@@ -1,5 +1,6 @@
 module GameSDL
   abstract class Game
+    getter window : SDL::Window
     getter renderer : SDL::Renderer
     getter scene_manager : SceneManager
     getter? exit
@@ -7,9 +8,11 @@ module GameSDL
     DefaultBackgroundColor = SDL::Color.new(0, 0, 0, 255)
 
     def initialize(title = "")
-      SDL.init(SDL::Init::VIDEO)
+      SDL.init(SDL::Init::VIDEO); at_exit { SDL.quit }
+      SDL::IMG.init(SDL::IMG::Init::PNG); at_exit { SDL::IMG.quit }
+      SDL::TTF.init; at_exit { SDL::TTF.quit }
 
-      window = SDL::Window.new(
+      @window = SDL::Window.new(
         title: title,
         width: 1920,
         height: 1080,
@@ -18,6 +21,8 @@ module GameSDL
 
       @renderer = SDL::Renderer.new(window)
       @scene_manager = SceneManager.new
+
+      window.raise
     end
 
     # TODO: check / use
@@ -41,8 +46,6 @@ module GameSDL
 
     def run
       @exit = false
-
-      window.raise
 
       while !exit?
         while event = SDL::Event.poll
@@ -85,7 +88,7 @@ module GameSDL
     # TODO: switch to renderer class architecture
     def draw
       # TODO: impl
-      scene_manager.draw(renderer)
+      scene_manager.draw(renderer, window)
     end
   end
 end
