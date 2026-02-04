@@ -1,14 +1,10 @@
 module GameSDL
   abstract class Game
-    # TODO: might not need window
-    # getter window : SDL::Window
     getter renderer : SDL::Renderer
-    getter? running
-    # getter? exit
-    # getter stage : Stage
+    getter scene_manager : SceneManager
+    getter? exit
 
-    # TODO: check / use
-    DefaultBackgroundColor = SF::Color.new(0, 0, 0)
+    DefaultBackgroundColor = SDL::Color.new(0, 0, 0, 255)
 
     def initialize(title = "")
       SDL.init(SDL::Init::VIDEO)
@@ -21,8 +17,7 @@ module GameSDL
       )
 
       @renderer = SDL::Renderer.new(window)
-
-      window.raise
+      @scene_manager = SceneManager.new
     end
 
     # TODO: check / use
@@ -40,25 +35,23 @@ module GameSDL
       true
     end
 
-    # TODO: check / use
     def background_color
       DefaultBackgroundColor
     end
 
     def run
-      @running = true
-      while running?
+      @exit = false
+
+      window.raise
+
+      while !exit?
         while event = SDL::Event.poll
           event(event)
         end
 
-        # TODO:
-        update
-
-        renderer.draw_color = SDL::Color.new(30, 30, 30, 255) # Dark Gray
-        renderer.clear
-
-        # TODO:
+        # TODO: figure out how to do frame_time with SDL2
+        update(0.123)
+        clear_screen
         draw
 
         renderer.present
@@ -70,25 +63,29 @@ module GameSDL
     def event(event)
       case event
       when SDL::Event::Quit
-        @running = false
+        @exit = true
       when SDL::Event::Keyboard
-        @running = false if event.sym.escape?
+        @exit = true if event.sym.escape?
       end
 
-      # TODO:
-      # stage.event(event)
+      scene_manager.event(event)
     end
 
-    def update # (frame_time : Float32)
-      # TODO:
-      # stage.update(frame_time)
+    def update(frame_time : Float32)
+      scene_manager.update(frame_time)
 
-      # @exit = true if stage.exit?
+      @exit = true if scene_manager.exit?
     end
 
-    # TODO: switch to renderer class
+    def clear_screen
+      renderer.draw_color = background_color
+      renderer.clear
+    end
+
+    # TODO: switch to renderer class architecture
     def draw
       # TODO: impl
+      scene_manager.draw(renderer)
     end
   end
 end
