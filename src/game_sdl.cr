@@ -1,8 +1,7 @@
 require "sdl"
 
-require "./version"
-require "./game_sdl/macros"
-require "./game_sdl/*"
+# require "./game_sdl/*"
+require "./game_sdl/game"
 
 module GameSDL
 end

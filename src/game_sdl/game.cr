@@ -1,87 +1,94 @@
 module GameSDL
   abstract class Game
-    getter window : SF::RenderWindow
-    getter clock : SF::Clock
-    getter? exit
-    getter stage : Stage
-    getter target_height : UInt32?
+    # TODO: might not need window
+    # getter window : SDL::Window
+    getter renderer : SDL::Renderer
+    getter? running
+    # getter? exit
+    # getter stage : Stage
 
+    # TODO: check / use
     DefaultBackgroundColor = SF::Color.new(0, 0, 0)
 
-    def initialize(title = "", mode = SF::VideoMode.desktop_mode, style = SF::Style::None, @target_height = nil)
-      if style.fullscreen?
-        mode = SF::VideoMode.fullscreen_modes.first
-      end
+    def initialize(title = "")
+      SDL.init(SDL::Init::VIDEO)
 
-      @window = SF::RenderWindow.new(mode, title, style)
+      window = SDL::Window.new(
+        title: title,
+        width: 1920,
+        height: 1080,
+        flags: SDL::Window::Flags::SHOWN | SDL::Window::Flags::RESIZABLE
+      )
 
-      @window.vertical_sync_enabled = vsync
-      @window.joystick_threshold = joystick_threshold
-      @window.mouse_cursor_visible = mouse_cursor_visible
+      @renderer = SDL::Renderer.new(window)
 
-      Screen.init(@window, mode.width, mode.height, target_height)
-
-      @exit = false
-      @clock = SF::Clock.new
-      @stage = StageEmpty.new
+      window.raise
     end
 
+    # TODO: check / use
     def vsync
       true
     end
 
+    # TODO: check / use
     def joystick_threshold
       1.0
     end
 
+    # TODO: check / use
     def mouse_cursor_visible
       true
     end
 
+    # TODO: check / use
     def background_color
       DefaultBackgroundColor
     end
 
     def run
-      while window.open?
-        while event = window.poll_event
+      @running = true
+      while running?
+        while event = SDL::Event.poll
           event(event)
         end
 
-        window.close if exit?
+        # TODO:
+        update
 
-        frame_time = clock.restart.as_seconds
+        renderer.draw_color = SDL::Color.new(30, 30, 30, 255) # Dark Gray
+        renderer.clear
 
-        update(frame_time)
+        # TODO:
+        draw
 
-        window.clear(background_color)
-
-        draw(window)
-
-        window.display
+        renderer.present
       end
+
+      SDL.quit
     end
 
     def event(event)
       case event
-      when SF::Event::Resized
-        # update the view to the new size of the window
-        Screen.init(window, event.width, event.height, target_height)
-      when SF::Event::Closed
-        window.close
+      when SDL::Event::Quit
+        @running = false
+      when SDL::Event::Keyboard
+        @running = false if event.sym.escape?
       end
 
-      stage.event(event)
+      # TODO:
+      # stage.event(event)
     end
 
-    def update(frame_time : Float32)
-      stage.update(frame_time)
+    def update # (frame_time : Float32)
+      # TODO:
+      # stage.update(frame_time)
 
-      @exit = true if stage.exit?
+      # @exit = true if stage.exit?
     end
 
-    def draw(window : SF::RenderWindow)
-      stage.draw(window)
+    # TODO: switch to renderer class
+    def draw
+      # TODO: impl
     end
   end
 end
