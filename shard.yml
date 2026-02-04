@@ -1,0 +1,13 @@
+name: game_sdl
+version: 0.2.0
+
+authors:
+  - Matt Swieboda <mswieboda@users.noreply.github.com>
+
+dependencies:
+  sdl:
+    github: ysbaddaden/sdl.cr
+
+crystal: '>= 1.19.1'
+
+license: MIT
