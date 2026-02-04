@@ -1,7 +1,6 @@
 require "sdl"
 
-# require "./game_sdl/*"
-require "./game_sdl/game"
+require "./game_sdl/*"
 
 module GameSDL
 end

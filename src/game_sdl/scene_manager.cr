@@ -1,15 +1,15 @@
 module GameSDL
-  abstract class Stage
-    getter keys
-    getter mouse
-    getter joysticks
+  abstract class SceneManager
     getter scene : Scene
+    # getter keys
+    # getter mouse
+    # getter joysticks
     getter? exit
 
     def initialize
-      @keys = Keys.new
-      @mouse = Mouse.new
-      @joysticks = Joysticks.new
+      # @keys = Keys.new
+      # @mouse = Mouse.new
+      # @joysticks = Joysticks.new
       @scene = SceneEmpty.new
       @exit = false
     end
