@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Font
 
     EmptyString = ""

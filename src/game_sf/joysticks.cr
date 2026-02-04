@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   # NOTE: buttons and axes mapped from Xbox 360 controller
   #       not sure if these are standardized across different controllers
   class Joysticks
@@ -15,7 +15,7 @@ module GameSDL
       RightThumb
     end
 
-    Util.extract GameSDL::Joysticks::Button
+    Util.extract GSF::Joysticks::Button
 
     alias Axis = SF::Joystick::Axis
 

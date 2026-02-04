@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class StyledText < SF::Text
     @raw_text : String
     @sections : Array(StyledTextSection)

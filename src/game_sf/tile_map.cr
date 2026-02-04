@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class TileMap
     include SF::Drawable
 

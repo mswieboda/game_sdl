@@ -1,6 +1,6 @@
 require "./math_helpers"
 
-module GameSDL
+module GSF
   struct Box
     property width : Int32
     property height : Int32

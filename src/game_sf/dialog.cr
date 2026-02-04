@@ -1,6 +1,6 @@
 require "./message"
 
-module GameSDL
+module GSF
   class Dialog
     alias Data = Hash(String, NamedTuple(message: String, choices: Array(Message::ChoiceData)))
 

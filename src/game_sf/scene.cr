@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   abstract class Scene
     getter name
     getter? exit

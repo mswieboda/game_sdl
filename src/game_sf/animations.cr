@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Animations
     alias AnimationData = {animation: Animation, flip_horizontal: Bool, flip_vertical: Bool}
 

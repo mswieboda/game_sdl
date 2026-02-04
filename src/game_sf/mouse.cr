@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Mouse
     alias Button = SF::Mouse::Button
 

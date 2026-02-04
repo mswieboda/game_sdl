@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   module MathHelpers
     extend self
 

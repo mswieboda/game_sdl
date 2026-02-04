@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   abstract class SceneManager
     getter scene : Scene
     # getter keys
@@ -27,7 +27,7 @@ module GameSDL
       @scene.init
     end
 
-    # called from GameSDL::Game, used to set things like keys, mouse, etc from events
+    # called from GSF::Game, used to set things like keys, mouse, etc from events
     def event(event)
       case event
       when SF::Event::MouseMoved

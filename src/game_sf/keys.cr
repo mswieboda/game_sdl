@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Keys
     alias Key = SF::Keyboard::Key
 

@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Screen
     @@window : SF::RenderWindow?
 

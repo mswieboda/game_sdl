@@ -1,6 +1,6 @@
 require "./movable"
 
-module GameSDL
+module GSF
   module PlayerController
     alias Key = SF::Keyboard::Key
 

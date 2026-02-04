@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class EllipseShape < SF::Shape
     getter radius : SF::Vector2f
     getter point_count : Int32

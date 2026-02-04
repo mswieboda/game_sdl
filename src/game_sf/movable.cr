@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Movable
     getter x : Int32 | Float32
     getter y : Int32 | Float32

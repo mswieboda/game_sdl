@@ -1,6 +1,6 @@
 require "./math_helpers"
 
-module GameSDL
+module GSF
   struct Circle
     property radius : Int32
 

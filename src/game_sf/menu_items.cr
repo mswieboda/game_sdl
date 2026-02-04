@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class MenuItems
     alias KeyValue = Tuple(String, String)
 

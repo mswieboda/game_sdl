@@ -1,6 +1,6 @@
 require "json"
 
-module GameSDL
+module GSF
   class TileMapLevel
     getter rows : Int32
     getter cols : Int32

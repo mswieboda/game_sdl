@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Animation
     getter frame : Int32
     getter? loops

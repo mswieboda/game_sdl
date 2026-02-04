@@ -1,6 +1,6 @@
 require "./styled_text"
 
-module GameSDL
+module GSF
   class Message
     alias ChoiceData = NamedTuple(key: String, label: String)
 

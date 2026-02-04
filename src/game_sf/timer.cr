@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class Timer
     property duration : Time::Span
 

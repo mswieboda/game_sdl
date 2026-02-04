@@ -1,4 +1,4 @@
-module GameSDL
+module GSF
   class SceneEmpty < Scene
     def initialize
       super(:empty)
