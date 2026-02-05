@@ -18,7 +18,7 @@ module GameSDL
     def update(frame_time : Float32)
     end
 
-    def draw(renderer : SDL::Renderer, window : SDL::Window)
+    def draw(renderer : SDL3::Renderer)
     end
   end
 end

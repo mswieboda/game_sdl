@@ -1,6 +1,4 @@
-require "sdl"
-require "sdl/image"
-require "sdl/ttf"
+require "sdl3"
 
 require "./game_sdl/*"
 

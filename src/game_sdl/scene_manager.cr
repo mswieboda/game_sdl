@@ -24,10 +24,6 @@ module GameSDL
       @scene.init
     end
 
-    def event(event : SDL::Event)
-      # TODO: impl
-    end
-
     def update(frame_time : Float32)
       check_scenes
       scene.update(frame_time) #, keys, mouse, joysticks)
@@ -36,8 +32,8 @@ module GameSDL
       # joysticks.reset
     end
 
-    def draw(renderer : SDL::Renderer, window : SDL::Window)
-      scene.draw(renderer, window)
+    def draw(renderer : SDL3::Renderer)
+      scene.draw(renderer)
     end
   end
 end
