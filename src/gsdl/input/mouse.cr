@@ -13,6 +13,9 @@ module GSDL
     @@states = {} of UInt8 => State
     @@x = 0
     @@y = 0
+    @@prev_x = 0
+    @@prev_y = 0
+    @@moved = false
 
     def self.x
       @@x
@@ -20,6 +23,14 @@ module GSDL
 
     def self.y
       @@y
+    end
+
+    def self.position
+      {@@x, @@y}
+    end
+
+    def self.moved?
+      @@moved
     end
 
     def self.update
@@ -33,6 +44,10 @@ module GSDL
           # No change for Pressed
         end
       end
+
+      @@moved = (@@x != @@prev_x || @@y != @@prev_y)
+      @@prev_x = @@x
+      @@prev_y = @@y
     end
 
     def self.handle_mouse_motion(event : LibSDL3::Event)

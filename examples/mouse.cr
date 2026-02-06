@@ -40,6 +40,10 @@ module GameEx
       if Mouse.just_released?(Mouse::ButtonRight)
         puts ">>> You just released Mouse Right!"
       end
+
+      if Mouse.moved?
+        puts ">>> Mouse moved: #{Mouse.position}"
+      end
     end
   end
 
