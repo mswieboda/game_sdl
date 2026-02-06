@@ -1,7 +1,7 @@
 module GSDL
   abstract class Game
     getter window : SDL3::Window
-    getter renderer : SDL3::Renderer
+    getter renderer : Renderer
     getter scene_manager : SceneManager
     getter? exit
     @last_tick : UInt64 = 0_i64
@@ -19,7 +19,7 @@ module GSDL
         flags: 32_u64 # This was changed from SDL::WindowFlags::SHOWN | SDL::WindowFlags::RESIZABLE
       )
 
-      @renderer = SDL3::Renderer.new(window)
+      @renderer = Renderer.new(window)
       @scene_manager = SceneManager.new
     end
 

@@ -26,7 +26,7 @@ class GSDL::AnimatedSprite
     @animation_player.update(dt)
   end
 
-  def draw(renderer : SDL3::Renderer)
+  def draw(renderer : Renderer)
     source_rect = SDL3::FRect.new(
       x: @animation_player.frame_id * @width,
       y: 0_f32,

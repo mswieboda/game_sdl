@@ -34,7 +34,7 @@ module GSDL
       @y = (height - self.height) // 2
     end
 
-    def draw(renderer : SDL3::Renderer)
+    def draw(renderer : Renderer)
       if source_rect = @source_rect
         dest_rect = SDL3::FRect.new(x: x, y: y, w: source_rect.w, h: source_rect.h)
         renderer.render_texture(texture: texture, source_rect: source_rect, dest_rect: dest_rect)

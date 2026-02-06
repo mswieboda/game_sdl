@@ -2,16 +2,16 @@ module GSDL
   class TextureManager
     @@instance : TextureManager? = nil
 
-    @renderer : SDL3::Renderer
+    @renderer : Renderer
     @textures : Hash(String, SDL3::Texture)
 
-    private def initialize(@renderer : SDL3::Renderer)
+    private def initialize(@renderer : Renderer)
       @textures = Hash(String, SDL3::Texture).new
     end
 
     # Sets up the singleton instance of TextureManager with the given renderer.
     # This should be called once at the start of the application.
-    def self.setup(renderer : SDL3::Renderer)
+    def self.setup(renderer : Renderer)
       raise "TextureManager already set up!" if @@instance
       @@instance = new(renderer)
     end

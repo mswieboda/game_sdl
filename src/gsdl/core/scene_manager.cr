@@ -23,7 +23,7 @@ module GSDL
       scene.update(dt)
     end
 
-    def draw(renderer : SDL3::Renderer)
+    def draw(renderer : Renderer)
       scene.draw(renderer)
     end
   end

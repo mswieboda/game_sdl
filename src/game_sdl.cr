@@ -6,4 +6,5 @@ require "./gsdl/input/*"
 require "./gsdl/ui/*"
 
 module GSDL
+  alias Renderer = SDL3::Renderer
 end

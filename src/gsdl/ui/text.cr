@@ -36,7 +36,7 @@ module GSDL
     def update(frame_time : Float32)
     end
 
-    def draw(renderer : SDL3::Renderer)
+    def draw(renderer : Renderer)
       texture = SDL3::Texture.from_surface(renderer, @surface)
       texture_width, texture_height = texture.size
 

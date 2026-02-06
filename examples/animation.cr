@@ -45,7 +45,7 @@ module GameEx
       @sprite.update(dt)
     end
 
-    def draw(renderer : SDL3::Renderer)
+    def draw(renderer : GSDL::Renderer)
       @sprite.draw(renderer)
     end
   end
