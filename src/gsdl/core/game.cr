@@ -7,22 +7,29 @@ module GSDL
 
     DefaultBackgroundColor = LibSDL3::Color.new(r: 0, g: 0, b: 0, a: 255)
 
-    def initialize(title = "")
-      SDL3.init(LibSDL3::SDL_INIT_VIDEO); at_exit { SDL3.quit }
-
-      SDL3::TTF.init; at_exit { SDL3::TTF.quit }
+    def initialize(title = "", width = 1920, height = 1080)
+      SDL3.init(LibSDL3::SDL_INIT_VIDEO)
+      SDL3::TTF.init
 
       @window = SDL3::Window.new(
         title,
-        1920,
-        1080,
+        width,
+        height,
         flags: 32_u64 # This was changed from SDL::WindowFlags::SHOWN | SDL::WindowFlags::RESIZABLE
       )
 
       @renderer = SDL3::Renderer.new(window)
       @scene_manager = SceneManager.new
+    end
 
+    def init
+      GSDL::TextureManager.setup(renderer)
 
+      load_textures
+    end
+
+    # NOTE: to be overridden by inheritted classes
+    def load_textures
     end
 
     # TODO: check / use
@@ -45,46 +52,38 @@ module GSDL
     end
 
     def run
+      init
+
       @exit = false
-      puts "Game loop started."
 
       while !exit?
-        puts "Loop iteration. exit? = #{exit?}"
         event_processed = false
         event = uninitialized LibSDL3::Event
         while SDL3.poll_event(pointerof(event))
           event_processed = true
-          puts "  Event received: type #{event.type}"
           case event.type
           when LibSDL3::SDL_EVENT_QUIT, LibSDL3::SDL_EVENT_WINDOW_CLOSE_REQUESTED
-            puts "    Quit event received. Setting @exit = true."
             @exit = true
           when LibSDL3::SDL_EVENT_KEY_DOWN
-            puts "    Keydown event. Keycode: #{event.key.key}"
             if event.key.key == LibSDL3::ESCAPE
-              puts "    ESC key pressed. Setting @exit = true."
               @exit = true
             end
           end
           break if @exit # Break from event polling if quit is signaled
         end
-        puts "Events processed in this iteration: #{event_processed}. After event processing, exit? = #{exit?}"
 
         break if @exit # Break from main loop if quit is signaled
 
         # TODO: figure out how to do frame_time with SDL2
         update(0.123)
         clear_screen
-        draw(1920, 1080) # Using hardcoded dimensions for now, as they are used to create the window
+        draw
         # Consider getting these from a window getter if added later.
         renderer.present
       end
 
-      puts "Game loop terminated. Calling SDL3.quit."
-      SDL3.quit
+      destroy
     end
-
-
 
     def update(frame_time : Float32)
       scene_manager.update(frame_time)
@@ -97,10 +96,16 @@ module GSDL
       renderer.clear
     end
 
-    # TODO: switch to renderer class architecture
-    def draw(window_width : Int32, window_height : Int32)
-      # TODO: impl
+    def draw
       scene_manager.draw(renderer)
+    end
+
+    def destroy
+      GSDL::TextureManager.clear_all # Unload all textures managed by the singleton
+      renderer.destroy
+      window.destroy
+      SDL3::TTF.quit
+      SDL3.quit
     end
   end
 end

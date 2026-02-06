@@ -1,7 +1,8 @@
 require "sdl3"
 
-require "./game_sdl/core/*"
-require "./game_sdl/ui/*"
+require "./gsdl/core/*"
+require "./gsdl/ui/*"
+require "./gsdl/gfx/*"
 
 module GSDL
 end
