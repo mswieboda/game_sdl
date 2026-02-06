@@ -1,15 +1,9 @@
 module GSDL
   class SceneManager
     getter scene : Scene
-    # getter keys
-    # getter mouse
-    # getter joysticks
     getter? exit
 
     def initialize
-      # @keys = Keys.new
-      # @mouse = Mouse.new
-      # @joysticks = Joysticks.new
       @scene = Scene.new
       @exit = false
     end
@@ -26,10 +20,7 @@ module GSDL
 
     def update(dt : Float32)
       check_scenes
-      scene.update(dt) #, keys, mouse, joysticks)
-      # keys.reset
-      # mouse.reset
-      # joysticks.reset
+      scene.update(dt)
     end
 
     def draw(renderer : SDL3::Renderer)

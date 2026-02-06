@@ -59,16 +59,15 @@ module GSDL
       @last_tick = SDL3.get_ticks
 
       while !exit?
+        GSDL::Keys.update
+
         current_tick = SDL3.get_ticks
         delta_time_ms = current_tick - @last_tick
         @last_tick = current_tick
+        delta_time = delta_time_ms / 1000.0f32
 
-        delta_time = delta_time_ms / 1000_f32
-
-        event_processed = false
         event = uninitialized LibSDL3::Event
         while SDL3.poll_event(pointerof(event))
-          event_processed = true
           case event.type
           when LibSDL3::SDL_EVENT_QUIT, LibSDL3::SDL_EVENT_WINDOW_CLOSE_REQUESTED
             @exit = true
@@ -78,9 +77,13 @@ module GSDL
             end
           end
           break if @exit # Break from event polling if quit is signaled
+
+          GSDL::Inputs.handle_event(event)
         end
 
         break if @exit # Break from main loop if quit is signaled
+
+        GSDL::Inputs.handle_event(event)
 
         update(delta_time)
         clear_screen
