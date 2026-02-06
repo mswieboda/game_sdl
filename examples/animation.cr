@@ -37,7 +37,7 @@ module GameEx
 
       @sprite = GSDL::AnimatedSprite.new("player", 128, 128)
       @sprite.center(WIDTH, HEIGHT)
-      @sprite.add("fire", (0..3).to_a, 60 / 1000_f32)
+      @sprite.add("fire", (0..3).to_a, 12)
       @sprite.play("fire")
     end
 
