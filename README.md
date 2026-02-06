@@ -1,17 +1,17 @@
 # game_sdl
 
-Wrapper / helpers for making a game with SDL2 using [`sdl.cr`](https://github.com/ysbaddaden/sdl.cr)
+Wrapper / helpers for making a game with SDL3 using [`sdl3.cr`](https://github.com/mswieboda/sdl3.cr)
 
 ## Installation
 
-1. [Install SDL2](https://wiki.libsdl.org/SDL2/Installation)
+1. [Install SDL3]([https://wiki.libsdl.org/SDL3/Installation](https://github.com/libsdl-org/SDL/releases))
 
 or install with favorite library / package manager
 
 for example for macOS:
 
 ```
-brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
+brew install sdl3 sdl3_image sdl3_ttf
 
 ```
 
