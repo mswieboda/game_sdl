@@ -1,6 +1,8 @@
 require "../src/game_sdl"
 
 module GameEx
+  alias Keys = GSDL::Keys
+
   WIDTH = 800
   HEIGHT = 600
 
@@ -42,24 +44,24 @@ module GameEx
 
     def update(dt : Float32)
       speed = 150 * dt
-      if GSDL::Keys.pressed?([LibSDL3::A, LibSDL3::LEFT])
+      if Keys.pressed?([Keys::A, Keys::Left])
         @sprite.x -= speed
       end
-      if GSDL::Keys.pressed?([LibSDL3::D, LibSDL3::RIGHT])
+      if Keys.pressed?([Keys::D, Keys::Right])
         @sprite.x += speed
       end
-      if GSDL::Keys.pressed?([LibSDL3::W, LibSDL3::UP])
+      if Keys.pressed?([Keys::W, Keys::Up])
         @sprite.y -= speed
       end
-      if GSDL::Keys.pressed?([LibSDL3::S, LibSDL3::DOWN])
+      if Keys.pressed?([Keys::S, Keys::Down])
         @sprite.y += speed
       end
 
-      if GSDL::Keys.just_pressed?(LibSDL3::RETURN)
+      if Keys.just_pressed?(Keys::Return)
         puts ">>> You just pressed RETURN!"
       end
 
-      if GSDL::Keys.just_released?(LibSDL3::SPACE)
+      if Keys.just_released?(Keys::Space)
         puts ">>> You just released SPACE!"
       end
     end
