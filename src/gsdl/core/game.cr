@@ -24,7 +24,7 @@ module GSDL
     end
 
     def init
-      GSDL::TextureManager.setup(renderer)
+      TextureManager.setup(renderer)
 
       load_textures
     end
@@ -59,35 +59,21 @@ module GSDL
       @last_tick = SDL3.get_ticks
 
       while !exit?
-        GSDL::Keys.update
+        Keys.update
 
         current_tick = SDL3.get_ticks
         delta_time_ms = current_tick - @last_tick
         @last_tick = current_tick
         delta_time = delta_time_ms / 1000.0f32
 
-        event = uninitialized LibSDL3::Event
-        while SDL3.poll_event(pointerof(event))
-          case event.type
-          when LibSDL3::SDL_EVENT_QUIT, LibSDL3::SDL_EVENT_WINDOW_CLOSE_REQUESTED
-            @exit = true
-          when LibSDL3::SDL_EVENT_KEY_DOWN
-            if event.key.key == LibSDL3::ESCAPE
-              @exit = true
-            end
-          end
-          break if @exit # Break from event polling if quit is signaled
+        Events.handle_events
 
-          GSDL::Inputs.handle_event(event)
-        end
-
-        break if @exit # Break from main loop if quit is signaled
-
-        GSDL::Inputs.handle_event(event)
+        break if Events.exit? || exit?
 
         update(delta_time)
         clear_screen
         draw
+
         # Consider getting these from a window getter if added later.
         renderer.present
       end
@@ -111,7 +97,7 @@ module GSDL
     end
 
     def destroy
-      GSDL::TextureManager.clear_all # Unload all textures managed by the singleton
+      TextureManager.clear_all # Unload all textures managed by the singleton
       renderer.destroy
       window.destroy
       SDL3::TTF.quit

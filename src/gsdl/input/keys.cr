@@ -1,8 +1,5 @@
 module GSDL
   module Keys
-    KeyDownEvent = LibSDL3::SDL_EVENT_KEY_DOWN
-    KeyUpEvent = LibSDL3::SDL_EVENT_KEY_UP
-
     Unknown = LibSDL3::UNKNOWN
     Return = LibSDL3::RETURN
     Escape = LibSDL3::ESCAPE
