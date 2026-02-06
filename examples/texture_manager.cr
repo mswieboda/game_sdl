@@ -41,15 +41,11 @@ module GameEx
       player_texture = GSDL::TextureManager.get("player")
       player_width, player_height = player_texture.size
 
-      # Set up a destination rectangle to draw the player in the center of the screen
-      dest_rect = SDL3::FRect.new(
-        x: (WIDTH - player_width) // 2,
-        y: (HEIGHT - player_height) // 2,
-        w: player_width,
-        h: player_height
-      )
+      # center of the screen
+      x = (WIDTH - player_width) // 2
+      y = (HEIGHT - player_height) // 2
 
-      renderer.render_texture(player_texture, dest_rect)
+      renderer.render_texture(texture: player_texture, x: x, y: y)
     end
   end
 
