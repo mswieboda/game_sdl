@@ -4,6 +4,7 @@ module GSDL
     getter renderer : SDL3::Renderer
     getter scene_manager : SceneManager
     getter? exit
+    @last_tick : UInt64 = 0_i64
 
     DefaultBackgroundColor = LibSDL3::Color.new(r: 0, g: 0, b: 0, a: 255)
 
@@ -55,8 +56,15 @@ module GSDL
       init
 
       @exit = false
+      @last_tick = SDL3.get_ticks
 
       while !exit?
+        current_tick = SDL3.get_ticks
+        delta_time_ms = current_tick - @last_tick
+        @last_tick = current_tick
+
+        delta_time = delta_time_ms / 1000_f32
+
         event_processed = false
         event = uninitialized LibSDL3::Event
         while SDL3.poll_event(pointerof(event))
@@ -74,8 +82,7 @@ module GSDL
 
         break if @exit # Break from main loop if quit is signaled
 
-        # TODO: figure out how to do frame_time with SDL2
-        update(0.123)
+        update(delta_time)
         clear_screen
         draw
         # Consider getting these from a window getter if added later.
@@ -85,8 +92,8 @@ module GSDL
       destroy
     end
 
-    def update(frame_time : Float32)
-      scene_manager.update(frame_time)
+    def update(dt : Float32)
+      scene_manager.update(dt)
 
       @exit = true if scene_manager.exit?
     end

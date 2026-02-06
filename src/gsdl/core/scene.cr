@@ -15,7 +15,7 @@ module GSDL
       @exit = false
     end
 
-    def update(frame_time : Float32)
+    def update(dt : Float32)
     end
 
     def draw(renderer : SDL3::Renderer)

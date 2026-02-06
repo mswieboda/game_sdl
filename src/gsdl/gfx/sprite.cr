@@ -8,7 +8,7 @@ module GSDL
 
     delegate size, to: @texture
 
-    def initialize(@key, @x, @y)
+    def initialize(@key, @x = 0_f32, @y = 0_f32)
       @texture = TextureManager.get(@key)
     end
 

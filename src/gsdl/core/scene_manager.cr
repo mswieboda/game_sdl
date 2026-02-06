@@ -24,9 +24,9 @@ module GSDL
       @scene.init
     end
 
-    def update(frame_time : Float32)
+    def update(dt : Float32)
       check_scenes
-      scene.update(frame_time) #, keys, mouse, joysticks)
+      scene.update(dt) #, keys, mouse, joysticks)
       # keys.reset
       # mouse.reset
       # joysticks.reset
