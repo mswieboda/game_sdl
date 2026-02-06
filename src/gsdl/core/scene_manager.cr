@@ -1,4 +1,4 @@
-module GameSDL
+module GSDL
   class SceneManager
     getter scene : Scene
     # getter keys

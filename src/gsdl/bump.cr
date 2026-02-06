@@ -1,6 +1,6 @@
 require "option_parser"
 
-module GameSDL
+module GSDL
   ShardFile = "shard.yml"
 
   class Bump
@@ -82,4 +82,4 @@ module GameSDL
   end
 end
 
-GameSDL::Bump.new.run
+GSDL::Bump.new.run

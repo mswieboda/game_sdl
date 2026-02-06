@@ -1,6 +1,6 @@
 require "./font"
 
-module GameSDL
+module GSDL
   class Text
     getter font
     getter text

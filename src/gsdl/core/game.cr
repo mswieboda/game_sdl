@@ -1,4 +1,4 @@
-module GameSDL
+module GSDL
   abstract class Game
     getter window : SDL3::Window
     getter renderer : SDL3::Renderer

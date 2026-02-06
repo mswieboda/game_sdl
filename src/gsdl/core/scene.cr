@@ -1,4 +1,4 @@
-module GameSDL
+module GSDL
   class Scene
     getter name
     getter? exit
