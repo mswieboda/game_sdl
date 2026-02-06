@@ -59,7 +59,7 @@ module GSDL
       @last_tick = SDL3.get_ticks
 
       while !exit?
-        Keys.update
+        Inputs.update
 
         current_tick = SDL3.get_ticks
         delta_time_ms = current_tick - @last_tick

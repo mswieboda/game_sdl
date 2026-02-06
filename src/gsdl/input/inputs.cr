@@ -1,11 +1,22 @@
 module GSDL
   module Inputs
+    def self.update
+      Keys.update
+      Mouse.update
+    end
+
     def self.handle_event(event : Event)
       case event.type
       when Events::KeyDown
         Keys.handle_key_down(event)
       when Events::KeyUp
         Keys.handle_key_up(event)
+      when Events::MouseMotion
+        Mouse.handle_mouse_motion(event)
+      when Events::MouseDown
+        Mouse.handle_mouse_button_down(event)
+      when Events::MouseUp
+        Mouse.handle_mouse_button_up(event)
       end
     end
   end

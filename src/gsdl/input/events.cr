@@ -6,6 +6,9 @@ module GSDL
     WindowClose = LibSDL3::SDL_EVENT_WINDOW_CLOSE_REQUESTED
     KeyDown = LibSDL3::SDL_EVENT_KEY_DOWN
     KeyUp = LibSDL3::SDL_EVENT_KEY_UP
+    MouseMotion = LibSDL3::SDL_EVENT_MOUSE_MOTION
+    MouseDown = LibSDL3::SDL_EVENT_MOUSE_BUTTON_DOWN
+    MouseUp = LibSDL3::SDL_EVENT_MOUSE_BUTTON_UP
 
     @@exit = false
 
