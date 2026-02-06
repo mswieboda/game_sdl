@@ -1,19 +1,25 @@
+require "./font_manager"
+
 module GSDL
   class Font
-    EmptyString = ""
+    DEFAULT_FONT_PATH = "assets/fonts/PressStart2P.ttf"
+    DEFAULT_FONT_SIZE = 16_f32
 
-    def self.default
-      # TODO: will have to edit bindings to be able to alter the font size
-      #   after initialization, so for now, create a new font per size
-      @@font_default ||= SDL3::TTF::Font.open(default_file, 28.0_f32)
+    # Gets the default font.
+    def self.default : SDL3::TTF::Font
+      get(DEFAULT_FONT_PATH, DEFAULT_FONT_SIZE)
     end
 
-    def self.create(size : UInt16)
-      SDL3::TTF::Font.open(default_file, size.to_f32)
+    # Creates a new font with the default path and a specific size.
+    def self.create(size : Float32) : SDL3::TTF::Font
+      get(DEFAULT_FONT_PATH, size)
     end
 
-    def self.default_file
-      EmptyString
+    # Loads and retrieves a font using the FontManager.
+    # The key for the font manager will be "#{path}-#{size}".
+    def self.get(path : String, size : Float32) : SDL3::TTF::Font
+      key = "#{path}-#{size}"
+      FontManager.get(key)
     end
   end
 end

@@ -11,8 +11,6 @@ module GSDL
 
     @surface : SDL3::Surface
 
-
-
     def initialize(
       @font = Font.default,
       @text = "",
@@ -40,10 +38,10 @@ module GSDL
       texture = SDL3::Texture.from_surface(renderer, @surface)
       texture_width, texture_height = texture.size
 
-      srcrect = LibSDL3::FRect.new(x: 0.0_f32, y: 0.0_f32, w: texture_width, h: texture_height)
+      srcrect = LibSDL3::FRect.new(x: 0_f32, y: 0_f32, w: texture_width, h: texture_height)
       dstrect = LibSDL3::FRect.new(x: x.to_f32, y: y.to_f32, w: texture_width, h: texture_height)
 
-      renderer.render_texture(texture, pointerof(srcrect), pointerof(dstrect))
+      renderer.render_texture(texture, srcrect, dstrect)
       texture.destroy
     end
   end
