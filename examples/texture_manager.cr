@@ -43,13 +43,13 @@ module GameEx
 
       # Set up a destination rectangle to draw the player in the center of the screen
       dest_rect = SDL3::FRect.new(
-        x: 100, #, (WIDTH - player_width) // 2,
-        y: 100, #, (HEIGHT - player_height) // 2,
+        x: (WIDTH - player_width) // 2,
+        y: (HEIGHT - player_height) // 2,
         w: player_width,
         h: player_height
       )
 
-      renderer.render_texture(player_texture, Pointer(SDL3::FRect).null, pointerof(dest_rect))
+      renderer.render_texture(player_texture, dest_rect)
     end
   end
 
