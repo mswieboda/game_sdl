@@ -3,9 +3,9 @@ require "./font"
 module GSDL
   class Text
     getter font
-    getter text
-    property x : Int32
-    property y : Int32
+    property text
+    property x : Float32
+    property y : Float32
     getter color : LibSDL3::Color
     getter? ansi
 
@@ -20,6 +20,11 @@ module GSDL
       @ansi = true
     )
 
+      @surface = font.render_text_blended(text, color)
+    end
+
+    def text=(text : String)
+      @text = text
       @surface = font.render_text_blended(text, color)
     end
 
