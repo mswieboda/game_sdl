@@ -55,6 +55,9 @@ module GSDL
         unless LibSDL3.put_audio_stream_data(@audio_stream, @audio_buf, @audio_len)
           raise "Failed to put audio stream data for '#{@file_path}': #{SDL3.get_error}"
         end
+
+        # TODO: maybe something with flushing
+        LibSDL3.flush_audio_stream(@audio_stream)
       end
 
       unless LibSDL3.resume_audio_stream_device(@audio_stream)
