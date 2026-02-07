@@ -37,6 +37,17 @@ shards install
 require "game_sdl"
 ```
 
+## TODO:
+
+Add from `sdl3.cr` binding updates:
+
+- [ ] logical presentation
+- [ ] blend mode
+- [ ] open URL cross platform
+- [ ] platform binding
+- [ ] game pad binding
+- [x] audio
+
 ## Contributing
 
 1. Fork it (<https://github.com/mswieboda/game_sdl/fork>)
