@@ -31,7 +31,11 @@ clean:
 
 examples:
 	@echo "Building and running all examples..."
-	@$(MAKE) run EXAMPLE=texture_manager
+	@$(MAKE) run EXAMPLE=text
+	@$(MAKE) run EXAMPLE=sprite
+	@$(MAKE) run EXAMPLE=animation
+	@$(MAKE) run EXAMPLE=keys
+	@$(MAKE) run EXAMPLE=mouse
 
 run:
 	@echo "Building and running example: $(EXAMPLE)"
