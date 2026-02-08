@@ -41,12 +41,10 @@ require "game_sdl"
 
 Add from `sdl3.cr` binding updates:
 
-- [ ] logical presentation
-- [ ] blend mode
-- [ ] open URL cross platform
-- [ ] platform binding
-- [ ] game pad binding
 - [x] audio
+- [x] game pad binding
+- [x] logical presentation
+- [ ] blend mode
 
 ## Contributing
 
