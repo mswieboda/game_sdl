@@ -93,10 +93,8 @@ module GameEx
         (0...LOGICAL_WIDTH).step(tile_size) do |x|
           rect = SDL3::Rect.new(x: x, y: y, w: tile_size, h: tile_size)
           if ((x / tile_size) + (y / tile_size)) % 2 == 0
-            # LibSDL3.fill_surface_rect(surface, pointerof(rect), SDL3.color_to_u32(color1))
             surface.fill_rect(rect, color1)
           else
-            # LibSDL3.fill_surface_rect(surface, pointerof(rect), SDL3.color_to_u32(color2))
             surface.fill_rect(rect, color2)
           end
         end
@@ -127,7 +125,7 @@ module GameEx
       renderer.clear
 
       # Render background, which will be scaled by the logical presentation
-      bg_dst_rect = LibSDL3::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
+      bg_dst_rect = SDL3::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
       renderer.render_texture(@background_texture, bg_dst_rect)
 
       # Render text
