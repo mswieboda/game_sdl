@@ -53,7 +53,7 @@ module GameEx
       @button_stop_rect = LibSDL3::FRect.new(x: 50.0, y: 150.0, w: 200.0, h: 50.0)
       @current_audio_state = AudioState::Initial
 
-      @audio = GSDL::Audio.load("./assets/sfx/sample.wav")
+      @audio = GSDL::Audio.new("./assets/sfx/sample.wav")
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
 
@@ -88,10 +88,14 @@ module GameEx
         if mouse_x >= @button_rect.x && mouse_x <= (@button_rect.x + @button_rect.w) &&
            mouse_y >= @button_rect.y && mouse_y <= (@button_rect.y + @button_rect.h)
           case @current_audio_state
-          when AudioState::Initial, AudioState::Stopped, AudioState::Paused
+          when AudioState::Initial, AudioState::Stopped
             @audio.play
             @current_audio_state = AudioState::Playing
             @audio_start_tick = SDL3.get_ticks
+            update_text("Pause")
+          when AudioState::Paused
+            @audio.resume
+            @current_audio_state = AudioState::Playing
             update_text("Pause")
           when AudioState::Playing
             @audio.pause
@@ -106,16 +110,14 @@ module GameEx
         end
       end
 
-      # TODO: needs work to stop after it's been paused. works if never paused
-
-      # # Automatic state transitions (e.g., stopping after audio finishes)
-      # if @current_audio_state == AudioState::Playing
-      #   if (SDL3.get_ticks - @audio_start_tick) > @audio.duration_ms
-      #     @audio.stop
-      #     @current_audio_state = AudioState::Stopped
-      #     update_text("Play")
-      #   end
-      # end
+      # Automatic state transitions (e.g., stopping after audio finishes)
+      if @current_audio_state == AudioState::Playing
+        if @audio.finished?
+          @audio.stop
+          @current_audio_state = AudioState::Stopped
+          update_text("Play")
+        end
+      end
     end
 
     def draw(renderer : SDL3::Renderer)

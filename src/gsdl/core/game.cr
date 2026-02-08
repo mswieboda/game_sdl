@@ -11,7 +11,7 @@ module GSDL
     def initialize(title = "", width = 1920, height = 1080)
       SDL3.init(LibSDL3::SDL_INIT_VIDEO)
       SDL3::TTF.init
-      SDL3.init(LibSDL3::SDL_INIT_AUDIO)
+      SDL3::Mixer.init
 
       @window = SDL3::Window.new(
         title,
