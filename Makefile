@@ -40,6 +40,7 @@ examples:
 	@$(MAKE) run EXAMPLE=mouse
 	@$(MAKE) run EXAMPLE=audio
 	@$(MAKE) run EXAMPLE=game_pad
+	@$(MAKE) run EXAMPLE=logical_presentation
 
 run:
 	@echo "Building and running example: $(EXAMPLE)"

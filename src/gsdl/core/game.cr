@@ -6,6 +6,16 @@ module GSDL
     getter? exit
     @last_tick : UInt64 = 0_i64
 
+    @@renderer : Renderer?
+
+    def self.renderer : Renderer
+      if renderer = @@renderer
+        renderer
+      else
+        raise "Failed to get global renderer"
+      end
+    end
+
     DefaultBackgroundColor = Color.new(r: 0, g: 0, b: 0, a: 255)
 
     def initialize(title = "", width = 1920, height = 1080)
@@ -21,6 +31,7 @@ module GSDL
       )
 
       @renderer = Renderer.new(window)
+      @@renderer = @renderer
       @scene_manager = SceneManager.new
     end
 
@@ -84,9 +95,6 @@ module GSDL
         update(delta_time)
         clear_screen
         draw
-
-        # Consider getting these from a window getter if added later.
-        renderer.present
       end
 
       destroy
@@ -105,6 +113,8 @@ module GSDL
 
     def draw
       scene_manager.draw(renderer)
+
+      renderer.present
     end
 
     def destroy
