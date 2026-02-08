@@ -1,8 +1,13 @@
+require "./keys"
+require "./mouse"
+require "./game_pad"
+
 module GSDL
   module Inputs
     def self.update
       Keys.update
       Mouse.update
+      GamePad.update
     end
 
     def self.handle_event(event : Event)
@@ -17,6 +22,14 @@ module GSDL
         Mouse.handle_mouse_button_down(event)
       when Events::MouseUp
         Mouse.handle_mouse_button_up(event)
+      when Events::GamepadButtonDown
+        GamePad.handle_gamepad_button_down(event)
+      when Events::GamepadButtonUp
+        GamePad.handle_gamepad_button_up(event)
+      when Events::GamepadAdded
+        GamePad.handle_gamepad_added(event)
+      when Events::GamepadRemoved
+        GamePad.handle_gamepad_removed(event)
       end
     end
   end

@@ -12,6 +12,7 @@ module GSDL
       SDL3.init(LibSDL3::SDL_INIT_VIDEO)
       SDL3::TTF.init
       SDL3::Mixer.init
+      SDL3.init(LibSDL3::SDL_INIT_GAMEPAD)
 
       @window = SDL3::Window.new(
         title,

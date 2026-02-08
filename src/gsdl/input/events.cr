@@ -9,6 +9,10 @@ module GSDL
     MouseMotion = LibSDL3::SDL_EVENT_MOUSE_MOTION
     MouseDown = LibSDL3::SDL_EVENT_MOUSE_BUTTON_DOWN
     MouseUp = LibSDL3::SDL_EVENT_MOUSE_BUTTON_UP
+    GamepadButtonDown = LibSDL3::SDL_EVENT_GAMEPAD_BUTTON_DOWN
+    GamepadButtonUp = LibSDL3::SDL_EVENT_GAMEPAD_BUTTON_UP
+    GamepadAdded = LibSDL3::SDL_EVENT_GAMEPAD_ADDED
+    GamepadRemoved = LibSDL3::SDL_EVENT_GAMEPAD_REMOVED
 
     @@exit = false
 
