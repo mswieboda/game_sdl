@@ -1,10 +1,10 @@
 require "sdl3"
 
 require "./gsdl/core/*"
-require "./gsdl/gfx/*"
-require "./gsdl/input/*"
-require "./gsdl/ui/*"
 require "./gsdl/audio/*"
+require "./gsdl/gfx/*"
+require "./gsdl/ui/*"
+require "./gsdl/input/*"
 
 module GSDL
   alias Color = SDL3::Color

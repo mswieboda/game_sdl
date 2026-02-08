@@ -2,6 +2,8 @@ require "../src/game_sdl"
 
 module GameEx
   alias Keys = GSDL::Keys
+  alias Font = GSDL::Font
+  alias Text = GSDL::Text
 
   WIDTH = 800
   HEIGHT = 600
@@ -19,6 +21,10 @@ module GameEx
     def load_textures
       GSDL::TextureManager.load("player", "./assets/gfx/player.png")
     end
+
+    def load_fonts
+      GSDL::FontManager.load(Font::DEFAULT_FONT_PATH, Font::DEFAULT_FONT_SIZE)
+    end
   end
 
   class SceneManager < GSDL::SceneManager
@@ -33,6 +39,7 @@ module GameEx
 
   class StartScene < GSDL::Scene
     @sprite : GSDL::Sprite
+    @text : Text
 
     def initialize
       super(:start)
@@ -40,6 +47,15 @@ module GameEx
       source_rect = SDL3::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
       @sprite = GSDL::Sprite.new(key: "player", source_rect: source_rect)
       @sprite.center(WIDTH, HEIGHT)
+
+      color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
+      @text = Text.new(text: "Use WASD or Arrows to move", color: color)
+      center_text
+      @text.y = @sprite.y + @sprite.height + 20 # Position below sprite
+    end
+
+    def center_text
+      @text.x = ((WIDTH - @text.width) / 2).to_f32
     end
 
     def update(dt : Float32)
@@ -58,16 +74,19 @@ module GameEx
       end
 
       if Keys.just_pressed?(Keys::Return)
-        puts ">>> You just pressed RETURN!"
+        @text.text = "You just pressed RETURN!"
+        center_text
       end
 
       if Keys.just_released?(Keys::Space)
-        puts ">>> You just released SPACE!"
+        @text.text = "You just released SPACE!"
+        center_text
       end
     end
 
     def draw(renderer : GSDL::Renderer)
       @sprite.draw(renderer)
+      @text.draw(renderer)
     end
   end
 
