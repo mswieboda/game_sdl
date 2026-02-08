@@ -4,7 +4,7 @@ require "./gsdl/core/*"
 require "./gsdl/gfx/*"
 require "./gsdl/input/*"
 require "./gsdl/ui/*"
-require "./gsdl/audio"
+require "./gsdl/audio/*"
 
 module GSDL
   alias Color = LibSDL3::Color

@@ -27,9 +27,11 @@ module GSDL
     def init
       TextureManager.setup(renderer)
       FontManager.setup
+      AudioManager.setup
 
       load_textures
       load_fonts
+      load_audio
     end
 
     # NOTE: to be overridden by inheritted classes
@@ -37,6 +39,9 @@ module GSDL
     end
 
     def load_fonts
+    end
+
+    def load_audio
     end
 
     # TODO: check / use
@@ -105,6 +110,7 @@ module GSDL
     def destroy
       TextureManager.clear_all # Unload all textures managed by the singleton
       FontManager.clear_all
+      AudioManager.clear_all
       renderer.destroy
       window.destroy
       SDL3::TTF.quit

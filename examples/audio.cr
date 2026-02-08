@@ -20,6 +20,10 @@ module GameEx
     def load_fonts
       GSDL::FontManager.load(GSDL::Font::DEFAULT_FONT_PATH, GSDL::Font::DEFAULT_FONT_SIZE)
     end
+
+    def load_audio
+      GSDL::AudioManager.load("sample_audio", "./assets/sfx/sample.wav")
+    end
   end
 
   class SceneManager < GSDL::SceneManager
@@ -53,7 +57,7 @@ module GameEx
       @button_stop_rect = LibSDL3::FRect.new(x: 50.0, y: 150.0, w: 200.0, h: 50.0)
       @current_audio_state = AudioState::Initial
 
-      @audio = GSDL::Audio.new("./assets/sfx/sample.wav")
+      @audio = GSDL::AudioManager.get("sample_audio")
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
 
@@ -132,7 +136,6 @@ module GameEx
     end
 
     def destroy
-      @audio.destroy
       @text.destroy
       super
     end
