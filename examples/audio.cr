@@ -45,16 +45,16 @@ module GameEx
 
     @audio : GSDL::Audio
     @text : GSDL::Text
-    @button_rect : LibSDL3::FRect
-    @button_stop_rect : LibSDL3::FRect
+    @button_rect : SDL3::FRect
+    @button_stop_rect : SDL3::FRect
     @current_audio_state : AudioState
     @audio_start_tick : UInt64 = 0_u64
 
     def initialize
       super(:start)
 
-      @button_rect = LibSDL3::FRect.new(x: 50.0, y: 50.0, w: 200.0, h: 50.0)
-      @button_stop_rect = LibSDL3::FRect.new(x: 50.0, y: 150.0, w: 200.0, h: 50.0)
+      @button_rect = SDL3::FRect.new(x: 50.0, y: 50.0, w: 200.0, h: 50.0)
+      @button_stop_rect = SDL3::FRect.new(x: 50.0, y: 150.0, w: 200.0, h: 50.0)
       @current_audio_state = AudioState::Initial
 
       @audio = GSDL::AudioManager.get("sample_audio")

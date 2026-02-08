@@ -104,7 +104,6 @@ module GSDL
         LibSDL3Mixer.destroy_mixer(@mixer)
         @mixer = Pointer(Void).null
       end
-      SDL3::Mixer.quit
     end
   end
 end

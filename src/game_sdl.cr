@@ -7,7 +7,8 @@ require "./gsdl/ui/*"
 require "./gsdl/audio/*"
 
 module GSDL
-  alias Color = LibSDL3::Color
+  alias Color = SDL3::Color
+  alias FColor = SDL3::FColor
   alias FPoint = SDL3::FPoint
   alias FRect = SDL3::FRect
   alias Rect = SDL3::Rect

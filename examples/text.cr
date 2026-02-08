@@ -40,8 +40,7 @@ module GameEx
       # Center the text
       text_width = @text.width
       text_height = @text.height
-      @text.x = (WIDTH - text_width) // 2
-      @text.y = (HEIGHT - text_height) // 2
+      @text.center(WIDTH, HEIGHT)
     end
 
     def draw(renderer : GSDL::Renderer)

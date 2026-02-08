@@ -38,6 +38,7 @@ examples:
 	@$(MAKE) run EXAMPLE=keys
 	@$(MAKE) run EXAMPLE=mouse
 	@$(MAKE) run EXAMPLE=audio
+	@$(MAKE) run EXAMPLE=game_pad
 
 run:
 	@echo "Building and running example: $(EXAMPLE)"

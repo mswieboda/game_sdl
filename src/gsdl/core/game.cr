@@ -6,13 +6,12 @@ module GSDL
     getter? exit
     @last_tick : UInt64 = 0_i64
 
-    DefaultBackgroundColor = LibSDL3::Color.new(r: 0, g: 0, b: 0, a: 255)
+    DefaultBackgroundColor = Color.new(r: 0, g: 0, b: 0, a: 255)
 
     def initialize(title = "", width = 1920, height = 1080)
-      SDL3.init(LibSDL3::SDL_INIT_VIDEO)
+      SDL3.init
       SDL3::TTF.init
       SDL3::Mixer.init
-      SDL3.init(LibSDL3::SDL_INIT_GAMEPAD)
 
       @window = SDL3::Window.new(
         title,
@@ -114,7 +113,6 @@ module GSDL
       AudioManager.clear_all
       renderer.destroy
       window.destroy
-      SDL3::TTF.quit
       SDL3.quit
     end
   end
