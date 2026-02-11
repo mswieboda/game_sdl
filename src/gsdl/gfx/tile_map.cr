@@ -45,7 +45,7 @@ module GSDL
 
       # Draws the tilemap
       def draw(renderer : SDL3::Renderer, camera_x : Int32, camera_y : Int32)
-        # Implement frustum culling here
+        # TODO: Implement frustum culling here
         # For simplicity, drawing all tiles for now.
 
         @map_data.each_with_index do |row_data, y_index|

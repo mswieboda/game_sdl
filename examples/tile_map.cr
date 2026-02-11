@@ -47,7 +47,7 @@ module TileMapEx
       @tilemap.add_tileset("tiles", tileset)
 
       # Manually define some map data
-      # 0 = empty, 1 = player tile (from global ID 1, which maps to tileset)
+      # 0 = empty, other are tiles from tiles.png asset
       map_data = [
         [0, 3, 3, 0, 5, 5, 2, 2, 0, 0],
         [0, 3, 3, 1, 0, 0, 0, 0, 0, 0],
