@@ -4,6 +4,12 @@ module GameEx
   WIDTH = 800
   HEIGHT = 600
 
+  module Assets
+    module GFX
+      Player = GSDL.embed_io_stream("assets/gfx/player.png")
+    end
+  end
+
   class Game < GSDL::Game
     def initialize
       super(title: "Animation Ex", width: WIDTH, height: HEIGHT)
@@ -15,7 +21,7 @@ module GameEx
     end
 
     def load_textures
-      GSDL::TextureManager.load("player", "./assets/gfx/player.png")
+      GSDL::TextureManager.load_from_memory("player", Assets::GFX::Player)
     end
   end
 

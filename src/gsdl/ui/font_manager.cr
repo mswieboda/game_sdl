@@ -28,6 +28,12 @@ module GSDL
       instance.load(path, size)
     end
 
+    # Loads a font from raw byte data and associates it with a key.
+    # If a font with the same key and size already exists, it will be returned.
+    def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : SDL3::TTF::Font
+      instance.load_from_memory(key, io, size)
+    end
+
     # Retrieves a loaded font by its key.
     def self.get(key : String) : SDL3::TTF::Font
       instance.get(key)
@@ -52,6 +58,17 @@ module GSDL
       end
       font = SDL3::TTF::Font.open(path, size)
       @fonts[key] = font
+      font
+    end
+
+    def load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : SDL3::TTF::Font
+      font_key = "#{key}-#{size}"
+      if @fonts.has_key?(font_key)
+        return @fonts[font_key]
+      end
+
+      font = SDL3::TTF::Font.open_io(io, size)
+      @fonts[font_key] = font
       font
     end
 

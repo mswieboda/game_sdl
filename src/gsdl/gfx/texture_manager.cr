@@ -28,6 +28,12 @@ module GSDL
       instance.load(key, path) # Delegate to the internal instance method
     end
 
+    # Loads a texture from raw byte data and associates it with a key.
+    # If a texture with the same key already exists, it will be returned.
+    def self.load_from_memory(key : String, io : SDL3::IOStream) : SDL3::Texture
+      instance.load_from_memory(key, io)
+    end
+
     # Retrieves a loaded texture by its key.
     # Returns nil if the texture is not found.
     def self.get(key : String) : SDL3::Texture
@@ -51,6 +57,15 @@ module GSDL
         return @textures[key]
       end
       texture = SDL3::Image.load_texture(@renderer, path)
+      @textures[key] = texture
+      texture
+    end
+
+    def load_from_memory(key : String, io : SDL3::IOStream) : SDL3::Texture
+      if @textures.has_key?(key)
+        return @textures[key]
+      end
+      texture = SDL3::Image.load_texture_io(@renderer, io, true)
       @textures[key] = texture
       texture
     end

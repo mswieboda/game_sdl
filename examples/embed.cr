@@ -6,6 +6,11 @@ module GameEx
   WIDTH = 800
   HEIGHT = 600
 
+  # NOTE: This example embeds SDL3::IOStream objects
+  #   directly into code during compilation, using macros.
+  #   So assets are not required outside of the application after compiling
+  #   and you can ship the application without separte asset files
+  #   (takes longer to compile since it loads the assets during compliation)
   module Assets
     module Fonts
       PressStart = GSDL.embed_io_stream("assets/fonts/PressStart2P.ttf")
@@ -14,11 +19,15 @@ module GameEx
     module Audio
       Sample = GSDL.embed_io_stream("assets/sfx/sample.wav")
     end
+
+    module GFX
+      Player = GSDL.embed_io_stream("assets/gfx/player.png")
+    end
   end
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Text Example", width: WIDTH, height: HEIGHT)
+      super(title: "Embed Example", width: WIDTH, height: HEIGHT)
     end
 
     def init
@@ -32,6 +41,10 @@ module GameEx
 
     def load_audio
       GSDL::AudioManager.load_from_memory("sample_audio", Assets::Audio::Sample)
+    end
+
+    def load_textures
+      GSDL::TextureManager.load_from_memory("player", Assets::GFX::Player)
     end
   end
 
@@ -53,42 +66,45 @@ module GameEx
     end
 
     @audio : GSDL::Audio
-    @text : GSDL::Text
+    @button_text : GSDL::Text
     @button_rect : SDL3::FRect
-    @button_stop_rect : SDL3::FRect
     @current_audio_state : AudioState
-    @audio_start_tick : UInt64 = 0_u64
+
+    @sprite : GSDL::AnimatedSprite
 
     def initialize
       super(:start)
 
-      @button_rect = SDL3::FRect.new(x: 50.0, y: 50.0, w: 200.0, h: 50.0)
-      @button_stop_rect = SDL3::FRect.new(x: 50.0, y: 150.0, w: 200.0, h: 50.0)
-      @current_audio_state = AudioState::Initial
-
+      # audio button
       @audio = GSDL::AudioManager.get("sample_audio")
+
+      @button_rect = SDL3::FRect.new(x: 50.0, y: 50.0, w: 200.0, h: 50.0)
+      @current_audio_state = AudioState::Initial
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
 
-      @text = GSDL::Text.new(text: "Play", color: color)
-      @text.x = @button_rect.x + (@button_rect.w - @text.width) / 2
-      @text.y = @button_rect.y + (@button_rect.h - @text.height) / 2
+      @button_text = GSDL::Text.new(text: "Play", color: color)
+      @button_text.x = @button_rect.x + (@button_rect.w - @button_text.width) / 2
+      @button_text.y = @button_rect.y + (@button_rect.h - @button_text.height) / 2
 
-      @text_stop = GSDL::Text.new(text: "Stop", color: color)
-      @text_stop.x = @button_stop_rect.x + (@button_stop_rect.w - @text_stop.width) / 2
-      @text_stop.y = @button_stop_rect.y + (@button_stop_rect.h - @text_stop.height) / 2
-
-      update_text("Play")
+      # animation
+      source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
+      @sprite = GSDL::AnimatedSprite.new("player", 128, 128)
+      @sprite.center(WIDTH, HEIGHT)
+      @sprite.add("fire", (0..3).to_a, 12)
+      @sprite.play("fire")
     end
 
     private def update_text(message : String)
-      @text.text = message
+      @button_text.text = message
       # Recalculate position after text change
-      @text.x = @button_rect.x + (@button_rect.w - @text.width) / 2
-      @text.y = @button_rect.y + (@button_rect.h - @text.height) / 2
+      @button_text.x = @button_rect.x + (@button_rect.w - @button_text.width) / 2
+      @button_text.y = @button_rect.y + (@button_rect.h - @button_text.height) / 2
     end
 
     def update(dt : Float32)
+      @sprite.update(dt)
+
       # Handle button click
       if Mouse.just_pressed?(Mouse::ButtonLeft)
         mouse_x, mouse_y = Mouse.position
@@ -99,7 +115,6 @@ module GameEx
           when AudioState::Initial, AudioState::Stopped
             @audio.play
             @current_audio_state = AudioState::Playing
-            @audio_start_tick = SDL3.get_ticks
             update_text("Pause")
           when AudioState::Paused
             @audio.resume
@@ -110,11 +125,6 @@ module GameEx
             @current_audio_state = AudioState::Paused
             update_text("Unpause")
           end
-        elsif mouse_x >= @button_stop_rect.x && mouse_x <= (@button_stop_rect.x + @button_stop_rect.w) &&
-           mouse_y >= @button_stop_rect.y && mouse_y <= (@button_stop_rect.y + @button_stop_rect.h)
-          @audio.stop
-          @current_audio_state = AudioState::Stopped
-          update_text("Play")
         end
       end
 
@@ -128,20 +138,14 @@ module GameEx
       end
     end
 
-    def draw(renderer : SDL3::Renderer)
-      # Draw button
+    def draw(renderer : GSDL::Renderer)
+      # button
       renderer.draw_color = {100_u8, 100_u8, 100_u8, 255_u8}
       renderer.fill_rect(@button_rect)
-      renderer.fill_rect(@button_stop_rect)
+      @button_text.draw(renderer)
 
-      # Draw text
-      @text.draw(renderer)
-      @text_stop.draw(renderer)
-    end
-
-    def destroy
-      @text.destroy
-      super
+      # animation
+      @sprite.draw(renderer)
     end
   end
 
