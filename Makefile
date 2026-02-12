@@ -42,7 +42,6 @@ examples:
 	@$(MAKE) run EXAMPLE=game_pad
 	@$(MAKE) run EXAMPLE=logical_presentation
 	@$(MAKE) run EXAMPLE=tile_map
-	@$(MAKE) run EXAMPLE=embed
 
 run:
 	@echo "Building and running example: $(EXAMPLE)"
