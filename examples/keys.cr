@@ -23,7 +23,7 @@ module GameEx
     end
 
     def load_fonts
-      GSDL::FontManager.load(Font::DEFAULT_FONT_PATH, Font::DEFAULT_FONT_SIZE)
+      GSDL::FontManager.load_default("assets/fonts/PressStart2P.ttf")
     end
   end
 

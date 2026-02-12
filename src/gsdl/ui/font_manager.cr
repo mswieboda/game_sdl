@@ -1,5 +1,8 @@
 module GSDL
   class FontManager
+    DEFAULT_FONT_KEY = "default"
+    DEFAULT_FONT_SIZE = 16_f32
+
     @@instance : FontManager? = nil
 
     @fonts : Hash(String, SDL3::TTF::Font)
@@ -24,8 +27,8 @@ module GSDL
 
     # Loads a font from the given path and associates it with a key.
     # If a font with the same key already exists, it will be returned.
-    def self.load(path : String, size : Float32) : SDL3::TTF::Font
-      instance.load(path, size)
+    def self.load(key : String, path : String, size : Float32) : SDL3::TTF::Font
+      instance.load(key, path, size)
     end
 
     # Loads a font from raw byte data and associates it with a key.
@@ -34,9 +37,21 @@ module GSDL
       instance.load_from_memory(key, io, size)
     end
 
+    def self.load_default(path : String, size : Float32 = DEFAULT_FONT_SIZE)
+      load(DEFAULT_FONT_KEY, path, size)
+    end
+
+    def self.get(key : String, size : Float32) : SDL3::TTF::Font
+      instance.get("#{key}-#{size}")
+    end
+
     # Retrieves a loaded font by its key.
     def self.get(key : String) : SDL3::TTF::Font
       instance.get(key)
+    end
+
+    def self.get_default(size : Float32 = DEFAULT_FONT_SIZE)
+      get(DEFAULT_FONT_KEY, size)
     end
 
     # Unloads a specific font from memory.
@@ -51,8 +66,8 @@ module GSDL
 
     # --- Instance methods (called by class methods via the singleton instance) ---
 
-    def load(path : String, size : Float32) : SDL3::TTF::Font
-      key = "#{path}-#{size}"
+    def load(key : String, path : String, size : Float32) : SDL3::TTF::Font
+      key = "#{key}-#{size}"
       if @fonts.has_key?(key)
         return @fonts[key]
       end

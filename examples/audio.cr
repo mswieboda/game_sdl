@@ -6,16 +6,6 @@ module GameEx
   WIDTH = 800
   HEIGHT = 600
 
-  module Assets
-    module Fonts
-      PressStart = GSDL.embed_io_stream("assets/fonts/PressStart2P.ttf")
-    end
-
-    module Audio
-      Sample = GSDL.embed_io_stream("assets/sfx/sample.wav")
-    end
-  end
-
   class Game < GSDL::Game
     def initialize
       super(title: "Text Example", width: WIDTH, height: HEIGHT)
@@ -27,11 +17,11 @@ module GameEx
     end
 
     def load_fonts
-      GSDL::FontManager.load_from_memory("PressStart2P", Assets::Fonts::PressStart, GSDL::Font::DEFAULT_FONT_SIZE)
+      GSDL::FontManager.load_default("assets/fonts/PressStart2P.ttf")
     end
 
     def load_audio
-      GSDL::AudioManager.load_from_memory("sample_audio", Assets::Audio::Sample)
+      GSDL::AudioManager.load("sample_audio", "assets/sfx/sample.wav")
     end
   end
 

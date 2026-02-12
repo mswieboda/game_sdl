@@ -2,24 +2,23 @@ require "./font_manager"
 
 module GSDL
   class Font
-    DEFAULT_FONT_KEY = "PressStart2P"
+    DEFAULT_FONT_KEY = "default"
     DEFAULT_FONT_SIZE = 16_f32
 
     # Gets the default font.
     def self.default : SDL3::TTF::Font
-      get(DEFAULT_FONT_KEY, DEFAULT_FONT_SIZE)
+      FontManager.get_default
     end
 
     # Creates a new font with the default path and a specific size.
-    def self.create(size : Float32) : SDL3::TTF::Font
-      get(DEFAULT_FONT_KEY, size)
+    def self.default(size : Float32) : SDL3::TTF::Font
+      FontManager.get_default(size)
     end
 
     # Loads and retrieves a font using the FontManager.
     # The key for the font manager will be "#{path}-#{size}".
-    def self.get(path : String, size : Float32) : SDL3::TTF::Font
-      key = "#{path}-#{size}"
-      FontManager.get(key)
+    def self.get(key : String, size : Float32) : SDL3::TTF::Font
+      FontManager.get(key, size)
     end
   end
 end
