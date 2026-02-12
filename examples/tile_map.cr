@@ -31,7 +31,7 @@ module TileMapEx
   end
 
   class StartScene < GSDL::Scene
-    @tilemap : GSDL::Gfx::TileMap
+    @tile_map : GSDL::TileMap
     @camera_x : Int32 = 0
     @camera_y : Int32 = 0
 
@@ -41,30 +41,33 @@ module TileMapEx
       # Create a tileset from tiles.png, assuming it's one TILE_SIZE x TILE_SIZE tile
       # first_gid = 1, as 0 is usually reserved for empty tiles
       texture = GSDL::TextureManager.get("tiles")
-      tileset = GSDL::Gfx::Tileset.new(texture, TILE_SIZE, TILE_SIZE, 1)
+      tileset = GSDL::Tileset.new(texture, TILE_SIZE, TILE_SIZE, 1)
+      tileset.solid_tiles = [1, 10]
 
-      @tilemap = GSDL::Gfx::TileMap.new(TILE_SIZE, TILE_SIZE)
-      @tilemap.add_tileset("tiles", tileset)
+      @tile_map = GSDL::TileMap.new(TILE_SIZE, TILE_SIZE)
+      @tile_map.add_tileset("tiles", tileset)
 
       # Manually define some map data
       # 0 = empty, other are tiles from tiles.png asset
       map_data = [
-        [0, 3, 3, 0, 5, 5, 2, 2, 0, 0],
-        [0, 3, 3, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 2, 2, 0, 0, 1, 1, 0, 0, 0],
-        [0, 0, 5, 5, 0, 1, 1, 0, 0, 0],
-        [0, 0, 5, 5, 0, 0, 0, 0, 0, 0],
+        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
+        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
+        [9, 9, 9, 5, 5, 9, 9, 9, 9, 9],
+        [9, 9, 9, 5, 5, 9, 9, 9, 9, 9],
+        [9, 1, 1, 1, 1, 9, 9, 9, 9, 9],
+        [1, 1, 1, 1, 1, 1, 1, 9, 9, 9],
+        [1, 1, 1, 1, 1, 1, 1, 1, 9, 9],
+        [0, 0, 0, 0, 0, 1, 1, 1, 1, 9],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       ]
-      @tilemap.load_map_data(map_data)
+      @tile_map.load_map_data(map_data)
     end
 
     def draw(renderer : GSDL::Renderer)
-      @tilemap.draw(renderer, @camera_x, @camera_y)
+      @tile_map.draw(renderer, @camera_x, @camera_y)
     end
   end
 

@@ -15,7 +15,7 @@ module GameEx
     end
 
     def load_textures
-      GSDL::TextureManager.load("player", "./assets/gfx/player.png")
+      GSDL::TextureManager.load("ship", "./assets/gfx/ship.png")
     end
   end
 
@@ -36,7 +36,7 @@ module GameEx
       super(:start)
 
       source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
-      @sprite = GSDL::Sprite.new(key: "player", source_rect: source_rect)
+      @sprite = GSDL::Sprite.new(key: "ship", source_rect: source_rect)
       @sprite.center(WIDTH, HEIGHT)
     end
 

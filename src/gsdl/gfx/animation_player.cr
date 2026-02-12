@@ -5,9 +5,9 @@ class GSDL::AnimationPlayer
   getter animation = Animation.new
   getter? paused : Bool = false
 
-  def add(name, frames, fps : Int32)
+  def add(name, frames, fps : Int32, loops = true)
     frame_time = 1 / fps.to_f32
-    @animations[name] = Animation.new(name, frames, frame_time)
+    @animations[name] = Animation.new(name, frames, frame_time, loops)
   end
 
   def play(name)
@@ -23,6 +23,10 @@ class GSDL::AnimationPlayer
 
   def pause
     @paused = true
+  end
+
+  def playing?(name : String)
+    @animation.name == name
   end
 
   def update(dt : Float32)

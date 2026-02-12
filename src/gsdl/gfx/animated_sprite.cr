@@ -10,6 +10,7 @@ class GSDL::AnimatedSprite < GSDL::SpriteBase
   delegate add, to: @animation_player
   delegate play, to: @animation_player
   delegate pause, to: @animation_player
+  delegate playing?, to: @animation_player
 
   def initialize(key : String, @width : Int32, @height : Int32, x = 0_f32, y = 0_f32)
     super(key, x, y)
@@ -19,17 +20,23 @@ class GSDL::AnimatedSprite < GSDL::SpriteBase
     @animation_player.update(dt)
   end
 
-  def draw(renderer : Renderer)
+  def draw(renderer : Renderer, camera_x : Float32 = 0.0_f32, camera_y : Float32 = 0.0_f32)
+    texture_width = texture.size[0]
+    columns = (texture_width / @width).to_i
+
+    frame_x = (@animation_player.frame_id % columns) * @width
+    frame_y = (@animation_player.frame_id / columns).floor * @height
+
     source_rect = SDL3::FRect.new(
-      x: @animation_player.frame_id * @width,
-      y: 0_f32,
+      x: frame_x.to_f32,
+      y: frame_y.to_f32,
       w: @width.to_f32,
       h: @height.to_f32
     )
 
     dest_rect = SDL3::FRect.new(
-      x: @x,
-      y: @y,
+      x: @x - camera_x,
+      y: @y - camera_y,
       w: @width.to_f32,
       h: @height.to_f32
     )
