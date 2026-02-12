@@ -1,11 +1,9 @@
-class GSDL::AnimatedSprite
-  property x : Float32
-  property y : Float32
-  getter texture : SDL3::Texture
+require "./sprite_base"
+
+class GSDL::AnimatedSprite < GSDL::SpriteBase
   getter width : Int32
   getter height : Int32
 
-  @key : String
   @animations = Hash(String, Animation).new
   @animation_player = AnimationPlayer.new
 
@@ -13,13 +11,8 @@ class GSDL::AnimatedSprite
   delegate play, to: @animation_player
   delegate pause, to: @animation_player
 
-  def initialize(@key : String, @width : Int32, @height : Int32, @x = 0_f32, @y = 0_f32)
-    @texture = TextureManager.get(@key)
-  end
-
-  def center(width : Int32 | Float32, height : Int32 | Float32)
-    @x = (width - @width) / 2_f32
-    @y = (height - @height) / 2_f32
+  def initialize(key : String, @width : Int32, @height : Int32, x = 0_f32, y = 0_f32)
+    super(key, x, y)
   end
 
   def update(dt : Float32)
