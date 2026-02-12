@@ -21,8 +21,6 @@ module TileMapEx
   end
 
   class SceneManager < GSDL::SceneManager
-    getter start
-
     def initialize
       super
 

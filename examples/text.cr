@@ -20,8 +20,6 @@ module GameEx
   end
 
   class SceneManager < GSDL::SceneManager
-    getter start
-
     def initialize
       super
       @scene = StartScene.new

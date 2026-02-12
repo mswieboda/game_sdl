@@ -24,8 +24,6 @@ module PlatformerEx
   end
 
   class SceneManager < GSDL::SceneManager
-    getter start
-
     def initialize
       super
 
@@ -45,6 +43,7 @@ module PlatformerEx
     # player physics
     @velocity_y = 0_f32
     @on_ground = false
+    @facing_left = false
 
     def initialize
       super(:start)
@@ -149,6 +148,7 @@ module PlatformerEx
       collided_x = false
 
       if dx > 0 # moving right
+        @facing_left = false
         if @tile_map.solid_at?((next_x + @sprite.width).to_i, @sprite.y.to_i) ||
            @tile_map.solid_at?((next_x + @sprite.width).to_i, (@sprite.y + @sprite.height / 2).to_i) ||
            @tile_map.solid_at?((next_x + @sprite.width).to_i, (@sprite.y + @sprite.height - 1).to_i)
@@ -156,6 +156,7 @@ module PlatformerEx
           collided_x = true
         end
       elsif dx < 0 # moving left
+        @facing_left = true
         if @tile_map.solid_at?(next_x.to_i, @sprite.y.to_i) ||
            @tile_map.solid_at?(next_x.to_i, (@sprite.y + @sprite.height / 2).to_i) ||
            @tile_map.solid_at?(next_x.to_i, (@sprite.y + @sprite.height - 1).to_i)
@@ -180,7 +181,7 @@ module PlatformerEx
 
     def draw(renderer : GSDL::Renderer)
       @tile_map.draw(renderer, @camera_x, @camera_y)
-      @sprite.draw(renderer, camera_x: @camera_x.to_f32, camera_y: @camera_y.to_f32)
+      @sprite.draw(renderer, camera_x: @camera_x.to_f32, camera_y: @camera_y.to_f32, flip_horizontal: @facing_left)
     end
   end
 

@@ -20,7 +20,7 @@ class GSDL::AnimatedSprite < GSDL::SpriteBase
     @animation_player.update(dt)
   end
 
-  def draw(renderer : Renderer, camera_x : Float32 = 0.0_f32, camera_y : Float32 = 0.0_f32)
+  def draw(renderer : Renderer, camera_x : Float32 = 0.0_f32, camera_y : Float32 = 0.0_f32, flip_horizontal : Bool = false)
     texture_width = texture.size[0]
     columns = (texture_width / @width).to_i
 
@@ -41,6 +41,11 @@ class GSDL::AnimatedSprite < GSDL::SpriteBase
       h: @height.to_f32
     )
 
-    renderer.render_texture(texture: texture, source_rect: source_rect, dest_rect: dest_rect)
+    renderer.render_texture_rotated(
+      texture: texture,
+      source_rect: source_rect,
+      dest_rect: dest_rect,
+      flip: flip_horizontal ? 1 : 0
+    )
   end
 end

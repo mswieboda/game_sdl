@@ -1,8 +1,11 @@
 require "../src/game_sdl"
 
 module GameEx
+  alias Keys = GSDL::Keys
+
   WIDTH = 800
   HEIGHT = 600
+
   class Game < GSDL::Game
     def initialize
       super(title: "Animation Ex", width: WIDTH, height: HEIGHT)
@@ -14,13 +17,15 @@ module GameEx
     end
 
     def load_textures
-      GSDL::TextureManager.load("ship", "assets/gfx/ship.png")
+      GSDL::TextureManager.load("player", "assets/gfx/skeleton.png")
+    end
+
+    def load_fonts
+      GSDL::FontManager.load_default("assets/fonts/PressStart2P.ttf")
     end
   end
 
   class SceneManager < GSDL::SceneManager
-    getter start
-
     def initialize
       super
 
@@ -30,22 +35,59 @@ module GameEx
 
   class StartScene < GSDL::Scene
     @sprite : GSDL::AnimatedSprite
+    @text : GSDL::Text
+    @text_animation : GSDL::Text
+    @animations = ["idle", "walk", "crouch", "hit", "jump"]
+    @animation_index = 0
 
     def initialize
       super(:start)
 
-      @sprite = GSDL::AnimatedSprite.new("ship", 128, 128)
+      @sprite = GSDL::AnimatedSprite.new("player", 32, 64)
       @sprite.center(WIDTH, HEIGHT)
-      @sprite.add("fire", (0..3).to_a, 12)
-      @sprite.play("fire")
+
+      @sprite.add("idle", [0], 8)
+      @sprite.add("walk", (1..6).to_a, 8)
+      @sprite.add("crouch", (7..9).to_a, 4, loops: false)
+      @sprite.add("hit", (10..12).to_a, 4, loops: false)
+      @sprite.add("jump", (17..19).to_a, 4, loops: false)
+      @sprite.play("idle")
+
+      color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
+      @text = GSDL::Text.new(text: "LEFT/RIGHT or A/D to toggle animations!", color: color)
+      @text_animation = GSDL::Text.new(text: "idle", color: color)
+
+      # Center the text
+      @text.center(WIDTH, 96)
+      @text_animation.center(WIDTH, HEIGHT + 256)
     end
 
     def update(dt : Float32)
       @sprite.update(dt)
+
+      if Keys.just_pressed?([Keys::A, Keys::Left])
+        @animation_index -= 1
+        @animation_index = @animations.size - 1 if @animation_index < 0
+        change_animation
+      elsif Keys.just_pressed?([Keys::D, Keys::Right])
+        @animation_index += 1
+        @animation_index = 0 if @animation_index >= @animations.size
+        change_animation
+      end
     end
 
     def draw(renderer : GSDL::Renderer)
+      @text.draw(renderer)
+      @text_animation.draw(renderer)
+
       @sprite.draw(renderer)
+    end
+
+    def change_animation
+      animation = @animations[@animation_index]
+      @sprite.play(animation)
+      @text_animation.text = animation
+      @text_animation.center(WIDTH, HEIGHT + 256)
     end
   end
 

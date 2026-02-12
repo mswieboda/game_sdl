@@ -23,12 +23,27 @@ class GSDL::Sprite < GSDL::SpriteBase
     end
   end
 
-  def draw(renderer : Renderer)
+  def draw(renderer : Renderer, camera_x : Float32 = 0.0_f32, camera_y : Float32 = 0.0_f32, flip_horizontal : Bool = false)
     if source_rect = @source_rect
-      dest_rect = SDL3::FRect.new(x: x.to_f32, y: y.to_f32, w: source_rect.w, h: source_rect.h)
-      renderer.render_texture(texture: texture, source_rect: source_rect, dest_rect: dest_rect)
+      dest_rect = SDL3::FRect.new(
+        x: x - camera_x,
+        y: y - camera_y,
+        w: source_rect.w,
+        h: source_rect.h
+      )
+      renderer.render_texture_rotated(
+        texture: texture,
+        source_rect: source_rect,
+        dest_rect: dest_rect,
+        flip: flip_horizontal ? 1 : 0
+      )
     else
-      renderer.render_texture(texture: texture, x: x, y: y)
+      renderer.render_texture_rotated(
+        texture: texture,
+        x: x,
+        y: y,
+        flip: flip_horizontal ? 1 : 0
+      )
     end
   end
 end

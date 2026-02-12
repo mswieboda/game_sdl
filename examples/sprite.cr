@@ -20,8 +20,6 @@ module GameEx
   end
 
   class SceneManager < GSDL::SceneManager
-    getter start
-
     def initialize
       super
 
@@ -36,7 +34,7 @@ module GameEx
       super(:start)
 
       source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
-      @sprite = GSDL::Sprite.new(key: "ship", source_rect: source_rect)
+      @sprite = GSDL::Sprite.new(key: "ship")
       @sprite.center(WIDTH, HEIGHT)
     end
 

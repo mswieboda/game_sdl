@@ -23,8 +23,6 @@ module GameEx
   end
 
   class SceneManager < GSDL::SceneManager
-    getter gamepad
-
     def initialize
       super
       @scene = GamePadScene.new
