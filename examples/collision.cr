@@ -1,0 +1,87 @@
+require "../src/game_sdl"
+
+module GameEx
+  alias Keys = GSDL::Keys
+
+  WIDTH = 800
+  HEIGHT = 600
+
+  class Game < GSDL::Game
+    def initialize
+      super(title: "Collision Ex", width: WIDTH, height: HEIGHT)
+    end
+
+    def init
+      super
+      @scene_manager = SceneManager.new
+    end
+
+    def load_textures
+      GSDL::TextureManager.load("player", "./assets/gfx/player.png")
+    end
+  end
+
+  class SceneManager < GSDL::SceneManager
+    getter start
+
+    def initialize
+      super
+
+      @scene = StartScene.new
+    end
+  end
+
+  class StartScene < GSDL::Scene
+    @player : GSDL::Sprite
+    @obstacle : GSDL::Sprite
+
+    def initialize
+      super(:start)
+
+      source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
+      @player = GSDL::Sprite.new(key: "player", x: 100_f32, y: 100_f32, source_rect: source_rect)
+      @obstacle = GSDL::Sprite.new(key: "player", x: 400_f32, y: 300_f32, source_rect: source_rect)
+    end
+
+    def update(dt : Float32)
+      speed = 200 * dt
+
+      previous_x = @player.x
+      previous_y = @player.y
+
+      if Keys.pressed?([Keys::A, Keys::Left])
+        @player.x -= speed
+      end
+      if Keys.pressed?([Keys::D, Keys::Right])
+        @player.x += speed
+      end
+      if Keys.pressed?([Keys::W, Keys::Up])
+        @player.y -= speed
+      end
+      if Keys.pressed?([Keys::S, Keys::Down])
+        @player.y += speed
+      end
+
+      if @player.collides?(@obstacle)
+        @player.x = previous_x
+        @player.y = previous_y
+      end
+    end
+
+    def draw(renderer : GSDL::Renderer)
+      @player.draw(renderer)
+      @obstacle.draw(renderer)
+
+      # Draw a green box around the player to visualize its bounding box
+      renderer.draw_color = {0_u8, 255_u8, 0_u8, 255_u8}
+      renderer.draw_rect(@player.collision_box)
+
+      # Draw a red box around the obstacle to visualize its bounding box
+      renderer.draw_color = {255_u8, 0_u8, 0_u8, 255_u8}
+      renderer.draw_rect(@obstacle.collision_box)
+      renderer.draw_color = {0_u8, 0_u8, 0_u8, 255_u8}
+    end
+  end
+
+  Game.new.run
+end
