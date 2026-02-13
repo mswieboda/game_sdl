@@ -1,9 +1,6 @@
 name: game_sdl
 version: 0.28.0
 
-scripts:
-  postinstall: post-install.sh
-
 
 authors:
   - Matt Swieboda <mswieboda@users.noreply.github.com>
