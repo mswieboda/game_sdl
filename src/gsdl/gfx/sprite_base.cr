@@ -1,5 +1,3 @@
-require "../physics/collidable"
-
 abstract class GSDL::SpriteBase
   include GSDL::Collidable
 

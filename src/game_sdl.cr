@@ -3,6 +3,7 @@ require "file" # Added to ensure File.read_bytes is available in macros
 
 require "./gsdl/core/*"
 require "./gsdl/audio/*"
+require "./gsdl/physics/*"
 require "./gsdl/gfx/*"
 require "./gsdl/ui/*"
 require "./gsdl/input/*"
