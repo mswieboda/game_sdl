@@ -79,7 +79,6 @@ module PlatformerEx
     end
 
     def dx_from_movement : Int32
-      # --- Input Handling ---
       dx = 0
 
       if Keys.pressed?([Keys::A, Keys::Left])
@@ -94,7 +93,6 @@ module PlatformerEx
     end
 
     def update_animation(dx : Int32)
-      # --- Animation ---
       if dx != 0
         @facing_left = dx < 0
       end
@@ -124,12 +122,12 @@ module PlatformerEx
     def initialize
       super(:start)
 
-      # Tileset
+      # tileset
       texture = GSDL::TextureManager.get("tiles")
       tileset = GSDL::Tileset.new(texture, TILE_SIZE, TILE_SIZE, 1)
       tileset.solid_tiles = [0]
 
-      # Tilemap
+      # tile map
       @tile_map = GSDL::TileMap.new(TILE_SIZE, TILE_SIZE)
       @tile_map.add_tileset("tiles", tileset)
       map_data = [
@@ -151,7 +149,7 @@ module PlatformerEx
       ]
       @tile_map.load_map_data(map_data)
 
-      # Player
+      # player
       @player = Player.new("player", 32, 64)
       @player.collision_box = SDL3::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
       @player.center(WIDTH, HEIGHT - 300)
@@ -160,7 +158,7 @@ module PlatformerEx
     def update(dt : Float32)
       @player.update(dt, @tile_map)
 
-      # Camera follows player
+      # camera follows player
       @camera_x = (@player.x - WIDTH / 2).to_i
       @camera_y = (@player.y - HEIGHT / 2).to_i
     end
@@ -171,7 +169,6 @@ module PlatformerEx
     end
   end
 
-  # Main entry point for the example
   game = Game.new
   game.run
 end
