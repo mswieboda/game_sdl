@@ -31,6 +31,22 @@ will install all required libraries
 shards install
 ```
 
+4. Install GameSDL Tools
+
+```
+crystal lib/game_sdl/install_gsdl_tools.cr
+```
+
+installs tools to your `./bin` directory, such as `./bin/gsdl-packer`
+
+which packages all assets into an `assets/assets.pack` binary file
+
+see usage via:
+
+```
+./bin/gsdl-packer --help
+```
+
 ## Usage
 
 ```crystal
