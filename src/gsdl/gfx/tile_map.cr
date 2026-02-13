@@ -1,3 +1,5 @@
+require "json"
+
 module GSDL
   class TileMap
     alias Num = Int32 | Float32
@@ -10,12 +12,53 @@ module GSDL
     property tile_height : Int32
     property map_width_tiles : Int32
     property map_height_tiles : Int32
+    property tiled_tilesets : Array(JSON::Any)
 
     def initialize(@tile_width, @tile_height)
       @map_data = [] of Array(Int32)
       @tilesets = {} of String => Tileset
       @map_width_tiles = 0
       @map_height_tiles = 0
+      @tiled_tilesets = [] of JSON::Any
+    end
+
+    def self.from_tiled_json(filepath : String) : TileMap
+      json = JSON.parse(File.read(filepath))
+
+      tile_w = json["tilewidth"].as_i
+      tile_h = json["tileheight"].as_i
+      map_w = json["width"].as_i
+      map_h = json["height"].as_i
+
+      tile_map = TileMap.new(tile_w, tile_h)
+      tile_map.map_width_tiles = map_w
+      tile_map.map_height_tiles = map_h
+
+      tiled_tilesets = json["tilesets"].as_a
+
+      tiled_tilesets.each do |ts_data|
+        name = ts_data["name"].as_s
+        image_path = "assets/gfx/" + ts_data["image"].as_s
+
+        texture = GSDL::TextureManager.get(name)
+
+        # Create and configure the tileset
+        tileset = GSDL::Tileset.new(
+          texture,
+          ts_data["tilewidth"].as_i,
+          ts_data["tileheight"].as_i,
+          ts_data["firstgid"].as_i
+        )
+
+        tileset.solid_tiles = ts_data["solid_tiles"].as_a.map(&.as_i)
+
+        tile_map.add_tileset(name, tileset)
+      end
+
+      layer_data = json["layers"][0]["data"].as_a.map(&.as_i)
+      chunked_data = chunk_data(layer_data, map_w)
+      tile_map.map_data = chunked_data
+      tile_map
     end
 
     # Adds a tileset to the map with a given key
@@ -30,6 +73,16 @@ module GSDL
       @map_width_tiles = data.empty? ? 0 : data[0].size
     end
 
+    private def self.chunk_data(data : Array(Int32), width : Int32) : Array(Array(Int32))
+      result = [] of Array(Int32)
+      (data.size / width).to_i.times do |i|
+        start_index = i * width
+        end_index = start_index + width
+        result << data[start_index...end_index]
+      end
+      result
+    end
+
     # Translates a global_gid into a Tileset and its local_tile_id
     def find_tileset_and_local_id(global_gid : Int32) : TileInfo?
       # A global_gid of 0 typically means an empty tile in Tiled
@@ -38,7 +91,7 @@ module GSDL
       @tilesets.each do |key, tileset|
         if tileset.contains_gid?(global_gid)
           local_tile_id = global_gid - tileset.first_gid
-          return TileInfo.new(key, local_tile_id, tileset.solid?(local_tile_id))
+          return TileInfo.new(key, local_tile_id, tileset.solid?(global_gid))
         end
       end
       nil # No tileset found for this global_gid

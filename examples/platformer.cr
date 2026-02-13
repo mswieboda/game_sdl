@@ -122,36 +122,19 @@ module PlatformerEx
     def initialize
       super(:start)
 
-      # tileset
-      texture = GSDL::TextureManager.get("tiles")
-      tileset = GSDL::Tileset.new(texture, TILE_SIZE, TILE_SIZE, 1)
-      tileset.solid_tiles = [0]
-
-      # tile map
-      @tile_map = GSDL::TileMap.new(TILE_SIZE, TILE_SIZE)
-      @tile_map.add_tileset("tiles", tileset)
-      map_data = [
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 1, 1],
-        [9, 9, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [9, 9, 1, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 1, 1, 1, 9, 9, 9, 9],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9]
-      ]
-      @tile_map.load_map_data(map_data)
+      # Load the map from a Tiled JSON file
+      # NOTE: after exporting a Tiled file to JSON, you'll need to add a
+      # "solid_tiles" array to the "tilesets" info, like:
+      # "solid_tiles": [1, 2, 3, 8, 10, 11, 12, 17]
+      # so that we know which tiles are solid and have collisions
+      # and which are just background
+      @tile_map = GSDL::TileMap.from_tiled_json("assets/gfx/map.json")
 
       # player
       @player = Player.new("player", 32, 64)
       @player.collision_box = SDL3::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
+
+      # TODO: find a way to include player start tile from map.json
       @player.center(WIDTH, HEIGHT - 300)
     end
 
