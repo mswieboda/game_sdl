@@ -18,7 +18,12 @@ module PlatformerEx
 
     def load_textures
       GSDL::TextureManager.load("player", "./assets/gfx/skeleton.png")
+      GSDL::TextureManager.load("coin", "./assets/gfx/coin.png")
       GSDL::TextureManager.load("tiles", "./assets/gfx/tiles.png")
+    end
+
+    def load_audio
+      GSDL::AudioManager.load("coin_audio", "assets/sfx/ding.wav")
     end
   end
 
@@ -118,6 +123,8 @@ module PlatformerEx
     @player : Player
     @camera_x : Int32 = 0
     @camera_y : Int32 = 0
+    @coins : Array(GSDL::AnimatedSprite)
+    @coin_audio : GSDL::Audio
 
     def initialize
       super(:start)
@@ -132,14 +139,35 @@ module PlatformerEx
 
       # player
       @player = Player.new("player", 32, 64)
-      @player.collision_box = SDL3::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
+      @player.collision_bounding_box = SDL3::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
 
       # TODO: find a way to include player start tile from map.json
       @player.center(WIDTH, HEIGHT - 300)
+
+      @coin_audio = GSDL::AudioManager.get("coin_audio")
+      @coins = [] of GSDL::AnimatedSprite
+
+      spots = [{64, 64}, {320, 320}, {640, 512}, {640, 256}, {256, 256}]
+
+      5.times.to_a do |i|
+        coin = GSDL::AnimatedSprite.new(key: "coin", width: 32, height: 32, x: spots[i][0].to_f32, y: spots[i][1].to_f32)
+        coin.add("idle", [0, 1, 2, 3, 4, 3, 2, 1], 8, loops: true)
+        coin.play("idle")
+        @coins << coin
+      end
     end
 
     def update(dt : Float32)
+      @coins.each(&.update(dt))
+
       @player.update(dt, @tile_map)
+
+      @coins.each do |coin|
+        if @player.collides?(coin)
+          @coin_audio.play
+          @coins.delete(coin)
+        end
+      end
 
       # camera follows player
       @camera_x = (@player.x - WIDTH / 2).to_i
@@ -148,6 +176,7 @@ module PlatformerEx
 
     def draw(renderer : GSDL::Renderer)
       @tile_map.draw(renderer, @camera_x, @camera_y)
+      @coins.each(&.draw(renderer, @camera_x.to_f32, @camera_y.to_f32))
       @player.draw(renderer, @camera_x.to_f32, @camera_y.to_f32)
     end
   end

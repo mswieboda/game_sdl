@@ -1,7 +1,16 @@
 module GSDL
   module Collidable
     # collision bounding box of the collidable object as an SDL3::FRect
-    abstract def collision_box : SDL3::FRect
+    abstract def collision_bounding_box : SDL3::FRect
+
+    def collision_box : SDL3::FRect
+      SDL3::FRect.new(
+        x: x + collision_bounding_box.x,
+        y: y + collision_bounding_box.y,
+        w: collision_bounding_box.w,
+        h: collision_bounding_box.h
+      )
+    end
 
     def collides?(other : Collidable) : Bool
       GSDL::Collidable.intersects?(collision_box, other.collision_box)

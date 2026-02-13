@@ -3,14 +3,14 @@ abstract class GSDL::SpriteBase
 
   property x : Float32
   property y : Float32
-  property collision_box : SDL3::FRect
+  property collision_bounding_box : SDL3::FRect
   getter texture : SDL3::Texture
 
   delegate size, to: @texture
 
   def initialize(@key : String, @x = 0_f32, @y = 0_f32)
     @texture = TextureManager.get(@key)
-    @collision_box = SDL3::FRect.new(x: x, y: y, w: width.to_f32, h: height.to_f32)
+    @collision_bounding_box = SDL3::FRect.new(x: 0_f32, y: 0_f32, w: width.to_f32, h: height.to_f32)
   end
 
   abstract def width : Int32

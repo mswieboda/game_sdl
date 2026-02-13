@@ -21,7 +21,7 @@ module GameEx
     end
 
     def load_audio
-      GSDL::AudioManager.load("sample_audio", "assets/sfx/sample.wav")
+      GSDL::AudioManager.load("race_car_audio", "assets/sfx/race_car.wav")
     end
   end
 
@@ -54,7 +54,7 @@ module GameEx
       @button_stop_rect = SDL3::FRect.new(x: 50.0, y: 150.0, w: 200.0, h: 50.0)
       @current_audio_state = AudioState::Initial
 
-      @audio = GSDL::AudioManager.get("sample_audio")
+      @audio = GSDL::AudioManager.get("race_car_audio")
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
 
