@@ -11,7 +11,7 @@ RM_CMD := rm -rf
 MKDIR_CMD := mkdir -p
 
 # Phony targets don't represent files
-.PHONY: all build build-debug clean examples spec run
+.PHONY: all build build-debug clean examples spec run packer
 
 # The default target, executed when you just run `make`
 all: build
@@ -30,6 +30,15 @@ clean:
 	@echo "Executing clean..."
 	$(RM_CMD) $(BUILD_DIR)
 	$(RM_CMD) $(LIB_DIR)
+
+pack:
+	@echo "Packing assets..."
+	$(CRYSTAL_COMPILER) run $(SOURCE_DIR)/pack.cr
+
+packer:
+	@echo "Building packer tool..."
+	$(MKDIR_CMD) $(BUILD_DIR)
+	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/pack.cr -o gsdl-packer --release --no-debug
 
 examples:
 	@echo "Building and running all examples..."
