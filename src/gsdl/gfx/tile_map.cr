@@ -1,5 +1,7 @@
 module GSDL
   class TileMap
+    alias Num = Int32 | Float32
+
     # Using a 2D array of Int32 to store global tile IDs.
     property map_data : Array(Array(Int32))
     # Map of tileset key to Tileset object
@@ -53,6 +55,32 @@ module GSDL
       return nil if x < 0 || x >= @map_width_tiles || y < 0 || y >= @map_height_tiles
       global_gid = @map_data[y][x]
       find_tileset_and_local_id(global_gid)
+    end
+
+    # Checks for solid tiles directly below the bounding box
+    def solid_down?(x : Num, y : Num, width : Num, height : Num) : Bool
+      solid_at?(x.to_i, (y + height).to_i) ||
+        solid_at?((x + width - 1).to_i, (y + height).to_i)
+    end
+
+    # Checks for solid tiles directly above the bounding box
+    def solid_up?(x : Num, y : Num, width : Num, height : Num) : Bool
+      solid_at?(x.to_i, y.to_i) ||
+        solid_at?((x + width - 1).to_i, y.to_i)
+    end
+
+    # Checks for solid tiles directly to the left of the bounding box
+    def solid_left?(x : Num, y : Num, width : Num, height : Num) : Bool
+      solid_at?(x.to_i, y.to_i) ||
+        solid_at?(x.to_i, (y + height / 2).to_i) ||
+        solid_at?(x.to_i, (y + height - 1).to_i)
+    end
+
+    # Checks for solid tiles directly to the right of the bounding box
+    def solid_right?(x : Num, y : Num, width : Num, height : Num) : Bool
+      solid_at?((x + width).to_i, y.to_i) ||
+        solid_at?((x + width).to_i, (y + height / 2).to_i) ||
+        solid_at?((x + width).to_i, (y + height - 1).to_i)
     end
 
     # Draws the tilemap
