@@ -69,7 +69,10 @@ module GSDL
       end
 
       if initialized?
-        puts "GSDL::AssetManager: Packfile already loaded. Closing existing and reloading."
+        {% if !flag?(:release) %}
+          puts "GSDL::AssetManager: Packfile already loaded. Closing existing and reloading."
+        {% end %}
+
         @@packfile_io.try &.close
       end
 
@@ -104,7 +107,9 @@ module GSDL
         @@manifest[asset_path] = PackEntry.new(path: asset_path, offset: offset, size: size)
       end
 
-      puts "GSDL::AssetManager: Loaded #{@@manifest.size} assets from packfile '#{packfile_path}'."
+      {% if !flag?(:release) %}
+        puts "GSDL::AssetManager: Loaded #{@@manifest.size} assets from packfile '#{packfile_path}'."
+      {% end %}
     rescue ex
       @@packfile_io.try &.close
       @@packfile_io = nil
@@ -117,7 +122,10 @@ module GSDL
       @@packfile_io.try &.close
       @@packfile_io = nil
       @@manifest.clear
-      puts "GSDL::AssetManager: Packfile closed."
+
+      {% if !flag?(:release) %}
+        puts "GSDL::AssetManager: Packfile closed."
+      {% end %}
     end
 
     # --- Raw Data Loading from Packfile ---
