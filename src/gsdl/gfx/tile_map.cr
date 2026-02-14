@@ -143,7 +143,7 @@ module GSDL
     end
 
     # Draws the tilemap
-    def draw(renderer : SDL3::Renderer, camera_x : Int32, camera_y : Int32)
+    def draw(renderer : Renderer, camera_x : Int32, camera_y : Int32)
       # TODO: Implement frustum culling here
       # For simplicity, drawing all tiles for now.
 

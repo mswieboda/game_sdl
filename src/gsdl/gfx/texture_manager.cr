@@ -79,7 +79,7 @@ module GSDL
       if @textures.has_key?(key)
         return @textures[key]
       end
-      texture = SDL3::Image.load_texture(@renderer, path)
+      texture = SDL3::Image.load_texture(@renderer.to_sdl, path)
       @textures[key] = texture
       texture
     end
@@ -88,7 +88,7 @@ module GSDL
       if @textures.has_key?(key)
         return @textures[key]
       end
-      texture = SDL3::Image.load_texture_io(@renderer, io, close_io: true)
+      texture = SDL3::Image.load_texture_io(@renderer.to_sdl, io, close_io: true)
       @textures[key] = texture
       texture
     end

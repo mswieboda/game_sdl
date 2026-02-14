@@ -84,12 +84,12 @@ module GameEx
 
       # Draw checkerboard pattern
       tile_size = 20
-      color1 = SDL3.color(50, 50, 50, 255) # Dark gray
-      color2 = SDL3.color(150, 150, 150, 255) # Light gray
+      color1 = GSDL.color(50, 50, 50, 255) # Dark gray
+      color2 = GSDL.color(150, 150, 150, 255) # Light gray
 
       (0...LOGICAL_HEIGHT).step(tile_size) do |y|
         (0...LOGICAL_WIDTH).step(tile_size) do |x|
-          rect = SDL3::Rect.new(x: x, y: y, w: tile_size, h: tile_size)
+          rect = GSDL::Rect.new(x: x, y: y, w: tile_size, h: tile_size)
           if ((x / tile_size) + (y / tile_size)) % 2 == 0
             surface.fill_rect(rect, color1)
           else
@@ -98,8 +98,8 @@ module GameEx
         end
       end
 
-      @background_texture = SDL3::Texture.from_surface(Game.renderer, surface)
-      # The SDL3::Surface.new(surface) takes ownership, so we don't need to destroy surface directly
+
+      @background_texture = Game.renderer.texture_from_surface(surface)
     end
 
     def update(dt : Float32)
@@ -119,11 +119,11 @@ module GameEx
 
     def draw(renderer : GSDL::Renderer)
       # Clear with a distinct color to show letterboxing/overscan areas
-      renderer.draw_color = {255_u8, 0_u8, 255_u8, 255_u8} # Magenta
+      renderer.color = GSDL::Colors::Magenta
       renderer.clear
 
       # Render background, which will be scaled by the logical presentation
-      bg_dst_rect = SDL3::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
+      bg_dst_rect = GSDL::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
       renderer.render_texture(@background_texture, bg_dst_rect)
 
       # Render text

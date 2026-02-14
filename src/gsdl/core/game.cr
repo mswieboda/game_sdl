@@ -1,12 +1,15 @@
 module GSDL
   abstract class Game
+    DefaultBackgroundColor = Colors::Black
+
+    @@renderer : Renderer?
+
     getter window : SDL3::Window
     getter renderer : Renderer
     getter scene_manager : SceneManager
     getter? exit
-    @last_tick : UInt64 = 0_i64
 
-    @@renderer : Renderer?
+    @last_tick : UInt64 = 0_i64
 
     def self.renderer : Renderer
       if renderer = @@renderer
@@ -15,8 +18,6 @@ module GSDL
         raise "Failed to get global renderer"
       end
     end
-
-    DefaultBackgroundColor = Color.new(r: 0, g: 0, b: 0, a: 255)
 
     def initialize(title = "", width = 1920, height = 1080)
       SDL3.init
@@ -120,20 +121,21 @@ module GSDL
     end
 
     def clear_screen
-      renderer.draw_color = {background_color.r, background_color.g, background_color.b, background_color.a}
+      renderer.color = background_color
       renderer.clear
     end
 
     def draw
       scene_manager.draw(renderer)
 
-      renderer.present
+      renderer.draw
     end
 
     def destroy
       TextureManager.clear_all # Unload all textures managed by the singleton
       FontManager.clear_all
       AudioManager.clear_all
+      TileMapManager.clear_all
       renderer.destroy
       window.destroy
       SDL3.quit

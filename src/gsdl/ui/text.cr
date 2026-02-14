@@ -7,7 +7,6 @@ module GSDL
     property x : Float32
     property y : Float32
     getter color : Color
-    getter? ansi
 
     @surface : SDL3::Surface
 
@@ -16,8 +15,7 @@ module GSDL
       @text = "",
       @x = 0,
       @y = 0,
-      @color = Color.new(r: 0, g: 0, b: 0, a: 255),
-      @ansi = true
+      @color = GSDL::Colors::White
     )
 
       @surface = font.render_text_blended(text, color)
@@ -41,15 +39,15 @@ module GSDL
       @y = ((height - self.height) / 2).to_f32
     end
 
-    def update(frame_time : Float32)
+    def update(dt : Float32)
     end
 
     def draw(renderer : Renderer)
-      texture = SDL3::Texture.from_surface(renderer, @surface)
+      texture = renderer.texture_from_surface(@surface)
       texture_width, texture_height = texture.size
 
-      srcrect = SDL3::FRect.new(x: 0_f32, y: 0_f32, w: texture_width, h: texture_height)
-      dstrect = SDL3::FRect.new(x: x.to_f32, y: y.to_f32, w: texture_width, h: texture_height)
+      srcrect = FRect.new(x: 0_f32, y: 0_f32, w: texture_width, h: texture_height)
+      dstrect = FRect.new(x: x.to_f32, y: y.to_f32, w: texture_width, h: texture_height)
 
       renderer.render_texture(texture, srcrect, dstrect)
       texture.destroy

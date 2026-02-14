@@ -116,11 +116,11 @@ module GameEx
       end
     end
 
-    def draw(renderer : SDL3::Renderer)
+    def draw(renderer : GSDL::Renderer)
       # Draw button
-      renderer.draw_color = {100_u8, 100_u8, 100_u8, 255_u8}
-      renderer.fill_rect(@button_rect)
-      renderer.fill_rect(@button_stop_rect)
+      renderer.color = GSDL.color_all(100)
+      renderer.draw_rect_filled(@button_rect)
+      renderer.draw_rect_filled(@button_stop_rect)
 
       # Draw text
       @text.draw(renderer)

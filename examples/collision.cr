@@ -71,13 +71,12 @@ module GameEx
       @obstacle.draw(renderer)
 
       # Draw a green box around the player to visualize its bounding box
-      renderer.draw_color = {0_u8, 255_u8, 0_u8, 255_u8}
-      renderer.draw_rect(@player.collision_box)
+      renderer.color = GSDL::Colors::Green
+      renderer.draw_rect_outline(@player.collision_box)
 
       # Draw a red box around the obstacle to visualize its bounding box
-      renderer.draw_color = {255_u8, 0_u8, 0_u8, 255_u8}
-      renderer.draw_rect(@obstacle.collision_box)
-      renderer.draw_color = {0_u8, 0_u8, 0_u8, 255_u8}
+      renderer.color = GSDL::Colors::Red
+      renderer.draw_rect_outline(@obstacle.collision_box)
     end
   end
 
