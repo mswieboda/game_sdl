@@ -39,7 +39,9 @@ module GSDL
       # When compiling with `crystal build --release`, the :release flag is set.
       {% if flag?(:release) %}
         # In release mode, defer to AssetManager which handles packfile loading
-        AssetManager.with_io_stream(path_key) do |io_stream|
+        # The `with_io_stream` method ensures the underlying data stays alive.
+        # with fonts, the io_stream needs to stay open, hence `close_io: false`
+        AssetManager.with_io_stream(path_key, close_io: false) do |io_stream|
           load_from_memory(key, io_stream, size)
         end
       {% else %}
@@ -100,7 +102,7 @@ module GSDL
         return @fonts[font_key]
       end
 
-      font = SDL3::TTF::Font.open_io(io, size)
+      font = SDL3::TTF::Font.open_io(io, size, close_io: true)
       @fonts[font_key] = font
       font
     end

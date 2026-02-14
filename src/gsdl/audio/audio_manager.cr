@@ -47,7 +47,8 @@ module GSDL
       {% if flag?(:release) %}
         # In release mode, use AssetManager to load from the packfile.
         # The `with_io_stream` method ensures the underlying data stays alive.
-        AssetManager.with_io_stream(path_key) do |io_stream|
+        # with audio, the io_stream needs to stay open, hence `close_io: false`
+        AssetManager.with_io_stream(path_key, close_io: false) do |io_stream|
           load_from_memory(key, io_stream)
         end
       {% else %}
@@ -110,7 +111,7 @@ module GSDL
         return @audio_assets[key]
       end
 
-      audio_lib = LibSDL3Mixer.load_audio_io(@mixer, io, true, true)
+      audio_lib = LibSDL3Mixer.load_audio_io(@mixer, io, predecode: true, closeio: true)
       if audio_lib.null?
         raise "Failed to load audio from memory for key '#{key}': #{SDL3.get_error}"
       end
