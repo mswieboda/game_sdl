@@ -50,19 +50,19 @@ module GSDL
       @@prev_y = @@y
     end
 
-    def self.handle_mouse_motion(event : LibSDL3::Event)
+    def self.handle_mouse_motion(event : Event)
       @@x = event.motion.x.to_i
       @@y = event.motion.y.to_i
     end
 
-    def self.handle_mouse_button_down(event : LibSDL3::Event)
+    def self.handle_mouse_button_down(event : Event)
       button = event.button.button
       unless pressed?(button)
         @@states[button] = State::JustPressed
       end
     end
 
-    def self.handle_mouse_button_up(event : LibSDL3::Event)
+    def self.handle_mouse_button_up(event : Event)
       @@states[event.button.button] = State::JustReleased
     end
 

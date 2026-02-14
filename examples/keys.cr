@@ -42,7 +42,7 @@ module GameEx
     def initialize
       super(:start)
 
-      source_rect = SDL3::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
+      source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
       @sprite = GSDL::Sprite.new(key: "ship", source_rect: source_rect)
       @sprite.center(WIDTH, HEIGHT)
 

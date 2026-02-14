@@ -143,7 +143,7 @@ module PlatformerEx
 
       # player
       @player = Player.new("player", 32, 64)
-      @player.collision_bounding_box = SDL3::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
+      @player.collision_bounding_box = GSDL::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
 
       # TODO: find a way to include player start tile from map.json
       @player.center(WIDTH, HEIGHT - 300)

@@ -29,6 +29,8 @@ module GameEx
     end
   end
 
+  # TODO: need to widely add wrappers, helpers so we
+  # don't need to access LibSDL3 or SDL3 directly
   class GamePadScene < GSDL::Scene
     @instruction_text : GSDL::Text
     @button_states : Hash(LibSDL3::GamepadButton, GSDL::Text)

@@ -156,7 +156,7 @@ module GSDL
           next unless tileset # Should not happen if find_tileset_and_local_id returns TileInfo
 
           src_rect = tileset.get_local_tile_src_rect(tile_info.local_tile_id)
-          dest_rect = SDL3::FRect.new(
+          dest_rect = FRect.new(
             x: x_index * @tile_width - camera_x,
             y: y_index * @tile_height - camera_y,
             w: @tile_width,

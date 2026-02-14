@@ -23,6 +23,8 @@ module GSDL
       @r.get_render_draw_blend_mode
     end
 
+    # NOTE: only intended to be used within GSDL, so end-user doesn't
+    #   have to deal with SDL3 lib directly
     def create_texture(surface : SDL3::Surface)
       SDL3::Texture.from_surface(to_sdl, surface)
     end

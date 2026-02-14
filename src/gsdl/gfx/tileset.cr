@@ -23,10 +23,11 @@ module GSDL
     end
 
     # Returns the source rectangle for a LOCAL tile ID within this tileset
-    def get_local_tile_src_rect(local_tile_id : Int32) : SDL3::FRect
+    def get_local_tile_src_rect(local_tile_id : Int32) : FRect
       x = (local_tile_id % @columns) * @tile_width
       y = (local_tile_id // @columns) * @tile_height
-      SDL3::FRect.new(x: x, y: y, w: @tile_width, h: @tile_height)
+
+      FRect.new(x: x, y: y, w: @tile_width, h: @tile_height)
     end
 
     # The number of tiles in this tileset

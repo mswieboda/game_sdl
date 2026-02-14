@@ -92,12 +92,12 @@ module GSDL
       init
 
       @exit = false
-      @last_tick = SDL3.get_ticks
+      @last_tick = GSDL.ticks
 
       while !exit?
         Inputs.update
 
-        current_tick = SDL3.get_ticks
+        current_tick = GSDL.ticks
         delta_time_ms = current_tick - @last_tick
         @last_tick = current_tick
         delta_time = delta_time_ms / 1000.0f32

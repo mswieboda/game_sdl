@@ -1,4 +1,6 @@
 module GSDL
+  # TODO: wrap our alias LibSDL3 and SDL3 usages
+  # so consumers don't need to use LibSDL3
   module GamePad
     enum State
       JustPressed

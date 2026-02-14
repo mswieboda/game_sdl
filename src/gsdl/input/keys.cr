@@ -1,5 +1,8 @@
 module GSDL
   module Keys
+    alias Keycode = LibSDL3::Keycode
+    alias Keycodes = Array(Keycode)
+
     Unknown = LibSDL3::UNKNOWN
     Return = LibSDL3::RETURN
     Escape = LibSDL3::ESCAPE
@@ -111,7 +114,7 @@ module GSDL
       JustReleased
     end
 
-    @@states = {} of LibSDL3::Keycode => State
+    @@states = {} of Code => State
 
     def self.update
       @@states.each do |key, state|
@@ -126,7 +129,7 @@ module GSDL
       end
     end
 
-    def self.handle_key_down(event : LibSDL3::Event)
+    def self.handle_key_down(event : Event)
       key = event.key.key
 
       # only set to JustPressed if it's not already down
@@ -135,31 +138,31 @@ module GSDL
       end
     end
 
-    def self.handle_key_up(event : LibSDL3::Event)
+    def self.handle_key_up(event : Event)
       @@states[event.key.key] = State::JustReleased
     end
 
-    def self.pressed?(key : LibSDL3::Keycode)
+    def self.pressed?(key : Keycode)
       @@states.has_key?(key) && (@@states[key] == State::Pressed || @@states[key] == State::JustPressed)
     end
 
-    def self.pressed?(keys : Array(LibSDL3::Keycode))
+    def self.pressed?(keys : Keycodes)
       keys.any? { |key| pressed?(key) }
     end
 
-    def self.just_pressed?(key : LibSDL3::Keycode)
+    def self.just_pressed?(key : Keycode)
       @@states.has_key?(key) && @@states[key] == State::JustPressed
     end
 
-    def self.just_pressed?(keys : Array(LibSDL3::Keycode))
+    def self.just_pressed?(keys : Keycodes)
       keys.any? { |key| just_pressed?(key) }
     end
 
-    def self.just_released?(key : LibSDL3::Keycode)
+    def self.just_released?(key : Keycode)
       @@states.has_key?(key) && @@states[key] == State::JustReleased
     end
 
-    def self.just_released?(keys : Array(LibSDL3::Keycode))
+    def self.just_released?(keys : Keycodes)
       keys.any? { |key| just_released?(key) }
     end
   end

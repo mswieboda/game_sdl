@@ -1,6 +1,8 @@
 module GSDL
   alias Event = LibSDL3::Event
 
+  # TODO: alias these events so we
+  # don't need to use LibSDL3 internally or for consumers
   module Events
     Quit = LibSDL3::SDL_EVENT_QUIT
     WindowClose = LibSDL3::SDL_EVENT_WINDOW_CLOSE_REQUESTED
