@@ -17,7 +17,7 @@ module GameEx
     end
 
     def load_textures
-      GSDL::TextureManager.load("ship", "./assets/gfx/ship.png")
+      GSDL::TextureManager.load("ship", "gfx/ship.png")
     end
   end
 

@@ -17,13 +17,13 @@ module PlatformerEx
     end
 
     def load_textures
-      GSDL::TextureManager.load("player", "./assets/gfx/skeleton.png")
-      GSDL::TextureManager.load("coin", "./assets/gfx/coin.png")
-      GSDL::TextureManager.load("tiles", "./assets/gfx/tiles.png")
+      GSDL::TextureManager.load("player", "gfx/skeleton.png")
+      GSDL::TextureManager.load("coin", "gfx/coin.png")
+      GSDL::TextureManager.load("tiles", "gfx/tiles.png")
     end
 
     def load_audio
-      GSDL::AudioManager.load("coin_audio", "assets/sfx/ding.wav")
+      GSDL::AudioManager.load("coin_audio", "sfx/ding.wav")
     end
   end
 

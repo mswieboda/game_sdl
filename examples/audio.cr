@@ -17,11 +17,11 @@ module GameEx
     end
 
     def load_fonts
-      GSDL::FontManager.load_default("assets/fonts/PressStart2P.ttf")
+      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
     end
 
     def load_audio
-      GSDL::AudioManager.load("race_car_audio", "assets/sfx/race_car.wav")
+      GSDL::AudioManager.load("race_car_audio", "sfx/race_car.wav")
     end
   end
 

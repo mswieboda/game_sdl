@@ -16,7 +16,7 @@ module TileMapEx
     end
 
     def load_textures
-      GSDL::TextureManager.load("tiles", "./assets/gfx/tiles.png")
+      GSDL::TextureManager.load("tiles", "gfx/tiles.png")
     end
   end
 

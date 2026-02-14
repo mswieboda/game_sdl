@@ -36,6 +36,10 @@ module GSDL
     end
 
     def init
+      {% if flag?(:release) %}
+        AssetManager.load_pack
+      {% end %}
+
       TextureManager.setup(renderer)
       FontManager.setup
       AudioManager.setup
@@ -43,6 +47,10 @@ module GSDL
       load_textures
       load_fonts
       load_audio
+
+      {% if flag?(:release) %}
+        AssetManager.close_pack
+      {% end %}
     end
 
     # NOTE: to be overridden by inheritted classes

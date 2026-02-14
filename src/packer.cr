@@ -1,20 +1,19 @@
 require "option_parser"
-require "file_utils"
 
 # This script scans an asset directory and packages all files into a single
 # binary .pack file. This can be used as a library or a command-line tool.
 module GSDL
   class Packer
-    # The format of the packfile created by this tool.
-    # See the top of the script for a detailed explanation.
-    MAGIC_NUMBER = "PACK"
+    # Format of the packfile created by this tool
+    # GSDL checks this to make sure it is indeed a packfile created from GSDL
+    FormatCode = "PACK"
 
     # Represents a single asset to be included in the packfile.
-    private struct Entry
+    private class Entry
       property path : String   # Relative path, e.g., "gfx/ship.png"
       property full_path : String # Full path on disk for reading
       property size : UInt64
-      property offset : UInt64
+      property! offset : UInt64
 
       def initialize(@path, @full_path)
         @size = File.size(@full_path).to_u64
@@ -66,7 +65,7 @@ module GSDL
       Dir.mkdir_p(output_dir) unless Dir.exists?(output_dir)
 
       File.open(@output_file, "w") do |file|
-        file.write MAGIC_NUMBER.to_slice
+        file.write FormatCode.to_slice
         file.write_bytes(entries.size.to_u32, IO::ByteFormat::LittleEndian)
 
         entries.each do |entry|

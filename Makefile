@@ -1,6 +1,6 @@
 CRYSTAL_COMPILER := crystal
 SOURCE_DIR := src
-BUILD_DIR := bin
+BUILD_DIR := build
 LIB_DIR := lib
 SDL3_MIXER_LIB_DIR := /Users/matt/ext_libs/sdl3_mixer/lib
 LINKFLAGS := -L$(SDL3_MIXER_LIB_DIR) -Wl,-rpath,$(SDL3_MIXER_LIB_DIR)
@@ -11,34 +11,20 @@ RM_CMD := rm -rf
 MKDIR_CMD := mkdir -p
 
 # Phony targets don't represent files
-.PHONY: all build build-debug clean examples spec run packer
+.PHONY: default clean examples run packer run-release
 
 # The default target, executed when you just run `make`
-all: build
-
-build:
-	@echo "Building release library..."
-	$(MKDIR_CMD) $(LIB_DIR)
-	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/sdl3.cr -o $(LIB_DIR)/$(LIB_NAME) --release --no-debug
-
-build-debug:
-	@echo "Building debug library..."
-	$(MKDIR_CMD) $(LIB_DIR)
-	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/sdl3.cr -o $(LIB_DIR)/$(LIB_NAME) --no-debug --error-trace
+default:
 
 clean:
 	@echo "Executing clean..."
 	$(RM_CMD) $(BUILD_DIR)
 	$(RM_CMD) $(LIB_DIR)
 
-pack:
-	@echo "Packing assets..."
-	$(CRYSTAL_COMPILER) run $(SOURCE_DIR)/pack.cr
-
 packer:
 	@echo "Building packer tool..."
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/pack.cr -o gsdl-packer --release --no-debug
+	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/packer.cr -o gsdl-packer --release --no-debug
 
 examples:
 	@echo "Building and running all examples..."
@@ -58,6 +44,12 @@ run:
 	@echo "Building and running example: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
 	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" --no-debug
+	./$(BUILD_DIR)/$(EXAMPLE)
+
+run-release:
+	@echo "Building and running example: $(EXAMPLE)"
+	$(MKDIR_CMD) $(BUILD_DIR)
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --release --link-flags "$(LINKFLAGS)" --no-debug
 	./$(BUILD_DIR)/$(EXAMPLE)
 
 debug:

@@ -25,14 +25,32 @@ module GSDL
       @@instance || raise("FontManager has not been set up. Call GSDL::UI::FontManager.setup first.")
     end
 
-    # Loads a font from the given path and associates it with a key.
-    # If a font with the same key already exists, it will be returned.
-    def self.load(key : String, path : String, size : Float32) : SDL3::TTF::Font
-      instance.load(key, path, size)
+    # Loads a font based on the mode (release/debug).
+    # In release mode, it uses AssetManager to load from the packfile.
+    # In debug mode, it loads from the loose asset filesystem path,
+    # prepending GSDL::AssetManager.asset_path.
+    def self.load(key : String, path_key : String, size : Float32) : SDL3::TTF::Font
+      # see TextureManager.load comments for more details on path_key
+      # which is a key based on the path like 'fonts/PressStart2P.ttf'
+      # and will either load from the asset.pack file in release mode
+      # or from the 'assets/fonts/PressStart2P.ttf' file directly in debug mode
+
+      # Using flag?(:release) for compile-time conditional compilation.
+      # When compiling with `crystal build --release`, the :release flag is set.
+      {% if flag?(:release) %}
+        # In release mode, defer to AssetManager which handles packfile loading
+        AssetManager.with_io_stream(path_key) do |io_stream|
+          load_from_memory(key, io_stream, size)
+        end
+      {% else %}
+        # In debug mode, load from loose files
+        full_path = GSDL::AssetManager.asset_path + path_key
+        instance.load(key, full_path, size)
+      {% end %}
     end
 
     # Loads a font from raw byte data and associates it with a key.
-    # If a font with the same key and size already exists, it will be returned.
+    # This method is primarily intended to be called by GSDL::AssetManager.
     def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : SDL3::TTF::Font
       instance.load_from_memory(key, io, size)
     end

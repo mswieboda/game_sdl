@@ -1,6 +1,7 @@
 require "sdl3"
 require "file" # Added to ensure File.read_bytes is available in macros
 
+require "./gsdl/asset_manager"
 require "./gsdl/core/*"
 require "./gsdl/audio/*"
 require "./gsdl/physics/*"
