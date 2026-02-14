@@ -110,10 +110,10 @@ module GameEx
       end
     end
 
-    def draw(renderer : GSDL::Renderer)
-      @instruction_text.draw(renderer)
-      @button_states.each_value { |text_obj| text_obj.draw(renderer) }
-      @axis_states.each_value { |text_obj| text_obj.draw(renderer) }
+    def draw(draw : GSDL::Draw)
+      @instruction_text.draw(draw)
+      @button_states.each_value { |text_obj| text_obj.draw(draw) }
+      @axis_states.each_value { |text_obj| text_obj.draw(draw) }
     end
 
     def destroy

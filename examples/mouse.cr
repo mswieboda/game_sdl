@@ -58,8 +58,8 @@ module GameEx
       end
     end
 
-    def draw(renderer : GSDL::Renderer)
-      @text.draw(renderer)
+    def draw(draw : GSDL::Draw)
+      @text.draw(draw)
     end
   end
 

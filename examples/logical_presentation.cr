@@ -17,7 +17,7 @@ module GameEx
     def init
       super
       @scene_manager = SceneManager.new
-      renderer.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
+      @draw.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
     end
 
     def load_fonts
@@ -99,7 +99,7 @@ module GameEx
       end
 
 
-      @background_texture = Game.renderer.texture_from_surface(surface)
+      @background_texture = Game.draw_instance.create_texture(surface)
     end
 
     def update(dt : Float32)
@@ -111,26 +111,26 @@ module GameEx
       if Keys.just_pressed?(Keys::Space)
         @current_mode_index = (@current_mode_index + 1) % @presentation_modes.size
         mode = @presentation_modes[@current_mode_index]
-        Game.renderer.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, mode)
+        Game.draw_instance.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, mode)
         @mode_text.text = "Mode: #{@presentation_mode_names[@current_mode_index]}"
         puts "Switched logical presentation to: #{@presentation_mode_names[@current_mode_index]}"
       end
     end
 
-    def draw(renderer : GSDL::Renderer)
+    def draw(draw : GSDL::Draw)
       # Clear with a distinct color to show letterboxing/overscan areas
-      renderer.color = GSDL::Colors::Magenta
-      renderer.clear
+      draw.color = GSDL::Colors::Magenta
+      draw.clear
 
       # Render background, which will be scaled by the logical presentation
       bg_dst_rect = GSDL::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
-      renderer.render_texture(@background_texture, bg_dst_rect)
+      draw.texture(@background_texture, bg_dst_rect)
 
       # Render text
-      @instruction_text.draw(renderer)
-      @mode_text.draw(renderer)
-      @logical_size_text.draw(renderer)
-      @window_size_text.draw(renderer)
+      @instruction_text.draw(draw)
+      @mode_text.draw(draw)
+      @logical_size_text.draw(draw)
+      @window_size_text.draw(draw)
     end
 
     def destroy

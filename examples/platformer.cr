@@ -115,8 +115,8 @@ module PlatformerEx
       end
     end
 
-    def draw(renderer : GSDL::Renderer, camera_x : Float32, camera_y : Float32)
-      super(renderer, camera_x: camera_x, camera_y: camera_y, flip_horizontal: facing_left?)
+    def draw(draw : GSDL::Draw, camera_x : Float32, camera_y : Float32)
+      super(draw, camera_x: camera_x, camera_y: camera_y, flip_horizontal: facing_left?)
     end
   end
 
@@ -178,10 +178,10 @@ module PlatformerEx
       @camera_y = (@player.y - HEIGHT / 2).to_i
     end
 
-    def draw(renderer : GSDL::Renderer)
-      @tile_map.draw(renderer, @camera_x, @camera_y)
-      @coins.each(&.draw(renderer, @camera_x.to_f32, @camera_y.to_f32))
-      @player.draw(renderer, @camera_x.to_f32, @camera_y.to_f32)
+    def draw(draw : GSDL::Draw)
+      @tile_map.draw(draw, @camera_x, @camera_y)
+      @coins.each(&.draw(draw, @camera_x.to_f32, @camera_y.to_f32))
+      @player.draw(draw, @camera_x.to_f32, @camera_y.to_f32)
     end
   end
 

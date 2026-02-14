@@ -67,8 +67,8 @@ module GameEx
       end
     end
 
-    def draw(renderer : GSDL::Renderer)
-      @text.each(&.draw(renderer))
+    def draw(draw : GSDL::Draw)
+      @text.each(&.draw(draw))
     end
   end
 

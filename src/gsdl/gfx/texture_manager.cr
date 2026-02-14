@@ -2,24 +2,28 @@ module GSDL
   class TextureManager
     @@instance : TextureManager? = nil
 
-    @renderer : Renderer
+    @draw : Draw
     @textures : Hash(String, SDL3::Texture)
 
-    private def initialize(@renderer : Renderer)
+    private def initialize(@draw : Draw)
+      puts ">>> TextureManager#initialize"
       @textures = Hash(String, SDL3::Texture).new
+      puts ">>> TextureManager#initialize done"
     end
 
-    # Sets up the singleton instance of TextureManager with the given renderer.
+    # Sets up the singleton instance of TextureManager with the given Draw.
     # This should be called once at the start of the application.
-    def self.setup(renderer : Renderer)
+    def self.setup(draw : Draw)
+      puts ">>> TextureManager.setup"
       raise "TextureManager already set up!" if @@instance
-      @@instance = new(renderer)
+      puts ">>> TextureManager.setup 1"
+      @@instance = new(draw)
     end
 
     # Retrieves the singleton instance of TextureManager.
     # Raises an error if setup has not been called.
     def self.instance : TextureManager
-      @@instance || raise("TextureManager has not been set up. Call GSDL::TextureManager.setup(renderer) first.")
+      @@instance || raise("TextureManager has not been set up. Call GSDL::TextureManager.setup(draw) first.")
     end
 
     # Loads a texture based on the mode (release/debug).
@@ -79,7 +83,7 @@ module GSDL
       if @textures.has_key?(key)
         return @textures[key]
       end
-      texture = SDL3::Image.load_texture(@renderer.to_sdl, path)
+      texture = SDL3::Image.load_texture(@draw.to_sdl, path)
       @textures[key] = texture
       texture
     end
@@ -88,7 +92,7 @@ module GSDL
       if @textures.has_key?(key)
         return @textures[key]
       end
-      texture = SDL3::Image.load_texture_io(@renderer.to_sdl, io, close_io: true)
+      texture = SDL3::Image.load_texture_io(@draw.to_sdl, io, close_io: true)
       @textures[key] = texture
       texture
     end

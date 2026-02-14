@@ -38,8 +38,8 @@ module GameEx
       @sprite.center(WIDTH, HEIGHT)
     end
 
-    def draw(renderer : GSDL::Renderer)
-      @sprite.draw(renderer)
+    def draw(draw : GSDL::Draw)
+      @sprite.draw(draw)
     end
   end
 

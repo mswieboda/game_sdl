@@ -42,14 +42,14 @@ module GSDL
     def update(dt : Float32)
     end
 
-    def draw(renderer : Renderer)
-      texture = renderer.texture_from_surface(@surface)
+    def draw(draw : Draw)
+      texture = draw.create_texture(@surface)
       texture_width, texture_height = texture.size
 
       srcrect = FRect.new(x: 0_f32, y: 0_f32, w: texture_width, h: texture_height)
       dstrect = FRect.new(x: x.to_f32, y: y.to_f32, w: texture_width, h: texture_height)
 
-      renderer.render_texture(texture, srcrect, dstrect)
+      draw.texture(texture, srcrect, dstrect)
       texture.destroy
     end
   end

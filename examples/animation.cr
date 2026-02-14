@@ -76,11 +76,11 @@ module GameEx
       end
     end
 
-    def draw(renderer : GSDL::Renderer)
-      @text.draw(renderer)
-      @text_animation.draw(renderer)
+    def draw(draw : GSDL::Draw)
+      @text.draw(draw)
+      @text_animation.draw(draw)
 
-      @sprite.draw(renderer)
+      @sprite.draw(draw)
     end
 
     def change_animation

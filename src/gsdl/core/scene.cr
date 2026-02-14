@@ -18,7 +18,7 @@ module GSDL
     def update(dt : Float32)
     end
 
-    def draw(renderer : Renderer)
+    def draw(draw : Draw)
     end
   end
 end

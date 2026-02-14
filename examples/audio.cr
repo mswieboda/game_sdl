@@ -116,15 +116,15 @@ module GameEx
       end
     end
 
-    def draw(renderer : GSDL::Renderer)
+    def draw(draw : GSDL::Draw)
       # Draw button
-      renderer.color = GSDL.color_all(100)
-      renderer.draw_rect_filled(@button_rect)
-      renderer.draw_rect_filled(@button_stop_rect)
+      draw.color = GSDL.color_all(100)
+      draw.rect_filled(@button_rect)
+      draw.rect_filled(@button_stop_rect)
 
       # Draw text
-      @text.draw(renderer)
-      @text_stop.draw(renderer)
+      @text.draw(draw)
+      @text_stop.draw(draw)
     end
 
     def destroy

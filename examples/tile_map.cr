@@ -64,8 +64,8 @@ module TileMapEx
       @tile_map.load_map_data(map_data)
     end
 
-    def draw(renderer : GSDL::Renderer)
-      @tile_map.draw(renderer, @camera_x, @camera_y)
+    def draw(draw : GSDL::Draw)
+      @tile_map.draw(draw, @camera_x, @camera_y)
     end
   end
 

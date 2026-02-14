@@ -2,20 +2,20 @@ module GSDL
   abstract class Game
     DefaultBackgroundColor = Colors::Black
 
-    @@renderer : Renderer?
+    @@draw : Draw?
 
     getter window : SDL3::Window
-    getter renderer : Renderer
     getter scene_manager : SceneManager
     getter? exit
 
+    @draw : Draw
     @last_tick : UInt64 = 0_i64
 
-    def self.renderer : Renderer
-      if renderer = @@renderer
-        renderer
+    def self.draw_instance : Draw
+      if draw = @@draw
+        draw
       else
-        raise "Failed to get global renderer"
+        raise "Failed to get global draw"
       end
     end
 
@@ -31,8 +31,8 @@ module GSDL
         flags: 32_u64 # This was changed from SDL::WindowFlags::SHOWN | SDL::WindowFlags::RESIZABLE
       )
 
-      @renderer = Renderer.new(window)
-      @@renderer = @renderer
+      @draw = Draw.new(window)
+      @@draw = @draw
       @scene_manager = SceneManager.new
     end
 
@@ -41,7 +41,7 @@ module GSDL
         AssetManager.load_pack
       {% end %}
 
-      TextureManager.setup(renderer)
+      TextureManager.setup(@draw)
       FontManager.setup
       AudioManager.setup
       TileMapManager.setup
@@ -121,14 +121,14 @@ module GSDL
     end
 
     def clear_screen
-      renderer.color = background_color
-      renderer.clear
+      @draw.color = background_color
+      @draw.clear
     end
 
     def draw
-      scene_manager.draw(renderer)
+      scene_manager.draw(@draw)
 
-      renderer.draw
+      @draw.draw
     end
 
     def destroy
@@ -136,7 +136,7 @@ module GSDL
       FontManager.clear_all
       AudioManager.clear_all
       TileMapManager.clear_all
-      renderer.destroy
+      @draw.destroy
       window.destroy
       SDL3.quit
     end
