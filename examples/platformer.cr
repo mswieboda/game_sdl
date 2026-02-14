@@ -25,6 +25,10 @@ module PlatformerEx
     def load_audio
       GSDL::AudioManager.load("coin_audio", "sfx/ding.wav")
     end
+
+    def load_tile_maps
+      GSDL::TileMapManager.load("map", "gfx/map.json")
+    end
   end
 
   class SceneManager < GSDL::SceneManager
@@ -135,7 +139,7 @@ module PlatformerEx
       # "solid_tiles": [1, 2, 3, 8, 10, 11, 12, 17]
       # so that we know which tiles are solid and have collisions
       # and which are just background
-      @tile_map = GSDL::TileMap.from_tiled_json("assets/gfx/map.json")
+      @tile_map = GSDL::TileMapManager.get("map")
 
       # player
       @player = Player.new("player", 32, 64)

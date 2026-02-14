@@ -43,10 +43,12 @@ module GSDL
       TextureManager.setup(renderer)
       FontManager.setup
       AudioManager.setup
+      TileMapManager.setup
 
       load_textures
       load_fonts
       load_audio
+      load_tile_maps
 
       {% if flag?(:release) %}
         AssetManager.close_pack
@@ -61,6 +63,9 @@ module GSDL
     end
 
     def load_audio
+    end
+
+    def load_tile_maps
     end
 
     # TODO: check / use

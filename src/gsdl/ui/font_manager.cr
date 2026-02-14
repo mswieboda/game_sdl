@@ -22,7 +22,7 @@ module GSDL
     # Retrieves the singleton instance of FontManager.
     # Raises an error if setup has not been called.
     def self.instance : FontManager
-      @@instance || raise("FontManager has not been set up. Call GSDL::UI::FontManager.setup first.")
+      @@instance || raise("FontManager has not been set up. Call GSDL::FontManager.setup first.")
     end
 
     # Loads a font based on the mode (release/debug).
@@ -52,7 +52,7 @@ module GSDL
     end
 
     # Loads a font from raw byte data and associates it with a key.
-    # This method is primarily intended to be called by GSDL::AssetManager.
+    # This method is primarily intended to be called by load if in release mode
     def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : SDL3::TTF::Font
       instance.load_from_memory(key, io, size)
     end

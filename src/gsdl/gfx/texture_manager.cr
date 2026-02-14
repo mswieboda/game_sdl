@@ -52,7 +52,7 @@ module GSDL
     end
 
     # Loads a texture from raw byte data and associates it with a key.
-    # This method is primarily intended to be called by GSDL::AssetManager.
+    # This method is primarily intended to be called by load if in release mode
     def self.load_from_memory(key : String, io : SDL3::IOStream) : SDL3::Texture
       instance.load_from_memory(key, io)
     end

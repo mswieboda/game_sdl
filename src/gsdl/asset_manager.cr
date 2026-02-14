@@ -124,7 +124,7 @@ module GSDL
 
     # Reads raw byte data for a given path_key from the loaded packfile.
     # Returns a Bytes object.
-    private def self.load_raw_data(path_key : String) : Bytes
+    def self.load_raw_data(path_key : String) : Bytes
       unless initialized?
         raise "GSDL::AssetManager: Packfile not loaded. Call AssetManager.load_pack first."
       end
@@ -148,12 +148,8 @@ module GSDL
     # This loads the entire asset into memory before passing it to SDL3.
     # Suitable for smaller to medium-sized assets.
     private def self.io_stream_from_data(data : Bytes) : SDL3::IOStream
-      # SDL_RWFromConstMem requires a pointer to constant memory.
+      # SDL3::IOStream requires a pointer to constant memory.
       # Crystal's Bytes provides a Pointer.
-      # The `true` for autoclose means SDL will free the RWops memory.
-      # The underlying data Bytes object needs to stay in scope for as long
-      # as the SDL3::IOStream is used by SDL. This is a potential pitfall
-      # that clients of this method must be aware of if not immediately consumed.
       SDL3::IOStream.from_memory(data, data.size)
     end
 

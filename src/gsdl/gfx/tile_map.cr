@@ -22,9 +22,7 @@ module GSDL
       @tiled_tilesets = [] of JSON::Any
     end
 
-    def self.from_tiled_json(filepath : String) : TileMap
-      json = JSON.parse(File.read(filepath))
-
+    def self.from_tiled_json(json : JSON::Any) : TileMap
       tile_w = json["tilewidth"].as_i
       tile_h = json["tileheight"].as_i
       map_w = json["width"].as_i
@@ -59,6 +57,14 @@ module GSDL
       chunked_data = chunk_data(layer_data, map_w)
       tile_map.map_data = chunked_data
       tile_map
+    end
+
+    def self.from_tiled_file(filepath : String) : TileMap
+      from_tiled_json(JSON.parse(File.read(filepath)))
+    end
+
+    def self.from_tiled_data(data : Bytes)
+      from_tiled_json(JSON.parse(String.new(data)))
     end
 
     # Adds a tileset to the map with a given key
