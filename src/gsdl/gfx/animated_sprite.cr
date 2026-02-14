@@ -46,7 +46,9 @@ module GSDL
         texture: @texture,
         source_rect: source_rect,
         dest_rect: dest_rect,
-        flip: flip_horizontal ? 1 : 0
+        flip: flip_horizontal ? 1 : 0,
+        z_index: z_index,
+        color: color
       )
     end
   end

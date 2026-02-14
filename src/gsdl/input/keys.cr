@@ -114,7 +114,7 @@ module GSDL
       JustReleased
     end
 
-    @@states = {} of Code => State
+    @@states = {} of Keycode => State
 
     def self.update
       @@states.each do |key, state|

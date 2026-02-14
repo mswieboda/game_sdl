@@ -23,7 +23,7 @@ module GSDL
     end
 
     # Returns the source rectangle for a LOCAL tile ID within this tileset
-    def get_local_tile_src_rect(local_tile_id : Int32) : FRect
+    def get_local_tile_source_rect(local_tile_id : Int32) : FRect
       x = (local_tile_id % @columns) * @tile_width
       y = (local_tile_id // @columns) * @tile_height
 

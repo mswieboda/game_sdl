@@ -6,17 +6,14 @@ module GSDL
     @textures : Hash(String, SDL3::Texture)
 
     private def initialize(@draw : Draw)
-      puts ">>> TextureManager#initialize"
       @textures = Hash(String, SDL3::Texture).new
-      puts ">>> TextureManager#initialize done"
     end
 
     # Sets up the singleton instance of TextureManager with the given Draw.
     # This should be called once at the start of the application.
     def self.setup(draw : Draw)
-      puts ">>> TextureManager.setup"
       raise "TextureManager already set up!" if @@instance
-      puts ">>> TextureManager.setup 1"
+
       @@instance = new(draw)
     end
 

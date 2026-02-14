@@ -155,7 +155,7 @@ module GSDL
           tileset = @tilesets[tile_info.tileset_key]
           next unless tileset # Should not happen if find_tileset_and_local_id returns TileInfo
 
-          src_rect = tileset.get_local_tile_src_rect(tile_info.local_tile_id)
+          source_rect = tileset.get_local_tile_source_rect(tile_info.local_tile_id)
           dest_rect = FRect.new(
             x: x_index * @tile_width - camera_x,
             y: y_index * @tile_height - camera_y,
@@ -163,7 +163,7 @@ module GSDL
             h: @tile_height
           )
 
-          draw.texture(tileset.texture, src_rect, dest_rect)
+          draw.texture(texture: tileset.texture, source_rect: source_rect, dest_rect: dest_rect)
         end
       end
     end

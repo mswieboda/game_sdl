@@ -48,9 +48,7 @@ module GSDL
 
       srcrect = FRect.new(x: 0_f32, y: 0_f32, w: texture_width, h: texture_height)
       dstrect = FRect.new(x: x.to_f32, y: y.to_f32, w: texture_width, h: texture_height)
-
-      draw.texture(texture, srcrect, dstrect)
-      texture.destroy
+      draw.texture(texture: texture, source_rect: srcrect, dest_rect: dstrect, destroy: true)
     end
   end
 end

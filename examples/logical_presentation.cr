@@ -37,7 +37,8 @@ module GameEx
     @mode_text : GSDL::Text
     @logical_size_text : GSDL::Text
     @window_size_text : GSDL::Text
-    @background_texture : SDL3::Texture
+    @bg_texture : SDL3::Texture
+    @current_mode_index = 0
 
     @presentation_modes : Array(SDL3::LogicalPresentation) = [
       SDL3::LogicalPresentation::Disabled,
@@ -46,6 +47,7 @@ module GameEx
       SDL3::LogicalPresentation::Overscan,
       SDL3::LogicalPresentation::IntegerScale,
     ]
+
     @presentation_mode_names = [
       "DISABLED",
       "STRETCH",
@@ -53,7 +55,7 @@ module GameEx
       "OVERSCAN",
       "INTEGER_SCALE",
     ]
-    @current_mode_index = 0
+
 
     def initialize
       super(:logical_presentation)
@@ -99,7 +101,7 @@ module GameEx
       end
 
 
-      @background_texture = Game.draw_instance.create_texture(surface)
+      @bg_texture = Game.draw_instance.create_texture(surface)
     end
 
     def update(dt : Float32)
@@ -123,8 +125,8 @@ module GameEx
       draw.clear
 
       # Render background, which will be scaled by the logical presentation
-      bg_dst_rect = GSDL::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
-      draw.texture(@background_texture, bg_dst_rect)
+      bg_dest_rect = GSDL::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
+      draw.texture(texture: @bg_texture, dest_rect: bg_dest_rect)
 
       # Render text
       @instruction_text.draw(draw)
@@ -138,7 +140,7 @@ module GameEx
       @mode_text.destroy
       @logical_size_text.destroy
       @window_size_text.destroy
-      @background_texture.destroy
+      @bg_texture.destroy
       super
     end
   end
