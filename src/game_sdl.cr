@@ -10,7 +10,6 @@ require "./gsdl/ui/*"
 require "./gsdl/input/*"
 
 module GSDL
-  alias Color = SDL3::Color
   alias FColor = SDL3::FColor
   alias FPoint = SDL3::FPoint
   alias FRect = SDL3::FRect
