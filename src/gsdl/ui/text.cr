@@ -1,5 +1,3 @@
-require "./font"
-
 module GSDL
   class Text
     getter font
@@ -17,13 +15,12 @@ module GSDL
       @y = 0,
       @color = GSDL::Colors::White
     )
-
-      @surface = font.render_text_blended(text, color)
+      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended(text, color)
     end
 
     def text=(text : String)
       @text = text
-      @surface = font.render_text_blended(text, color)
+      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended(text, color)
     end
 
     def width
@@ -43,6 +40,8 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      return if @text.empty?
+
       texture = draw.create_texture(@surface)
       texture_width, texture_height = texture.size
 

@@ -30,7 +30,7 @@ module GSDL
     end
 
     def pause
-      @paused_duration = time_expired
+      @paused_duration = elapsed
     end
 
     def paused?
@@ -41,7 +41,7 @@ module GSDL
       @start_time != nil
     end
 
-    def time_expired
+    def elapsed
       if paused_duration = @paused_duration
         return paused_duration
       end
@@ -58,13 +58,19 @@ module GSDL
     end
 
     def done?
-      return false unless start_time = @start_time
+      return false unless started?
 
-      time_expired >= @duration
+      elapsed >= @duration
+    end
+
+    def running?
+      return false unless started?
+
+      elapsed < @duration
     end
 
     def percent
-      time_expired / @duration
+      elapsed / @duration
     end
   end
 end
