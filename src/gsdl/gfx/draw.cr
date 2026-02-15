@@ -105,29 +105,98 @@ module GSDL
       @r.present
     end
 
-    def line(*args, **options)
-      @r.draw_line(*args, **options)
+    # points
+
+    def point(x : Float32, y : Float32)
+      @r.draw_point(x: x, y: y)
     end
 
-    def lines(*args, **options)
-      @r.draw_lines(*args, **options)
+    def point(point : SDL3::FPoint)
+      point(x: point.x, y: point.y)
     end
 
-    def point(*args, **options)
-      @r.draw_point(*args, **options)
+    def point(point : Point)
+      point(point.x.to_f32, point.y.to_f32)
     end
 
-    def points(*args, **options)
-      @r.draw_points(*args, **options)
+    def points(points : Array(SDL3::FPoint))
+      slice = Slice.new(points.to_unsafe, points.size)
+
+      @r.draw_points(slice)
     end
 
-    def rect_filled(*args, **options)
-      @r.fill_rect(*args, **options)
+    def points(points : Array(Point))
+      points(points.map(&.to_sdl))
     end
 
-    def rect_outline(*args, **options)
-      @r.draw_rect(*args, **options)
+    # lines
+
+    def line(x1 : Float32, y1 : Float32, x2 : Float32, y2 : Float32)
+      @r.draw_line(x1: x1, y1: y1, x2: x2, y2: y2)
     end
+
+    def line(line : Line)
+      @r.draw_line(
+        x1: line.x1.to_f32,
+        y1: line.y1.to_f32,
+        x2: line.x2.to_f32,
+        y2: line.y2.to_f32
+      )
+    end
+
+    def lines(points : Array(Point))
+      slice = Slice.new(points.map(&.to_sdl).to_unsafe, points.size)
+
+      @r.draw_lines(slice)
+    end
+
+    # rects
+
+    def filled(rect : SDL3::FRect)
+      @r.fill_rect(rect)
+    end
+
+    def filled(rect : Rect)
+      filled(rect.to_sdl_f32)
+    end
+
+    def filled(rects : Array(SDL3::FRect))
+      slice = Slice.new(rects.to_unsafe, rects.size)
+
+      @r.fill_rects(slice)
+    end
+
+    def filled(rects : Array(Rect))
+      filled(rects.map(&.to_sdl))
+    end
+
+    def outline(rect : SDL3::FRect)
+      @r.draw_rect(rect)
+    end
+
+    def outline(rect : Rect)
+      outline(rect.to_sdl_f32)
+    end
+
+    def outlines(rects : Array(SDL3::FRect))
+      slice = Slice.new(rects.to_unsafe, rects.size)
+
+      @r.draw_rects(slice)
+    end
+
+    def outlines(rects : Array(Rect))
+      outlines(rects.map(&.to_sdl_f32))
+    end
+
+    def outline(rects : Array(SDL3::FRect))
+      outlines(rects)
+    end
+
+    def outline(rects : Array(Rect))
+      outlines(rects)
+    end
+
+    # textures
 
     def texture(
       texture : SDL3::Texture,

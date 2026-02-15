@@ -29,15 +29,16 @@ packer:
 examples:
 	@echo "Building and running all examples..."
 	@$(MAKE) run EXAMPLE=text
+	@$(MAKE) run EXAMPLE=geometry
 	@$(MAKE) run EXAMPLE=sprite
 	@$(MAKE) run EXAMPLE=animation
+	@$(MAKE) run EXAMPLE=collision
+	@$(MAKE) run EXAMPLE=audio
 	@$(MAKE) run EXAMPLE=keys
 	@$(MAKE) run EXAMPLE=mouse
-	@$(MAKE) run EXAMPLE=audio
 	@$(MAKE) run EXAMPLE=game_pad
 	@$(MAKE) run EXAMPLE=logical_presentation
 	@$(MAKE) run EXAMPLE=tile_map
-	@$(MAKE) run EXAMPLE=collision
 	@$(MAKE) run EXAMPLE=platformer
 
 run:

@@ -13,9 +13,5 @@ module GSDL
   alias FColor = SDL3::FColor
   alias FPoint = SDL3::FPoint
   alias FRect = SDL3::FRect
-  alias Rect = SDL3::Rect
-
-  def self.ticks
-    SDL3.get_ticks
-  end
+  alias RectSDL = SDL3::Rect
 end

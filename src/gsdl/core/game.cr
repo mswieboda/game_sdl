@@ -1,4 +1,8 @@
 module GSDL
+  def self.ticks
+    SDL3.get_ticks
+  end
+
   abstract class Game
     DefaultBackgroundColor = Colors::Black
 

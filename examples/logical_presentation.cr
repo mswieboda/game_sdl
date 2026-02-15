@@ -93,9 +93,9 @@ module GameEx
         (0...LOGICAL_WIDTH).step(tile_size) do |x|
           rect = GSDL::Rect.new(x: x, y: y, w: tile_size, h: tile_size)
           if ((x / tile_size) + (y / tile_size)) % 2 == 0
-            surface.fill_rect(rect, color1)
+            surface.fill_rect(rect.to_sdl, color1)
           else
-            surface.fill_rect(rect, color2)
+            surface.fill_rect(rect.to_sdl, color2)
           end
         end
       end

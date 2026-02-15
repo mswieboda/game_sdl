@@ -119,8 +119,8 @@ module GameEx
     def draw(draw : GSDL::Draw)
       # Draw button
       draw.color = GSDL.color_all(100)
-      draw.rect_filled(@button_rect)
-      draw.rect_filled(@button_stop_rect)
+      draw.filled(@button_rect)
+      draw.filled(@button_stop_rect)
 
       # Draw text
       @text.draw(draw)
