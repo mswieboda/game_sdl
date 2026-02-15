@@ -6,6 +6,7 @@ module GSDL
     property y : Float32
     getter color : Color
 
+    @width : Int32?
     @surface : SDL3::Surface
 
     def initialize(
@@ -13,18 +14,31 @@ module GSDL
       @text = "",
       @x = 0,
       @y = 0,
-      @color = GSDL::Colors::White
+      @color = GSDL::Colors::White,
+      @width : Int32? = nil
     )
-      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended(text, color)
+      width = 0
+
+      if w = @width
+        width = w
+      end
+
+      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended_wrapped(text, color, width)
     end
 
     def text=(text : String)
       @text = text
-      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended(text, color)
+
+      width = 0
+      if w = @width
+        width = w
+      end
+
+      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended_wrapped(text, color, width)
     end
 
     def width
-      @surface.to_unsafe.value.w
+      @width || @surface.to_unsafe.value.w
     end
 
     def height

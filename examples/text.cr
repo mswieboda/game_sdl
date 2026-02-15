@@ -28,6 +28,7 @@ module GameEx
 
   class StartScene < GSDL::Scene
     @text : Array(GSDL::Text)
+    @text_wrapped : GSDL::Text
 
     def initialize
       super(:start)
@@ -57,6 +58,15 @@ module GameEx
 
       color = GSDL::Colors.random_chunks(16)
       @text << GSDL::TextTyped.new(text: "hello world!", color: color, chars_per_second: 8_u8)
+
+      color = GSDL::Colors::White
+      @text_wrapped = GSDL::Text.new(
+        text: "multiple lines\nof text\nwith newlines\nwrapped to a width too",
+        x: 32,
+        y: 32,
+        color: color,
+        width: 256
+      )
     end
 
     def update(dt : Float32)
@@ -73,6 +83,7 @@ module GameEx
 
     def draw(draw : GSDL::Draw)
       @text.each(&.draw(draw))
+      @text_wrapped.draw(draw)
     end
   end
 
