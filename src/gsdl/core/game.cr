@@ -37,6 +37,9 @@ module GSDL
 
       @draw = Draw.new(window)
       @@draw = @draw
+
+      Text.draw = @draw
+
       @scene_manager = SceneManager.new
     end
 

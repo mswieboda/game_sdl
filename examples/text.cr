@@ -65,7 +65,7 @@ module GameEx
         x: 32,
         y: 32,
         color: color,
-        width: 256
+        wrap_width: 256
       )
     end
 

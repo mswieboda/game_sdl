@@ -4,45 +4,69 @@ module GSDL
     property text
     property x : Float32
     property y : Float32
-    getter color : Color
 
-    @width : Int32?
-    @surface : SDL3::Surface
+    @@renderer : SDL3::Renderer?
+
+    @text_sdl : SDL3::TTF::Text
+
+    delegate color, to: @text_sdl
+    delegate :"color=", to: @text_sdl
+    delegate direction, to: @text_sdl
+    delegate :"direction=", to: @text_sdl
+    delegate text_engine, to: @text_sdl
+    delegate :"text_engine=", to: @text_sdl
+    delegate font, to: @text_sdl
+    delegate :"font=", to: @text_sdl
+    delegate height, to: @text_sdl
+    delegate width, to: @text_sdl # might need to be @wrap_width || width
+    delegate whitespace_visible?, to: @text_sdl
+    delegate :"wrap_whitespace_visible=", to: @text_sdl
+    delegate wrap_width, to: @text_sdl
+    delegate :"wrap_width=", to: @text_sdl
+    delegate size, to: @text_sdl
 
     def initialize(
-      @font = Font.default,
+      font = Font.default,
       @text = "",
       @x = 0,
       @y = 0,
-      @color = GSDL::Colors::White,
-      @width : Int32? = nil
+      color = GSDL::Colors::White,
+      direction = SDL3::TTF::Direction::LTR,
+      wrap_width : Int32? = nil
     )
-      width = 0
+      # NOTE: needs to be Text.renderer in case of child classes
+      text_engine = Text.renderer.create_text_engine
+      @text_sdl = text_engine.create_text(font, @text)
 
-      if w = @width
-        width = w
+      @text_sdl.color = color
+      @text_sdl.direction = direction
+      @text_sdl.font = font
+
+      # TODO: maybe make a constructor param
+      @text_sdl.wrap_whitespace_visible = false
+
+      if ww = wrap_width
+        @text_sdl.wrap_width = ww
       end
+    end
 
-      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended_wrapped(text, color, width)
+    def self.draw=(draw : Draw)
+      @@renderer = draw.to_sdl
+    end
+
+    def self.renderer : SDL3::Renderer
+      if renderer = @@renderer
+        renderer
+      else
+        raise "GSDL::Text.renderer not set, should be set via GSDL::Game.init"
+      end
     end
 
     def text=(text : String)
+      # saved internally for parent classes since there is
+      # no SDL3::TTF::Text#text to get text
       @text = text
-
-      width = 0
-      if w = @width
-        width = w
-      end
-
-      @surface = @text.empty? ? SDL3::Surface.new : font.render_text_blended_wrapped(text, color, width)
-    end
-
-    def width
-      @width || @surface.to_unsafe.value.w
-    end
-
-    def height
-      @surface.to_unsafe.value.h
+      @text_sdl.text = text
     end
 
     def center(width : Int32 | Float32, height : Int32 | Float32)
@@ -56,12 +80,12 @@ module GSDL
     def draw(draw : Draw)
       return if @text.empty?
 
-      texture = draw.create_texture(@surface)
-      texture_width, texture_height = texture.size
+      @text_sdl.draw(x, y)
+    end
 
-      srcrect = FRect.new(x: 0_f32, y: 0_f32, w: texture_width, h: texture_height)
-      dstrect = FRect.new(x: x.to_f32, y: y.to_f32, w: texture_width, h: texture_height)
-      draw.texture(texture: texture, source_rect: srcrect, dest_rect: dstrect, destroy: true)
+    def destroy
+      @text_sdl.text_engine.destroy
+      @text_sdl.destroy
     end
   end
 end
