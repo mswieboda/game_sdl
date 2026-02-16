@@ -42,14 +42,24 @@ module GameEx
         y: 256,
         color: color
       )
+
+      @button = GSDL::Button.new(
+        font: font,
+        text: "OK!",
+        x: 128,
+        y: 64,
+        color: color
+      )
     end
 
     def update(dt : Float32)
       @message.update(dt)
+      @button.update(dt)
     end
 
     def draw(draw : GSDL::Draw)
       @message.draw(draw)
+      @button.draw(draw)
     end
   end
 
