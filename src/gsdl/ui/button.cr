@@ -1,30 +1,62 @@
-require "./message"
+require "./text_box"
 
 module GSDL
-  class Button < Message
+  class Button < TextBox
+    alias Callback = (String)->
+
+    @on_click : Callback
+
+    def initialize(
+      @on_click : Callback,
+      font = Font.default,
+      text : String = "",
+      width : Int32? = nil,
+      height : Int32? = nil,
+      padding = TextBox::Padding,
+      align = Font::Align::Center,
+      x : Float32 = 0_f32,
+      y : Float32 = 0_f32,
+      color = Colors::Black,
+    )
+      super(
+        font: font,
+        text: text,
+        width: width,
+        height: height,
+        padding: padding,
+        align: align,
+        x: x,
+        y: y,
+        color: color
+      )
+
+      # TODO: add on_click callback
+    end
+
+    def update(dt : Float32)
+      super
+
+      if Mouse.clicked_in?(x, y, width, height)
+        @on_click.call(@text.text)
+      end
+    end
+
     def draw_background(draw : Draw)
       rect = Rect.new(x: x, y: y, width: width, height: height, color: Colors::White)
       rect.draw_filled(draw)
     end
 
     def draw_border(draw : Draw)
-      border_margin = 2
+      margin = 2
 
       rect = Rect.new(
-        x: x + border_margin,
-        y: y + border_margin,
-        width: (width - padding / 2 - border_margin).to_f32,
-        height: (height - padding / 2 - border_margin).to_f32,
-        color: Colors::Red
+        x: x + margin,
+        y: y + margin,
+        width: width - margin * 2,
+        height: height - margin * 2,
+        color: @text.color
       )
       rect.draw_outline(draw)
-    end
-
-    def draw(draw : Draw)
-      draw_background(draw)
-      draw_border(draw)
-
-      @text.draw
     end
   end
 end

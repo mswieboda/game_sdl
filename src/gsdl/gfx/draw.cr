@@ -2,6 +2,9 @@ module GSDL
   class Draw
     @r : SDL3::Renderer
 
+    # TODO: rename this to DrawTextureCommand
+    #   and add DrawTextCommand, DrawRectCommand, DrawLineCommand etc
+    #   maybe parent abstract DrawCommand has z_index, color, destroy only
     struct DrawCommand
       property z_index : Int32
       property texture : SDL3::Texture
@@ -23,6 +26,7 @@ module GSDL
       end
     end
 
+    # add more for text, geo etc
     @draw_commands : Array(DrawCommand)
 
     delegate clear, to: @r
@@ -194,6 +198,16 @@ module GSDL
 
     def outline(rects : Array(Rect))
       outlines(rects)
+    end
+
+    # text
+
+    def text(text : Text)
+      # TODO: add to draw commands
+
+      # NOTE: doesn't need @r, see SDL3::TTF::Text, it's because
+      #   GSDL::Text#text_sdl is created with a SDL3::TTF::TextEngine
+      text._draw
     end
 
     # textures

@@ -2,8 +2,7 @@ require "./font_manager"
 
 module GSDL
   class Font
-    DEFAULT_FONT_KEY = "default"
-    DEFAULT_FONT_SIZE = 16_f32
+    alias Align = SDL3::TTF::Align
 
     # Gets the default font.
     def self.default : SDL3::TTF::Font

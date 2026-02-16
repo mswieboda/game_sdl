@@ -1,6 +1,5 @@
 module GSDL
   class Text
-    getter font
     property text
     property x : Float32
     property y : Float32
@@ -17,9 +16,8 @@ module GSDL
     delegate :"text_engine=", to: @text_sdl
     delegate font, to: @text_sdl
     delegate :"font=", to: @text_sdl
-    delegate height, to: @text_sdl
-    delegate width, to: @text_sdl # might need to be @wrap_width || width
-    delegate whitespace_visible?, to: @text_sdl
+    delegate width, to: @text_sdl
+    delegate wrap_whitespace_visible?, to: @text_sdl
     delegate :"wrap_whitespace_visible=", to: @text_sdl
     delegate wrap_width, to: @text_sdl
     delegate :"wrap_width=", to: @text_sdl
@@ -69,6 +67,13 @@ module GSDL
       @text_sdl.text = text
     end
 
+    def height
+      had_newlines = @text.includes?("\n")
+      text_size_wrapped = font.text_size_wrapped(@text, width)
+
+      text_size_wrapped[1] - (had_newlines ? font.size.to_i : 0)
+    end
+
     def center(width : Int32 | Float32, height : Int32 | Float32)
       @x = ((width - self.width) / 2).to_f32
       @y = ((height - self.height) / 2).to_f32
@@ -77,9 +82,15 @@ module GSDL
     def update(dt : Float32)
     end
 
-    def draw
+    def draw(draw : Draw)
       return if @text.empty?
 
+      draw.text(self)
+    end
+
+    # NOTE: shouldn't be used outside of Draw class, but Draw needs it public
+    #   to access the `@text_sdl` internally here
+    def _draw
       @text_sdl.draw(x, y)
     end
 

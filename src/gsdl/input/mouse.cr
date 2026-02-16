@@ -1,5 +1,8 @@
 module GSDL
   module Mouse
+    alias Num = Int32 | Float32
+
+    # TODO: make enum
     ButtonLeft = 1_u8
     ButtonMiddle = 2_u8
     ButtonRight = 3_u8
@@ -31,6 +34,17 @@ module GSDL
 
     def self.moved?
       @@moved
+    end
+
+    def self.in?(x : Num, y : Num, width : Num, height : Num)
+      in_x = self.x >= x && self.x <= x + width
+      in_y = self.y >= y && self.y <= y + height
+
+      in_x && in_y
+    end
+
+    def self.clicked_in?(x : Num, y : Num, width : Num, height : Num, button : UInt8 = ButtonLeft)
+      in?(x, y, width, height) && just_pressed?(button)
     end
 
     def self.update

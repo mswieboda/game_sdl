@@ -1,7 +1,7 @@
 module GSDL
   class FontManager
-    DEFAULT_FONT_KEY = "default"
-    DEFAULT_FONT_SIZE = 16_f32
+    DefaultFontKey = "default"
+    DefaultFontSize = 16_f32
 
     @@instance : FontManager? = nil
 
@@ -57,8 +57,8 @@ module GSDL
       instance.load_from_memory(key, io, size)
     end
 
-    def self.load_default(path : String, size : Float32 = DEFAULT_FONT_SIZE)
-      load(DEFAULT_FONT_KEY, path, size)
+    def self.load_default(path : String, size : Float32 = DefaultFontSize)
+      load(DefaultFontKey, path, size)
     end
 
     def self.get(key : String, size : Float32) : SDL3::TTF::Font
@@ -70,8 +70,8 @@ module GSDL
       instance.get(key)
     end
 
-    def self.get_default(size : Float32 = DEFAULT_FONT_SIZE)
-      get(DEFAULT_FONT_KEY, size)
+    def self.get_default(size : Float32 = DefaultFontSize)
+      get(DefaultFontKey, size)
     end
 
     # Unloads a specific font from memory.

@@ -27,7 +27,8 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @message : GSDL::Message
+    @messages : Array(GSDL::Message)
+    @buttons : Array(GSDL::Button)
 
     def initialize
       super(:start)
@@ -35,31 +36,59 @@ module GameEx
       font = GSDL::Font.default.copy
       font.size = 12
       color = GSDL::Colors::Red
-      @message = GSDL::Message.new(
+
+      @messages = [] of GSDL::Message
+      @buttons = [] of GSDL::Button
+
+      @messages << GSDL::Message.new(
         font: font,
-        text: "multiple lines of text inside a message box!",
+        text: "multiple lines\nof some text inside\na message box!",
         x: 64,
         y: 256,
         color: color
       )
 
-      @button = GSDL::Button.new(
+      margin = 16
+      height = 36 + GSDL::TextBox::Padding * 2
+
+      @messages << GSDL::Message.new(
         font: font,
+        text: "automatically wrapped, with a set width. This could be a dialog box for character dialog, TBD a GSD::Dialog class to come later!",
+        x: margin.to_f32,
+        y: ((HEIGHT - height) - margin).to_f32,
+        width: ((WIDTH - margin * 2).to_f32).to_i,
+        height: height.to_i,
+        color: color
+      )
+
+      @buttons << GSDL::Button.new(
+        on_click: ->on_click(String),
         text: "OK!",
-        x: 128,
-        y: 64,
+        x: 64.to_f32,
+        y: 32.to_f32
+      )
+      @buttons << GSDL::Button.new(
+        on_click: ->on_click(String),
+        font: font,
+        text: "OK! a large button",
+        x: 320.to_f32,
+        y: 64.to_f32,
+        width: 128,
         color: color
       )
     end
 
+    def on_click(text : String)
+      puts ">>> on_click: text: #{text}"
+    end
+
     def update(dt : Float32)
-      @message.update(dt)
-      @button.update(dt)
+      @buttons.each(&.update(dt))
     end
 
     def draw(draw : GSDL::Draw)
-      @message.draw(draw)
-      @button.draw(draw)
+      @messages.each(&.draw(draw))
+      @buttons.each(&.draw(draw))
     end
   end
 
