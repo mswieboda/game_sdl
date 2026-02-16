@@ -82,8 +82,8 @@ module GameEx
     end
 
     def draw(draw : GSDL::Draw)
-      @text.each(&.draw(draw))
-      @text_wrapped.draw(draw)
+      @text.each(&.draw)
+      @text_wrapped.draw
     end
   end
 

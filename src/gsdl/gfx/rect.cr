@@ -2,27 +2,27 @@ module GSDL
   class Rect < Drawable
     alias Num = Int32 | Float32
 
-    property w : Num
-    property h : Num
+    property width : Num
+    property height : Num
 
-    def initialize(x, y, @w, @h, @color : Color? = nil)
+    def initialize(x, y, @width, @height, @color : Color? = nil)
       super(x: x, y: y, color: color)
     end
 
-    def width : Num
-      self.w
+    def w : Num
+      self.width
     end
 
-    def height : Num
+    def h : Num
       self.height
     end
 
-    def width=(width : Num)
-      self.w=(width)
+    def w=(width : Num)
+      self.width=(width)
     end
 
-    def height=(height : Num)
-      self.h=(height)
+    def h=(height : Num)
+      self.height=(height)
     end
 
     def to_sdl

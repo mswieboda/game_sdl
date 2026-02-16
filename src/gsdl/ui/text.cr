@@ -77,7 +77,7 @@ module GSDL
     def update(dt : Float32)
     end
 
-    def draw(draw : Draw)
+    def draw
       return if @text.empty?
 
       @text_sdl.draw(x, y)
