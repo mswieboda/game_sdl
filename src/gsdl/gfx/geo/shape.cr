@@ -1,7 +1,5 @@
 module GSDL
   abstract class Shape
-    alias Num = Int32 | Float32
-
     # for creating getter/setter, for variables affecting update_geometry
     # so we know to call update_geometry in draw methods, if this var changes
     # ex:
@@ -78,6 +76,9 @@ module GSDL
 
     getter? changed : Bool = true
 
+    def initialize
+    end
+
     def initialize(@x, @y, @color)
     end
 
@@ -90,6 +91,14 @@ module GSDL
     end
 
     abstract def draw(draw : Draw)
+
+    def draw_filled(draw : Draw)
+      draw(draw)
+    end
+
+    def draw_outline(draw : Draw)
+      draw(draw)
+    end
 
     def self.draw(draw : Draw, shapes : Array(Shape))
       shapes.each(&.draw(draw))

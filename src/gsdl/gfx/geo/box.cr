@@ -8,9 +8,8 @@ module GSDL
     alias Vertices = Array(Vertex)
     alias Indices = Array(Int32)
     alias ArcPoints = Array(Array(FPoint))
-    alias Num = Int32 | Float32
 
-    GSDL::Shape.properties_changed({
+    properties_changed({
       width: Num = 0,
       height: Num = 0,
       border_radius: UInt32 = 0
@@ -22,6 +21,10 @@ module GSDL
       outline_arc_points: ArcPoints = [] of Array(FPoint)
     })
 
+    def initialize(@width, @height, @border_radius : UInt32 = 0)
+      super()
+    end
+
     def initialize(x, y, @width, @height, color : Color, @border_radius : UInt32 = 0)
       super(x: x, y: y, color: color)
     end
@@ -31,7 +34,7 @@ module GSDL
       @fill_indices = [] of Int32
       @outline_arc_points = [] of Array(FPoint)
 
-      if @border_radius > 0
+      if border_radius > 0
         max_border_radius = ([width, height].min / 2).to_u32
         @border_radius = [border_radius, max_border_radius].min
 
@@ -52,7 +55,7 @@ module GSDL
     private def build_corner_radius(center, dir : Tuple(Int8, Int8))
       center_x, center_y = center
       x_dir, y_dir = dir
-      resolution = [12, (Math.sqrt(border_radius) * 2).to_i].max
+      resolution = [12, (Math.sqrt(border_radius) * 4).to_i].max
 
       # Center vertex
       @fill_vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)

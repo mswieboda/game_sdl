@@ -1,7 +1,5 @@
 module GSDL
   module Mouse
-    alias Num = Int32 | Float32
-
     # TODO: make enum
     ButtonLeft = 1_u8
     ButtonMiddle = 2_u8

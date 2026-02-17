@@ -2,8 +2,6 @@ require "json"
 
 module GSDL
   class TileMap
-    alias Num = Int32 | Float32
-
     # Using a 2D array of Int32 to store global tile IDs.
     property map_data : Array(Array(Int32))
     # Map of tileset key to Tileset object

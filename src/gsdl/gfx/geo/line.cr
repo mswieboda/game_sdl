@@ -2,10 +2,16 @@ require "./shape"
 
 module GSDL
   class Line < Shape
-    alias Num = Int32 | Float32
+    property x2 : Num = 0
+    property y2 : Num = 0
 
-    property x2 : Num
-    property y2 : Num
+    def initialize(x1, y1, @x2 : Num, @y2 : Num)
+      super(x: x1, y: y1)
+    end
+
+    def initialize(@x2 : Num, @y2 : Num)
+      super()
+    end
 
     def initialize(x1, y1, @x2 : Num, @y2 : Num, color : Color)
       super(x: x1, y: y1, color: color)

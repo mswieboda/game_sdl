@@ -10,4 +10,5 @@ require "./gsdl/ui/*"
 require "./gsdl/input/*"
 
 module GSDL
+  alias Num = Int32 | Float32
 end
