@@ -15,7 +15,7 @@ module GSDL
     @indices : Array(Int32)
     @arc_points : Array(Array(FPoint))
 
-    def initialize(x, y, @width, @height, color : Color, @border_radius : UInt32 = 0, resolution : UInt8 = 16_u8)
+    def initialize(x, y, @width, @height, color : Color, @border_radius : UInt32 = 0)
       super(x: x, y: y, color: color)
 
       @vertices = [] of Vertex
@@ -26,45 +26,23 @@ module GSDL
         max_border_radius = ([@width, @height].min / 2).to_u32
         @border_radius = [@border_radius, max_border_radius].min
 
-        # top left
-        build_corner_radius(
-          center_x: @x + @border_radius,
-          center_y: @y + @border_radius,
-          x_dir: 1,
-          y_dir: 1,
-          resolution: resolution
-        )
-
-        # top right
-        build_corner_radius(
-          center_x: @x + @width - @border_radius,
-          center_y: @y + @border_radius,
-          x_dir: -1,
-          y_dir: 1,
-          resolution: resolution
-        )
-
-        # bottom left
-        build_corner_radius(
-          center_x: @x + @border_radius,
-          center_y: @y + height - @border_radius,
-          x_dir: 1,
-          y_dir: -1,
-          resolution: resolution
-        )
-
-        # bottom right
-        build_corner_radius(
-          center_x: @x + @width - @border_radius,
-          center_y: @y + @height - @border_radius,
-          x_dir: -1,
-          y_dir: -1,
-          resolution: resolution
-        )
+        # top left, top right, bottom left, bottom right
+        [
+          { center: {@x + @border_radius, @y + @border_radius}, dir: {1_i8, 1_i8} },
+          { center: {@x + @width - @border_radius, @y + @border_radius}, dir: {-1_i8, 1_i8} },
+          { center: {@x + @border_radius, @y + height - @border_radius}, dir: {1_i8, -1_i8} },
+          { center: {@x + @width - @border_radius, @y + @height - @border_radius}, dir: {-1_i8, -1_i8} }
+        ].each do |data|
+          build_corner_radius(center: data[:center], dir: data[:dir])
+        end
       end
     end
 
-    private def build_corner_radius(center_x, center_y, x_dir : Int8, y_dir : Int8, resolution : UInt8)
+    private def build_corner_radius(center, dir : Tuple(Int8, Int8))
+      center_x, center_y = center
+      x_dir, y_dir = dir
+      resolution = [12, (Math.sqrt(border_radius) * 2).to_i].max
+
       # Center vertex
       @vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)
 
