@@ -1,4 +1,6 @@
 module GSDL
+  alias FPoint = SDL3::FPoint
+
   class Point < Drawable
     def to_sdl
       SDL3::FPoint.new(x: x.to_f32, y: y.to_f32)

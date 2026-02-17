@@ -24,7 +24,8 @@ module GameEx
 
   class StartScene < GSDL::Scene
     @drawables : Array(GSDL::Drawable)
-    @rect_outline : GSDL::Rect
+    @rect_outline : GSDL::Box
+    @rect_rounded : GSDL::Box
 
     def initialize
       super(:start)
@@ -38,15 +39,21 @@ module GameEx
       @drawables << GSDL::Line.new(x1: 64, y1: 64, x2: 96, y2: 128, color: color)
 
       color = GSDL.color(r: 255)
-      @drawables << GSDL::Rect.new(x: 128, y: 128, width: 64, height: 96, color: color)
+      @drawables << GSDL::Box.new(x: 128, y: 128, width: 64, height: 96, color: color)
 
-      @rect_outline = GSDL::Rect.new(x: 320, y: 320, width: 64, height: 32, color: color)
+      @rect_outline = GSDL::Box.new(x: 32, y: 32, width: 64, height: 32, color: color)
+
+      color = GSDL::Color::LimeGreen
+      @rect_rounded = GSDL::Box.new(x: 320, y: 320, width: 96, height: 64, color: color, border_radius: 32)
     end
 
     def draw(draw : GSDL::Draw)
       @drawables.each(&.draw(draw))
 
       @rect_outline.draw_outline(draw)
+
+      # TODO: also do draw_outline when it's implemented
+      @rect_rounded.draw(draw)
 
       color = GSDL::Color::Magenta
       GSDL::Point.draw(draw, [
@@ -69,10 +76,10 @@ module GameEx
       ])
 
       color = GSDL::Color::Yellow
-      GSDL::Rect.draw_outlines(draw, [
-        GSDL::Rect.new(x: 256, y: 128, width: 32, height: 32, color: color),
-        GSDL::Rect.new(x: 272, y: 144, width: 64, height: 64, color: color),
-        GSDL::Rect.new(x: 312, y: 184, width: 48, height: 48, color: color),
+      GSDL::Box.draw_outlines(draw, [
+        GSDL::Box.new(x: 256, y: 128, width: 32, height: 32, color: color),
+        GSDL::Box.new(x: 272, y: 144, width: 64, height: 64, color: color),
+        GSDL::Box.new(x: 312, y: 184, width: 48, height: 48, color: color),
       ])
     end
   end

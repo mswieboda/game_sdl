@@ -1,4 +1,10 @@
 module GSDL
+  alias Vertex = SDL3::Vertex
+
+  def self.vertex(x : Int32 | Float32, y : Int32 | Float32, color : FColor) : Vertex
+    SDL3::Vertex.new(x.to_f32, y.to_f32, color)
+  end
+
   class Draw
     @r : SDL3::Renderer
 
@@ -96,6 +102,16 @@ module GSDL
       @r.present
     end
 
+    # geometry
+
+    def geometry(vertices : Array(Vertex), indices : Array(Int32))
+      @r.render_geometry(vertices, indices)
+    end
+
+    def geometry(texture : Texture, vertices : Array(Vertex), indices : Array(Int32))
+      @r.render_geometry(texture, vertices, indices)
+    end
+
     # points
 
     def point(x : Float32, y : Float32)
@@ -143,47 +159,47 @@ module GSDL
 
     # rects
 
-    def filled(rect : SDL3::FRect)
+    def filled(rect : FRect)
       @r.fill_rect(rect)
     end
 
-    def filled(rect : Rect)
-      filled(rect.to_sdl_f32)
+    def filled(rect : Rect | Box)
+      filled(rect.to_frect)
     end
 
-    def filled(rects : Array(SDL3::FRect))
+    def filled(rects : Array(FRect))
       slice = Slice.new(rects.to_unsafe, rects.size)
 
       @r.fill_rects(slice)
     end
 
-    def filled(rects : Array(Rect))
-      filled(rects.map(&.to_sdl))
+    def filled(rects : Array(Rect | Box))
+      filled(rects.map(&.to_frect))
     end
 
-    def outline(rect : SDL3::FRect)
+    def outline(rect : FRect)
       @r.draw_rect(rect)
     end
 
-    def outline(rect : Rect)
-      outline(rect.to_sdl_f32)
+    def outline(rect : Rect | Box)
+      outline(rect.to_frect)
     end
 
-    def outlines(rects : Array(SDL3::FRect))
+    def outlines(rects : Array(FRect))
       slice = Slice.new(rects.to_unsafe, rects.size)
 
       @r.draw_rects(slice)
     end
 
-    def outlines(rects : Array(Rect))
-      outlines(rects.map(&.to_sdl_f32))
+    def outlines(rects : Array(Rect | Box))
+      outlines(rects.map(&.to_frect))
     end
 
-    def outline(rects : Array(SDL3::FRect))
+    def outline(rects : Array(FRect))
       outlines(rects)
     end
 
-    def outline(rects : Array(Rect))
+    def outline(rects : Array(Rect | Box))
       outlines(rects)
     end
 
