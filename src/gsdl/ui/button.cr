@@ -17,7 +17,7 @@ module GSDL
       y : Float32 = 0_f32,
       color = Color::Black,
       border_radius : UInt32 = 0,
-      @on_click : Callback = Proc.new,
+      @on_click : Callback = -> on_click(String),
     )
       super(
         font: font,
@@ -31,6 +31,10 @@ module GSDL
         color: color,
         border_radius: border_radius
       )
+    end
+
+    def on_click(text : String)
+      puts ">>> Button on_click: text: #{text}"
     end
 
     def update(dt : Float32)

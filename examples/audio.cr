@@ -41,70 +41,68 @@ module GameEx
     end
 
     @audio : GSDL::Audio
-    @text : GSDL::Text
-    @button_rect : GSDL::FRect
-    @button_stop_rect : GSDL::FRect
-    @current_audio_state : AudioState
+    @button : GSDL::Button
+    @button_stop : GSDL::Button
+    @current_audio_state : AudioState = AudioState::Initial
     @audio_start_tick : UInt64 = 0_u64
 
     def initialize
       super(:start)
 
-      @button_rect = GSDL::FRect.new(x: 50.0, y: 50.0, w: 200.0, h: 50.0)
-      @button_stop_rect = GSDL::FRect.new(x: 50.0, y: 150.0, w: 200.0, h: 50.0)
-      @current_audio_state = AudioState::Initial
+      color = GSDL.color(g: 255)
+      @button = GSDL::Button.new(
+        text: "Play",
+        x: 50,
+        y: 50,
+        width: 200,
+        height: 50,
+        on_click: -> on_click_play(String)
+      )
+      @button_stop = GSDL::Button.new(
+        text: "Stop",
+        x: 50,
+        y: 150,
+        width: 200,
+        height: 50,
+        on_click: -> on_click_stop(String)
+      )
 
       @audio = GSDL::AudioManager.get("race_car_audio")
-
-      color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
-
-      @text = GSDL::Text.new(text: "Play", color: color)
-      @text.x = @button_rect.x + (@button_rect.w - @text.width) / 2
-      @text.y = @button_rect.y + (@button_rect.h - @text.height) / 2
-
-      @text_stop = GSDL::Text.new(text: "Stop", color: color)
-      @text_stop.x = @button_stop_rect.x + (@button_stop_rect.w - @text_stop.width) / 2
-      @text_stop.y = @button_stop_rect.y + (@button_stop_rect.h - @text_stop.height) / 2
 
       update_text("Play")
     end
 
     private def update_text(message : String)
-      @text.text = message
-      # Recalculate position after text change
-      @text.x = @button_rect.x + (@button_rect.w - @text.width) / 2
-      @text.y = @button_rect.y + (@button_rect.h - @text.height) / 2
+      @button.text = message
+    end
+
+    private def on_click_play(_text : String)
+      case @current_audio_state
+      when AudioState::Initial, AudioState::Stopped
+        @audio.play
+        @current_audio_state = AudioState::Playing
+        @audio_start_tick = GSDL.ticks
+        update_text("Pause")
+      when AudioState::Paused
+        @audio.resume
+        @current_audio_state = AudioState::Playing
+        update_text("Pause")
+      when AudioState::Playing
+        @audio.pause
+        @current_audio_state = AudioState::Paused
+        update_text("Unpause")
+      end
+    end
+
+    private def on_click_stop(_text : String)
+      @audio.stop
+      @current_audio_state = AudioState::Stopped
+      update_text("Play")
     end
 
     def update(dt : Float32)
-      # Handle button click
-      if Mouse.just_pressed?(Mouse::ButtonLeft)
-        mouse_x, mouse_y = Mouse.position
-
-        if mouse_x >= @button_rect.x && mouse_x <= (@button_rect.x + @button_rect.w) &&
-           mouse_y >= @button_rect.y && mouse_y <= (@button_rect.y + @button_rect.h)
-          case @current_audio_state
-          when AudioState::Initial, AudioState::Stopped
-            @audio.play
-            @current_audio_state = AudioState::Playing
-            @audio_start_tick = GSDL.ticks
-            update_text("Pause")
-          when AudioState::Paused
-            @audio.resume
-            @current_audio_state = AudioState::Playing
-            update_text("Pause")
-          when AudioState::Playing
-            @audio.pause
-            @current_audio_state = AudioState::Paused
-            update_text("Unpause")
-          end
-        elsif mouse_x >= @button_stop_rect.x && mouse_x <= (@button_stop_rect.x + @button_stop_rect.w) &&
-           mouse_y >= @button_stop_rect.y && mouse_y <= (@button_stop_rect.y + @button_stop_rect.h)
-          @audio.stop
-          @current_audio_state = AudioState::Stopped
-          update_text("Play")
-        end
-      end
+      @button.update(dt)
+      @button_stop.update(dt)
 
       # Automatic state transitions (e.g., stopping after audio finishes)
       if @current_audio_state == AudioState::Playing
@@ -117,19 +115,8 @@ module GameEx
     end
 
     def draw(draw : GSDL::Draw)
-      # Draw button
-      draw.color = GSDL.color_all(100)
-      draw.filled(@button_rect)
-      draw.filled(@button_stop_rect)
-
-      # Draw text
-      @text.draw(draw)
-      @text_stop.draw(draw)
-    end
-
-    def destroy
-      @text.destroy
-      super
+      @button.draw(draw)
+      @button_stop.draw(draw)
     end
   end
 

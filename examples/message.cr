@@ -63,13 +63,13 @@ module GameEx
       )
 
       @buttons << GSDL::Button.new(
-        on_click: ->on_click(String),
+        on_click: -> on_click(String),
         text: "OK!",
         x: 64.to_f32,
         y: 32.to_f32
       )
       @buttons << GSDL::Button.new(
-        on_click: ->on_click(String),
+        on_click: -> on_click(String),
         font: font,
         text: "OK! a large button",
         x: 320.to_f32,

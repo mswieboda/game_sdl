@@ -49,6 +49,10 @@ module GSDL
       @text.y = y + padding
     end
 
+    def text=(text : String)
+      @text.text = text
+    end
+
     def x
       @text.x - padding
     end
