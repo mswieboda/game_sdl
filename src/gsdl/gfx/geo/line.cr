@@ -1,24 +1,17 @@
-require "./shape"
+require "./pixel"
 
 module GSDL
-  class Line < Shape
+  class Line < Pixel
     property x2 : Num = 0
     property y2 : Num = 0
+    property color : Color = Color::White
 
-    def initialize(x1, y1, @x2 : Num, @y2 : Num)
-      super(x: x1, y: y1)
-    end
-
-    def initialize(@x2 : Num, @y2 : Num)
+    def initialize(@x2 : Num = 0, @y2 : Num = 0, @color = Color::White)
       super()
     end
 
-    def initialize(x1, y1, @x2 : Num, @y2 : Num, color : Color)
-      super(x: x1, y: y1, color: color)
-    end
-
-    # not used for this class, can just use raw values to draw
-    def update_geometry
+    def initialize(x1, y1, @x2 : Num, @y2 : Num, @color : Color = Color::White)
+      super(x: x1, y: y1)
     end
 
     def x1 : Num
@@ -46,9 +39,9 @@ module GSDL
       draw.line(self)
     end
 
-    def self.draw(draw : Draw, points : Array(Point))
-      draw.color = points.first.color
-      draw.lines(points)
+    def self.draw(draw : Draw, pixels : Array(Pixel))
+      draw.color = pixels.first.color
+      draw.lines(pixels)
     end
   end
 end

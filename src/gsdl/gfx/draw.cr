@@ -136,6 +136,14 @@ module GSDL
       points(points.map(&.to_fpoint))
     end
 
+    def pixel(pixel : Pixel)
+      point(pixel.x.to_f32, pixel.y.to_f32)
+    end
+
+    def pixels(pixels : Array(Point))
+      points(pixels.map(&.to_fpoint))
+    end
+
     # lines
 
     def line(x1 : Int32 | Float32, y1 : Int32 | Float32, x2 : Int32 | Float32, y2 : Int32 | Float32)

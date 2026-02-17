@@ -23,20 +23,22 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
+    @points : Array(GSDL::Point)
     @filled : Array(GSDL::Shape)
     @outlines : Array(GSDL::Shape)
 
     def initialize
       super(:start)
 
+      @points = [] of GSDL::Point
       @filled = [] of GSDL::Shape
       @outlines = [] of GSDL::Shape
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
-      @filled << GSDL::Point.new(x: 32, y: 32, color: color)
+      @points << GSDL::Pixel.new(x: 16, y: 16, color: color)
 
       color = GSDL.color(r: 255, g: 160, b: 224)
-      @filled << GSDL::Line.new(x1: 64, y1: 64, x2: 96, y2: 128, color: color)
+      @points << GSDL::Line.new(x1: 64, y1: 64, x2: 96, y2: 128, color: color)
 
       color = GSDL.color(r: 255)
       @filled << GSDL::Box.new(x: 128, y: 128, width: 64, height: 96, color: color)
@@ -63,27 +65,30 @@ module GameEx
     end
 
     def draw(draw : GSDL::Draw)
+      @points.each(&.draw(draw))
       @filled.each(&.draw(draw))
       @outlines.each(&.draw_outline(draw))
 
       color = GSDL::Color::Magenta
-      GSDL::Point.draw(draw, [
-        GSDL::Point.new(x: 128, y: 32, color: color),
-        GSDL::Point.new(x: 136, y: 40, color: color),
-        GSDL::Point.new(x: 144, y: 48, color: color),
+      GSDL::Pixel.draw(draw, [
+        GSDL::Pixel.new(x: 128, y: 32, color: color),
+        GSDL::Pixel.new(x: 160, y: 16, color: color),
+        GSDL::Pixel.new(x: 160, y: 40, color: color),
+        GSDL::Pixel.new(x: 160, y: 64, color: color),
+        GSDL::Pixel.new(x: 192, y: 48, color: color),
       ])
 
       # can also use GSDL::Line.draw
       # with array of Points too
       # it should be the same
       color = GSDL::Color::Cyan
-      GSDL::Point.draw_lines(draw, [
-        GSDL::Point.new(x: 32, y: 128, color: color),
-        GSDL::Point.new(x: 40, y: 136, color: color),
-        GSDL::Point.new(x: 48, y: 144, color: color),
-        GSDL::Point.new(x: 56, y: 136, color: color),
-        GSDL::Point.new(x: 64, y: 152, color: color),
-        GSDL::Point.new(x: 32, y: 256, color: color),
+      GSDL::Pixel.draw_lines(draw, [
+        GSDL::Pixel.new(x: 32, y: 128, color: color),
+        GSDL::Pixel.new(x: 40, y: 136, color: color),
+        GSDL::Pixel.new(x: 48, y: 144, color: color),
+        GSDL::Pixel.new(x: 56, y: 136, color: color),
+        GSDL::Pixel.new(x: 64, y: 152, color: color),
+        GSDL::Pixel.new(x: 32, y: 256, color: color),
       ])
 
       color = GSDL::Color::Yellow
