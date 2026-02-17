@@ -12,7 +12,7 @@ module GSDL
     properties_changed({
       width: Num = 0,
       height: Num = 0,
-      border_radius: UInt32 = 0
+      border_radius: Num = 0
     })
 
     getters_update_geometry({
@@ -21,11 +21,11 @@ module GSDL
       outline_arc_points: ArcPoints = [] of Array(FPoint)
     })
 
-    def initialize(@width, @height, @border_radius : UInt32 = 0)
+    def initialize(@width, @height, @border_radius : Num = 0)
       super()
     end
 
-    def initialize(x, y, @width, @height, color : Color, @border_radius : UInt32 = 0)
+    def initialize(x, y, @width, @height, color : Color, @border_radius : Num = 0)
       super(x: x, y: y, color: color)
     end
 
@@ -35,7 +35,7 @@ module GSDL
       @outline_arc_points = [] of Array(FPoint)
 
       if border_radius > 0
-        max_border_radius = ([width, height].min / 2).to_u32
+        max_border_radius = ([width, height].min / 2).to_f32
         @border_radius = [border_radius, max_border_radius].min
 
         # top left, top right, bottom left, bottom right

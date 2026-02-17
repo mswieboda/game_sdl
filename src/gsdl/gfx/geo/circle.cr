@@ -7,7 +7,7 @@ module GSDL
     alias ArcPoints = Array(Array(FPoint))
 
     properties_changed({
-      radius: UInt32 = 16
+      radius: Num = 16
     })
 
     getters_update_geometry({
@@ -16,11 +16,11 @@ module GSDL
       outline_arc_points: ArcPoints = [] of Array(FPoint)
     })
 
-    def initialize(@radius : UInt32 = 16)
+    def initialize(@radius : Num = 16)
       super()
     end
 
-    def initialize(x, y, @radius : UInt32 = 16, color : Color = Color::White)
+    def initialize(x, y, @radius : Num = 16, color : Color = Color::White)
       super(x: x, y: y, color: color)
     end
 

@@ -50,10 +50,14 @@ module GameEx
       circle = GSDL::Circle.new(x: 400, y: 400, radius: 64, color: color)
       @outlines << circle
 
+      color = GSDL::Color::Blue
+      @outlines << GSDL::Circle.new(x: 256, y: 320, radius: 64, color: color)
+
       # example for changed, update_geometry
-      circle.x = 100
-      circle.y = 400
-      circle.color = GSDL::Color::Blue
+      circle.x = 447
+      circle.y = 447
+      circle.radius = 32.5_f32
+      circle.color = GSDL::Color::Magenta
     end
 
     def draw(draw : GSDL::Draw)
