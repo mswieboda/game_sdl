@@ -91,7 +91,7 @@ module GameEx
 
       (0...LOGICAL_HEIGHT).step(tile_size) do |y|
         (0...LOGICAL_WIDTH).step(tile_size) do |x|
-          rect = GSDL::Rect.new(x: x, y: y, w: tile_size, h: tile_size)
+          rect = GSDL::Rect.new(x: x, y: y, width: tile_size, height: tile_size, color: color1)
           if ((x / tile_size) + (y / tile_size)) % 2 == 0
             surface.fill_rect(rect.to_sdl, color1)
           else
@@ -121,12 +121,12 @@ module GameEx
 
     def draw(draw : GSDL::Draw)
       # Clear with a distinct color to show letterboxing/overscan areas
-      draw.color = GSDL::Colors::Magenta
+      draw.color = GSDL::Color::Magenta
       draw.clear
 
       # Render background, which will be scaled by the logical presentation
       bg_dest_rect = GSDL::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
-      draw.texture(texture: @bg_texture, dest_rect: bg_dest_rect)
+      draw.texture(texture: @bg_texture, dest_rect: bg_dest_rect, draw_immediately: true)
 
       # Render text
       @instruction_text.draw(draw)

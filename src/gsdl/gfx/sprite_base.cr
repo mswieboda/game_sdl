@@ -5,7 +5,7 @@ module GSDL
     property x : Float32
     property y : Float32
     property z_index : Int32 = 0
-    property color : Color = Colors::White
+    property color : Color = Color::White
     property collision_bounding_box : FRect
 
     @texture : SDL3::Texture

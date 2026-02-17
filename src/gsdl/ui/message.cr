@@ -6,7 +6,7 @@ module GSDL
     end
 
     def draw_background(draw : Draw)
-      rect = Rect.new(x: x, y: y, width: width, height: height, color: Colors::White)
+      rect = Rect.new(x: x, y: y, width: width, height: height, color: Color::White)
       rect.draw_filled(draw)
     end
 

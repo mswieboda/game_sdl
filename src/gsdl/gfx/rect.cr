@@ -5,7 +5,7 @@ module GSDL
     property width : Num
     property height : Num
 
-    def initialize(x, y, @width, @height, @color : Color? = nil)
+    def initialize(x, y, @width, @height, color : Color)
       super(x: x, y: y, color: color)
     end
 
@@ -38,27 +38,27 @@ module GSDL
     end
 
     def draw_filled(draw : Draw)
-      draw_color(draw)
+      draw.color = color
       draw.filled(self)
     end
 
-    def self.draw_filled(draw : Draw, rects : Array(Rect), color : Color? = nil)
-      draw_color(draw, color)
+    def self.draw_filled(draw : Draw, rects : Array(Rect))
+      draw.color = rects.first.color
       draw.filled(rects)
     end
 
     def draw_outline(draw : Draw)
-      draw_color(draw)
+      draw.color = color
       draw.outline(self)
     end
 
-    def self.draw_outlines(draw : Draw, rects : Array(Rect), color : Color? = nil)
-      draw_color(draw, color)
+    def self.draw_outlines(draw : Draw, rects : Array(Rect))
+      draw.color = rects.first.color
       draw.outlines(rects)
     end
 
-    def self.draw_outline(draw : Draw, rects : Array(Rect), color : Color? = nil)
-      draw_outlines(draw, rects, color)
+    def self.draw_outline(draw : Draw, rects : Array(Rect))
+      draw_outlines(draw, rects)
     end
   end
 end

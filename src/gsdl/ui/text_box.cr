@@ -17,7 +17,7 @@ module GSDL
       align = Font::Align::Left,
       x : Float32 = 0_f32,
       y : Float32 = 0_f32,
-      color = Colors::Black
+      color = Color::Black
     )
       if font.align != align
         font = font.copy

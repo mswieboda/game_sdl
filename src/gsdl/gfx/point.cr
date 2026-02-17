@@ -5,17 +5,17 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      draw_color(draw)
+      draw.color = color
       draw.point(self)
     end
 
-    def self.draw(draw : Draw, points : Array(Point), color : Color? = nil)
-      draw_color(draw, color)
+    def self.draw(draw : Draw, points : Array(Point))
+      draw.color = points.first.color
       draw.points(points)
     end
 
-    def self.draw_lines(draw : Draw, points : Array(Point), color : Color? = nil)
-      draw_color(draw, color)
+    def self.draw_lines(draw : Draw, points : Array(Point))
+      draw.color = points.first.color
       draw.lines(points)
     end
   end

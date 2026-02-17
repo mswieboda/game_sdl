@@ -40,6 +40,7 @@ examples:
 	@$(MAKE) run EXAMPLE=collision
 	@$(MAKE) run EXAMPLE=tile_map
 	@$(MAKE) run EXAMPLE=platformer
+	@$(MAKE) run EXAMPLE=message
 
 run:
 	@echo "Building and running example: $(EXAMPLE)"

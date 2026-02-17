@@ -35,7 +35,7 @@ module GameEx
 
       font = GSDL::Font.default.copy
       font.size = 12
-      color = GSDL::Colors::Red
+      color = GSDL::Color::Red
 
       @messages = [] of GSDL::Message
       @buttons = [] of GSDL::Button

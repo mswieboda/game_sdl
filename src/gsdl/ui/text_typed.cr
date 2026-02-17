@@ -13,7 +13,7 @@ module GSDL
       text = "",
       x = 0_f32,
       y = 0_f32,
-      color = GSDL::Colors::White,
+      color = Color::White,
       @chars_per_second : UInt8 = 16_u8,
       @on_complete : Proc(Nil) | Nil = nil
     )

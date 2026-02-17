@@ -45,7 +45,7 @@ module GSDL
       source_rect : FRect?,
       dest_rect : FRect,
       flip : Int32,
-      color : Color = Colors::White,
+      color : Color = Color::White,
       destroy : Bool = false
     )
       @draw_commands << DrawCommand.new(z_index, texture, source_rect, dest_rect, flip, color, destroy)
@@ -81,27 +81,14 @@ module GSDL
       @draw_commands.sort_by!(&.z_index)
 
       @draw_commands.each do |command|
-
-        set_color(command.color)
-
-        if source_rect = command.source_rect
-          @r.render_texture_rotated(
-            texture: command.texture,
-            source_rect: source_rect,
-            dest_rect: command.dest_rect,
-            flip: command.flip
-          )
-        else
-          @r.render_texture_rotated(
-            texture: command.texture,
-            dest_rect: command.dest_rect,
-            flip: command.flip
-          )
-        end
-
-        if command.destroy?
-          command.texture.destroy
-        end
+        draw_texture_rotated(
+          texture: command.texture,
+          source_rect: command.source_rect,
+          dest_rect: command.dest_rect,
+          flip: command.flip,
+          color: command.color,
+          destroy: command.destroy?,
+        )
       end
 
       @draw_commands.clear
@@ -220,10 +207,11 @@ module GSDL
       dest_rect : FRect? = nil,
       flip : Int32 = 0,
       z_index : Int32 = 0,
-      color : Color = Colors::White,
-      destroy : Bool = false
+      color : Color = Color::White,
+      destroy : Bool = false,
+      draw_immediately : Bool = false
     )
-      texture_rotated(texture, x, y, source_rect, dest_rect, flip, z_index, color)
+      texture_rotated(texture, x, y, source_rect, dest_rect, flip, z_index, color, destroy, draw_immediately)
     end
 
     def texture_rotated(
@@ -234,12 +222,54 @@ module GSDL
       dest_rect : FRect? = nil,
       flip : Int32 = 0,
       z_index : Int32 = 0,
-      color : Color = Colors::White,
-      destroy : Bool = false
+      color : Color = Color::White,
+      destroy : Bool = false,
+      draw_immediately : Bool = false
     )
       actual_dest_rect = dest_rect || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)
 
-      add_draw_command(z_index, texture, source_rect, actual_dest_rect, flip, color)
+      if draw_immediately
+        draw_texture_rotated(
+          texture: texture,
+          source_rect: source_rect,
+          dest_rect: actual_dest_rect,
+          flip: flip,
+          color: color,
+          destroy: destroy,
+        )
+      else
+        add_draw_command(z_index, texture, source_rect, actual_dest_rect, flip, color)
+      end
+    end
+
+    def draw_texture_rotated(
+      texture : SDL3::Texture,
+      source_rect : FRect? = nil,
+      dest_rect : FRect? = nil,
+      flip : Int32 = 0,
+      color : Color = Color::White,
+      destroy : Bool = false
+    )
+      set_color(color)
+
+      if src_rect = source_rect
+        @r.render_texture_rotated(
+          texture: texture,
+          source_rect: src_rect,
+          dest_rect: dest_rect,
+          flip: flip
+        )
+      else
+        @r.render_texture_rotated(
+          texture: texture,
+          dest_rect: dest_rect,
+          flip: flip
+        )
+      end
+
+      if destroy
+        texture.destroy
+      end
     end
 
     def target=(texture : SDL3::Texture?)

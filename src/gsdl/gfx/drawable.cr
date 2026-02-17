@@ -4,21 +4,9 @@ module GSDL
 
     property x : Num
     property y : Num
-    property color : Color?
+    property color : Color
 
-    def initialize(@x, @y, @color : Color? = nil)
-    end
-
-    def draw_color(draw : Draw)
-      if c = color
-        draw.color = c
-      end
-    end
-
-    def self.draw_color(draw : Draw, color : Color? = nil)
-      if c = color
-        draw.color = c
-      end
+    def initialize(@x, @y, @color : Color)
     end
 
     def draw(draw : Draw)

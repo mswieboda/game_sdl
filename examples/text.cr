@@ -47,19 +47,19 @@ module GameEx
       color = GSDL.color_all(160)
       @text << GSDL::Text.new(text: "hello world!", color: color)
 
-      color = GSDL::Colors::Indigo
+      color = GSDL::Color::Indigo
       @text << GSDL::Text.new(text: "hello world!", color: color)
 
-      color = GSDL::Colors.from_hex("#0000aa")
+      color = GSDL::Color.from_hex("#0000aa")
       @text << GSDL::TextTyped.new(text: "hello world!", color: color, chars_per_second: 12_u8)
 
-      color = GSDL::Colors.random
+      color = GSDL::Color.random
       @text << GSDL::Text.new(text: "hello world!", color: color)
 
-      color = GSDL::Colors.random_chunks(16)
+      color = GSDL::Color.random_chunks(16)
       @text << GSDL::TextTyped.new(text: "hello world!", color: color, chars_per_second: 8_u8)
 
-      color = GSDL::Colors::White
+      color = GSDL::Color::White
       @text_wrapped = GSDL::Text.new(
         text: "multiple lines\nof text\nwith newlines\nwrapped to a width too",
         x: 32,
@@ -82,8 +82,8 @@ module GameEx
     end
 
     def draw(draw : GSDL::Draw)
-      @text.each(&.draw)
-      @text_wrapped.draw
+      @text.each(&.draw(draw))
+      @text_wrapped.draw(draw)
     end
   end
 

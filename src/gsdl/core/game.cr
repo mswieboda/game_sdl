@@ -4,7 +4,7 @@ module GSDL
   end
 
   abstract class Game
-    DefaultBackgroundColor = Colors::Black
+    DefaultBackgroundColor = Color::Black
 
     @@draw : Draw?
 

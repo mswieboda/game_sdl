@@ -28,7 +28,7 @@ module GSDL
       @text = "",
       @x = 0,
       @y = 0,
-      color = GSDL::Colors::White,
+      color = Color::White,
       direction = SDL3::TTF::Direction::LTR,
       wrap_width : Int32? = nil
     )

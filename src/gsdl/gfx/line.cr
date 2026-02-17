@@ -5,7 +5,7 @@ module GSDL
     property x2 : Num
     property y2 : Num
 
-    def initialize(x1, y1, @x2 : Num, @y2 : Num, color : Color? = nil)
+    def initialize(x1, y1, @x2 : Num, @y2 : Num, color : Color)
       super(x: x1, y: y1, color: color)
     end
 
@@ -30,12 +30,12 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      draw_color(draw)
+      draw.color = color
       draw.line(self)
     end
 
-    def self.draw(draw : Draw, points : Array(Point), color : Color? = nil)
-      draw_color(draw, color)
+    def self.draw(draw : Draw, points : Array(Point))
+      draw.color = points.first.color
       draw.lines(points)
     end
   end

@@ -1,59 +1,24 @@
 module GSDL
   alias Color = SDL3::Color
+  alias FColor = SDL3::FColor
 
   def self.color(r : UInt8 = 0, g : UInt8 = 0, b : UInt8 = 0, a : UInt8 = 255) : Color
-    Color.new(r: r, g: g, b: b, a: a)
+    SDL3.color(r: r, g: g, b: b, a: a)
   end
 
   def self.color_all(value : UInt8, a : UInt8 = 255) : Color
-    color(r: value, g: value, b: value, a: a)
+    SDL3.color_all(value, a)
   end
 
-  module Colors
-    def self.from_hex(hex : String)
-      code = hex.lchop('#').lchop("0x")
-      alpha = code[6..7].empty? ? "ff" : code[6..7]
+  def self.fcolor(r : Float32 = 0_f32, g : Float32 = 0_f32, b : Float32 = 0_f32, a : Float32 = 1_f32) : Color
+    SDL3.fcolor(r: r, g: g, b: b, a: a)
+  end
 
-      Color.new(
-        r: code[0..1].to_u8(base: 16),
-        g: code[2..3].to_u8(base: 16),
-        b: code[4..5].to_u8(base: 16),
-        a: alpha.to_u8(base: 16)
-      )
-    end
+  def self.fcolor_all(value : Float32, a : Float32 = 1_f32) : Color
+    SDL3.fcolor(value, a)
+  end
 
-    def self.random(a : UInt8 = 255)
-      Color.new(
-        r: rand(256),
-        g: rand(256),
-        b: rand(256),
-        a: a
-      )
-    end
-
-    def self.random_chunks(size : UInt8 = 8, a : UInt8 = 255)
-      rand_max = (256 // size) + 1
-
-      Color.new(
-        r: rand(rand_max) * size,
-        g: rand(rand_max) * size,
-        b: rand(rand_max) * size,
-        a: a
-      )
-    end
-
-    def self.to_u32(color : Color)
-      (color.r.to_u32 << 24) | (color.g.to_u32 << 16) | (color.b.to_u32 << 8) | color.a.to_u32
-    end
-
-    def self.to_hex(color : Color, with_alpha = false)
-      hex = "#"
-      hex += color.r.to_s(base: 16, upcase: true)
-      hex += color.g.to_s(base: 16, upcase: true)
-      hex += color.b.to_s(base: 16, upcase: true)
-      hex += color.a.to_s(base: 16, upcase: true) if with_alpha
-    end
-
+  struct Color
     # TODO: methods like:
     # - darken
     # - lighten
@@ -153,22 +118,22 @@ module GSDL
     SandyWood   = GSDL.color(r: 244, g: 164, b: 96)
     Tan         = GSDL.color(r: 210, g: 180, b: 140)
     Moccasin    = GSDL.color(r: 255, g: 228, b: 181)
+  end
 
-    # Palettes
-    Palette = Array(Color)
+  # Palettes
+  alias Palette = Array(Color)
 
-    module Palettes
-      Primary = [Red, Blue, Yellow]
-      RYB = Primary
-      PrimaryRYB = Primary
-      RGB = [Red, Green, Blue]
-      PrimaryRGB = RGB
+  module Palettes
+    Primary = [Red, Blue, Yellow]
+    RYB = Primary
+    PrimaryRYB = Primary
+    RGB = [Red, Green, Blue]
+    PrimaryRGB = RGB
 
-      Secondary = [Orange, Green, Purple]
-      SecondaryRYB = Secondary
-      SecondaryRGB = [Cyan, Magenta, Yellow]
+    Secondary = [Orange, Green, Purple]
+    SecondaryRYB = Secondary
+    SecondaryRGB = [Cyan, Magenta, Yellow]
 
-      Rainbow = [Red, Orange, Yellow, Green, Blue, Indigo, Violet]
-    end
+    Rainbow = [Red, Orange, Yellow, Green, Blue, Indigo, Violet]
   end
 end
