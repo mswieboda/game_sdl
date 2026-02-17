@@ -138,8 +138,8 @@ module GSDL
 
     # lines
 
-    def line(x1 : Float32, y1 : Float32, x2 : Float32, y2 : Float32)
-      @r.draw_line(x1: x1, y1: y1, x2: x2, y2: y2)
+    def line(x1 : Int32 | Float32, y1 : Int32 | Float32, x2 : Int32 | Float32, y2 : Int32 | Float32)
+      @r.draw_line(x1: x1.to_f32, y1: y1.to_f32, x2: x2.to_f32, y2: y2.to_f32)
     end
 
     def line(line : Line)
@@ -151,10 +151,14 @@ module GSDL
       )
     end
 
-    def lines(points : Array(Point))
-      slice = Slice.new(points.map(&.to_sdl).to_unsafe, points.size)
+    def lines(points : Array(FPoint))
+      slice = Slice.new(points.to_unsafe, points.size)
 
       @r.draw_lines(slice)
+    end
+
+    def lines(points : Array(Point))
+      lines(points.map(&.to_sdl))
     end
 
     # rects

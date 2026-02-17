@@ -23,37 +23,37 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @drawables : Array(GSDL::Drawable)
-    @box_outline : GSDL::Box
-    @box_rounded : GSDL::Box
+    @filled : Array(GSDL::Drawable)
+    @outlines : Array(GSDL::Box)
 
     def initialize
       super(:start)
 
-      @drawables = [] of GSDL::Drawable
+      @filled = [] of GSDL::Drawable
+      @outlines = [] of GSDL::Box
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
-      @drawables << GSDL::Point.new(x: 32, y: 32, color: color)
+      @filled << GSDL::Point.new(x: 32, y: 32, color: color)
 
       color = GSDL.color(r: 255, g: 160, b: 224)
-      @drawables << GSDL::Line.new(x1: 64, y1: 64, x2: 96, y2: 128, color: color)
+      @filled << GSDL::Line.new(x1: 64, y1: 64, x2: 96, y2: 128, color: color)
 
       color = GSDL.color(r: 255)
-      @drawables << GSDL::Box.new(x: 128, y: 128, width: 64, height: 96, color: color)
-
-      @box_outline = GSDL::Box.new(x: 32, y: 32, width: 64, height: 32, color: color)
+      @filled << GSDL::Box.new(x: 128, y: 128, width: 64, height: 96, color: color)
+      @outlines << GSDL::Box.new(x: 32, y: 32, width: 64, height: 32, color: color)
 
       color = GSDL::Color::LimeGreen
-      @box_rounded = GSDL::Box.new(x: 320, y: 320, width: 96, height: 64, color: color, border_radius: 32)
+      @filled << GSDL::Box.new(x: 320, y: 320, width: 96, height: 64, color: color, border_radius: 16)
+      @outlines << GSDL::Box.new(x: 448, y: 256, width: 64, height: 128, color: color, border_radius: 64)
+
+      # TODO: refactor to Arc / Pie, and Circle without the Rect parts
+      #   a circle is width = height = border_radius
+      @outlines << GSDL::Box.new(x: 400, y: 400, width: 64, height: 64, color: color, border_radius: 32)
     end
 
     def draw(draw : GSDL::Draw)
-      @drawables.each(&.draw(draw))
-
-      @box_outline.draw_outline(draw)
-
-      # TODO: also do draw_outline when it's implemented
-      @box_rounded.draw(draw)
+      @filled.each(&.draw(draw))
+      @outlines.each(&.draw_outline(draw))
 
       color = GSDL::Color::Magenta
       GSDL::Point.draw(draw, [

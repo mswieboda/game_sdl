@@ -13,12 +13,14 @@ module GSDL
 
     @vertices : Array(Vertex)
     @indices : Array(Int32)
+    @arc_points : Array(Array(FPoint))
 
     def initialize(x, y, @width, @height, color : Color, @border_radius : UInt32 = 0, resolution : UInt8 = 16_u8)
       super(x: x, y: y, color: color)
 
       @vertices = [] of Vertex
       @indices = [] of Int32
+      @arc_points = [] of Array(FPoint)
 
       if @border_radius > 0
         max_border_radius = ([@width, @height].min / 2).to_u32
@@ -69,12 +71,17 @@ module GSDL
       start_v = @vertices.size
 
       # Arc vertices
+      points = [] of FPoint
+
       (resolution + 1).times do |i|
         angle = Math::PI + i * (0.5 * Math::PI / resolution)
         x = center_x + x_dir * border_radius * Math.cos(angle)
         y = center_y + y_dir * border_radius * Math.sin(angle)
         @vertices << Vertex.new(x.to_f32, y.to_f32, color.to_fcolor)
+        points << FPoint.new(x.to_f32, y.to_f32)
       end
+
+      @arc_points << points
 
       # Indices for triangle fan
       resolution.times do |i|
@@ -150,8 +157,57 @@ module GSDL
     end
 
     def draw_outline(draw : Draw)
+      if border_radius <= 0
+        draw.color = color
+        draw.outline(self)
+      else
+        draw_outline_cross(draw)
+        draw_outline_border_radius(draw)
+      end
+    end
+
+    def draw_outline_cross(draw : Draw)
       draw.color = color
-      draw.outline(self)
+
+      # top
+      draw.line(
+        x1: x + border_radius,
+        y1: y,
+        x2: x + width - border_radius,
+        y2: y,
+      )
+
+      # bottom
+      draw.line(
+        x1: x + border_radius,
+        y1: y + height,
+        x2: x + width - border_radius,
+        y2: y + height,
+      )
+
+      # left
+      draw.line(
+        x1: x,
+        y1: y + border_radius,
+        x2: x,
+        y2: y + height - border_radius,
+      )
+
+      # right
+      draw.line(
+        x1: x + width,
+        y1: y + border_radius,
+        x2: x + width,
+        y2: y + height - border_radius,
+      )
+    end
+
+    def draw_outline_border_radius(draw : Draw)
+      draw.color = color
+
+      @arc_points.each do |points|
+        draw.lines(points)
+      end
     end
 
     def self.draw_outlines(draw : Draw, rects : Array(Box))
