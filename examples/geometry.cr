@@ -24,15 +24,13 @@ module GameEx
 
   class StartScene < GSDL::Scene
     @points : Array(GSDL::Point)
-    @filled : Array(GSDL::Shape)
-    @outlines : Array(GSDL::Shape)
+    @shapes : Array(GSDL::Shape)
 
     def initialize
       super(:start)
 
       @points = [] of GSDL::Point
-      @filled = [] of GSDL::Shape
-      @outlines = [] of GSDL::Shape
+      @shapes = [] of GSDL::Shape
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
       @points << GSDL::Pixel.new(x: 16, y: 16, color: color)
@@ -41,36 +39,36 @@ module GameEx
       @points << GSDL::Line.new(x1: 64, y1: 64, x2: 96, y2: 128, color: color)
 
       color = GSDL::Color::Magenta
-      @filled << GSDL::Triangle.new({64, 16}, {96, 32}, {32, 48}, color: color)
+      @shapes << GSDL::Triangle.new({64, 16}, {96, 32}, {32, 48}, color: color)
 
       color = GSDL.color(r: 255)
-      @filled << GSDL::Box.new(x: 128, y: 128, width: 64, height: 96, color: color)
-      @outlines << GSDL::Box.new(x: 256, y: 32, width: 64, height: 32, color: color)
+      @shapes << GSDL::Box.new(x: 128, y: 128, width: 64, height: 96, color: color)
+      @shapes << GSDL::Box.new(x: 256, y: 32, width: 64, height: 32, color: color, draw_mode: GSDL::Shape::DrawMode::Outline)
 
       color = GSDL::Color::LimeGreen
-      @filled << GSDL::Box.new(x: 320, y: 320, width: 96, height: 64, color: color, border_radius: 16)
-      @outlines << GSDL::Box.new(x: 448, y: 256, width: 64, height: 128, color: color, border_radius: 64)
-      @filled << GSDL::Circle.new(x: 320, y: 448, radius: 32, color: color)
-      @filled << GSDL::Oval.new(x: 448, y: 448, radius_x: 32, radius_y: 64, color: color)
+      @shapes << GSDL::Box.new(x: 320, y: 320, width: 96, height: 64, color: color, border_radius: 16)
+      @shapes << GSDL::Box.new(x: 448, y: 256, width: 64, height: 128, color: color, border_radius: 64, draw_mode: GSDL::Shape::DrawMode::Outline)
+      @shapes << GSDL::Circle.new(x: 320, y: 448, radius: 32, color: color)
+      @shapes << GSDL::Oval.new(x: 448, y: 448, radius_x: 32, radius_y: 64, color: color)
 
-      circle = GSDL::Circle.new(x: 400, y: 400, radius: 64, color: color)
-      @outlines << circle
+      circle = GSDL::Circle.new(x: 400, y: 400, radius: 64, color: color, draw_mode: GSDL::Shape::DrawMode::Outline)
+      @shapes << circle
 
       color = GSDL::Color::Blue
-      @outlines << GSDL::Circle.new(x: 256, y: 320, radius: 64, color: color)
-      @filled << GSDL::Oval.new(x: 224, y: 448, radius_x: 64, radius_y: 32, color: color)
+      @shapes << GSDL::Circle.new(x: 256, y: 320, radius: 64, color: color, draw_mode: GSDL::Shape::DrawMode::Outline)
+      @shapes << GSDL::Oval.new(x: 224, y: 448, radius_x: 64, radius_y: 32, color: color)
 
       # example for changed, update_geometry
       circle.x = 319
       circle.y = 447
       circle.radius = 32.5_f32
+      circle.draw_mode = GSDL::Shape::DrawMode::Outline
       circle.color = GSDL::Color::Magenta
     end
 
     def draw(draw : GSDL::Draw)
       @points.each(&.draw(draw))
-      @filled.each(&.draw(draw))
-      @outlines.each(&.draw_outline(draw))
+      @shapes.each(&.draw(draw))
 
       color = GSDL::Color::Magenta
       GSDL::Pixel.draw(draw, [
@@ -92,13 +90,6 @@ module GameEx
         GSDL::Pixel.new(x: 56, y: 136, color: color),
         GSDL::Pixel.new(x: 64, y: 152, color: color),
         GSDL::Pixel.new(x: 32, y: 256, color: color),
-      ])
-
-      color = GSDL::Color::Yellow
-      GSDL::Box.draw_outlines(draw, [
-        GSDL::Box.new(x: 256, y: 128, width: 32, height: 32, color: color),
-        GSDL::Box.new(x: 272, y: 144, width: 64, height: 64, color: color),
-        GSDL::Box.new(x: 312, y: 184, width: 48, height: 48, color: color),
       ])
     end
   end

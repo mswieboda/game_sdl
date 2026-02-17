@@ -79,16 +79,12 @@ module GSDL
       # scale_x: Num = 0,
       # scale_y: Num = 0,
       color: Color = Color::White,
-      # TODO: add to constructor?
       draw_mode: DrawMode = DrawMode::Fill
     })
 
     getter? changed : Bool = true
 
-    def initialize
-    end
-
-    def initialize(@x, @y, @color)
+    def initialize(@x : Num = 0, @y : Num = 0, @color : Color = Color::White, @draw_mode : DrawMode = DrawMode::Fill)
     end
 
     # needs to be called at the end of initialization,
@@ -99,18 +95,17 @@ module GSDL
       @changed = true
     end
 
-    abstract def draw(draw : Draw)
+    def draw(draw : Draw)
+      draw_filled(draw) if draw_mode.fill? || draw_mode.both?
+      draw_outline(draw) if draw_mode.outline? || draw_mode.both?
+    end
 
-    def draw_filled(draw : Draw)
+    private def draw_filled(draw : Draw)
       draw(draw)
     end
 
-    def draw_outline(draw : Draw)
+    private def draw_outline(draw : Draw)
       draw(draw)
-    end
-
-    def self.draw(draw : Draw, shapes : Array(Shape))
-      shapes.each(&.draw(draw))
     end
   end
 end

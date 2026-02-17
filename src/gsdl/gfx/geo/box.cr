@@ -25,8 +25,8 @@ module GSDL
       super()
     end
 
-    def initialize(x, y, @width, @height, color : Color, @border_radius : Num = 0)
-      super(x: x, y: y, color: color)
+    def initialize(x, y, @width, @height, color : Color, draw_mode : Shape::DrawMode = Shape::DrawMode::Fill, @border_radius : Num = 0)
+      super(x: x, y: y, color: color, draw_mode: draw_mode)
     end
 
     def update_geometry
@@ -107,7 +107,7 @@ module GSDL
       FRect.new(x: x.to_f32, y: y.to_f32, w: w.to_f32, h: h.to_f32)
     end
 
-    def draw_filled(draw : Draw)
+    private def draw_filled(draw : Draw)
       if border_radius <= 0
         draw.color = color
         draw.filled(self)
@@ -118,7 +118,7 @@ module GSDL
       end
     end
 
-    def draw_filled_cross(draw : Draw)
+    private def draw_filled_cross(draw : Draw)
       draw.color = color
       draw.filled([
         Rect.new(
@@ -136,20 +136,11 @@ module GSDL
       ])
     end
 
-    def draw_filled_border_radius(draw : Draw)
+    private def draw_filled_border_radius(draw : Draw)
       draw.geometry(@fill_vertices, @fill_indices)
     end
 
-    def self.draw_filled(draw : Draw, rects : Array(Box))
-      draw.color = rects.first.color
-      draw.filled(rects)
-    end
-
-    def draw(draw : Draw)
-      draw_filled(draw)
-    end
-
-    def draw_outline(draw : Draw)
+    private def draw_outline(draw : Draw)
       if border_radius <= 0
         draw.color = color
         draw.outline(self)
@@ -160,7 +151,7 @@ module GSDL
       end
     end
 
-    def draw_outline_cross(draw : Draw)
+    private def draw_outline_cross(draw : Draw)
       draw.color = color
 
       # top
@@ -196,21 +187,12 @@ module GSDL
       )
     end
 
-    def draw_outline_border_radius(draw : Draw)
+    private def draw_outline_border_radius(draw : Draw)
       draw.color = color
 
       @outline_arc_points.each do |points|
         draw.lines(points)
       end
-    end
-
-    def self.draw_outlines(draw : Draw, rects : Array(Box))
-      draw.color = rects.first.color
-      draw.outlines(rects)
-    end
-
-    def self.draw_outline(draw : Draw, rects : Array(Box))
-      draw_outlines(draw, rects)
     end
   end
 end

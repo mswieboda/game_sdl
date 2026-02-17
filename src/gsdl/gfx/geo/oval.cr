@@ -21,8 +21,8 @@ module GSDL
       super()
     end
 
-    def initialize(x, y, @radius_x : Num = 16, @radius_y : Num = 16, color : Color = Color::White)
-      super(x: x, y: y, color: color)
+    def initialize(x, y, @radius_x : Num = 16, @radius_y : Num = 16, color : Color = Color::White, draw_mode : Shape::DrawMode = Shape::DrawMode::Fill)
+      super(x: x, y: y, color: color, draw_mode: draw_mode)
     end
 
     # TODO: add setter
@@ -110,22 +110,13 @@ module GSDL
       end
     end
 
-    def draw(draw : Draw)
-      draw_filled(draw)
-    end
-
-    def draw_filled(draw : Draw)
+    private def draw_filled(draw : Draw)
       update_geometry if changed?
 
       draw.geometry(@fill_vertices, @fill_indices)
     end
 
-    def self.draw_filled(draw : Draw, ovals : Array(Oval))
-      draw.color = ovals.first.color
-      draw.filled(ovals)
-    end
-
-    def draw_outline(draw : Draw)
+    private def draw_outline(draw : Draw)
       update_geometry if changed?
 
       draw.color = color
@@ -133,15 +124,6 @@ module GSDL
       @outline_arc_points.each do |points|
         draw.lines(points)
       end
-    end
-
-    def self.draw_outlines(draw : Draw, ovals : Array(Oval))
-      draw.color = ovals.first.color
-      draw.outlines(ovals)
-    end
-
-    def self.draw_outline(draw : Draw, ovals : Array(Oval))
-      draw_outlines(draw, ovals)
     end
   end
 end

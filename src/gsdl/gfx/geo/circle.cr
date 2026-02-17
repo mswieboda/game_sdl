@@ -6,8 +6,8 @@ module GSDL
       super(radius_x: radius, radius_y: radius)
     end
 
-    def initialize(x, y, radius : Num = 16, color : Color = Color::White)
-      super(x: x, y: y, radius_x: radius, radius_y: radius, color: color)
+    def initialize(x, y, radius : Num = 16, color : Color = Color::White, draw_mode : Shape::DrawMode = Shape::DrawMode::Fill)
+      super(x: x, y: y, radius_x: radius, radius_y: radius, color: color, draw_mode: draw_mode)
     end
 
     # TODO: add setter
@@ -24,20 +24,6 @@ module GSDL
       @radius_x = value
       @radius_y = value
       @changed = true
-    end
-
-    def self.draw_filled(draw : Draw, circles : Array(Circle))
-      draw.color = circles.first.color
-      draw.filled(circles)
-    end
-
-    def self.draw_outlines(draw : Draw, circles : Array(Circle))
-      draw.color = circles.first.color
-      draw.outlines(circles)
-    end
-
-    def self.draw_outline(draw : Draw, circles : Array(Circle))
-      draw_outlines(draw, circles)
     end
   end
 end

@@ -18,20 +18,22 @@ module GSDL
       @y2 : Num = 0,
       @x3 : Num = 0,
       @y3 : Num = 0,
-      color : Color = Color::White
+      color : Color = Color::White,
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill
     )
-      super(x: x1, y: y1, color: color)
+      super(x: x1, y: y1, color: color, draw_mode: draw_mode)
     end
 
     def initialize(
       p1 : Tuple(Num, Num),
       p2 : Tuple(Num, Num),
       p3 : Tuple(Num, Num),
-      color : Color = Color::White
+      color : Color = Color::White,
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill
     )
       x1, y1 = p1
 
-      super(x: x1, y: y1, color: color)
+      super(x: x1, y: y1, color: color, draw_mode: draw_mode)
 
       @x2, @y2 = p2
       @x3, @y3 = p3
@@ -69,7 +71,12 @@ module GSDL
     def update_geometry
     end
 
-    def draw(draw : Draw)
+    private def draw_filled(draw : Draw)
+      draw.geometry(vertices, indices)
+    end
+
+    private def draw_outline(draw : Draw)
+      # TODO: draw lines between vertices
       draw.geometry(vertices, indices)
     end
 
