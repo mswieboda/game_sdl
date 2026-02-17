@@ -45,16 +45,18 @@ module GameEx
       color = GSDL::Color::LimeGreen
       @filled << GSDL::Box.new(x: 320, y: 320, width: 96, height: 64, color: color, border_radius: 16)
       @outlines << GSDL::Box.new(x: 448, y: 256, width: 64, height: 128, color: color, border_radius: 64)
-      @filled << GSDL::Circle.new(x: 448, y: 448, radius: 32, color: color)
+      @filled << GSDL::Circle.new(x: 320, y: 448, radius: 32, color: color)
+      @filled << GSDL::Oval.new(x: 448, y: 448, radius_x: 32, radius_y: 64, color: color)
 
       circle = GSDL::Circle.new(x: 400, y: 400, radius: 64, color: color)
       @outlines << circle
 
       color = GSDL::Color::Blue
       @outlines << GSDL::Circle.new(x: 256, y: 320, radius: 64, color: color)
+      @filled << GSDL::Oval.new(x: 224, y: 448, radius_x: 64, radius_y: 32, color: color)
 
       # example for changed, update_geometry
-      circle.x = 447
+      circle.x = 319
       circle.y = 447
       circle.radius = 32.5_f32
       circle.color = GSDL::Color::Magenta

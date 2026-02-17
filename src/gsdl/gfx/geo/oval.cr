@@ -1,0 +1,147 @@
+require "./shape"
+
+module GSDL
+  class Oval < Shape
+    alias Vertices = Array(Vertex)
+    alias Indices = Array(Int32)
+    alias ArcPoints = Array(Array(FPoint))
+
+    properties_changed({
+      radius_x: Num = 16,
+      radius_y: Num = 16
+    })
+
+    getters_update_geometry({
+      fill_vertices: Vertices = [] of Vertex,
+      fill_indices: Indices = [] of Int32,
+      outline_arc_points: ArcPoints = [] of Array(FPoint)
+    })
+
+    def initialize(@radius_x : Num = 16, @radius_y : Num = 16)
+      super()
+    end
+
+    def initialize(x, y, @radius_x : Num = 16, @radius_y : Num = 16, color : Color = Color::White)
+      super(x: x, y: y, color: color)
+    end
+
+    # TODO: add setter
+    def diameter_x
+      radius_x * 2
+    end
+
+    # TODO: add setter
+    def diameter_y
+      radius_y * 2
+    end
+
+    # TODO: add setter
+    def width
+      diameter_x
+    end
+
+    # TODO: add setter
+    def height
+      diameter_y
+    end
+
+    # TODO: add setter
+    def center_x
+      x + radius_x
+    end
+
+    # TODO: add setter
+    def center_y
+      y + radius_y
+    end
+
+    def update_geometry
+      @fill_vertices = [] of Vertex
+      @fill_indices = [] of Int32
+      @outline_arc_points = [] of Array(FPoint)
+
+      if radius_x > 0 && radius_y > 0
+        # top left, top right, bottom left, bottom right
+        [
+          {1_i8, 1_i8},
+          {-1_i8, 1_i8},
+          {1_i8, -1_i8},
+          {-1_i8, -1_i8}
+        ].each do |dir|
+          # TODO: maybe we can do 360 angles (dumbed down to depending on resolution)
+          #   instead of doing 4 corners?
+          build_corner(dir)
+        end
+      end
+
+      @changed = false
+    end
+
+    private def build_corner(dir : Tuple(Int8, Int8))
+      x_dir, y_dir = dir
+      corner_radius_x = radius_x / 2
+      corner_radius_y = radius_y / 2
+      max_radius = [corner_radius_x, corner_radius_y].max
+      resolution = [12, (Math.sqrt(max_radius) * 4).to_i].max
+
+      # Center vertex
+      @fill_vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)
+
+      start_v = @fill_vertices.size
+
+      # Arc vertices
+      points = [] of FPoint
+
+      (resolution + 1).times do |i|
+        angle = Math::PI + i * (0.5 * Math::PI / resolution)
+        x = center_x + x_dir * corner_radius_x * Math.cos(angle)
+        y = center_y + y_dir * corner_radius_y * Math.sin(angle)
+        @fill_vertices << Vertex.new(x.to_f32, y.to_f32, color.to_fcolor)
+        points << FPoint.new(x.to_f32, y.to_f32)
+      end
+
+      @outline_arc_points << points
+
+      # Indices for triangle fan
+      resolution.times do |i|
+        @fill_indices << start_v - 1
+        @fill_indices << start_v + i
+        @fill_indices << start_v + i + 1
+      end
+    end
+
+    def draw(draw : Draw)
+      draw_filled(draw)
+    end
+
+    def draw_filled(draw : Draw)
+      update_geometry if changed?
+
+      draw.geometry(@fill_vertices, @fill_indices)
+    end
+
+    def self.draw_filled(draw : Draw, ovals : Array(Oval))
+      draw.color = ovals.first.color
+      draw.filled(ovals)
+    end
+
+    def draw_outline(draw : Draw)
+      update_geometry if changed?
+
+      draw.color = color
+
+      @outline_arc_points.each do |points|
+        draw.lines(points)
+      end
+    end
+
+    def self.draw_outlines(draw : Draw, ovals : Array(Oval))
+      draw.color = ovals.first.color
+      draw.outlines(ovals)
+    end
+
+    def self.draw_outline(draw : Draw, ovals : Array(Oval))
+      draw_outlines(draw, ovals)
+    end
+  end
+end
