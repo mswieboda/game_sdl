@@ -1,13 +1,12 @@
-require "./text_box"
+require "./message"
 
 module GSDL
-  class Button < TextBox
+  class Button < Message
     alias Callback = (String)->
 
-    @on_click : Callback
+    getter on_click : Callback
 
     def initialize(
-      @on_click : Callback,
       font = Font.default,
       text : String = "",
       width : Int32? = nil,
@@ -17,6 +16,8 @@ module GSDL
       x : Float32 = 0_f32,
       y : Float32 = 0_f32,
       color = Color::Black,
+      border_radius : UInt32 = 0,
+      @on_click : Callback = Proc.new,
     )
       super(
         font: font,
@@ -27,10 +28,9 @@ module GSDL
         align: align,
         x: x,
         y: y,
-        color: color
+        color: color,
+        border_radius: border_radius
       )
-
-      # TODO: add on_click callback
     end
 
     def update(dt : Float32)
@@ -42,21 +42,23 @@ module GSDL
     end
 
     def draw_background(draw : Draw)
-      rect = Rect.new(x: x, y: y, width: width, height: height, color: Color::White)
-      rect.draw_filled(draw)
+      box = Box.new(x: x, y: y, width: width, height: height, color: Color::White, border_radius: border_radius)
+      box.draw_filled(draw)
     end
 
     def draw_border(draw : Draw)
+      return if border_radius > 0
+
       margin = 2
 
-      rect = Rect.new(
+      box = Box.new(
         x: x + margin,
         y: y + margin,
         width: width - margin * 2,
         height: height - margin * 2,
         color: @text.color
       )
-      rect.draw_outline(draw)
+      box.draw_outline(draw)
     end
   end
 end

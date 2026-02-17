@@ -45,7 +45,8 @@ module GameEx
         text: "multiple lines\nof some text inside\na message box!",
         x: 64,
         y: 256,
-        color: color
+        color: color,
+        border_radius: 32
       )
 
       margin = 16
@@ -74,7 +75,8 @@ module GameEx
         x: 320.to_f32,
         y: 64.to_f32,
         width: 128,
-        color: color
+        color: color,
+        border_radius: 64
       )
     end
 
