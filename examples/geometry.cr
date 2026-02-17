@@ -23,13 +23,13 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @filled : Array(GSDL::Drawable)
+    @filled : Array(GSDL::Shape)
     @outlines : Array(GSDL::Box)
 
     def initialize
       super(:start)
 
-      @filled = [] of GSDL::Drawable
+      @filled = [] of GSDL::Shape
       @outlines = [] of GSDL::Box
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
@@ -48,7 +48,13 @@ module GameEx
 
       # TODO: refactor to Arc / Pie, and Circle without the Rect parts
       #   a circle is width = height = border_radius
-      @outlines << GSDL::Box.new(x: 400, y: 400, width: 64, height: 64, color: color, border_radius: 32)
+      circle = GSDL::Box.new(x: 400, y: 400, width: 64, height: 64, color: color, border_radius: 32)
+      @outlines << circle
+
+      # example for changed, update_geometry
+      circle.x = 100
+      circle.y = 400
+      circle.color = GSDL::Color::Blue
     end
 
     def draw(draw : GSDL::Draw)

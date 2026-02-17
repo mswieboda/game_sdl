@@ -133,7 +133,7 @@ module GSDL
     end
 
     def points(points : Array(Point))
-      points(points.map(&.to_sdl))
+      points(points.map(&.to_fpoint))
     end
 
     # lines
@@ -158,7 +158,7 @@ module GSDL
     end
 
     def lines(points : Array(Point))
-      lines(points.map(&.to_sdl))
+      lines(points.map(&.to_fpoint))
     end
 
     # rects

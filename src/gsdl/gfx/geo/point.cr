@@ -1,8 +1,14 @@
+require "./shape"
+
 module GSDL
   alias FPoint = SDL3::FPoint
 
-  class Point < Drawable
-    def to_sdl
+  class Point < Shape
+    # not used for this class, can just use raw values to draw
+    def update_geometry
+    end
+
+    def to_fpoint
       SDL3::FPoint.new(x: x.to_f32, y: y.to_f32)
     end
 

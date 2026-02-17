@@ -5,6 +5,7 @@ require "./gsdl/core/*"
 require "./gsdl/audio/*"
 require "./gsdl/physics/*"
 require "./gsdl/gfx/*"
+require "./gsdl/gfx/geo/*"
 require "./gsdl/ui/*"
 require "./gsdl/input/*"
 

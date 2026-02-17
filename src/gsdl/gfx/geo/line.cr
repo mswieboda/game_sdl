@@ -1,5 +1,7 @@
+require "./shape"
+
 module GSDL
-  class Line < Drawable
+  class Line < Shape
     alias Num = Int32 | Float32
 
     property x2 : Num
@@ -7,6 +9,10 @@ module GSDL
 
     def initialize(x1, y1, @x2 : Num, @y2 : Num, color : Color)
       super(x: x1, y: y1, color: color)
+    end
+
+    # not used for this class, can just use raw values to draw
+    def update_geometry
     end
 
     def x1 : Num
