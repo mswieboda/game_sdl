@@ -4,14 +4,36 @@ module GSDL
   class Line < Pixel
     property x2 : Num = 0
     property y2 : Num = 0
-    property color : Color = Color::White
 
-    def initialize(@x2 : Num = 0, @y2 : Num = 0, @color = Color::White)
+    def initialize(@x2 : Num = 0, @y2 : Num = 0)
       super()
     end
 
-    def initialize(x1, y1, @x2 : Num, @y2 : Num, @color : Color = Color::White)
-      super(x: x1, y: y1)
+    def initialize(p2 : Tuple(Num, Num))
+      super()
+
+      @x2, @y2 = point
+    end
+
+    def initialize(x1, y1, @x2 : Num = 0, @y2 : Num = 0, color : Color = Color::White)
+      super(x: x1, y: y1, color: color)
+    end
+
+    def initialize(p1 : Tuple(Num, Num), p2 : Tuple(Num, Num), color : Color = Color::White)
+      x1, y1 = p1
+
+      super(x: x1, y: y1, color: color)
+
+      @x2, @y2 = p2
+    end
+
+    def initialize(points : Tuple(Num, Num, Num, Num), color : Color = Color::White)
+      x1, y1, x2, y2 = points
+
+      super(x: x1, y: y1, color: color)
+
+      @x2 = x2
+      @y2 = y2
     end
 
     def x1 : Num
@@ -30,8 +52,16 @@ module GSDL
       self.y = y1
     end
 
+    def dx
+      x2 - x1
+    end
+
+    def dy
+      y2 - y1
+    end
+
     def distance
-      Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+      Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2))
     end
 
     def draw(draw : Draw)

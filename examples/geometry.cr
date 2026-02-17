@@ -40,9 +40,12 @@ module GameEx
       color = GSDL.color(r: 255, g: 160, b: 224)
       @points << GSDL::Line.new(x1: 64, y1: 64, x2: 96, y2: 128, color: color)
 
+      color = GSDL::Color::Magenta
+      @filled << GSDL::Triangle.new({64, 16}, {96, 32}, {32, 48}, color: color)
+
       color = GSDL.color(r: 255)
       @filled << GSDL::Box.new(x: 128, y: 128, width: 64, height: 96, color: color)
-      @outlines << GSDL::Box.new(x: 32, y: 32, width: 64, height: 32, color: color)
+      @outlines << GSDL::Box.new(x: 256, y: 32, width: 64, height: 32, color: color)
 
       color = GSDL::Color::LimeGreen
       @filled << GSDL::Box.new(x: 320, y: 320, width: 96, height: 64, color: color, border_radius: 16)

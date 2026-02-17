@@ -5,16 +5,25 @@ module GSDL
     getter x : Num = 0
     getter y : Num = 0
 
-    def initialize
+    def initialize(@x : Num = 0, @y : Num = 0)
     end
 
-    def initialize(@x, @y)
+    def initialize(point : Tuple(Num, Num))
+      @x, @y = point
+    end
+
+    def to_fpoint
+      FPoint.new(x: x.to_f32, y: y.to_f32)
     end
 
     abstract def draw(draw : Draw)
 
-    def self.draw(draw : Draw, coords : Array(Coords))
-      coords.each(&.draw(draw))
+    def draw_filled(draw : Draw)
+      draw(draw)
+    end
+
+    def self.draw(draw : Draw, points : Array(Point))
+      points.each(&.draw(draw))
     end
   end
 end

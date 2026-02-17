@@ -1,5 +1,11 @@
 module GSDL
   abstract class Shape
+    enum DrawMode
+      Fill
+      Outline
+      Both
+    end
+
     # for creating getter/setter, for variables affecting update_geometry
     # so we know to call update_geometry in draw methods, if this var changes
     # ex:
@@ -66,12 +72,15 @@ module GSDL
     properties_changed({
       x: Num = 0,
       y: Num = 0,
-      origin_x: Num = 0,
-      origin_y: Num = 0,
-      rotation: Num = 0,
-      scale_x: Num = 0,
-      scale_y: Num = 0,
-      color: Color = Color::White
+      # TODO: implement these
+      # origin_x: Num = 0,
+      # origin_y: Num = 0,
+      # rotation: Num = 0,
+      # scale_x: Num = 0,
+      # scale_y: Num = 0,
+      color: Color = Color::White,
+      # TODO: add to constructor?
+      draw_mode: DrawMode = DrawMode::Fill
     })
 
     getter? changed : Bool = true
