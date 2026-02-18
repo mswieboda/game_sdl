@@ -120,5 +120,8 @@ module GSDL
         draw.line(inner_arc_points.last.x, inner_arc_points.last.y, outer_arc_points.last.x, outer_arc_points.last.y)
       end
     end
+
+    private def draw_border(draw : Draw)
+    end
   end
 end

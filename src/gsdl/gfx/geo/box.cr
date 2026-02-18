@@ -231,8 +231,8 @@ module GSDL
         border_thickness.to_i.times do |i|
           offset_x = self.x + i
           offset_y = self.y + i
-          inner_width = self.width - (2 * i)
-          inner_height = self.height - (2 * i)
+          inner_width = self.width - (i * 2)
+          inner_height = self.height - (i * 2)
 
           if inner_width > 0 && inner_height > 0
             Box.new(

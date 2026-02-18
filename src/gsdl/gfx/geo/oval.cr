@@ -18,7 +18,7 @@ module GSDL
     })
 
     def initialize(@radius_x : Num = 16, @radius_y : Num = 16)
-      super()
+      super(border_thickness: 1, border_color: Color::White) # Pass default values
     end
 
     def initialize(
@@ -27,9 +27,18 @@ module GSDL
       @radius_x : Num = 16,
       @radius_y : Num = 16,
       color : Color = Color::White,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      border_thickness : Num = 1,
+      border_color : Color = Color::White
     )
-      super(x: x, y: y, color: color, draw_mode: draw_mode)
+      super(
+        x: x,
+        y: y,
+        color: color,
+        draw_mode: draw_mode,
+        border_thickness: border_thickness,
+        border_color: border_color
+      )
     end
 
     # TODO: add setter
@@ -135,6 +144,32 @@ module GSDL
 
       @outline_arc_points.each do |points|
         draw.lines(points)
+      end
+    end
+
+    private def draw_border(draw : Draw)
+      draw.color = border_color # Set draw color for border
+
+      border_thickness.to_i.times do |i|
+        # Calculate the dimensions and position for the current border line
+        # The 'i' offset applies to the position and effectively reduces the radii
+        offset_x = self.x + i
+        offset_y = self.y + i
+        inner_radius_x = (self.radius_x - i * 2).to_f32
+        inner_radius_y = (self.radius_y - i * 2).to_f32
+
+        # Ensure radii remain positive
+        if inner_radius_x > 0 && inner_radius_y > 0
+          # Create a temporary Oval instance for drawing this specific border segment
+          Oval.new(
+            x: offset_x,
+            y: offset_y,
+            radius_x: inner_radius_x,
+            radius_y: inner_radius_y,
+            color: self.border_color, # Use border_color for the temporary oval
+            draw_mode: Shape::DrawMode::Outline # Force outline drawing
+          ).draw(draw) # Use the public draw method
+        end
       end
     end
   end

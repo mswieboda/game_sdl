@@ -53,8 +53,8 @@ module GameEx
       @shapes << GSDL::Triangle.new({64, 16}, {96, 32}, {32, 48}, color: color)
       @shapes << GSDL::Box.new(width: w, height: h, color: color, border_thickness: border_thickness)
       @shapes << GSDL::Box.new(width: w, height: h, color: color, border_thickness: border_thickness, border_radius: 16)
-      @shapes << GSDL::Oval.new(radius_x: r_x, radius_y: r_y, color: color)
-      @shapes << GSDL::Circle.new(radius: r_y, color: color)
+      @shapes << GSDL::Oval.new(radius_x: r_x, radius_y: r_y, color: color, border_thickness: border_thickness)
+      @shapes << GSDL::Circle.new(radius: r_y, color: color, border_thickness: border_thickness)
       @shapes << GSDL::Arc.new(radius_x: r_x, radius_y: r_y, color: color)
 
       @text_box.center(WIDTH, HEIGHT - HEIGHT + 128)
