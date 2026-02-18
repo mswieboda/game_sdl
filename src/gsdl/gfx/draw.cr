@@ -61,6 +61,10 @@ module GSDL
       @r.draw_color = {color.r, color.g, color.b, color.a}
     end
 
+    def color : Color
+      @r.draw_color
+    end
+
     def color=(color : Color)
       set_color(color)
     end

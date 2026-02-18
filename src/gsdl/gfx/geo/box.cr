@@ -32,13 +32,17 @@ module GSDL
       y : Num = 0,
       color : Color = Color::White,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      border_thickness : Num = 1,
+      border_color : Color = Color::White,
       @border_radius : Num = 0
     )
       super(
         x: x,
         y: y,
         color: color,
-        draw_mode: draw_mode
+        draw_mode: draw_mode,
+        border_thickness: border_thickness,
+        border_color: border_color
       )
     end
 
@@ -205,6 +209,43 @@ module GSDL
 
       @outline_arc_points.each do |points|
         draw.lines(points)
+      end
+    end
+
+    private def draw_border(draw : Draw)
+      return if border_thickness <= 0
+
+      draw.color = border_color
+
+      if border_radius <= 0
+        # draw four filled rectangles for a sharp-cornered border
+        # top, bottom
+        draw.filled(FRect.new(x: x, y: y, w: width, h: border_thickness))
+        draw.filled(FRect.new(x: x, y: y + height - border_thickness, w: width, h: border_thickness))
+
+        # left, right (adjust height to avoid overlapping corners)
+        draw.filled(FRect.new(x: x, y: y + border_thickness, w: border_thickness, h: height - 2 * border_thickness))
+        draw.filled(FRect.new(x: x + width - border_thickness, y: y + border_thickness, w: border_thickness, h: height - 2 * border_thickness))
+      else
+        # use existing logic for rounded borders
+        border_thickness.to_i.times do |i|
+          offset_x = self.x + i
+          offset_y = self.y + i
+          inner_width = self.width - (2 * i)
+          inner_height = self.height - (2 * i)
+
+          if inner_width > 0 && inner_height > 0
+            Box.new(
+              width: inner_width,
+              height: inner_height,
+              x: offset_x,
+              y: offset_y,
+              color: self.border_color,
+              draw_mode: Shape::DrawMode::Outline,
+              border_radius: self.border_radius
+            ).draw(draw)
+          end
+        end
       end
     end
   end

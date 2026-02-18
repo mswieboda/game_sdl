@@ -8,7 +8,7 @@ authors:
 dependencies:
   sdl3:
     github: mswieboda/sdl3.cr
-    version: 0.34.0
+    version: 0.35.0
     # path: ../sdl3
 
 crystal: '>= 1.19.1'

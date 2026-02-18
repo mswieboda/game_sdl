@@ -43,6 +43,7 @@ module GameEx
       h = 200
       r_x = (w / 2).to_f32
       r_y = (h / 2).to_f32
+      border_thickness = 8
 
       text = "LEFT/RIGHT or A/D toggles shapes\n\nTAB toggles draw mode"
       @text_box = GSDL::TextBox.new(text: text, color: color, align: GSDL::Font::Align::Center)
@@ -50,8 +51,8 @@ module GameEx
       @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, radius: 8)
 
       @shapes << GSDL::Triangle.new({64, 16}, {96, 32}, {32, 48}, color: color)
-      @shapes << GSDL::Box.new(width: w, height: h, color: color)
-      @shapes << GSDL::Box.new(width: w, height: h, color: color, border_radius: 16)
+      @shapes << GSDL::Box.new(width: w, height: h, color: color, border_thickness: border_thickness)
+      @shapes << GSDL::Box.new(width: w, height: h, color: color, border_thickness: border_thickness, border_radius: 16)
       @shapes << GSDL::Oval.new(radius_x: r_x, radius_y: r_y, color: color)
       @shapes << GSDL::Circle.new(radius: r_y, color: color)
       @shapes << GSDL::Arc.new(radius_x: r_x, radius_y: r_y, color: color)
