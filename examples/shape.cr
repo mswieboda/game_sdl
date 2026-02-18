@@ -65,17 +65,26 @@ module GameEx
       if Keys.just_pressed?([Keys::A, Keys::Left])
         @shape_index -= 1
         @shape_index = @shapes.size - 1 if @shape_index < 0
+
+        update_draw_mode
       elsif Keys.just_pressed?([Keys::D, Keys::Right])
         @shape_index += 1
         @shape_index = 0 if @shape_index >= @shapes.size
+
+        update_draw_mode
       elsif Keys.just_pressed?(Keys::Tab)
         @draw_mode_index += 1
         @draw_mode_index = 0 if @draw_mode_index >= GSDL::Shape::DrawMode.values.size
         @draw_mode_index = GSDL::Shape::DrawMode.values.size - 1 if @draw_mode_index < 0
 
-        shape = @shapes[@shape_index]
-        shape.draw_mode = GSDL::Shape::DrawMode.values[@draw_mode_index]
+        update_draw_mode
       end
+    end
+
+    def update_draw_mode
+      shape = @shapes[@shape_index]
+      draw_mode = GSDL::Shape::DrawMode.values[@draw_mode_index]
+      shape.draw_mode = draw_mode if shape.draw_mode != draw_mode
     end
 
     def draw(draw : GSDL::Draw)

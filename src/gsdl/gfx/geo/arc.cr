@@ -4,7 +4,7 @@ module GSDL
   class Arc < Oval
     alias Vertices = Array(Vertex)
     alias Indices = Array(Int32)
-    alias ArcPoints = Array(Array(FPoint))
+    alias ArcPoints = Array(FPoint)
 
     DefaultEndAngle = (Math::PI * 0.3).to_f32
     DefaultSegments = 64_u8
@@ -18,7 +18,8 @@ module GSDL
     getters_update_geometry({
       fill_vertices: Vertices = [] of Vertex,
       fill_indices: Indices = [] of Int32,
-      outline_arc_points: ArcPoints = [] of Array(FPoint)
+      inner_arc_points: ArcPoints = [] of FPoint,
+      outer_arc_points: ArcPoints = [] of FPoint
     })
 
     def initialize(@start_angle : Num = 0, @end_angle : Num = DefaultEndAngle, @thickness : Num = 16)
@@ -42,7 +43,8 @@ module GSDL
     def update_geometry
       @fill_vertices = [] of Vertex
       @fill_indices = [] of Int32
-      @outline_arc_points = [] of Array(FPoint)
+      @inner_arc_points = [] of FPoint
+      @outer_arc_points = [] of FPoint
 
       if radius_x > 0 && radius_y > 0
         # TODO: dynamically calc, like oval `resolution`
@@ -73,11 +75,13 @@ module GSDL
         inner_x = center_x + inner_radius_x * Math.cos(angle)
         inner_y = center_y + inner_radius_y * Math.sin(angle)
         @fill_vertices << Vertex.new(inner_x.to_f32, inner_y.to_f32, fcolor)
+        @inner_arc_points << FPoint.new(inner_x.to_f32, inner_y.to_f32)
 
         # Outer vertex
         outer_x = center_x + outer_radius_x * Math.cos(angle)
         outer_y = center_y + outer_radius_y * Math.sin(angle)
         @fill_vertices << Vertex.new(outer_x.to_f32, outer_y.to_f32, fcolor)
+        @outer_arc_points << FPoint.new(outer_x.to_f32, outer_y.to_f32)
       end
     end
 
@@ -97,6 +101,23 @@ module GSDL
         @fill_indices << v_outer_prev
         @fill_indices << v_inner_curr
         @fill_indices << v_outer_curr
+      end
+    end
+
+    private def draw_outline(draw : Draw)
+      update_geometry if changed?
+
+      draw.color = color
+
+      draw.lines(@inner_arc_points)
+      draw.lines(@outer_arc_points)
+
+      # draw connecting lines at start and end of the arc
+      if inner_arc_points.size > 0 && outer_arc_points.size > 0
+        # line at start of arc
+        draw.line(inner_arc_points.first.x, inner_arc_points.first.y, outer_arc_points.first.x, outer_arc_points.first.y)
+        # line at end of arc
+        draw.line(inner_arc_points.last.x, inner_arc_points.last.y, outer_arc_points.last.x, outer_arc_points.last.y)
       end
     end
   end
