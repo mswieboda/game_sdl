@@ -35,15 +35,19 @@ module GameEx
 
       x = 300
       y = 200
+      w = 100
+      h = 200
+      r_x = (w / 2).to_f32
+      r_y = (h / 2).to_f32
 
       @pixel = GSDL::Pixel.new(x: x, y: y, color: color)
 
       @shapes << GSDL::Triangle.new({64, 16}, {96, 32}, {32, 48}, color: color)
-      @shapes << GSDL::Box.new(x: x, y: y, width: 64, height: 96, color: color)
-      @shapes << GSDL::Box.new(x: x, y: y, width: 96, height: 64, color: color, border_radius: 16)
-      @shapes << GSDL::Circle.new(x: x, y: y, radius: 32, color: color)
-      @shapes << GSDL::Oval.new(x: x, y: y, radius_x: 32, radius_y: 64, color: color)
-      @shapes << GSDL::Arc.new(x: x, y: y, radius_x: 64, radius_y: 32, color: color)
+      @shapes << GSDL::Box.new(x: x, y: y, width: w, height: h, color: color)
+      @shapes << GSDL::Box.new(x: x, y: y, width: w, height: h, color: color, border_radius: 16)
+      @shapes << GSDL::Oval.new(x: x, y: y, radius_x: r_x, radius_y: r_y, color: color)
+      @shapes << GSDL::Circle.new(x: x, y: y, radius: r_y, color: color)
+      @shapes << GSDL::Arc.new(x: x, y: y, radius_x: r_x, radius_y: r_y, color: color)
     end
 
     def update(dt : Float32)

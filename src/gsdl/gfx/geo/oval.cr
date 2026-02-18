@@ -47,12 +47,12 @@ module GSDL
 
     # TODO: add setter
     def center_x
-      x + radius_x
+      x + radius_x / 2
     end
 
     # TODO: add setter
     def center_y
-      y + radius_y
+      y + radius_y / 2
     end
 
     def update_geometry
