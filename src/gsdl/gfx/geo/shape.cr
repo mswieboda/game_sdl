@@ -101,6 +101,9 @@ module GSDL
       @y = ((height - self.height) / 2).to_f32
     end
 
+    abstract def width : Num
+    abstract def height : Num
+
     # needs to be called at the end of initialization,
     # and in every #draw method (only if #changed?)
     abstract def update_geometry

@@ -42,33 +42,33 @@ module GSDL
     end
 
     # TODO: add setter
-    def diameter_x
+    def diameter_x : Num
       radius_x * 2
     end
 
     # TODO: add setter
-    def diameter_y
+    def diameter_y : Num
       radius_y * 2
     end
 
     # TODO: add setter
-    def width
+    def width : Num
       diameter_x
     end
 
     # TODO: add setter
-    def height
+    def height : Num
       diameter_y
     end
 
     # TODO: add setter
-    def center_x
-      x + radius_x / 2
+    def center_x : Num
+      (x + radius_x / 2).to_f32
     end
 
     # TODO: add setter
-    def center_y
-      y + radius_y / 2
+    def center_y : Num
+      (y + radius_y / 2).to_f32
     end
 
     def center(width : Num, height : Num)

@@ -6,7 +6,7 @@ module GSDL
     alias Indices = Array(Int32)
     alias ArcPoints = Array(FPoint)
 
-    DefaultEndAngle = (Math::PI * 0.3).to_f32
+    DefaultEndAngle = (-Math::PI * 0.3).to_f32
     DefaultSegments = 64_u8
 
     properties_changed({
