@@ -250,11 +250,7 @@ module GSDL
     # text
 
     def text(text : Text)
-      # TODO: add to draw commands
-
-      # NOTE: doesn't need @r, see SDL3::TTF::Text, it's because
-      #   GSDL::Text#text_sdl is created with a SDL3::TTF::TextEngine
-      text._draw
+      add_draw_text_command(text.z_index, text)
     end
 
     # textures
