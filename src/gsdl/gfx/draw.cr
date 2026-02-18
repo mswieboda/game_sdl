@@ -2,7 +2,7 @@ module GSDL
   alias Vertex = SDL3::Vertex
 
   def self.vertex(x : Int32 | Float32, y : Int32 | Float32, color : FColor) : Vertex
-    SDL3::Vertex.new(x.to_f32, y.to_f32, color)
+    Vertex.new(x.to_f32, y.to_f32, color)
   end
 
   class Draw

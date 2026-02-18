@@ -148,8 +148,6 @@ module GSDL
     end
 
     private def draw_border(draw : Draw)
-      draw.color = border_color # Set draw color for border
-
       border_thickness.to_i.times do |i|
         # Calculate the dimensions and position for the current border line
         # The 'i' offset applies to the position and effectively reduces the radii

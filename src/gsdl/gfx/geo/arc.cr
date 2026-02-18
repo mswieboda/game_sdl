@@ -33,11 +33,22 @@ module GSDL
       radius_y : Num = 16,
       color : Color = Color::White,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      border_thickness : Num = 1,
+      border_color : Color = Color::White,
       @start_angle : Num = 0,
       @end_angle : Num = DefaultEndAngle,
-      @thickness : Num = 16
+      @thickness : Num = 32
     )
-      super(x: x, y: y, radius_x: radius_x, radius_y: radius_y, color: color, draw_mode: draw_mode)
+      super(
+        x: x,
+        y: y,
+        radius_x: radius_x,
+        radius_y: radius_y,
+        color: color,
+        draw_mode: draw_mode,
+        border_thickness: border_thickness,
+        border_color: border_color
+      )
     end
 
     def update_geometry
@@ -104,6 +115,16 @@ module GSDL
       end
     end
 
+    def draw(draw : Draw)
+      draw_filled(draw) if draw_mode.fill?
+
+      if draw_mode.border?
+        draw_border(draw)
+      elsif draw_mode.outline?
+        draw_outline(draw)
+      end
+    end
+
     private def draw_outline(draw : Draw)
       update_geometry if changed?
 
@@ -121,7 +142,35 @@ module GSDL
       end
     end
 
+    # TODO: this is broken, but really difficult to accurately implement
+    #  without doing sin, cos, tan math
+    #  maybe we need inner_radius and outer_radius could help
     private def draw_border(draw : Draw)
+      # temporarily swap vertices colors
+      @fill_vertices = @fill_vertices.map do |v|
+        GSDL.vertex(v.position.x, v.position.y, self.border_color.to_fcolor)
+      end
+
+      draw_filled(draw)
+
+      diff_thickness = self.thickness - self.border_thickness
+
+      # now draw a smaller arc inside the border color one just drawn
+      Arc.new(
+        x: self.x,
+        y: self.y,
+        radius_x: self.radius_x,
+        radius_y: self.radius_y,
+        color: self.color, # Use color for the temporary middle arc
+        start_angle: self.start_angle,
+        end_angle: self.end_angle,
+        thickness: diff_thickness
+      ).draw(draw)
+
+      # put the main color back
+      @fill_vertices = @fill_vertices.map do |v|
+        GSDL.vertex(v.position.x, v.position.y, self.color.to_fcolor)
+      end
     end
   end
 end
