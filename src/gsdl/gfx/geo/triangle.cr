@@ -76,8 +76,11 @@ module GSDL
     end
 
     private def draw_outline(draw : Draw)
-      # TODO: draw lines between vertices
-      draw.geometry(vertices, indices)
+      draw.color = color
+      lines = vertices.map { |v| FPoint.new(x: v.position.x.to_f32, y: v.position.y.to_f32) }
+      lines << FPoint.new(x: vertices.first.position.x.to_f32, y: vertices.first.position.y.to_f32)
+
+      draw.lines(lines)
     end
 
     def self.draw(draw : Draw, triangles : Array(Triangle))
