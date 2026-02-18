@@ -3,6 +3,7 @@ module GSDL
     property text
     property x : Float32
     property y : Float32
+    property z_index : Int32 = 0
 
     @@renderer : SDL3::Renderer?
 
@@ -30,7 +31,8 @@ module GSDL
       @y = 0,
       color = Color::White,
       direction = SDL3::TTF::Direction::LTR,
-      wrap_width : Int32? = nil
+      wrap_width : Int32? = nil,
+      @z_index : Int32 = 0
     )
       # NOTE: needs to be Text.renderer in case of child classes
       text_engine = Text.renderer.create_text_engine

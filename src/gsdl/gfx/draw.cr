@@ -8,11 +8,14 @@ module GSDL
   class Draw
     @r : SDL3::Renderer
 
-    # TODO: rename this to DrawTextureCommand
-    #   and add DrawTextCommand, DrawRectCommand, DrawLineCommand etc
-    #   maybe parent abstract DrawCommand has z_index, color, destroy only
-    struct DrawCommand
+    abstract struct DrawCommand
       property z_index : Int32
+
+      def initialize(@z_index : Int32)
+      end
+    end
+
+    struct DrawTextureCommand < DrawCommand
       property texture : SDL3::Texture
       property source_rect : FRect?
       property dest_rect : FRect
@@ -21,7 +24,7 @@ module GSDL
       property? destroy
 
       def initialize(
-        @z_index : Int32,
+        z_index : Int32,
         @texture : SDL3::Texture,
         @source_rect : FRect?,
         @dest_rect : FRect,
@@ -29,6 +32,15 @@ module GSDL
         @color : Color,
         @destroy : Bool = false
       )
+        super(z_index: z_index)
+      end
+    end
+
+    struct DrawTextCommand < DrawCommand
+      property text : Text
+
+      def initialize(z_index : Int32, @text : Text)
+        super(z_index: z_index)
       end
     end
 
@@ -45,7 +57,7 @@ module GSDL
       @draw_commands = [] of DrawCommand
     end
 
-    def add_draw_command(
+    private def add_draw_texture_command(
       z_index : Int32,
       texture : SDL3::Texture,
       source_rect : FRect?,
@@ -54,7 +66,11 @@ module GSDL
       color : Color = Color::White,
       destroy : Bool = false
     )
-      @draw_commands << DrawCommand.new(z_index, texture, source_rect, dest_rect, flip, color, destroy)
+      @draw_commands << DrawTextureCommand.new(z_index, texture, source_rect, dest_rect, flip, color, destroy)
+    end
+
+    private def add_draw_text_command(z_index : Int32, text : Text)
+      @draw_commands << DrawTextCommand.new(z_index, text)
     end
 
     private def set_color(color : Color)
@@ -91,19 +107,31 @@ module GSDL
       @draw_commands.sort_by!(&.z_index)
 
       @draw_commands.each do |command|
-        draw_texture_rotated(
-          texture: command.texture,
-          source_rect: command.source_rect,
-          dest_rect: command.dest_rect,
-          flip: command.flip,
-          color: command.color,
-          destroy: command.destroy?,
-        )
+        if command.is_a?(DrawTextureCommand)
+          _draw_texture_command(command)
+        elsif command.is_a?(DrawTextCommand)
+          _draw_text_command(command)
+        end
       end
 
       @draw_commands.clear
 
       @r.present
+    end
+
+    private def _draw_texture_command(command : DrawTextureCommand)
+      draw_texture_rotated(
+        texture: command.texture,
+        source_rect: command.source_rect,
+        dest_rect: command.dest_rect,
+        flip: command.flip,
+        color: command.color,
+        destroy: command.destroy?,
+      )
+    end
+
+    private def _draw_text_command(command : DrawTextCommand)
+      command.text._draw
     end
 
     # geometry
@@ -270,7 +298,7 @@ module GSDL
           destroy: destroy,
         )
       else
-        add_draw_command(z_index, texture, source_rect, actual_dest_rect, flip, color)
+        add_draw_texture_command(z_index, texture, source_rect, actual_dest_rect, flip, color)
       end
     end
 
