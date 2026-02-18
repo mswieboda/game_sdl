@@ -7,7 +7,6 @@ module GSDL
     alias ArcPoints = Array(FPoint)
 
     DefaultEndAngle = (-Math::PI * 0.3).to_f32
-    DefaultSegments = 64_u8
 
     properties_changed({
       start_angle: Num = 0,
@@ -58,18 +57,21 @@ module GSDL
       @outer_arc_points = [] of FPoint
 
       if radius_x > 0 && radius_y > 0
-        # TODO: dynamically calc, like oval `resolution`
-        segments = DefaultSegments
+        arc_radius_x = radius_x / 2
+        arc_radius_y = radius_y / 2
+
+        max_radius = [arc_radius_x, arc_radius_y].max
+        segments = [12, (Math.sqrt(max_radius) * 4).to_i].max.to_u8
         angle_step = (end_angle - start_angle) / segments
 
-        generate_vertices(segments)
+        generate_vertices(segments, arc_radius_x, arc_radius_y)
         generate_indices(segments)
       end
 
       @changed = false
     end
 
-    def generate_vertices(segments : UInt8)
+    def generate_vertices(segments : UInt8, arc_radius_x, arc_radius_y)
       angle_step = (end_angle - start_angle) / segments
       fcolor = color.to_fcolor
 
@@ -77,10 +79,10 @@ module GSDL
         angle = start_angle + i * angle_step
 
         # Calculate points on inner and outer edges of the arc
-        inner_radius_x = radius_x
-        inner_radius_y = radius_y
-        outer_radius_x = radius_x + thickness
-        outer_radius_y = radius_y + thickness
+        inner_radius_x = arc_radius_x
+        inner_radius_y = arc_radius_y
+        outer_radius_x = arc_radius_x + thickness
+        outer_radius_y = arc_radius_y + thickness
 
         # Inner vertex
         inner_x = center_x + inner_radius_x * Math.cos(angle)

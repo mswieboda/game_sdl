@@ -103,7 +103,7 @@ module GSDL
       corner_radius_x = radius_x / 2
       corner_radius_y = radius_y / 2
       max_radius = [corner_radius_x, corner_radius_y].max
-      resolution = [12, (Math.sqrt(max_radius) * 4).to_i].max
+      segments = [12, (Math.sqrt(max_radius) * 4).to_i].max
 
       # Center vertex
       @fill_vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)
@@ -113,8 +113,8 @@ module GSDL
       # Arc vertices
       points = [] of FPoint
 
-      (resolution + 1).times do |i|
-        angle = Math::PI + i * (0.5 * Math::PI / resolution)
+      (segments + 1).times do |i|
+        angle = Math::PI + i * (0.5 * Math::PI / segments)
         x = center_x + x_dir * corner_radius_x * Math.cos(angle)
         y = center_y + y_dir * corner_radius_y * Math.sin(angle)
         @fill_vertices << Vertex.new(x.to_f32, y.to_f32, color.to_fcolor)
@@ -124,7 +124,7 @@ module GSDL
       @outline_arc_points << points
 
       # Indices for triangle fan
-      resolution.times do |i|
+      segments.times do |i|
         @fill_indices << start_v - 1
         @fill_indices << start_v + i
         @fill_indices << start_v + i + 1
@@ -149,24 +149,20 @@ module GSDL
 
     private def draw_border(draw : Draw)
       border_thickness.to_i.times do |i|
-        # Calculate the dimensions and position for the current border line
-        # The 'i' offset applies to the position and effectively reduces the radii
         offset_x = self.x + i
         offset_y = self.y + i
         inner_radius_x = (self.radius_x - i * 2).to_f32
         inner_radius_y = (self.radius_y - i * 2).to_f32
 
-        # Ensure radii remain positive
         if inner_radius_x > 0 && inner_radius_y > 0
-          # Create a temporary Oval instance for drawing this specific border segment
           Oval.new(
             x: offset_x,
             y: offset_y,
             radius_x: inner_radius_x,
             radius_y: inner_radius_y,
-            color: self.border_color, # Use border_color for the temporary oval
-            draw_mode: Shape::DrawMode::Outline # Force outline drawing
-          ).draw(draw) # Use the public draw method
+            color: self.border_color,
+            draw_mode: Shape::DrawMode::Outline
+          ).draw(draw)
         end
       end
     end
