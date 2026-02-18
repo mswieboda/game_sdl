@@ -1,33 +1,53 @@
 module GSDL
   abstract class SpriteBase
+    alias Origin = Tuple(Float32, Float32)
+
     include Collidable
 
-    property x : Float32
-    property y : Float32
+    property x : Num
+    property y : Num
     property z_index : Int32 = 0
     property color : Color = Color::White
     property collision_bounding_box : FRect
+    property origin : Origin = {0_f32, 0_f32}
 
     @texture : SDL3::Texture
 
     delegate size, to: @texture
 
-    def initialize(@key : String, @x = 0_f32, @y = 0_f32)
+    def initialize(@key : String, @x : Num = 0, @y : Num = 0, @origin : Origin = {0_f32, 0_f32})
       @texture = TextureManager.get(@key)
       @collision_bounding_box = FRect.new(
-        x: 0_f32,
-        y: 0_f32,
+        x: x.to_f32,
+        y: x.to_f32,
         w: width.to_f32,
         h: height.to_f32
       )
     end
 
-    abstract def width : Int32
-    abstract def height : Int32
+    abstract def width : Num
+    abstract def height : Num
 
-    def center(width : Int32 | Float32, height : Int32 | Float32)
-      @x = (width - self.width) / 2_f32
-      @y = (height - self.height) / 2_f32
+    def origin_x : Float32
+      origin[0]
+    end
+
+    def origin_y : Float32
+      origin[1]
+    end
+
+    def draw_x : Num
+      x - (width * origin_x)
+    end
+
+
+    def draw_y : Num
+      y - (height * origin_y)
+    end
+
+    def center(width : Num, height : Num)
+      @x = width / 2_f32
+      @y = height / 2_f32
     end
   end
 end
