@@ -26,15 +26,15 @@ module GSDL
     end
 
     def initialize(
-      x,
-      y,
+      x : Num = 0,
+      y : Num = 0,
       radius_x : Num = 16,
       radius_y : Num = 16,
+      color : Color = Color::White,
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       @start_angle : Num = 0,
       @end_angle : Num = DefaultEndAngle,
-      @thickness : Num = 16,
-      color : Color = Color::White,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill
+      @thickness : Num = 16
     )
       super(x: x, y: y, radius_x: radius_x, radius_y: radius_y, color: color, draw_mode: draw_mode)
     end

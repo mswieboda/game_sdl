@@ -25,8 +25,21 @@ module GSDL
       super()
     end
 
-    def initialize(x, y, @width, @height, color : Color, draw_mode : Shape::DrawMode = Shape::DrawMode::Fill, @border_radius : Num = 0)
-      super(x: x, y: y, color: color, draw_mode: draw_mode)
+    def initialize(
+      @width,
+      @height,
+      x : Num = 0,
+      y : Num = 0,
+      color : Color = Color::White,
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      @border_radius : Num = 0
+    )
+      super(
+        x: x,
+        y: y,
+        color: color,
+        draw_mode: draw_mode
+      )
     end
 
     def update_geometry

@@ -1,5 +1,5 @@
 module GSDL
-  abstract class TextBox
+  class TextBox
     Padding = 16
 
     getter width : Int32
@@ -67,6 +67,11 @@ module GSDL
 
     def y=(y : Float32)
       @text.y = y + padding
+    end
+
+    def center(width : Num, height : Num)
+      self.x = ((width - self.width) / 2).to_f32
+      self.y = ((height - self.height) / 2).to_f32
     end
 
     def update(dt : Float32)

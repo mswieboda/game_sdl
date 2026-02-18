@@ -14,6 +14,10 @@ module GameEx
       super
       @scene_manager = SceneManager.new
     end
+
+    def load_fonts
+      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    end
   end
 
   class SceneManager < GSDL::SceneManager
@@ -24,45 +28,60 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @index : Int32 = 0
-    @pixel : GSDL::Pixel
+    @shape_index : Int32 = 0
+    @draw_mode_index : Int32 = 0
+    @circle : GSDL::Circle
     @shapes : Array(GSDL::Shape) = [] of GSDL::Shape
+    @text_box : GSDL::TextBox
 
     def initialize
       super(:start)
 
       color = GSDL::Color::LimeGreen
 
-      x = 300
-      y = 200
       w = 100
       h = 200
       r_x = (w / 2).to_f32
       r_y = (h / 2).to_f32
 
-      @pixel = GSDL::Pixel.new(x: x, y: y, color: color)
+      text = "LEFT/RIGHT or A/D toggles shapes\n\nTAB toggles draw mode"
+      @text_box = GSDL::TextBox.new(text: text, color: color, align: GSDL::Font::Align::Center)
+
+      @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, radius: 8)
 
       @shapes << GSDL::Triangle.new({64, 16}, {96, 32}, {32, 48}, color: color)
-      @shapes << GSDL::Box.new(x: x, y: y, width: w, height: h, color: color)
-      @shapes << GSDL::Box.new(x: x, y: y, width: w, height: h, color: color, border_radius: 16)
-      @shapes << GSDL::Oval.new(x: x, y: y, radius_x: r_x, radius_y: r_y, color: color)
-      @shapes << GSDL::Circle.new(x: x, y: y, radius: r_y, color: color)
-      @shapes << GSDL::Arc.new(x: x, y: y, radius_x: r_x, radius_y: r_y, color: color)
+      @shapes << GSDL::Box.new(width: w, height: h, color: color)
+      @shapes << GSDL::Box.new(width: w, height: h, color: color, border_radius: 16)
+      @shapes << GSDL::Oval.new(radius_x: r_x, radius_y: r_y, color: color)
+      @shapes << GSDL::Circle.new(radius: r_y, color: color)
+      @shapes << GSDL::Arc.new(radius_x: r_x, radius_y: r_y, color: color)
+
+      @text_box.center(WIDTH, HEIGHT - HEIGHT + 128)
+      @circle.center(WIDTH, HEIGHT)
+      @shapes.each(&.center(WIDTH, HEIGHT))
     end
 
     def update(dt : Float32)
       if Keys.just_pressed?([Keys::A, Keys::Left])
-        @index += 1
-        @index = 0 if @index >= @shapes.size
+        @shape_index -= 1
+        @shape_index = @shapes.size - 1 if @shape_index < 0
       elsif Keys.just_pressed?([Keys::D, Keys::Right])
-        @index -= 1
-        @index = @shapes.size - 1 if @index < 0
+        @shape_index += 1
+        @shape_index = 0 if @shape_index >= @shapes.size
+      elsif Keys.just_pressed?(Keys::Tab)
+        @draw_mode_index += 1
+        @draw_mode_index = 0 if @draw_mode_index >= GSDL::Shape::DrawMode.values.size
+        @draw_mode_index = GSDL::Shape::DrawMode.values.size - 1 if @draw_mode_index < 0
+
+        shape = @shapes[@shape_index]
+        shape.draw_mode = GSDL::Shape::DrawMode.values[@draw_mode_index]
       end
     end
 
     def draw(draw : GSDL::Draw)
-      @pixel.draw(draw)
-      @shapes[@index].draw(draw)
+      @shapes[@shape_index].draw(draw)
+      @circle.draw(draw)
+      @text_box.draw(draw)
     end
   end
 

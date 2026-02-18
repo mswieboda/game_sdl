@@ -55,6 +55,29 @@ module GSDL
       self.y = y1
     end
 
+    def width : Num
+      [x1, x2, x3].max - [x1, x2, x3].min
+    end
+
+    def height : Num
+      [y1, y2, y3].max - [y1, y2, y3].min
+    end
+
+    def center(width : Num, height : Num)
+      half_width = self.height / 2
+      half_height = self.height / 2
+
+      dx = ((width - self.width) / 2).to_f32
+      dy = ((height - self.height) / 2).to_f32
+
+      @x += dx - half_width
+      @y += dy - half_height
+      @x2 += dx - half_width
+      @y2 += dy - half_height
+      @x3 += dx - half_width
+      @y3 += dy - half_height
+    end
+
     def vertices : Array(Vertex)
       vertices = [] of Vertex
       fcolor = color.to_fcolor

@@ -2,7 +2,7 @@ require "./text_box"
 
 module GSDL
   class Message < TextBox
-    getter border_radius : UInt32
+    getter border_radius : Num
 
     def initialize(
       font = Font.default,
@@ -14,7 +14,7 @@ module GSDL
       x : Float32 = 0_f32,
       y : Float32 = 0_f32,
       color = Color::Black,
-      @border_radius : UInt32 = 0,
+      @border_radius : Num = 0,
     )
       super(
         font: font,
@@ -31,7 +31,7 @@ module GSDL
 
     def draw_background(draw : Draw)
       box = Box.new(x: x, y: y, width: width, height: height, color: Color::White, border_radius: border_radius)
-      box.draw_filled(draw)
+      box.draw(draw)
     end
 
     def draw_border(draw : Draw)
@@ -43,9 +43,10 @@ module GSDL
           y: y + margin,
           width: (width - padding / 2).to_f32,
           height: (height - padding / 2).to_f32,
-          color: @text.color
+          color: @text.color,
+          draw_mode: Shape::DrawMode::Outline
         )
-        box.draw_outline(draw)
+        box.draw(draw)
       end
     end
   end

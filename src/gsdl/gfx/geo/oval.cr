@@ -21,7 +21,14 @@ module GSDL
       super()
     end
 
-    def initialize(x, y, @radius_x : Num = 16, @radius_y : Num = 16, color : Color = Color::White, draw_mode : Shape::DrawMode = Shape::DrawMode::Fill)
+    def initialize(
+      x : Num = 0,
+      y : Num = 0,
+      @radius_x : Num = 16,
+      @radius_y : Num = 16,
+      color : Color = Color::White,
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill
+    )
       super(x: x, y: y, color: color, draw_mode: draw_mode)
     end
 
@@ -53,6 +60,11 @@ module GSDL
     # TODO: add setter
     def center_y
       y + radius_y / 2
+    end
+
+    def center(width : Num, height : Num)
+      @x = ((width - self.radius_x) / 2).to_f32
+      @y = ((height - self.radius_y) / 2).to_f32
     end
 
     def update_geometry

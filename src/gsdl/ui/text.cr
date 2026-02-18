@@ -74,7 +74,7 @@ module GSDL
       text_size_wrapped[1] - (had_newlines ? font.size.to_i : 0)
     end
 
-    def center(width : Int32 | Float32, height : Int32 | Float32)
+    def center(width : Num, height : Num)
       @x = ((width - self.width) / 2).to_f32
       @y = ((height - self.height) / 2).to_f32
     end

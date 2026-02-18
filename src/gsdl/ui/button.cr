@@ -16,7 +16,7 @@ module GSDL
       x : Float32 = 0_f32,
       y : Float32 = 0_f32,
       color = Color::Black,
-      border_radius : UInt32 = 0,
+      border_radius : Num = 0,
       @on_click : Callback = -> on_click(String),
     )
       super(
@@ -47,7 +47,7 @@ module GSDL
 
     def draw_background(draw : Draw)
       box = Box.new(x: x, y: y, width: width, height: height, color: Color::White, border_radius: border_radius)
-      box.draw_filled(draw)
+      box.draw(draw)
     end
 
     def draw_border(draw : Draw)
@@ -60,9 +60,10 @@ module GSDL
         y: y + margin,
         width: width - margin * 2,
         height: height - margin * 2,
-        color: @text.color
+        color: @text.color,
+        draw_mode: Shape::DrawMode::Outline
       )
-      box.draw_outline(draw)
+      box.draw(draw)
     end
   end
 end
