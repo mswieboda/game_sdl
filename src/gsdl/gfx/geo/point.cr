@@ -18,10 +18,6 @@ module GSDL
 
     abstract def draw(draw : Draw)
 
-    def draw_filled(draw : Draw)
-      draw(draw)
-    end
-
     def self.draw(draw : Draw, points : Array(Point))
       points.each(&.draw(draw))
     end
