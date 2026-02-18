@@ -19,9 +19,18 @@ module GSDL
       @x3 : Num = 0,
       @y3 : Num = 0,
       color : Color = Color::White,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      border_thickness : Num = 1,
+      border_color : Color = Color::White
     )
-      super(x: x1, y: y1, color: color, draw_mode: draw_mode)
+      super(
+        x: x1,
+        y: y1,
+        color: color,
+        draw_mode: draw_mode,
+        border_thickness: border_thickness,
+        border_color: border_color,
+      )
     end
 
     def initialize(
@@ -29,11 +38,20 @@ module GSDL
       p2 : Tuple(Num, Num),
       p3 : Tuple(Num, Num),
       color : Color = Color::White,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill
+      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      border_thickness : Num = 1,
+      border_color : Color = Color::White
     )
       x1, y1 = p1
 
-      super(x: x1, y: y1, color: color, draw_mode: draw_mode)
+      super(
+        x: x1,
+        y: y1,
+        color: color,
+        draw_mode: draw_mode,
+        border_thickness: border_thickness,
+        border_color: border_color,
+      )
 
       @x2, @y2 = p2
       @x3, @y3 = p3
@@ -104,6 +122,70 @@ module GSDL
       lines << FPoint.new(x: vertices.first.position.x.to_f32, y: vertices.first.position.y.to_f32)
 
       draw.lines(lines)
+    end
+
+    private def draw_border(draw : Draw)
+      draw.color = border_color
+
+      original_lines = vertices.map { |v| FPoint.new(x: v.position.x.to_f32, y: v.position.y.to_f32) }
+      original_lines << FPoint.new(x: vertices.first.position.x.to_f32, y: vertices.first.position.y.to_f32)
+
+      border_thickness.to_i.times do |i|
+        current_lines = original_lines.map(&.dup) # Work on a copy of points for each iteration
+
+        min_x_point_i = _find_index_by_accessor(current_lines, :min, &.x)
+        min_y_point_i = _find_index_by_accessor(current_lines, :min, &.y)
+        max_x_point_i = _find_index_by_accessor(current_lines, :max, &.x)
+        max_y_point_i = _find_index_by_accessor(current_lines, :max, &.y)
+
+        min_x_point = current_lines[min_x_point_i]
+        min_x_point.x += i
+        current_lines[min_x_point_i] = min_x_point
+
+        min_y_point = current_lines[min_y_point_i]
+        min_y_point.y += i
+        current_lines[min_y_point_i] = min_y_point
+
+        max_x_point = current_lines[max_x_point_i]
+        max_x_point.x -= i
+        current_lines[max_x_point_i] = max_x_point
+
+        max_y_point = current_lines[max_y_point_i]
+        max_y_point.y -= i
+        current_lines[max_y_point_i] = max_y_point
+
+        current_lines[-1] = current_lines.first
+
+        draw.lines(current_lines)
+      end
+    end
+
+    # Generic helper to find the index of the min/max value of a property in an Array(FPoint)
+    private def _find_index_by_accessor(
+      points : Array(FPoint),
+      direction : Symbol, # :min or :max
+      &accessor : FPoint -> Num
+    ) : Int32
+      return 0 if points.empty? # Return first index if empty or handle error
+
+      best_val = accessor.call(points.first)
+      best_idx = 0
+
+      points.each_with_index do |point, index|
+        current_val = accessor.call(point)
+        if direction == :min
+          if current_val < best_val
+            best_val = current_val
+            best_idx = index
+          end
+        else # direction == :max
+          if current_val > best_val
+            best_val = current_val
+            best_idx = index
+          end
+        end
+      end
+      best_idx
     end
 
     def self.draw(draw : Draw, triangles : Array(Triangle))
