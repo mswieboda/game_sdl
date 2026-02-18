@@ -117,11 +117,11 @@ module GSDL
     end
 
     def to_rect
-      Rect.new(x: x.to_i, y: y.to_i, w: w.to_i, h: h.to_i)
+      Rect.new(x: draw_x.to_i, y: draw_y.to_i, w: w.to_i, h: h.to_i)
     end
 
     def to_frect
-      FRect.new(x: x.to_f32, y: y.to_f32, w: w.to_f32, h: h.to_f32)
+      FRect.new(x: draw_x.to_f32, y: draw_y.to_f32, w: w.to_f32, h: h.to_f32)
     end
 
     private def draw_filled(draw : Draw)

@@ -73,8 +73,6 @@ module GSDL
       x: Num = 0,
       y: Num = 0,
       # TODO: implement these
-      # origin_x: Num = 0,
-      # origin_y: Num = 0,
       # rotation: Num = 0,
       # scale_x: Num = 0,
       # scale_y: Num = 0,
@@ -84,11 +82,13 @@ module GSDL
       border_color: Color = Color::White
     })
 
+    property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     getter? changed : Bool = true
 
     def initialize(
       @x : Num = 0,
       @y : Num = 0,
+      @origin = {0_f32, 0_f32},
       @color : Color = Color::White,
       @draw_mode : DrawMode = DrawMode::Fill,
       @border_thickness : Num = 1,
@@ -97,8 +97,8 @@ module GSDL
     end
 
     def center(width : Num, height : Num)
-      @x = ((width - self.width) / 2).to_f32
-      @y = ((height - self.height) / 2).to_f32
+      @x = width / 2_f32
+      @y = height / 2_f32
     end
 
     abstract def width : Num
@@ -110,6 +110,22 @@ module GSDL
 
     def changed!
       @changed = true
+    end
+
+    def origin_x : Float32
+      origin[0]
+    end
+
+    def origin_y : Float32
+      origin[1]
+    end
+
+    def draw_x : Num
+      x - (width * origin_x)
+    end
+
+    def draw_y : Num
+      y - (height * origin_y)
     end
 
     def draw(draw : Draw)

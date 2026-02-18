@@ -1,7 +1,5 @@
 module GSDL
   abstract class SpriteBase
-    alias Origin = Tuple(Float32, Float32)
-
     include Collidable
 
     property x : Num
@@ -9,13 +7,13 @@ module GSDL
     property z_index : Int32 = 0
     property color : Color = Color::White
     property collision_bounding_box : FRect
-    property origin : Origin = {0_f32, 0_f32}
+    property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
 
     @texture : SDL3::Texture
 
     delegate size, to: @texture
 
-    def initialize(@key : String, @x : Num = 0, @y : Num = 0, @origin : Origin = {0_f32, 0_f32})
+    def initialize(@key : String, @x : Num = 0, @y : Num = 0, @origin = {0_f32, 0_f32})
       @texture = TextureManager.get(@key)
       @collision_bounding_box = FRect.new(
         x: x.to_f32,

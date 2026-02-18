@@ -71,11 +71,6 @@ module GSDL
       (y + radius_y / 2).to_f32
     end
 
-    def center(width : Num, height : Num)
-      @x = ((width - self.radius_x) / 2).to_f32
-      @y = ((height - self.radius_y) / 2).to_f32
-    end
-
     def update_geometry
       @fill_vertices = [] of Vertex
       @fill_indices = [] of Int32

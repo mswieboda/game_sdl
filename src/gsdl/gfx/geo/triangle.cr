@@ -81,6 +81,7 @@ module GSDL
       [y1, y2, y3].max - [y1, y2, y3].min
     end
 
+    # TODO: reimplement this, like Shape#center
     def center(width : Num, height : Num)
       half_width = self.height / 2
       half_height = self.height / 2
