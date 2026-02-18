@@ -3,7 +3,7 @@ module GSDL
     enum DrawMode
       Fill
       Outline
-      Both
+      Border
     end
 
     # for creating getter/setter, for variables affecting update_geometry
@@ -79,12 +79,18 @@ module GSDL
       # scale_x: Num = 0,
       # scale_y: Num = 0,
       color: Color = Color::White,
-      draw_mode: DrawMode = DrawMode::Fill
+      draw_mode: DrawMode = DrawMode::Fill,
+      border: Num = 0
     })
 
     getter? changed : Bool = true
 
-    def initialize(@x : Num = 0, @y : Num = 0, @color : Color = Color::White, @draw_mode : DrawMode = DrawMode::Fill)
+    def initialize(
+      @x : Num = 0,
+      @y : Num = 0,
+      @color : Color = Color::White,
+      @draw_mode : DrawMode = DrawMode::Fill
+    )
     end
 
     # needs to be called at the end of initialization,
@@ -96,8 +102,12 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      draw_filled(draw) if draw_mode.fill? || draw_mode.both?
-      draw_outline(draw) if draw_mode.outline? || draw_mode.both?
+      if draw_mode.outline?
+        draw_outline(draw)
+      else
+        draw_filled(draw)
+        draw_border(draw) if draw_mode.border?
+      end
     end
 
     private def draw_filled(draw : Draw)
@@ -106,6 +116,9 @@ module GSDL
 
     private def draw_outline(draw : Draw)
       draw(draw)
+    end
+
+    private def draw_border(draw : Draw)
     end
   end
 end

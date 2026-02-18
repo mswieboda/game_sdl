@@ -60,6 +60,8 @@ module GameEx
       @shapes << GSDL::Circle.new(x: 256, y: 320, radius: 64, color: color, draw_mode: GSDL::Shape::DrawMode::Outline)
       @shapes << GSDL::Oval.new(x: 224, y: 448, radius_x: 64, radius_y: 32, color: color)
 
+      @shapes << GSDL::Arc.new(x: 224, y: 448, radius_x: 64, radius_y: 32, color: color)
+
       # example for changed, update_geometry
       circle.x = 319
       circle.y = 447
