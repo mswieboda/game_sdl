@@ -7,7 +7,7 @@ module GameEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Shape Example", width: WIDTH, height: HEIGHT)
+      super(title: "Shapes Example", width: WIDTH, height: HEIGHT)
     end
 
     def init
@@ -59,7 +59,11 @@ module GameEx
       @shapes << GSDL::Arc.new(radius_x: r_x, radius_y: r_y, color: color, border_thickness: border_thickness)
 
       @text_box.center(WIDTH, HEIGHT - HEIGHT + 128)
+
+      @circle.origin = {0.5_f32, 0.5_f32}
       @circle.center(WIDTH, HEIGHT)
+
+      @shapes.each { |s| s.origin = {0.5_f32, 0.5_f32} }
       @shapes.each(&.center(WIDTH, HEIGHT))
     end
 

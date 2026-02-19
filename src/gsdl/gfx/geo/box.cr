@@ -57,10 +57,10 @@ module GSDL
 
         # top left, top right, bottom left, bottom right
         [
-          { center: {x + border_radius, y + border_radius}, dir: {1_i8, 1_i8} },
-          { center: {x + width - border_radius, y + border_radius}, dir: {-1_i8, 1_i8} },
-          { center: {x + border_radius, y + height - border_radius}, dir: {1_i8, -1_i8} },
-          { center: {x + width - border_radius, y + height - @border_radius}, dir: {-1_i8, -1_i8} }
+          { center: {draw_x + border_radius, draw_y + border_radius}, dir: {1_i8, 1_i8} },
+          { center: {draw_x + width - border_radius, draw_y + border_radius}, dir: {-1_i8, 1_i8} },
+          { center: {draw_x + border_radius, draw_y + height - border_radius}, dir: {1_i8, -1_i8} },
+          { center: {draw_x + width - border_radius, draw_y + height - @border_radius}, dir: {-1_i8, -1_i8} }
         ].each do |data|
           build_corner_radius(center: data[:center], dir: data[:dir])
         end
@@ -139,14 +139,14 @@ module GSDL
       draw.color = color
       draw.filled([
         Rect.new(
-          x: x + border_radius,
-          y: y,
+          x: draw_x + border_radius,
+          y: draw_y,
           w: width - border_radius * 2,
           h: height,
         ),
         Rect.new(
-          x: x,
-          y: y + border_radius,
+          x: draw_x,
+          y: draw_y + border_radius,
           w: width,
           h: height - border_radius * 2,
         )

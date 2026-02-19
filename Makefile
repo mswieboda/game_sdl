@@ -29,8 +29,7 @@ packer:
 examples:
 	@echo "Building and running all examples..."
 	@$(MAKE) run EXAMPLE=text
-	@$(MAKE) run EXAMPLE=geometry
-	@$(MAKE) run EXAMPLE=shape
+	@$(MAKE) run EXAMPLE=shapes
 	@$(MAKE) run EXAMPLE=sprite
 	@$(MAKE) run EXAMPLE=animation
 	@$(MAKE) run EXAMPLE=audio

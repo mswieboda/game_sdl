@@ -63,12 +63,12 @@ module GSDL
 
     # TODO: add setter
     def center_x : Num
-      (x + radius_x / 2).to_f32
+      draw_x + radius_x
     end
 
     # TODO: add setter
     def center_y : Num
-      (y + radius_y / 2).to_f32
+      draw_y + radius_y
     end
 
     def update_geometry
@@ -93,6 +93,8 @@ module GSDL
       @changed = false
     end
 
+    # TODO: switch to start_angle to end_angle (360 deg)
+    #   instead of doing this calc 4 times with each corner
     private def build_corner(dir : Tuple(Int8, Int8))
       x_dir, y_dir = dir
       corner_radius_x = radius_x / 2
