@@ -114,7 +114,7 @@ module GSDL
     end
 
     private def draw_filled(draw : Draw)
-      draw.geometry(vertices, indices)
+      draw.geometry(z_index, vertices, indices)
     end
 
     private def draw_outline(draw : Draw)

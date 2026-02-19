@@ -38,6 +38,7 @@ module GameEx
 
       source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
       @player = GSDL::Sprite.new(key: "ship", x: 100_f32, y: 100_f32, source_rect: source_rect)
+      @player.collision_bounding_box = GSDL::FRect.new(24, 24, 80, 80)
       @obstacle = GSDL::Sprite.new(key: "ship", x: 400_f32, y: 300_f32, source_rect: source_rect)
     end
 
@@ -67,16 +68,16 @@ module GameEx
     end
 
     def draw(draw : GSDL::Draw)
+      # Draw a green box around the player to visualize its bounding box
+      # also show cases z_index, as this would be drawn first, if not for setting z_index > 0 (default)
+      draw.outline(@player.collision_box, GSDL::Color::Green, z_index: 9)
+
       @player.draw(draw)
       @obstacle.draw(draw)
 
-      # Draw a green box around the player to visualize its bounding box
-      draw.color = GSDL::Color::Green
-      draw.outline(@player.collision_box)
-
       # Draw a red box around the obstacle to visualize its bounding box
-      draw.color = GSDL::Color::Red
-      draw.outline(@obstacle.collision_box)
+      # no z_index is needed here, since it's it's draw call is last
+      draw.outline(@obstacle.collision_box, GSDL::Color::Red)
     end
   end
 

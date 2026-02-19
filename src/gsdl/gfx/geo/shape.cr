@@ -84,6 +84,7 @@ module GSDL
 
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     getter? changed : Bool = true
+    property z_index : Int32 = 0
 
     def initialize(
       @x : Num = 0,

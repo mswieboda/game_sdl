@@ -85,7 +85,8 @@ module GSDL
 
     private def draw_filled(draw : Draw)
       update_geometry if changed?
-      draw.geometry(@fill_vertices, @fill_indices)
+
+      draw.geometry(z_index, @fill_vertices, @fill_indices)
     end
 
     private def draw_border(draw : Draw)

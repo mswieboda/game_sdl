@@ -39,7 +39,32 @@ module GSDL
     struct DrawTextCommand < DrawCommand
       property text : Text
 
-      def initialize(z_index : Int32, @text : Text)
+      def initialize(@text : Text)
+        super(z_index: @text.z_index)
+      end
+    end
+
+    struct DrawGeometryCommand < DrawCommand
+      property texture : SDL3::Texture? = nil
+      property vertices : Array(Vertex)
+      property indices : Array(Int32)
+
+      def initialize(
+        z_index : Int32,
+        @vertices : Array(Vertex),
+        @indices : Array(Int32),
+        @texture : SDL3::Texture? = nil
+      )
+        super(z_index: z_index)
+      end
+    end
+
+    struct DrawFRectCommand < DrawCommand
+      property color : Color
+      property rect : FRect
+      property? outline : Bool
+
+      def initialize(z_index : Int32, @color : Color, @rect : FRect, @outline : Bool)
         super(z_index: z_index)
       end
     end
@@ -55,22 +80,6 @@ module GSDL
     def initialize(window : SDL3::Window)
       @r = SDL3::Renderer.new(window)
       @draw_commands = [] of DrawCommand
-    end
-
-    private def add_draw_texture_command(
-      z_index : Int32,
-      texture : SDL3::Texture,
-      source_rect : FRect?,
-      dest_rect : FRect,
-      flip : Int32,
-      color : Color = Color::White,
-      destroy : Bool = false
-    )
-      @draw_commands << DrawTextureCommand.new(z_index, texture, source_rect, dest_rect, flip, color, destroy)
-    end
-
-    private def add_draw_text_command(z_index : Int32, text : Text)
-      @draw_commands << DrawTextCommand.new(z_index, text)
     end
 
     private def set_color(color : Color)
@@ -107,10 +116,15 @@ module GSDL
       @draw_commands.sort_by!(&.z_index)
 
       @draw_commands.each do |command|
-        if command.is_a?(DrawTextureCommand)
+        case command
+        when DrawTextureCommand
           _draw_texture_command(command)
-        elsif command.is_a?(DrawTextCommand)
+        when DrawTextCommand
           _draw_text_command(command)
+        when DrawGeometryCommand
+          _draw_geometry_command(command)
+        when DrawFRectCommand
+          _draw_frect_command(command)
         end
       end
 
@@ -120,7 +134,7 @@ module GSDL
     end
 
     private def _draw_texture_command(command : DrawTextureCommand)
-      draw_texture_rotated(
+      _draw_texture_rotated(
         texture: command.texture,
         source_rect: command.source_rect,
         dest_rect: command.dest_rect,
@@ -134,14 +148,32 @@ module GSDL
       command.text._draw
     end
 
+    private def _draw_geometry_command(command : DrawGeometryCommand)
+      if texture = command.texture
+        @r.render_geometry(texture, command.vertices, command.indices)
+      else
+        @r.render_geometry(command.vertices, command.indices)
+      end
+    end
+
+    private def _draw_frect_command(command : DrawFRectCommand)
+      self.color = command.color
+
+      if command.outline?
+        @r.draw_rect(command.rect)
+      else
+        @r.fill_rect(command.rect)
+      end
+    end
+
     # geometry
 
-    def geometry(vertices : Array(Vertex), indices : Array(Int32))
-      @r.render_geometry(vertices, indices)
+    def geometry(z_index : Int32, vertices : Array(Vertex), indices : Array(Int32))
+      @draw_commands << DrawGeometryCommand.new(z_index, vertices, indices)
     end
 
     def geometry(texture : Texture, vertices : Array(Vertex), indices : Array(Int32))
-      @r.render_geometry(texture, vertices, indices)
+      @draw_commands << DrawGeometryCommand.new(z_index, vertices, indices, texture)
     end
 
     # points
@@ -203,14 +235,15 @@ module GSDL
 
     # rects
 
-    def filled(rect : FRect)
-      @r.fill_rect(rect)
+    def filled(rect : FRect, color = Color::White, z_index : Int32 = 0)
+      @draw_commands << DrawFRectCommand.new(z_index: z_index, color: color, rect: rect, outline: false)
     end
 
     def filled(rect : Rect | Box)
       filled(rect.to_frect)
     end
 
+    # TODO: add z_index and DrawFRectsCommand type
     def filled(rects : Array(FRect))
       slice = Slice.new(rects.to_unsafe, rects.size)
 
@@ -221,14 +254,15 @@ module GSDL
       filled(rects.map(&.to_frect))
     end
 
-    def outline(rect : FRect)
-      @r.draw_rect(rect)
+    def outline(rect : FRect, color = Color::White, z_index : Int32 = 0)
+      @draw_commands << DrawFRectCommand.new(z_index: z_index, color: color, rect: rect, outline: true)
     end
 
     def outline(rect : Rect | Box)
       outline(rect.to_frect)
     end
 
+    # TODO: add z_index, and DrawFRectsCommand struct
     def outlines(rects : Array(FRect))
       slice = Slice.new(rects.to_unsafe, rects.size)
 
@@ -250,7 +284,7 @@ module GSDL
     # text
 
     def text(text : Text)
-      add_draw_text_command(text.z_index, text)
+      @draw_commands << DrawTextCommand.new(text)
     end
 
     # textures
@@ -285,7 +319,7 @@ module GSDL
       actual_dest_rect = dest_rect || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)
 
       if draw_immediately
-        draw_texture_rotated(
+        _draw_texture_rotated(
           texture: texture,
           source_rect: source_rect,
           dest_rect: actual_dest_rect,
@@ -294,11 +328,19 @@ module GSDL
           destroy: destroy,
         )
       else
-        add_draw_texture_command(z_index, texture, source_rect, actual_dest_rect, flip, color)
+        @draw_commands << DrawTextureCommand.new(
+          z_index: z_index,
+          texture: texture,
+          source_rect: source_rect,
+          dest_rect: actual_dest_rect,
+          flip: flip,
+          color: color,
+          destroy: destroy
+        )
       end
     end
 
-    def draw_texture_rotated(
+    private def _draw_texture_rotated(
       texture : SDL3::Texture,
       source_rect : FRect? = nil,
       dest_rect : FRect? = nil,

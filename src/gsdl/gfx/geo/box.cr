@@ -130,6 +130,7 @@ module GSDL
         draw.filled(self)
       else
         update_geometry if changed?
+
         draw_filled_cross(draw)
         draw_filled_border_radius(draw)
       end
@@ -154,7 +155,7 @@ module GSDL
     end
 
     private def draw_filled_border_radius(draw : Draw)
-      draw.geometry(@fill_vertices, @fill_indices)
+      draw.geometry(z_index, @fill_vertices, @fill_indices)
     end
 
     private def draw_outline(draw : Draw)
