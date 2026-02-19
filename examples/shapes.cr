@@ -41,7 +41,12 @@ module GameEx
       color = GSDL::Color::LimeGreen
 
       text = "LEFT/RIGHT or A/D toggles shapes\n\nTAB toggles draw mode"
-      @text_box = GSDL::TextBox.new(text: text, color: color, align: GSDL::Font::Align::Center)
+      @text_box = GSDL::TextBox.new(
+        text: text,
+        origin: {0.5_f32, 0.5_f32},
+        color: color,
+        align: GSDL::Font::Align::Center
+      )
       @text_box.center(WIDTH, HEIGHT - HEIGHT + 128)
 
       @points << GSDL::Pixel.new(x: 32, y: 32, color: color, z_index: 3)
@@ -49,7 +54,7 @@ module GameEx
       @points << GSDL::Pixel.new({32, 96}, color: color)
       @points << GSDL::Line.new({32, 128}, {WIDTH - 32, 128}, color: color, z_index: 3)
 
-      @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, radius: 8, z_index: 9)
+      @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, scale: {2, 4}, radius: 8, z_index: 9)
       @circle.origin = {0.5_f32, 0.5_f32}
       @circle.center(WIDTH, HEIGHT)
 

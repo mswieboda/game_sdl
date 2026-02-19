@@ -32,6 +32,7 @@ module GSDL
       y : Num = 0,
       color : Color = Color::White,
       origin = {0_f32, 0_f32},
+      scale = {1_f32, 1_f32},
       z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
@@ -42,6 +43,7 @@ module GSDL
         x: x,
         y: y,
         origin: origin,
+        scale: scale,
         color: color,
         z_index: z_index,
         draw_mode: draw_mode,
@@ -50,33 +52,37 @@ module GSDL
       )
     end
 
+    def draw_border_radius : Num
+      border_radius * [scale_x, scale_y].min
+    end
+
     def update_geometry
       @fill_vertices = [] of Vertex
       @fill_indices = [] of Int32
       @outline_arc_points = [] of Array(FPoint)
 
-      if border_radius > 0
-        max_border_radius = ([width, height].min / 2).to_f32
-        @border_radius = [border_radius, max_border_radius].min
+      if draw_border_radius > 0
+        max_border_radius = ([draw_width, draw_height].min / 2).to_f32
+        actual_border_radius = [draw_border_radius, max_border_radius].min
 
         # top left, top right, bottom left, bottom right
         [
-          { center: {draw_x + border_radius, draw_y + border_radius}, dir: {1_i8, 1_i8} },
-          { center: {draw_x + width - border_radius, draw_y + border_radius}, dir: {-1_i8, 1_i8} },
-          { center: {draw_x + border_radius, draw_y + height - border_radius}, dir: {1_i8, -1_i8} },
-          { center: {draw_x + width - border_radius, draw_y + height - @border_radius}, dir: {-1_i8, -1_i8} }
+          { center: {draw_x + actual_border_radius, draw_y + actual_border_radius}, dir: {1_i8, 1_i8} },
+          { center: {draw_x + draw_width - actual_border_radius, draw_y + actual_border_radius}, dir: {-1_i8, 1_i8} },
+          { center: {draw_x + actual_border_radius, draw_y + draw_height - actual_border_radius}, dir: {1_i8, -1_i8} },
+          { center: {draw_x + draw_width - actual_border_radius, draw_y + draw_height - actual_border_radius}, dir: {-1_i8, -1_i8} }
         ].each do |data|
-          build_corner_radius(center: data[:center], dir: data[:dir])
+          build_corner_radius(center: data[:center], dir: data[:dir], radius: actual_border_radius)
         end
       end
 
       @changed = false
     end
 
-    private def build_corner_radius(center, dir : Tuple(Int8, Int8))
+    private def build_corner_radius(center, dir : Tuple(Int8, Int8), radius : Num)
       center_x, center_y = center
       x_dir, y_dir = dir
-      resolution = [12, (Math.sqrt(border_radius) * 4).to_i].max
+      resolution = [12, (Math.sqrt(radius) * 4).to_i].max
 
       # Center vertex
       @fill_vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)
@@ -88,8 +94,8 @@ module GSDL
 
       (resolution + 1).times do |i|
         angle = Math::PI + i * (0.5 * Math::PI / resolution)
-        x = center_x + x_dir * border_radius * Math.cos(angle)
-        y = center_y + y_dir * border_radius * Math.sin(angle)
+        x = center_x + x_dir * radius * Math.cos(angle)
+        y = center_y + y_dir * radius * Math.sin(angle)
         @fill_vertices << Vertex.new(x.to_f32, y.to_f32, color.to_fcolor)
         points << FPoint.new(x.to_f32, y.to_f32)
       end
@@ -121,15 +127,15 @@ module GSDL
     end
 
     def to_rect
-      Rect.new(x: draw_x.to_i, y: draw_y.to_i, w: w.to_i, h: h.to_i)
+      Rect.new(x: draw_x.to_i, y: draw_y.to_i, w: draw_width.to_i, h: draw_height.to_i)
     end
 
     def to_frect
-      FRect.new(x: draw_x.to_f32, y: draw_y.to_f32, w: w.to_f32, h: h.to_f32)
+      FRect.new(x: draw_x.to_f32, y: draw_y.to_f32, w: draw_width.to_f32, h: draw_height.to_f32)
     end
 
     private def draw_fill(draw : Draw)
-      if border_radius <= 0
+      if draw_border_radius <= 0
         draw.rect_fill(self)
       else
         update_geometry if changed?
@@ -143,16 +149,16 @@ module GSDL
       draw.rects_fill(
         rects: [
           Rect.new(
-            x: draw_x + border_radius,
+            x: draw_x + draw_border_radius,
             y: draw_y,
-            w: width - border_radius * 2,
-            h: height,
+            w: draw_width - draw_border_radius * 2,
+            h: draw_height,
           ),
           Rect.new(
             x: draw_x,
-            y: draw_y + border_radius,
-            w: width,
-            h: height - border_radius * 2,
+            y: draw_y + draw_border_radius,
+            w: draw_width,
+            h: draw_height - draw_border_radius * 2,
           ),
         ],
         color: color,
@@ -165,7 +171,7 @@ module GSDL
     end
 
     private def draw_outline(draw : Draw)
-      if border_radius <= 0
+      if draw_border_radius <= 0
         draw.rect_outline(self)
       else
         update_geometry if changed?
@@ -177,9 +183,9 @@ module GSDL
     private def draw_outline_cross(draw : Draw)
       # top
       draw.line(
-        x1: draw_x + border_radius,
+        x1: draw_x + draw_border_radius,
         y1: draw_y,
-        x2: draw_x + width - border_radius,
+        x2: draw_x + draw_width - draw_border_radius,
         y2: draw_y,
         color: color,
         z_index: z_index
@@ -187,10 +193,10 @@ module GSDL
 
       # bottom
       draw.line(
-        x1: draw_x + border_radius,
-        y1: draw_y + height,
-        x2: draw_x + width - border_radius,
-        y2: draw_y + height,
+        x1: draw_x + draw_border_radius,
+        y1: draw_y + draw_height,
+        x2: draw_x + draw_width - draw_border_radius,
+        y2: draw_y + draw_height,
         color: color,
         z_index: z_index
       )
@@ -198,19 +204,19 @@ module GSDL
       # left
       draw.line(
         x1: draw_x,
-        y1: draw_y + border_radius,
+        y1: draw_y + draw_border_radius,
         x2: draw_x,
-        y2: draw_y + height - border_radius,
+        y2: draw_y + draw_height - draw_border_radius,
         color: color,
         z_index: z_index
       )
 
       # right
       draw.line(
-        x1: draw_x + width,
-        y1: draw_y + border_radius,
-        x2: draw_x + width,
-        y2: draw_y + height - border_radius,
+        x1: draw_x + draw_width,
+        y1: draw_y + draw_border_radius,
+        x2: draw_x + draw_width,
+        y2: draw_y + draw_height - draw_border_radius,
         color: color,
         z_index: z_index
       )
@@ -225,18 +231,18 @@ module GSDL
     private def draw_border(draw : Draw)
       return if border_thickness <= 0
 
-      if border_radius <= 0
+      if draw_border_radius <= 0
         # draw four fill rectangles for a sharp-cornered border
         # top
         draw.rect_fill(
-          rect: FRect.new(x: draw_x, y: draw_y, w: width, h: border_thickness),
+          rect: FRect.new(x: draw_x, y: draw_y, w: draw_width, h: border_thickness),
           color: border_color,
           z_index: z_index
         )
 
         # bottom
         draw.rect_fill(
-          rect: FRect.new(x: draw_x, y: draw_y + height - border_thickness, w: width, h: border_thickness),
+          rect: FRect.new(x: draw_x, y: draw_y + draw_height - border_thickness, w: draw_width, h: border_thickness),
           color: border_color,
           z_index: z_index
         )
@@ -247,7 +253,7 @@ module GSDL
             x: draw_x,
             y: draw_y + border_thickness,
             w: border_thickness,
-            h: height - 2 * border_thickness
+            h: draw_height - 2 * border_thickness
           ),
           color: border_color,
           z_index: z_index
@@ -256,10 +262,10 @@ module GSDL
         # right (adjust height to avoid overlapping corners)
         draw.rect_fill(
           rect: FRect.new(
-            x: draw_x + width - border_thickness,
+            x: draw_x + draw_width - border_thickness,
             y: draw_y + border_thickness,
             w: border_thickness,
-            h: height - 2 * border_thickness
+            h: draw_height - 2 * border_thickness
           ),
           color: border_color,
           z_index: z_index
@@ -267,8 +273,8 @@ module GSDL
       else
         # use existing logic for rounded borders
         border_thickness.to_i.times do |i|
-          inner_width = self.width - (i * 2)
-          inner_height = self.height - (i * 2)
+          inner_width = self.draw_width - (i * 2)
+          inner_height = self.draw_height - (i * 2)
 
           if inner_width > 0 && inner_height > 0
             Box.new(
@@ -280,7 +286,7 @@ module GSDL
               color: self.border_color,
               z_index: z_index,
               draw_mode: Shape::DrawMode::Outline,
-              border_radius: self.border_radius
+              border_radius: self.draw_border_radius
             ).draw(draw)
           end
         end

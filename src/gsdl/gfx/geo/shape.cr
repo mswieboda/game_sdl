@@ -1,5 +1,7 @@
 module GSDL
   abstract class Shape
+    alias ScaleType = Tuple(Num, Num)
+
     enum DrawMode
       Fill
       Outline
@@ -72,10 +74,9 @@ module GSDL
     properties_changed({
       x: Num = 0,
       y: Num = 0,
+      scale: ScaleType = {1_f32, 1_f32},
       # TODO: implement these
       # rotation: Num = 0,
-      # scale_x: Num = 0,
-      # scale_y: Num = 0,
       color: Color = Color::White,
       draw_mode: DrawMode = DrawMode::Fill,
       border_thickness: Num = 1,
@@ -90,12 +91,35 @@ module GSDL
       @x : Num = 0,
       @y : Num = 0,
       @origin = {0_f32, 0_f32},
+      @scale = {1_f32, 1_f32},
       @color : Color = Color::White,
       @z_index : Int32 = 0,
       @draw_mode : DrawMode = DrawMode::Fill,
       @border_thickness : Num = 1,
       @border_color : Color = Color::White
     )
+    end
+
+    def scale=(val : Tuple(Num, Num))
+      return if @scale == val
+      @scale = val
+      @changed = true
+    end
+
+    def scale_x : Num
+      scale[0]
+    end
+
+    def scale_y : Num
+      scale[1]
+    end
+
+    def scale_x=(val : Num)
+      self.scale = {val, scale_y}
+    end
+
+    def scale_y=(val : Num)
+      self.scale = {scale_x, val}
     end
 
     def center(width : Num, height : Num)
@@ -106,6 +130,14 @@ module GSDL
 
     abstract def width : Num
     abstract def height : Num
+
+    def draw_width : Num
+      width * scale_x
+    end
+
+    def draw_height : Num
+      height * scale_y
+    end
 
     # needs to be called at the end of initialization,
     # and in every #draw method (only if #changed?)
@@ -124,11 +156,11 @@ module GSDL
     end
 
     def draw_x : Num
-      x - (width * origin_x)
+      x - (draw_width * origin_x)
     end
 
     def draw_y : Num
-      y - (height * origin_y)
+      y - (draw_height * origin_y)
     end
 
     def draw(draw : Draw)

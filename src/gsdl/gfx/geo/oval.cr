@@ -27,6 +27,7 @@ module GSDL
       origin = {0_f32, 0_f32},
       @radius_x : Num = 16,
       @radius_y : Num = 16,
+      scale = {1_f32, 1_f32},
       color : Color = Color::White,
       z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
@@ -37,12 +38,21 @@ module GSDL
         x: x,
         y: y,
         origin: origin,
+        scale: scale,
         color: color,
         z_index: z_index,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
         border_color: border_color
       )
+    end
+
+    def draw_radius_x : Num
+      radius_x * scale_x
+    end
+
+    def draw_radius_y : Num
+      radius_y * scale_y
     end
 
     # TODO: add setter
@@ -67,12 +77,12 @@ module GSDL
 
     # TODO: add setter
     def center_x : Num
-      draw_x + radius_x
+      draw_x + draw_radius_x
     end
 
     # TODO: add setter
     def center_y : Num
-      draw_y + radius_y
+      draw_y + draw_radius_y
     end
 
     def update_geometry
@@ -80,7 +90,7 @@ module GSDL
       @fill_indices = [] of Int32
       @outline_arc_points = [] of Array(FPoint)
 
-      if radius_x > 0 && radius_y > 0
+      if draw_radius_x > 0 && draw_radius_y > 0
         # top left, top right, bottom left, bottom right
         [
           {1_i8, 1_i8},
@@ -101,8 +111,8 @@ module GSDL
     #   instead of doing this calc 4 times with each corner
     private def build_corner(dir : Tuple(Int8, Int8))
       x_dir, y_dir = dir
-      corner_radius_x = radius_x / 2
-      corner_radius_y = radius_y / 2
+      corner_radius_x = draw_radius_x / 2
+      corner_radius_y = draw_radius_y / 2
       max_radius = [corner_radius_x, corner_radius_y].max
       segments = [12, (Math.sqrt(max_radius) * 4).to_i].max
 
@@ -148,16 +158,17 @@ module GSDL
 
     private def draw_border(draw : Draw)
       border_thickness.to_i.times do |i|
-        inner_radius_x = (self.radius_x - i * 2).to_f32
-        inner_radius_y = (self.radius_y - i * 2).to_f32
+        inner_radius_x = (self.draw_radius_x - i * 2).to_f32
+        inner_radius_y = (self.draw_radius_y - i * 2).to_f32
 
         if inner_radius_x > 0 && inner_radius_y > 0
           Oval.new(
             x: self.x,
             y: self.y,
             origin: origin,
-            radius_x: inner_radius_x,
-            radius_y: inner_radius_y,
+            radius_x: inner_radius_x / scale_x,
+            radius_y: inner_radius_y / scale_y,
+            scale: scale,
             color: self.border_color,
             z_index: z_index,
             draw_mode: Shape::DrawMode::Outline

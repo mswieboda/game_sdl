@@ -22,6 +22,7 @@ module GSDL
       y : Num = 0,
       origin = {0_f32, 0_f32},
       radius : Num = 16,
+      scale = {1_f32, 1_f32},
       @start_angle : Num = DefaultStartAngle,
       @end_angle : Num = DefaultEndAngle,
       color : Color = Color::White,
@@ -35,6 +36,7 @@ module GSDL
         y: y,
         origin: origin,
         radius: radius,
+        scale: scale,
         color: color,
         z_index: z_index,
         draw_mode: draw_mode,
@@ -50,7 +52,7 @@ module GSDL
 
       if radius > 0
         # TODO: calculate this, like resolution in Oval
-        segments = [12, (Math.sqrt(radius) * 4).to_i].max
+        segments = [12, (Math.sqrt(draw_radius_x) * 4).to_i].max
         angle_step = (end_angle - start_angle) / segments
 
         points = [] of FPoint
@@ -64,8 +66,8 @@ module GSDL
         # Vertices along the arc
         (segments + 1).times do |i|
           angle = start_angle + i * angle_step
-          arc_x = center_x + radius / 2 * Math.cos(angle)
-          arc_y = center_y + radius / 2 * Math.sin(angle)
+          arc_x = center_x + (draw_radius_x / 2) * Math.cos(angle)
+          arc_y = center_y + (draw_radius_y / 2) * Math.sin(angle)
           @fill_vertices << Vertex.new(arc_x.to_f32, arc_y.to_f32, color.to_fcolor)
           points << FPoint.new(arc_x.to_f32, arc_y.to_f32)
         end
@@ -95,6 +97,7 @@ module GSDL
       last_arc_pos = self.outline_arc_points.first[-2]
 
       border_thickness.to_i.times do |i|
+        # Scale inner radius based on current scale
         inner_radius = (self.radius - i * 2).to_f32
 
         if inner_radius > 0
@@ -103,6 +106,7 @@ module GSDL
             y: self.y,
             origin: origin,
             radius: inner_radius,
+            scale: scale,
             start_angle: self.start_angle,
             end_angle: self.end_angle,
             color: self.border_color,

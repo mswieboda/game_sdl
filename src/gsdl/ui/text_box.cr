@@ -11,6 +11,7 @@ module GSDL
     def initialize(
       font = Font.default,
       text : String = "",
+      origin = {0_f32, 0_f32},
       width : Int32? = nil,
       height : Int32? = nil,
       @padding = Padding,
@@ -22,6 +23,7 @@ module GSDL
       @text = Text.new(
         font: font,
         text: text,
+        origin: origin,
         color: color,
         align: align,
         wrap_width: width ? width - padding * 2 : 0

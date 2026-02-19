@@ -18,6 +18,7 @@ module GSDL
       @y2 : Num = 0,
       @x3 : Num = 0,
       @y3 : Num = 0,
+      scale : Tuple(Num, Num) = {1_f32, 1_f32},
       color : Color = Color::White,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
@@ -26,6 +27,7 @@ module GSDL
       super(
         x: x1,
         y: y1,
+        scale: scale,
         color: color,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
@@ -37,6 +39,7 @@ module GSDL
       p1 : Tuple(Num, Num),
       p2 : Tuple(Num, Num),
       p3 : Tuple(Num, Num),
+      scale : Tuple(Num, Num) = {1_f32, 1_f32},
       color : Color = Color::White,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
@@ -47,6 +50,7 @@ module GSDL
       super(
         x: x1,
         y: y1,
+        scale: scale,
         color: color,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
@@ -81,20 +85,47 @@ module GSDL
       [y1, y2, y3].max - [y1, y2, y3].min
     end
 
+    def draw_x1 : Num
+      base_min_x = [x1, x2, x3].min
+      draw_x + (x1 - base_min_x) * scale_x
+    end
+
+    def draw_y1 : Num
+      base_min_y = [y1, y2, y3].min
+      draw_y + (y1 - base_min_y) * scale_y
+    end
+
+    def draw_x2 : Num
+      base_min_x = [x1, x2, x3].min
+      draw_x + (x2 - base_min_x) * scale_x
+    end
+
+    def draw_y2 : Num
+      base_min_y = [y1, y2, y3].min
+      draw_y + (y2 - base_min_y) * scale_y
+    end
+
+    def draw_x3 : Num
+      base_min_x = [x1, x2, x3].min
+      draw_x + (x3 - base_min_x) * scale_x
+    end
+
+    def draw_y3 : Num
+      base_min_y = [y1, y2, y3].min
+      draw_y + (y3 - base_min_y) * scale_y
+    end
+
     # TODO: reimplement this, like Shape#center
     def center(width : Num, height : Num)
-      half_width = self.height / 2
-      half_height = self.height / 2
+      dx = (width / 2_f32) - self.x
+      dy = (height / 2_f32) - self.y
 
-      dx = ((width - self.width) / 2).to_f32
-      dy = ((height - self.height) / 2).to_f32
-
-      @x += dx - half_width
-      @y += dy - half_height
-      @x2 += dx - half_width
-      @y2 += dy - half_height
-      @x3 += dx - half_width
-      @y3 += dy - half_height
+      @x = width / 2_f32
+      @y = height / 2_f32
+      @x2 += dx
+      @y2 += dy
+      @x3 += dx
+      @y3 += dy
 
       @origin = {0.5_f32, 0.5_f32}
     end
@@ -103,9 +134,9 @@ module GSDL
       vertices = [] of Vertex
       fcolor = color.to_fcolor
 
-      vertices << Vertex.new(x1.to_f32, y1.to_f32, fcolor)
-      vertices << Vertex.new(x2.to_f32, y2.to_f32, fcolor)
-      vertices << Vertex.new(x3.to_f32, y3.to_f32, fcolor)
+      vertices << Vertex.new(draw_x1.to_f32, draw_y1.to_f32, fcolor)
+      vertices << Vertex.new(draw_x2.to_f32, draw_y2.to_f32, fcolor)
+      vertices << Vertex.new(draw_x3.to_f32, draw_y3.to_f32, fcolor)
     end
 
     def indices : Array(Int32)
