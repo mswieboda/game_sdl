@@ -1,42 +1,67 @@
 module GSDL
   class TextTyped < Text
+    alias Callback = Proc(Nil)
+
+    enum Type
+      Char
+      Word
+    end
+
     getter full_text : String
-    getter chars_per_second : UInt8
+    getter types_per_second : UInt8
+    getter type : Type
     getter? complete : Bool
     getter on_complete : Proc(Nil) | Nil
 
-    @typed_char_count : UInt8
+    @typed_count : UInt8
     @timer : Timer
 
     def initialize(
       font = Font.default,
-      text = "",
-      x = 0_f32,
-      y = 0_f32,
-      color = Color::White,
-      @chars_per_second : UInt8 = 16_u8,
-      @on_complete : Proc(Nil) | Nil = nil
+      text : String = "",
+      x : Num = 0,
+      y : Num = 0,
+      color : Color = Color::White,
+      align = Font::Align::Left,
+      direction = SDL3::TTF::Direction::LTR,
+      wrap_width : Int32? = nil,
+      z_index : Int32 = 0,
+      @types_per_second : UInt8 = 8_u8,
+      @type : Type = Type::Word,
+      @on_type : Callback | Nil = nil,
+      @on_complete : Callback | Nil = nil
     )
-      # init with empty text, as it will be typed
-      super(font: font, text: "", x: x, y: y, color: color)
+      # init with empty text space char, as it will get typed out
+      # empty space char ensures height gets calculated
+      super(
+        font: font,
+        text: " ",
+        x: x,
+        y: y,
+        color: color,
+        align: align,
+        direction: direction,
+        wrap_width: wrap_width,
+        z_index: z_index
+      )
 
       @full_text = text
-      @typed_char_count = 1
-      @timer = Timer.new(seconds_per_character)
+      @typed_count = 1
+      @timer = Timer.new(seconds_per_type)
       @complete = false
     end
 
-    private def seconds_per_character : Time::Span
-      (1_f32 / @chars_per_second).seconds
+    private def seconds_per_type : Time::Span
+      (1_f32 / @types_per_second).seconds
     end
 
-    def chars_per_second=(chars_per_second : UInt8)
-      @timer = Timer.new(seconds_per_character)
+    def types_per_second=(types_per_second : UInt8)
+      @timer = Timer.new(seconds_per_type)
     end
 
     # restarts the typing animation
     def restart
-      @typed_char_count = 1
+      @typed_count = 1
       @complete = false
 
       @timer.restart
@@ -45,10 +70,36 @@ module GSDL
     def full_text=(value : String)
       @full_text = value
 
-      # update the underlying Text's display and surface
-      super("")
+      # update the underlying Text's display and surface, with empty space
+      # empty space char ensures height gets calculated
+      super(" ")
 
       restart
+    end
+
+    def total_types
+      if type.char?
+        @full_text.size
+      else
+        @full_text.split(/\s+/).size
+      end
+    end
+
+    def type_text
+      if type.char?
+        # append one char at a time
+        self.text = @full_text[0...@typed_count]
+      else
+        # append next word (including pre whitespace)
+        self.text = @full_text.scan(/(\s*\S+)/).compact[0...@typed_count].join("")
+      end
+
+      @typed_count += 1
+
+      @on_type.try(&.call)
+
+      # reset timer for the next char
+      @timer.restart
     end
 
     def complete
@@ -66,17 +117,8 @@ module GSDL
 
       return unless @timer.done?
 
-      if @typed_char_count < @full_text.size
-        # append one char at a time
-        current_display_text = @full_text[0...@typed_char_count]
-
-        # update the underlying Text's display
-        self.text = current_display_text
-
-        @typed_char_count += 1
-
-        # reset timer for the next char
-        @timer.restart
+      if @typed_count < total_types
+        type_text
       else
         complete
       end

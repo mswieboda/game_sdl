@@ -35,49 +35,51 @@ module GameEx
 
       @text = [] of GSDL::Text
 
-      color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
-      @text << GSDL::Text.new(text: "hello world!", color: color)
-
       color = GSDL.color(r: 255, g: 160, b: 224)
       @text << GSDL::Text.new(text: "hello world!", color: color)
 
       color = GSDL.color(r: 255)
-      @text << GSDL::TextTyped.new(text: "hello world!", color: color)
+      @text << GSDL::TextTyped.new(text: "word typed hello world!", color: color, types_per_second: 4_u8)
 
       color = GSDL.color_all(160)
       @text << GSDL::Text.new(text: "hello world!", color: color)
 
-      color = GSDL::Color::Indigo
-      @text << GSDL::Text.new(text: "hello world!", color: color)
-
       color = GSDL::Color.from_hex("#0000aa")
-      @text << GSDL::TextTyped.new(text: "hello world!", color: color, chars_per_second: 12_u8)
-
-      color = GSDL::Color.random
-      @text << GSDL::Text.new(text: "hello world!", color: color)
+      @text << GSDL::TextTyped.new(
+        text: "char typed hello world!",
+        color: color,
+        type: GSDL::TextTyped::Type::Char, types_per_second: 16_u8
+      )
 
       color = GSDL::Color.random_chunks(16)
-      @text << GSDL::TextTyped.new(text: "hello world!", color: color, chars_per_second: 8_u8)
+      @text << GSDL::TextTyped.new(text: "hello world!", color: color, types_per_second: 8_u8)
 
       color = GSDL::Color::White
-      @text_wrapped = GSDL::Text.new(
+      @text << GSDL::TextTyped.new(
+        text: "typed multiple lines\nof text\nwith newlines\naligned center",
+        color: color,
+        align: GSDL::Font::Align::Center
+      )
+
+      @text_wrapped = GSDL::TextTyped.new(
         text: "multiple lines\nof text\nwith newlines\nwrapped to a width too",
-        x: 32,
-        y: 32,
         color: color,
         wrap_width: 256
       )
+
+      @text.each_with_index do |text, i|
+        height_and_padding = text.height * 2
+        centered_y_adjust = (@text.size * height_and_padding).to_f32
+        text.center(WIDTH, HEIGHT - centered_y_adjust)
+        text.y += i * height_and_padding
+      end
     end
 
     def update(dt : Float32)
       @text.each_with_index do |text, i|
         text.update(dt)
 
-        # Center the text
-        height_and_padding = text.height * 2
-        centered_y_adjust = (@text.size * height_and_padding).to_f32
-        text.center(WIDTH, HEIGHT - centered_y_adjust)
-        text.y += i * height_and_padding
+        text.x = ((WIDTH - text.width) / 2).to_f32
       end
     end
 

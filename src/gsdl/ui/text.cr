@@ -1,8 +1,8 @@
 module GSDL
   class Text
     property text
-    property x : Float32
-    property y : Float32
+    property x : Num
+    property y : Num
     property z_index : Int32 = 0
 
     @@renderer : SDL3::Renderer?
@@ -30,10 +30,16 @@ module GSDL
       @x = 0,
       @y = 0,
       color = Color::White,
+      align = Font::Align::Left,
       direction = SDL3::TTF::Direction::LTR,
       wrap_width : Int32? = nil,
       @z_index : Int32 = 0
     )
+      if font.align != align
+        font = font.copy
+        font.align = align
+      end
+
       # NOTE: needs to be Text.renderer in case of child classes
       text_engine = Text.renderer.create_text_engine
       @text_sdl = text_engine.create_text(font, @text)
@@ -94,7 +100,7 @@ module GSDL
     # NOTE: shouldn't be used outside of Draw class, but Draw needs it public
     #   to access the `@text_sdl` internally here
     def _draw
-      @text_sdl.draw(x, y)
+      @text_sdl.draw(x.to_f32, y.to_f32)
     end
 
     def destroy
