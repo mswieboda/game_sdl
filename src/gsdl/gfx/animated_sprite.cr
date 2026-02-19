@@ -13,8 +13,8 @@ module GSDL
     delegate pause, to: @animation_player
     delegate playing?, to: @animation_player
 
-    def initialize(key : String, @width : Int32, @height : Int32, x = 0_f32, y = 0_f32, origin = {0_f32, 0_f32})
-      super(key: key, x: x, y: y, origin: origin)
+    def initialize(key : String, @width : Int32, @height : Int32, x = 0_f32, y = 0_f32, origin = {0_f32, 0_f32}, scale = {1_f32, 1_f32})
+      super(key: key, x: x, y: y, origin: origin, scale: scale)
     end
 
     def update(dt : Float32)
@@ -36,10 +36,10 @@ module GSDL
       )
 
       dest_rect = FRect.new(
-        x: draw_x - camera_x,
-        y: draw_y - camera_y,
-        w: @width.to_f32,
-        h: @height.to_f32
+        x: draw_x.to_f32 - camera_x,
+        y: draw_y.to_f32 - camera_y,
+        w: draw_width.to_f32,
+        h: draw_height.to_f32
       )
 
       draw.texture_rotated(

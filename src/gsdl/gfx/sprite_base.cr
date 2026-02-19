@@ -8,18 +8,19 @@ module GSDL
     property color : Color = Color::White
     property collision_bounding_box : FRect
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
+    property scale : Tuple(Num, Num) = {1_f32, 1_f32}
 
     @texture : SDL3::Texture
 
     delegate size, to: @texture
 
-    def initialize(@key : String, @x : Num = 0, @y : Num = 0, @origin = {0_f32, 0_f32})
+    def initialize(@key : String, @x : Num = 0, @y : Num = 0, @origin = {0_f32, 0_f32}, @scale = {1_f32, 1_f32})
       @texture = TextureManager.get(@key)
       @collision_bounding_box = FRect.new(
         x: 0,
         y: 0,
-        w: width.to_f32,
-        h: height.to_f32
+        w: draw_width.to_f32,
+        h: draw_height.to_f32
       )
     end
 
@@ -34,13 +35,36 @@ module GSDL
       origin[1]
     end
 
-    def draw_x : Num
-      x - (width * origin_x)
+    def scale_x : Num
+      scale[0]
     end
 
+    def scale_y : Num
+      scale[1]
+    end
+
+    def scale_x=(val : Num)
+      @scale = {val, scale_y}
+    end
+
+    def scale_y=(val : Num)
+      @scale = {scale_x, val}
+    end
+
+    def draw_width : Num
+      width * scale_x
+    end
+
+    def draw_height : Num
+      height * scale_y
+    end
+
+    def draw_x : Num
+      x - (draw_width * origin_x)
+    end
 
     def draw_y : Num
-      y - (height * origin_y)
+      y - (draw_height * origin_y)
     end
 
     def center(width : Num, height : Num)
