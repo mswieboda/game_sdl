@@ -16,6 +16,10 @@ module GameEx
       @scene_manager = SceneManager.new
     end
 
+    def load_fonts
+      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    end
+
     def load_textures
       GSDL::TextureManager.load("ship", "gfx/ship.png")
     end
@@ -29,17 +33,54 @@ module GameEx
     end
   end
 
+  class Enemy < GSDL::Sprite
+    def initialize(x : GSDL::Num, y : GSDL::Num)
+      source_rect = GSDL::FRect.new(x: 0, y: 0, w: 128, h: 128)
+
+      super(
+        key: "ship",
+        x: x,
+        y: y,
+        origin: {0.5_f32, 0.5_f32},
+        source_rect: source_rect
+      )
+    end
+
+    def draw(draw)
+      super(draw)
+
+      draw_box(draw, area_box, GSDL::Color::Yellow)
+      draw_box(draw, collision_box, GSDL::Color::Red)
+    end
+
+    def draw_box(draw, box, color)
+      draw.rect_outline(box, color, z_index: 9)
+    end
+  end
+
+  class Player < Enemy
+    def area_bounding_box : GSDL::FRect
+      GSDL::FRect.new(-32, -32, width + 64, height + 64)
+    end
+
+    def collision_bounding_box : GSDL::FRect
+      GSDL::FRect.new(24, 24, 80, 80)
+    end
+  end
+
   class StartScene < GSDL::Scene
-    @player : GSDL::Sprite
-    @obstacle : GSDL::Sprite
+    @text : GSDL::Text
+    @enemy : Enemy
+    @player : Player
 
     def initialize
       super(:start)
 
-      source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
-      @player = GSDL::Sprite.new(key: "ship", x: 100_f32, y: 100_f32, source_rect: source_rect)
-      @player.collision_bounding_box = GSDL::FRect.new(24, 24, 80, 80)
-      @obstacle = GSDL::Sprite.new(key: "ship", x: 400_f32, y: 300_f32, source_rect: source_rect)
+      @text = GSDL::Text.new(text: "", y: 32, origin: {0.5_f32, 0.5_f32})
+      @text.x = WIDTH / 2_f32
+
+      @enemy = Enemy.new(x: 320, y: 320)
+      @player = Player.new(x: 128, y: 128)
     end
 
     def update(dt : Float32)
@@ -61,23 +102,21 @@ module GameEx
         @player.y += speed
       end
 
-      if @player.collides?(@obstacle)
+      if @player.collides?(@enemy)
+        @text.text = "collision!"
         @player.x = previous_x
         @player.y = previous_y
+      elsif @enemy.in?(@player)
+        @text.text = "enemy in area!"
+      elsif !@text.text.empty?
+        @text.text = ""
       end
     end
 
     def draw(draw : GSDL::Draw)
-      # Draw a green box around the player to visualize its bounding box
-      # also show cases z_index, as this would be drawn first, if not for setting z_index > 0 (default)
-      draw.rect_outline(@player.collision_box, GSDL::Color::Green, z_index: 9)
-
+      @enemy.draw(draw)
       @player.draw(draw)
-      @obstacle.draw(draw)
-
-      # Draw a red box around the obstacle to visualize its bounding box
-      # no z_index is needed here, since it's it's draw call is last
-      draw.rect_outline(@obstacle.collision_box, GSDL::Color::Red)
+      @text.draw(draw)
     end
   end
 

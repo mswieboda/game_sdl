@@ -1,12 +1,12 @@
 module GSDL
   abstract class SpriteBase
     include Collidable
+    include Area
 
     property x : Num
     property y : Num
     property z_index : Int32 = 0
     property tint : Color? = nil
-    property collision_bounding_box : FRect
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
 
@@ -23,12 +23,6 @@ module GSDL
       @tint : Color? = nil
     )
       @texture = TextureManager.get(@key)
-      @collision_bounding_box = FRect.new(
-        x: 0,
-        y: 0,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
-      )
     end
 
     abstract def width : Num
@@ -64,6 +58,26 @@ module GSDL
 
     def scale=(val : Num)
       @scale = {val, val}
+    end
+
+    # override in parent class for custom area box
+    def area_bounding_box : FRect
+      FRect.new(
+        x: 0_f32,
+        y: 0_f32,
+        w: draw_width.to_f32,
+        h: draw_height.to_f32
+      )
+    end
+
+    # override in parent class for custom collision box
+    def collision_bounding_box : FRect
+      FRect.new(
+        x: 0_f32,
+        y: 0_f32,
+        w: draw_width.to_f32,
+        h: draw_height.to_f32
+      )
     end
 
     def draw_width : Num

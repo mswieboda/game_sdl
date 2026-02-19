@@ -4,11 +4,11 @@ module GSDL
     abstract def draw_x : Num
     abstract def draw_y : Num
 
-    # collision bounding box of the collidable object as an SDL3::FRect
-    abstract def collision_bounding_box : SDL3::FRect
+    # collision bounding box of the collidable object as an FRect
+    abstract def collision_bounding_box : FRect
 
-    def collision_box : SDL3::FRect
-      SDL3::FRect.new(
+    def collision_box : FRect
+      FRect.new(
         x: draw_x + collision_bounding_box.x,
         y: draw_y + collision_bounding_box.y,
         w: collision_bounding_box.w,
@@ -17,10 +17,10 @@ module GSDL
     end
 
     def collides?(other : Collidable) : Bool
-      GSDL::Collidable.intersects?(collision_box, other.collision_box)
+      GSDL::Collidable.overlaps?(collision_box, other.collision_box)
     end
 
-    def self.intersects?(rect_a : SDL3::FRect, rect_b : SDL3::FRect) : Bool
+    def self.overlaps?(rect_a : FRect, rect_b : FRect) : Bool
       # Check if the rectangles overlap on both axes
       rect_a.x < rect_b.x + rect_b.w &&
       rect_a.x + rect_a.w > rect_b.x &&
