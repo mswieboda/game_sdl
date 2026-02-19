@@ -16,8 +16,8 @@ module GSDL
     def initialize(@key : String, @x : Num = 0, @y : Num = 0, @origin = {0_f32, 0_f32})
       @texture = TextureManager.get(@key)
       @collision_bounding_box = FRect.new(
-        x: x.to_f32,
-        y: x.to_f32,
+        x: 0,
+        y: 0,
         w: width.to_f32,
         h: height.to_f32
       )
