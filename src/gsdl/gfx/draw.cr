@@ -28,7 +28,7 @@ module GSDL
       property source_rect : FRect?
       property dest_rect : FRect
       property flip : Int32
-      property color : Color
+      property tint : Color?
       property? destroy
 
       def initialize(
@@ -37,7 +37,7 @@ module GSDL
         @source_rect : FRect?,
         @dest_rect : FRect,
         @flip : Int32,
-        @color : Color,
+        @tint : Color? = nil,
         @destroy : Bool = false
       )
         super(z_index: z_index)
@@ -177,7 +177,7 @@ module GSDL
             source_rect: command.source_rect,
             dest_rect: command.dest_rect,
             flip: command.flip,
-            color: command.color,
+            tint: command.tint,
             destroy: command.destroy?
           )
         when DrawTextCommand
@@ -404,7 +404,7 @@ module GSDL
       dest_rect : FRect? = nil,
       flip : Int32 = 0,
       z_index : Int32 = 0,
-      color : Color = Color::White,
+      tint : Color? = nil,
       destroy : Bool = false,
       draw_immediately : Bool = false
     )
@@ -416,7 +416,7 @@ module GSDL
           source_rect: source_rect,
           dest_rect: actual_dest_rect,
           flip: flip,
-          color: color,
+          tint: tint,
           destroy: destroy,
         )
       else
@@ -426,7 +426,7 @@ module GSDL
           source_rect: source_rect,
           dest_rect: actual_dest_rect,
           flip: flip,
-          color: color,
+          tint: tint,
           destroy: destroy
         )
       end
@@ -437,10 +437,27 @@ module GSDL
       source_rect : FRect? = nil,
       dest_rect : FRect? = nil,
       flip : Int32 = 0,
-      color : Color = Color::White,
+      tint : Color? = nil,
       destroy : Bool = false
     )
-      set_color(color)
+      orig_tint = nil
+
+      # set tint
+      if t = tint
+        # draw the original texture, so we have a tint overlay, if alpha != 255
+        _draw_texture_rotated(
+          texture: texture,
+          source_rect: source_rect,
+          dest_rect: dest_rect,
+          flip: flip,
+          tint: nil,
+          destroy: false
+        )
+
+        # save the old tint
+        orig_tint = texture.tint
+        texture.tint = t
+      end
 
       if src_rect = source_rect
         @r.render_texture_rotated(
@@ -455,6 +472,11 @@ module GSDL
           dest_rect: dest_rect,
           flip: flip
         )
+      end
+
+      # put tint back to what it was
+      if tint = orig_tint
+        texture.tint = tint
       end
 
       if destroy

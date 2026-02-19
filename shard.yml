@@ -8,9 +8,9 @@ authors:
 dependencies:
   sdl3:
     github: mswieboda/sdl3.cr
-    version: 0.36.0
+    version: "~> 0.37.0"
     # path: ../sdl3
 
-crystal: '>= 1.19.1'
+crystal: "~> 1.19.1"
 
 license: MIT

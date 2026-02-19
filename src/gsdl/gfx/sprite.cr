@@ -4,8 +4,16 @@ module GSDL
   class Sprite < SpriteBase
     @source_rect : FRect | Nil
 
-    def initialize(key : String, x = 0, y = 0, origin = {0_f32, 0_f32}, scale = {1_f32, 1_f32}, @source_rect = nil)
-      super(key: key, x: x, y: y, origin: origin, scale: scale)
+    def initialize(
+      key : String,
+      x : Num = 0,
+      y : Num = 0,
+      origin = {0_f32, 0_f32},
+      scale = {1_f32, 1_f32},
+      tint : Color? = nil,
+      @source_rect = nil
+    )
+      super(key: key, x: x, y: y, origin: origin, scale: scale, tint: tint)
     end
 
     def width : Num
@@ -24,7 +32,7 @@ module GSDL
       end
     end
 
-    def draw(draw : Draw, camera_x : Float32 = 0.0_f32, camera_y : Float32 = 0.0_f32, flip_horizontal : Bool = false)
+    def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)
       dest_rect = FRect.new(
         x: draw_x.to_f32 - camera_x,
         y: draw_y.to_f32 - camera_y,
@@ -39,7 +47,7 @@ module GSDL
           dest_rect: dest_rect,
           flip: flip_horizontal ? 1 : 0,
           z_index: z_index,
-          color: color
+          tint: tint
         )
       else
         draw.texture_rotated(
@@ -47,7 +55,7 @@ module GSDL
           dest_rect: dest_rect,
           flip: flip_horizontal ? 1 : 0,
           z_index: z_index,
-          color: color
+          tint: tint
         )
       end
     end

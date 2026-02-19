@@ -5,7 +5,7 @@ module GSDL
     property x : Num
     property y : Num
     property z_index : Int32 = 0
-    property color : Color = Color::White
+    property tint : Color? = nil
     property collision_bounding_box : FRect
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
@@ -14,7 +14,14 @@ module GSDL
 
     delegate size, to: @texture
 
-    def initialize(@key : String, @x : Num = 0, @y : Num = 0, @origin = {0_f32, 0_f32}, @scale = {1_f32, 1_f32})
+    def initialize(
+      @key : String,
+      @x : Num = 0,
+      @y : Num = 0,
+      @origin = {0_f32, 0_f32},
+      @scale = {1_f32, 1_f32},
+      @tint : Color? = nil
+    )
       @texture = TextureManager.get(@key)
       @collision_bounding_box = FRect.new(
         x: 0,
@@ -72,5 +79,7 @@ module GSDL
       @y = height / 2_f32
       @origin = {0.5_f32, 0.5_f32}
     end
+
+    abstract def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)
   end
 end
