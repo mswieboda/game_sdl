@@ -95,6 +95,8 @@ module GSDL
       @y2 += dy - half_height
       @x3 += dx - half_width
       @y3 += dy - half_height
+
+      @origin = {0.5_f32, 0.5_f32}
     end
 
     def vertices : Array(Vertex)

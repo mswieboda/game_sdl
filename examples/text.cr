@@ -35,28 +35,50 @@ module GameEx
 
       @text = [] of GSDL::Text
 
+      origin = {0.5_f32, 0.5_f32}
+
       color = GSDL.color(r: 255, g: 160, b: 224)
-      @text << GSDL::Text.new(text: "hello world!", color: color)
+      @text << GSDL::Text.new(
+        text: "hello world!",
+        origin: origin,
+        color: color
+      )
 
       color = GSDL.color(r: 255)
-      @text << GSDL::TextTyped.new(text: "word typed hello world!", color: color, types_per_second: 4_u8)
+      @text << GSDL::TextTyped.new(
+        text: "word typed hello world!",
+        origin: origin,
+        color: color,
+        types_per_second: 4_u8
+      )
 
       color = GSDL.color_all(160)
-      @text << GSDL::Text.new(text: "hello world!", color: color)
+      @text << GSDL::Text.new(
+        text: "hello world!",
+        origin: origin,
+        color: color
+      )
 
       color = GSDL::Color.from_hex("#0000aa")
       @text << GSDL::TextTyped.new(
         text: "char typed hello world!",
+        origin: origin,
         color: color,
         type: GSDL::TextTyped::Type::Char, types_per_second: 16_u8
       )
 
       color = GSDL::Color.random_chunks(16)
-      @text << GSDL::TextTyped.new(text: "hello world!", color: color, types_per_second: 8_u8)
+      @text << GSDL::TextTyped.new(
+        text: "hello world!",
+        origin: origin,
+        color: color,
+        types_per_second: 8_u8
+      )
 
       color = GSDL::Color::White
       @text << GSDL::TextTyped.new(
         text: "typed multiple lines\nof text\nwith newlines\naligned center",
+        origin: {0.5_f32, 0_f32},
         color: color,
         align: GSDL::Font::Align::Center
       )
@@ -66,22 +88,26 @@ module GameEx
         color: color,
         wrap_width: 256
       )
+    end
 
-      @text.each_with_index do |text, i|
-        height_and_padding = text.height * 2
-        centered_y_adjust = (@text.size * height_and_padding).to_f32
-        text.center(WIDTH, HEIGHT - centered_y_adjust)
-        text.y += i * height_and_padding
-      end
+    def center_text(text : GSDL::Text, y : Int32 | Float32)
+      height_and_padding = text.height * 2
+      text.x = WIDTH / 2_f32
+      text.y = y + height_and_padding
     end
 
     def update(dt : Float32)
-      @text.each_with_index do |text, i|
-        text.update(dt)
-
-        text.x = ((WIDTH - text.width) / 2).to_f32
+      y = 64
+      @text[0..-2].each do |text|
+        center_text(text, y)
+        y = text.y
       end
 
+      # TODO: get this to be centered in Y as it adds more lines, not just move up?
+      @text.last.x = WIDTH / 2_f32
+      @text.last.y = y + @text.first.height * 2
+
+      @text.each(&.update(dt))
       @text_wrapped.update(dt)
     end
 

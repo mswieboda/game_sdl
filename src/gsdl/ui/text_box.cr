@@ -65,10 +65,8 @@ module GSDL
       @text.y = y + padding
     end
 
-    # TODO: reimplement this when origin added
     def center(width : Num, height : Num)
-      self.x = ((width - self.width) / 2).to_f32
-      self.y = ((height - self.height) / 2).to_f32
+      @text.center(width, height)
     end
 
     def update(dt : Float32)

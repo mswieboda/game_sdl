@@ -3,6 +3,7 @@ module GSDL
     property text
     property x : Num
     property y : Num
+    property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property z_index : Int32 = 0
 
     @@renderer : SDL3::Renderer?
@@ -29,6 +30,7 @@ module GSDL
       @text = "",
       @x = 0,
       @y = 0,
+      @origin = {0_f32, 0_f32},
       color = Color::White,
       align = Font::Align::Left,
       direction = SDL3::TTF::Direction::LTR,
@@ -82,10 +84,25 @@ module GSDL
       text_size_wrapped[1] - (had_newlines ? font.size.to_i : 0)
     end
 
-    # TODO: reimplement this when origin added
+    def origin_x : Float32
+      origin[0]
+    end
+
+    def origin_y : Float32
+      origin[1]
+    end
+
+    def draw_x : Num
+      x - (width * origin_x)
+    end
+
+    def draw_y : Num
+      y - (height * origin_y)
+    end
+
     def center(width : Num, height : Num)
-      @x = ((width - self.width) / 2).to_f32
-      @y = ((height - self.height) / 2).to_f32
+      @x = width / 2_f32
+      @y = height / 2_f32
     end
 
     def update(dt : Float32)
@@ -100,7 +117,7 @@ module GSDL
     # NOTE: shouldn't be used outside of Draw class, but Draw needs it public
     #   to access the `@text_sdl` internally here
     def _draw
-      @text_sdl.draw(x.to_f32, y.to_f32)
+      @text_sdl.draw(draw_x.to_f32, draw_y.to_f32)
     end
 
     def destroy

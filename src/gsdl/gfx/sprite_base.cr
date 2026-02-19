@@ -46,6 +46,7 @@ module GSDL
     def center(width : Num, height : Num)
       @x = width / 2_f32
       @y = height / 2_f32
+      @origin = {0.5_f32, 0.5_f32}
     end
   end
 end
