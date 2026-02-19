@@ -58,6 +58,14 @@ module GSDL
       @scale = {scale_x, val}
     end
 
+    def scale=(val : Tuple(Num, Num))
+      @scale = val
+    end
+
+    def scale=(val : Num)
+      @scale = {val, val}
+    end
+
     def draw_width : Num
       width * scale_x
     end
