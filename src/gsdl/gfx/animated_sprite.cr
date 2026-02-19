@@ -13,8 +13,8 @@ module GSDL
     delegate pause, to: @animation_player
     delegate playing?, to: @animation_player
 
-    def initialize(key : String, @width : Int32, @height : Int32, x = 0_f32, y = 0_f32)
-      super(key, x, y)
+    def initialize(key : String, @width : Int32, @height : Int32, x = 0_f32, y = 0_f32, origin = {0_f32, 0_f32})
+      super(key: key, x: x, y: y, origin: origin)
     end
 
     def update(dt : Float32)
@@ -36,8 +36,8 @@ module GSDL
       )
 
       dest_rect = FRect.new(
-        x: @x - camera_x,
-        y: @y - camera_y,
+        x: draw_x - camera_x,
+        y: draw_y - camera_y,
         w: @width.to_f32,
         h: @height.to_f32
       )
