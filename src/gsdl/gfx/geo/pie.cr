@@ -13,17 +13,19 @@ module GSDL
       end_angle: Num = DefaultEndAngle
     })
 
-    def initialize(@radius : Num = 16, @start_angle : Num = DefaultStartAngle, @end_angle : Num = DefaultEndAngle)
+    def initialize(@start_angle : Num = DefaultStartAngle, @end_angle : Num = DefaultEndAngle)
       super()
     end
 
     def initialize(
       x : Num = 0,
       y : Num = 0,
+      origin = {0_f32, 0_f32},
       radius : Num = 16,
       @start_angle : Num = DefaultStartAngle,
       @end_angle : Num = DefaultEndAngle,
       color : Color = Color::White,
+      z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
@@ -31,8 +33,10 @@ module GSDL
       super(
         x: x,
         y: y,
+        origin: origin,
         radius: radius,
         color: color,
+        z_index: z_index,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
         border_color: border_color
@@ -83,12 +87,6 @@ module GSDL
       @changed = false
     end
 
-    private def draw_filled(draw : Draw)
-      update_geometry if changed?
-
-      draw.geometry(z_index, @fill_vertices, @fill_indices)
-    end
-
     private def draw_border(draw : Draw)
       offset_cx = self.outline_arc_points.first[0].x
       offset_cy = self.outline_arc_points.first[0].y
@@ -97,18 +95,18 @@ module GSDL
       last_arc_pos = self.outline_arc_points.first[-2]
 
       border_thickness.to_i.times do |i|
-        offset_x = self.x + i
-        offset_y = self.y + i
         inner_radius = (self.radius - i * 2).to_f32
 
         if inner_radius > 0
           Pie.new(
-            x: offset_x,
-            y: offset_y,
+            x: self.x,
+            y: self.y,
+            origin: origin,
             radius: inner_radius,
             start_angle: self.start_angle,
             end_angle: self.end_angle,
             color: self.border_color,
+            z_index: z_index,
             draw_mode: Shape::DrawMode::Outline
           ).draw(draw)
         end
@@ -120,7 +118,8 @@ module GSDL
           y1: offset_cy + i * Math.cos(self.start_angle),
           x2: first_arc_pos.x + i * Math.sin(self.start_angle),
           y2: first_arc_pos.y + i * Math.cos(self.start_angle),
-          color: self.border_color
+          color: self.border_color,
+          z_index: z_index
         ).draw(draw)
 
         # TODO: this one is not working well for some reason
@@ -129,7 +128,8 @@ module GSDL
           y1: offset_cy + i * Math.cos(self.end_angle),
           x2: last_arc_pos.x + i * Math.sin(self.end_angle),
           y2: last_arc_pos.y + i * Math.cos(self.end_angle),
-          color: self.border_color
+          color: self.border_color,
+          z_index: z_index
         ).draw(draw)
       end
     end

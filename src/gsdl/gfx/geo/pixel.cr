@@ -3,13 +3,18 @@ require "./point"
 module GSDL
   class Pixel < Point
     property color : Color = Color::White
+    property z_index : Int32 = 0
 
-    def initialize(@color = Color::White)
+    def initialize(@color = Color::White, @z_index = 0)
       super()
     end
 
-    def initialize(x, y, @color = Color::White)
+    def initialize(x : Num, y : Num, @color = Color::White, @z_index = 0)
       super(x: x, y: y)
+    end
+
+    def initialize(point : Tuple(Num, Num), @color = Color::White, @z_index = 0)
+      super(point: point)
     end
 
     def to_point
@@ -21,18 +26,7 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      draw.color = color
       draw.pixel(self)
-    end
-
-    def self.draw(draw : Draw, pixels : Array(Pixel))
-      draw.color = pixels.first.color
-      draw.pixels(pixels)
-    end
-
-    def self.draw_lines(draw : Draw, pixels : Array(Pixel))
-      draw.color = pixels.first.color
-      draw.lines(pixels)
     end
   end
 end

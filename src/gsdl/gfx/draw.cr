@@ -15,6 +15,14 @@ module GSDL
       end
     end
 
+    abstract struct DrawColorCommand < DrawCommand
+      property color : Color
+
+      def initialize(z_index : Int32, @color : Color)
+        super(z_index: z_index)
+      end
+    end
+
     struct DrawTextureCommand < DrawCommand
       property texture : SDL3::Texture
       property source_rect : FRect?
@@ -45,9 +53,9 @@ module GSDL
     end
 
     struct DrawGeometryCommand < DrawCommand
-      property texture : SDL3::Texture? = nil
       property vertices : Array(Vertex)
       property indices : Array(Int32)
+      property texture : SDL3::Texture? = nil
 
       def initialize(
         z_index : Int32,
@@ -59,13 +67,55 @@ module GSDL
       end
     end
 
-    struct DrawFRectCommand < DrawCommand
-      property color : Color
+    struct DrawFRectCommand < DrawColorCommand
       property rect : FRect
       property? outline : Bool
 
-      def initialize(z_index : Int32, @color : Color, @rect : FRect, @outline : Bool)
-        super(z_index: z_index)
+      def initialize(z_index : Int32, color : Color, @rect : FRect, @outline : Bool)
+        super(z_index: z_index, color: color)
+      end
+    end
+
+    struct DrawFRectsCommand < DrawColorCommand
+      property rects : Array(FRect)
+      property? outline : Bool
+
+      def initialize(z_index : Int32, color : Color, @rects : Array(FRect), @outline : Bool)
+        super(z_index: z_index, color: color)
+      end
+    end
+
+    struct DrawPointCommand < DrawColorCommand
+      property x : Float32
+      property y : Float32
+
+      def initialize(z_index : Int32, color : Color, @x : Float32, @y : Float32)
+        super(z_index: z_index, color: color)
+      end
+    end
+
+    abstract struct DrawPointsCommandBase < DrawColorCommand
+      property points : Array(FPoint)
+
+      def initialize(z_index : Int32, color : Color, @points : Array(FPoint))
+        super(z_index: z_index, color: color)
+      end
+    end
+
+    struct DrawPointsCommand < DrawPointsCommandBase
+    end
+
+    struct DrawLinesCommand < DrawPointsCommandBase
+    end
+
+    struct DrawLineCommand < DrawColorCommand
+      property x1 : Float32
+      property y1 : Float32
+      property x2 : Float32
+      property y2 : Float32
+
+      def initialize(z_index : Int32, color : Color, @x1, @y1, @x2, @y2)
+        super(z_index: z_index, color: color)
       end
     end
 
@@ -116,15 +166,51 @@ module GSDL
       @draw_commands.sort_by!(&.z_index)
 
       @draw_commands.each do |command|
+        if command.is_a?(DrawColorCommand)
+          self.color = command.color
+        end
+
         case command
         when DrawTextureCommand
-          _draw_texture_command(command)
+          _draw_texture_rotated(
+            texture: command.texture,
+            source_rect: command.source_rect,
+            dest_rect: command.dest_rect,
+            flip: command.flip,
+            color: command.color,
+            destroy: command.destroy?
+          )
         when DrawTextCommand
-          _draw_text_command(command)
+          command.text._draw
         when DrawGeometryCommand
-          _draw_geometry_command(command)
+          if texture = command.texture
+            @r.render_geometry(texture, command.vertices, command.indices)
+          else
+            @r.render_geometry(command.vertices, command.indices)
+          end
         when DrawFRectCommand
-          _draw_frect_command(command)
+          if command.outline?
+            @r.draw_rect(command.rect)
+          else
+            @r.fill_rect(command.rect)
+          end
+        when DrawFRectsCommand
+          slice = Slice.new(command.rects.to_unsafe, command.rects.size)
+          if command.outline?
+            @r.draw_rects(slice)
+          else
+            @r.fill_rects(slice)
+          end
+        when DrawPointCommand
+          @r.draw_point(x: command.x, y: command.y)
+        when DrawPointsCommand
+          slice = Slice.new(command.points.to_unsafe, command.points.size)
+          @r.draw_points(slice)
+        when DrawLineCommand
+          @r.draw_line(x1: command.x1, y1: command.y1, x2: command.x2, y2: command.y2)
+        when DrawLinesCommand
+          slice = Slice.new(command.points.to_unsafe, command.points.size)
+          @r.draw_lines(slice)
         end
       end
 
@@ -133,152 +219,158 @@ module GSDL
       @r.present
     end
 
-    private def _draw_texture_command(command : DrawTextureCommand)
-      _draw_texture_rotated(
-        texture: command.texture,
-        source_rect: command.source_rect,
-        dest_rect: command.dest_rect,
-        flip: command.flip,
-        color: command.color,
-        destroy: command.destroy?,
-      )
-    end
-
-    private def _draw_text_command(command : DrawTextCommand)
-      command.text._draw
-    end
-
-    private def _draw_geometry_command(command : DrawGeometryCommand)
-      if texture = command.texture
-        @r.render_geometry(texture, command.vertices, command.indices)
-      else
-        @r.render_geometry(command.vertices, command.indices)
-      end
-    end
-
-    private def _draw_frect_command(command : DrawFRectCommand)
-      self.color = command.color
-
-      if command.outline?
-        @r.draw_rect(command.rect)
-      else
-        @r.fill_rect(command.rect)
-      end
-    end
-
     # geometry
 
-    def geometry(z_index : Int32, vertices : Array(Vertex), indices : Array(Int32))
-      @draw_commands << DrawGeometryCommand.new(z_index, vertices, indices)
-    end
-
-    def geometry(texture : Texture, vertices : Array(Vertex), indices : Array(Int32))
-      @draw_commands << DrawGeometryCommand.new(z_index, vertices, indices, texture)
+    def geometry(vertices : Array(Vertex), indices : Array(Int32), z_index : Int32 = 0, texture : SDL3::Texture? = nil)
+      @draw_commands << DrawGeometryCommand.new(
+        z_index: z_index,
+        vertices: vertices,
+        indices: indices,
+        texture: texture
+      )
     end
 
     # points
 
-    def point(x : Float32, y : Float32)
-      @r.draw_point(x: x, y: y)
+    def point(x : Num, y : Num, color = Color::White, z_index = 0)
+      @draw_commands << DrawPointCommand.new(
+        z_index: z_index,
+        color: color,
+        x: x.to_f32,
+        y: y.to_f32
+      )
     end
 
-    def point(point : SDL3::FPoint)
-      point(x: point.x, y: point.y)
+    def point(point : FPoint, color = Color::White, z_index = 0)
+      point(x: point.x, y: point.y, color: color, z_index: z_index)
     end
 
-    def point(point : Point)
-      point(point.x.to_f32, point.y.to_f32)
+    def point(point : Point, color = Color::White, z_index = 0)
+      point(point.x.to_f32, point.y.to_f32, color: color, z_index: z_index)
     end
 
-    def points(points : Array(SDL3::FPoint))
-      slice = Slice.new(points.to_unsafe, points.size)
-
-      @r.draw_points(slice)
+    def points(points : Array(FPoint), color = Color::White, z_index = 0)
+      @draw_commands << DrawPointsCommand.new(
+        points: points,
+        color: color,
+        z_index: z_index
+      )
     end
 
-    def points(points : Array(Point))
-      points(points.map(&.to_fpoint))
+    def points(points : Array(Point), color = Color::White, z_index = 0)
+      points(points: points.map(&.to_fpoint), color: color, z_index: z_index)
     end
 
     def pixel(pixel : Pixel)
-      point(pixel.x.to_f32, pixel.y.to_f32)
+      point(x: pixel.x.to_f32, y: pixel.y.to_f32, color: pixel.color, z_index: pixel.z_index)
     end
 
-    def pixels(pixels : Array(Point))
-      points(pixels.map(&.to_fpoint))
+    def pixels(pixels : Array(Pixel))
+      pixel = pixels.first
+      points(points: pixels.map(&.to_fpoint), color: pixel.color, z_index: pixel.z_index)
     end
 
     # lines
 
-    def line(x1 : Int32 | Float32, y1 : Int32 | Float32, x2 : Int32 | Float32, y2 : Int32 | Float32)
-      @r.draw_line(x1: x1.to_f32, y1: y1.to_f32, x2: x2.to_f32, y2: y2.to_f32)
-    end
-
-    def line(line : Line)
-      @r.draw_line(
-        x1: line.x1.to_f32,
-        y1: line.y1.to_f32,
-        x2: line.x2.to_f32,
-        y2: line.y2.to_f32
+    def line(x1 : Num, y1 : Num, x2 : Num, y2 : Num, color = Color::White, z_index = 0)
+      @draw_commands << DrawLineCommand.new(
+        z_index: z_index,
+        color: color,
+        x1: x1.to_f32,
+        y1: y1.to_f32,
+        x2: x2.to_f32,
+        y2: y2.to_f32
       )
     end
 
-    def lines(points : Array(FPoint))
-      slice = Slice.new(points.to_unsafe, points.size)
-
-      @r.draw_lines(slice)
+    def line(line : Line)
+      line(
+        x1: line.x1.to_f32,
+        y1: line.y1.to_f32,
+        x2: line.x2.to_f32,
+        y2: line.y2.to_f32,
+        color: line.color,
+        z_index: line.z_index
+      )
     end
 
-    def lines(points : Array(Point))
-      lines(points.map(&.to_fpoint))
+    def lines(points : Array(FPoint), color = Color::White, z_index = 0)
+      @draw_commands << DrawLinesCommand.new(
+        points: points,
+        color: color,
+        z_index: z_index
+      )
+    end
+
+    def lines(points : Array(Point), color = Color::White, z_index = 0)
+      lines(points: points.map(&.to_fpoint), color: color, z_index: z_index)
     end
 
     # rects
 
-    def filled(rect : FRect, color = Color::White, z_index : Int32 = 0)
+    def rect_fill(rect : FRect, color = Color::White, z_index : Int32 = 0)
       @draw_commands << DrawFRectCommand.new(z_index: z_index, color: color, rect: rect, outline: false)
     end
 
-    def filled(rect : Rect | Box)
-      filled(rect.to_frect)
+    def rect_fill(rect : Rect, color = Color::White, z_index : Int32 = 0)
+      rect_fill(rect: rect.to_frect, color: color, z_index: z_index)
     end
 
-    # TODO: add z_index and DrawFRectsCommand type
-    def filled(rects : Array(FRect))
-      slice = Slice.new(rects.to_unsafe, rects.size)
-
-      @r.fill_rects(slice)
+    def rect_fill(box : Box)
+      rect_fill(rect: box.to_frect, color: box.color, z_index: box.z_index)
     end
 
-    def filled(rects : Array(Rect | Box))
-      filled(rects.map(&.to_frect))
+    def rects_fill(rects : Array(FRect), color = Color::White, z_index = 0)
+      @draw_commands << DrawFRectsCommand.new(
+        rects: rects,
+        color: color,
+        z_index: z_index,
+        outline: false
+      )
     end
 
-    def outline(rect : FRect, color = Color::White, z_index : Int32 = 0)
-      @draw_commands << DrawFRectCommand.new(z_index: z_index, color: color, rect: rect, outline: true)
+    def rects_fill(rects : Array(Rect), color = Color::White, z_index = 0)
+      rects_fill(rects: rects.map(&.to_frect), color: color, z_index: z_index)
     end
 
-    def outline(rect : Rect | Box)
-      outline(rect.to_frect)
+    def rects_fill(boxes : Array(Box))
+      box = boxes.first.color
+      rects_fill(rects: boxes.map(&.to_frect), color: box.color, z_index: box.z_index)
     end
 
-    # TODO: add z_index, and DrawFRectsCommand struct
-    def outlines(rects : Array(FRect))
-      slice = Slice.new(rects.to_unsafe, rects.size)
-
-      @r.draw_rects(slice)
+    def rect_outline(rect : FRect, color = Color::White, z_index : Int32 = 0)
+      @draw_commands << DrawFRectCommand.new(
+        rect: rect,
+        color: color,
+        z_index: z_index,
+        outline: true
+      )
     end
 
-    def outlines(rects : Array(Rect | Box))
-      outlines(rects.map(&.to_frect))
+    def rect_outline(rect : Rect, color = Color::White, z_index : Int32 = 0)
+      rect_outline(rect: rect.to_frect, color: color, z_index: z_index)
     end
 
-    def outline(rects : Array(FRect))
-      outlines(rects)
+    def rect_outline(box : Box)
+      rect_outline(rect: box.to_frect, color: box.color, z_index: box.z_index)
     end
 
-    def outline(rects : Array(Rect | Box))
-      outlines(rects)
+    def rects_outline(rects : Array(FRect), color = Color::White, z_index = 0)
+      @draw_commands << DrawFRectsCommand.new(
+        rects: rects,
+        color: color,
+        z_index: z_index,
+        outline: true
+      )
+    end
+
+    def rects_outline(rects : Array(Rect), color = Color::White, z_index = 0)
+      rects_outline(rects: rects.map(&.to_frect), color: color, z_index: z_index)
+    end
+
+    def rects_outline(boxes : Array(Box))
+      box = boxes.first.color
+      rects_outline(rects: boxes.map(&.to_frect), color: box.color, z_index: box.z_index)
     end
 
     # text

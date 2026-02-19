@@ -15,22 +15,22 @@ module GSDL
       @x2, @y2 = point
     end
 
-    def initialize(x1, y1, @x2 : Num = 0, @y2 : Num = 0, color : Color = Color::White)
-      super(x: x1, y: y1, color: color)
+    def initialize(x1 : Num, y1 : Num, @x2 : Num = 0, @y2 : Num = 0, color : Color = Color::White, z_index = 0)
+      super(x: x1, y: y1, color: color, z_index: z_index)
     end
 
-    def initialize(p1 : Tuple(Num, Num), p2 : Tuple(Num, Num), color : Color = Color::White)
+    def initialize(p1 : Tuple(Num, Num), p2 : Tuple(Num, Num), color : Color = Color::White, z_index = 0)
       x1, y1 = p1
 
-      super(x: x1, y: y1, color: color)
+      super(x: x1, y: y1, color: color, z_index: z_index)
 
       @x2, @y2 = p2
     end
 
-    def initialize(points : Tuple(Num, Num, Num, Num), color : Color = Color::White)
+    def initialize(points : Tuple(Num, Num, Num, Num), color : Color = Color::White, z_index = 0)
       x1, y1, x2, y2 = points
 
-      super(x: x1, y: y1, color: color)
+      super(x: x1, y: y1, color: color, z_index: z_index)
 
       @x2 = x2
       @y2 = y2
@@ -65,13 +65,7 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      draw.color = color
       draw.line(self)
-    end
-
-    def self.draw(draw : Draw, pixels : Array(Pixel))
-      draw.color = pixels.first.color
-      draw.lines(pixels)
     end
   end
 end

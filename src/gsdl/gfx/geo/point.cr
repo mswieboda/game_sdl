@@ -1,7 +1,7 @@
 module GSDL
   alias FPoint = SDL3::FPoint
 
-  abstract class Point
+  class Point
     getter x : Num = 0
     getter y : Num = 0
 
@@ -21,10 +21,8 @@ module GSDL
       FPoint.new(x: x.to_f32, y: y.to_f32)
     end
 
-    abstract def draw(draw : Draw)
-
-    def self.draw(draw : Draw, points : Array(Point))
-      points.each(&.draw(draw))
+    def draw(draw : Draw, color = Color::White, z_index = 0)
+      draw.point(point: self, color: color, z_index: z_index)
     end
   end
 end

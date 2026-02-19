@@ -113,21 +113,18 @@ module GSDL
     def update_geometry
     end
 
-    private def draw_filled(draw : Draw)
-      draw.geometry(z_index, vertices, indices)
+    private def draw_fill(draw : Draw)
+      draw.geometry(vertices: vertices, indices: indices, z_index: z_index)
     end
 
     private def draw_outline(draw : Draw)
-      draw.color = color
       lines = vertices.map { |v| FPoint.new(x: v.position.x.to_f32, y: v.position.y.to_f32) }
       lines << FPoint.new(x: vertices.first.position.x.to_f32, y: vertices.first.position.y.to_f32)
 
-      draw.lines(lines)
+      draw.lines(points: lines, color: color, z_index: z_index)
     end
 
     private def draw_border(draw : Draw)
-      draw.color = border_color
-
       original_lines = vertices.map { |v| FPoint.new(x: v.position.x.to_f32, y: v.position.y.to_f32) }
       original_lines << FPoint.new(x: vertices.first.position.x.to_f32, y: vertices.first.position.y.to_f32)
 
@@ -157,7 +154,7 @@ module GSDL
 
         current_lines[-1] = current_lines.first
 
-        draw.lines(current_lines)
+        draw.lines(points: current_lines, color: border_color, z_index: z_index)
       end
     end
 
@@ -187,10 +184,6 @@ module GSDL
         end
       end
       best_idx
-    end
-
-    def self.draw(draw : Draw, triangles : Array(Triangle))
-      triangles.each(&.draw(draw))
     end
   end
 end

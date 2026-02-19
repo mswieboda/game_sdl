@@ -24,9 +24,11 @@ module GSDL
     def initialize(
       x : Num = 0,
       y : Num = 0,
+      origin = {0_f32, 0_f32},
       @radius_x : Num = 16,
       @radius_y : Num = 16,
       color : Color = Color::White,
+      z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
@@ -34,7 +36,9 @@ module GSDL
       super(
         x: x,
         y: y,
+        origin: origin,
         color: color,
+        z_index: z_index,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
         border_color: border_color
@@ -128,36 +132,34 @@ module GSDL
       end
     end
 
-    private def draw_filled(draw : Draw)
+    private def draw_fill(draw : Draw)
       update_geometry if changed?
 
-      draw.geometry(z_index, @fill_vertices, @fill_indices)
+      draw.geometry(vertices: @fill_vertices, indices: @fill_indices, z_index: z_index)
     end
 
     private def draw_outline(draw : Draw)
       update_geometry if changed?
 
-      draw.color = color
-
       @outline_arc_points.each do |points|
-        draw.lines(points)
+        draw.lines(points: points, color: color, z_index: z_index)
       end
     end
 
     private def draw_border(draw : Draw)
       border_thickness.to_i.times do |i|
-        offset_x = self.x + i
-        offset_y = self.y + i
         inner_radius_x = (self.radius_x - i * 2).to_f32
         inner_radius_y = (self.radius_y - i * 2).to_f32
 
         if inner_radius_x > 0 && inner_radius_y > 0
           Oval.new(
-            x: offset_x,
-            y: offset_y,
+            x: self.x,
+            y: self.y,
+            origin: origin,
             radius_x: inner_radius_x,
             radius_y: inner_radius_y,
             color: self.border_color,
+            z_index: z_index,
             draw_mode: Shape::DrawMode::Outline
           ).draw(draw)
         end

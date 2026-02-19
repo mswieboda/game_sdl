@@ -70,14 +70,14 @@ module GameEx
     def draw(draw : GSDL::Draw)
       # Draw a green box around the player to visualize its bounding box
       # also show cases z_index, as this would be drawn first, if not for setting z_index > 0 (default)
-      draw.outline(@player.collision_box, GSDL::Color::Green, z_index: 9)
+      draw.rect_outline(@player.collision_box, GSDL::Color::Green, z_index: 9)
 
       @player.draw(draw)
       @obstacle.draw(draw)
 
       # Draw a red box around the obstacle to visualize its bounding box
       # no z_index is needed here, since it's it's draw call is last
-      draw.outline(@obstacle.collision_box, GSDL::Color::Red)
+      draw.rect_outline(@obstacle.collision_box, GSDL::Color::Red)
     end
   end
 

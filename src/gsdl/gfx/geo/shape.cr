@@ -91,6 +91,7 @@ module GSDL
       @y : Num = 0,
       @origin = {0_f32, 0_f32},
       @color : Color = Color::White,
+      @z_index : Int32 = 0,
       @draw_mode : DrawMode = DrawMode::Fill,
       @border_thickness : Num = 1,
       @border_color : Color = Color::White
@@ -130,7 +131,7 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      draw_filled(draw) if draw_mode.fill? || draw_mode.border?
+      draw_fill(draw) if draw_mode.fill? || draw_mode.border?
 
       if draw_mode.border?
         draw_border(draw)
@@ -139,7 +140,7 @@ module GSDL
       end
     end
 
-    private def draw_filled(draw : Draw)
+    private def draw_fill(draw : Draw)
       draw(draw)
     end
 
