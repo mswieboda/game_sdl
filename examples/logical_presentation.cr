@@ -62,7 +62,7 @@ module GameEx
 
       color = GSDL::Color.new(r: 255, g: 255, b: 255, a: 255)
 
-      @instruction_text = GSDL::Text.new(text: "Press SPACE to change presentation mode. ESC to exit.", color: color)
+      @instruction_text = GSDL::Text.new(text: "Press SPACE to change presentation mode", color: color)
       @instruction_text.x = 10
       @instruction_text.y = 10
 

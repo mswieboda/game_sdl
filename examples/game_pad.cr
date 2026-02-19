@@ -40,14 +40,17 @@ module GameEx
       super(:gamepad)
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
-      @instruction_text = GSDL::Text.new(text: "Press Gamepad buttons or move axes. Press ESC to exit.", color: color)
-      @instruction_text.x = 20
-      @instruction_text.y = 20
+      @instruction_text = GSDL::Text.new(text: "Press Gamepad buttons or move axes", color: color, wrap_width: WIDTH)
+      @instruction_text.x = 16
+      @instruction_text.y = 16
 
       @button_states = Hash(LibSDL3::GamepadButton, GSDL::Text).new
       @axis_states = Hash(LibSDL3::GamepadAxis, GSDL::Text).new
 
-      y_offset = 60
+      font = GSDL::Font.default.copy
+      font.size = 12
+
+      y_offset = 64
 
       # Display for buttons
       [
@@ -62,13 +65,11 @@ module GameEx
         LibSDL3::GamepadButton::LeftShoulder,
         LibSDL3::GamepadButton::RightShoulder,
       ].each_with_index do |button, i|
-        text = GSDL::Text.new(text: "#{button}: Released", color: color)
-        text.x = 20
-        text.y = (y_offset + (i * 30)).to_f32
+        text = GSDL::Text.new(font: font, text: "#{button}: Released", color: color)
+        text.x = 24
+        text.y = (y_offset + (i * 32)).to_f32
         @button_states[button] = text
       end
-
-      y_offset += @button_states.size * 30 + 30
 
       # Display for axes
       [
@@ -79,9 +80,9 @@ module GameEx
         LibSDL3::GamepadAxis::LeftTrigger,
         LibSDL3::GamepadAxis::RightTrigger,
       ].each_with_index do |axis, i|
-        text = GSDL::Text.new(text: "#{axis}: 0", color: color)
-        text.x = 20
-        text.y = (y_offset + (i * 30)).to_f32
+        text = GSDL::Text.new(font: font, text: "#{axis}: 0", color: color)
+        text.x = WIDTH / 2_f32 + 24
+        text.y = (y_offset + (i * 32)).to_f32
         @axis_states[axis] = text
       end
     end
