@@ -19,15 +19,11 @@ module GSDL
       y : Float32 = 0_f32,
       color = Color::Black
     )
-      if font.align != align
-        font = font.copy
-        font.align = align
-      end
-
       @text = Text.new(
         font: font,
         text: text,
         color: color,
+        align: align,
         wrap_width: width ? width - padding * 2 : 0
       )
 
