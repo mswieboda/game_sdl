@@ -59,12 +59,18 @@ module GameEx
   end
 
   class Player < Enemy
+    include GSDL::MoveController
+
     def area_bounding_box : GSDL::FRect
       GSDL::FRect.new(-32, -32, width + 64, height + 64)
     end
 
     def collision_bounding_box : GSDL::FRect
       GSDL::FRect.new(24, 24, 80, 80)
+    end
+
+    def move_speed : GSDL::Num
+      200
     end
   end
 
@@ -84,28 +90,10 @@ module GameEx
     end
 
     def update(dt : Float32)
-      speed = 200 * dt
-
-      previous_x = @player.x
-      previous_y = @player.y
-
-      if Keys.pressed?([Keys::A, Keys::Left])
-        @player.x -= speed
-      end
-      if Keys.pressed?([Keys::D, Keys::Right])
-        @player.x += speed
-      end
-      if Keys.pressed?([Keys::W, Keys::Up])
-        @player.y -= speed
-      end
-      if Keys.pressed?([Keys::S, Keys::Down])
-        @player.y += speed
-      end
+      @player.move_and_collide(dt, [@enemy])
 
       if @player.collides?(@enemy)
         @text.text = "collision!"
-        @player.x = previous_x
-        @player.y = previous_y
       elsif @enemy.in?(@player)
         @text.text = "enemy in area!"
       elsif !@text.text.empty?
