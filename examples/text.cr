@@ -81,6 +81,8 @@ module GameEx
 
         text.x = ((WIDTH - text.width) / 2).to_f32
       end
+
+      @text_wrapped.update(dt)
     end
 
     def draw(draw : GSDL::Draw)
