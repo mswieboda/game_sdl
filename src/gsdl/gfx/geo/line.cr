@@ -44,6 +44,27 @@ module GSDL
       (y2 - y1).abs.to_f32
     end
 
+    def draw_x : Num
+      x1 - ((x2 - x1) * scale_x * origin_x)
+    end
+
+    def draw_y : Num
+      y1 - ((y2 - y1) * scale_y * origin_y)
+    end
+
+    def center(width : Num, height : Num)
+      # Capture the current relative vector before x1/y1 are changed
+      vx = x2 - x1
+      vy = y2 - y1
+
+      # Move x1/y1 (inherited as x/y) to the center and set origin to 0.5
+      super(width, height)
+
+      # Adjust x2/y2 so they maintain the same relative distance from x1/y1
+      @x2 = x1 + vx
+      @y2 = y1 + vy
+    end
+
     def update_geometry
       @changed = false
     end

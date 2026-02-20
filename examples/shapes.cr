@@ -29,7 +29,6 @@ module GameEx
 
   class StartScene < GSDL::Scene
     @text_box : GSDL::TextBox
-    @points = [] of GSDL::Point
     @circle : GSDL::Circle
     @shapes = [] of GSDL::Shape
     @shape_index : Int32 = 0
@@ -49,12 +48,7 @@ module GameEx
       )
       @text_box.center(WIDTH, HEIGHT - HEIGHT + 128)
 
-      @points << GSDL::Pixel.new(x: 32, y: 32, color: color, z_index: 3)
-      @points << GSDL::Pixel.new({32, 64}, color: color)
-      @points << GSDL::Pixel.new({32, 96}, color: color)
-      @points << GSDL::Line.new({32, 128}, {WIDTH - 32, 128}, color: color, z_index: 3)
-
-      @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, scale: {2, 4}, radius: 8, z_index: 9)
+      @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, radius: 6, z_index: 9)
       @circle.origin = {0.5_f32, 0.5_f32}
       @circle.center(WIDTH, HEIGHT)
 
@@ -70,6 +64,8 @@ module GameEx
       @shapes << GSDL::Oval.new(radius_x: r_x, radius_y: r_y, color: color, border_thickness: border_thickness)
       @shapes << GSDL::Circle.new(radius: r_y, color: color, border_thickness: border_thickness)
       @shapes << GSDL::Pie.new(radius: r_y, color: color, border_thickness: border_thickness)
+      @shapes << GSDL::Line.new({32, 128}, {160, 96}, color: color, z_index: 3)
+      @shapes << GSDL::Pixel.new(color: color)
 
       @shapes.each { |s| s.origin = {0.5_f32, 0.5_f32} }
       @shapes.each(&.center(WIDTH, HEIGHT))
@@ -103,19 +99,8 @@ module GameEx
 
     def draw(draw : GSDL::Draw)
       @text_box.draw(draw)
-      @points.each(&.draw(draw))
-      @circle.draw(draw)
+      @circle.draw(draw) unless @shape_index == @shapes.size - 1
       @shapes[@shape_index].draw(draw)
-
-      draw.points(
-        points: [
-          GSDL::Point.new(x: WIDTH - 32, y: 32),
-          GSDL::Point.new({WIDTH - 32, 64}),
-          GSDL::Pixel.new({WIDTH - 32, 96})
-        ],
-        color: GSDL::Color::Magenta,
-        z_index: 9
-      )
     end
   end
 
