@@ -1,6 +1,8 @@
 require "json"
 
 module GSDL
+  # NOTE: can be accessed from GSDL::Data singleton
+  # defined at the bottom of this file
   class GameData
     @data : Hash(String, JSON::Any)
 
