@@ -77,7 +77,6 @@ module GSDL
       x: Num = 0,
       y: Num = 0,
       scale: ScaleType = {1_f32, 1_f32},
-      # TODO: implement these
       # rotation: Num = 0,
       color: Color = Color::White,
       draw_mode: DrawMode = DrawMode::Fill,

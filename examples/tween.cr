@@ -137,20 +137,22 @@ module TweenEx
       if GSDL::Keys.just_pressed?(GSDL::Keys::S)
         obj = active_object
         obj.tweens.clear
+        tween = obj.tween
 
-                tween = obj.tween
-                
-                # Color property is called 'tint' for Sprites and 'color' for Shapes and Text
-                color_prop = if obj.is_a?(GSDL::Sprite)
-                               "tint"
-                             else
-                               "color"
-                             end
-                tween.add_sequence([
+        # Color property is called 'tint' for Sprites and 'color' for Shapes and Text
+        color_prop = if obj.is_a?(GSDL::Sprite)
+          "tint"
+        else
+          "color"
+        end
+
+        # Rotation property only used for Sprites for now
+        tween.add_sequence([
           {
             "duration" => 0.8,
             "x" => WIDTH - 150.0,
             color_prop => GSDL::Color::Red,
+            "rotation" => 90.0,
             "easing" => "ease_in"
           },
           {
@@ -158,12 +160,14 @@ module TweenEx
             "y" => HEIGHT - 200.0,
             color_prop => GSDL::Color::Green,
             "scale" => 2.0,
+            "rotation" => 180.0,
             "easing" => :ease_out
           },
           {
             "duration" => 0.4,
             "scale" => 0.5,
             color_prop => GSDL::Color::Blue,
+            "rotation" => 270.0,
             "easing" => "ease_in_out"
           },
           {
@@ -171,6 +175,7 @@ module TweenEx
             "x" => WIDTH / 2.0,
             "y" => HEIGHT / 2.0,
             "scale" => 1.0,
+            "rotation" => 360.0,
             color_prop => GSDL::Color::White,
             "easing" => :linear
           }

@@ -50,6 +50,7 @@ module GSDL
           source_rect: source_rect,
           dest_rect: dest_rect,
           flip: flip_horizontal ? 1 : 0,
+          angle: rotation,
           z_index: z_index,
           tint: tint
         )
@@ -58,6 +59,7 @@ module GSDL
           texture: @texture,
           dest_rect: dest_rect,
           flip: flip_horizontal ? 1 : 0,
+          angle: rotation,
           z_index: z_index,
           tint: tint
         )

@@ -7,6 +7,7 @@ module GSDL
     property x : Num
     property y : Num
     property z_index : Int32 = 0
+    property rotation : Num = 0
     property tint : Color? = nil
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}

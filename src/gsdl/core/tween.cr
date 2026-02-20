@@ -40,16 +40,22 @@ module GSDL
         duration = step["duration"]?.as?(Float32 | Float64 | Int32).try(&.to_f32) || 0_f32
         easing_val = step["easing"]?
         easing = case easing_val
-                 when Easing          then easing_val
-                 when Symbol, String  then
-                   case easing_val.to_s.underscore
-                   when "ease_in"     then Easing::EaseIn
-                   when "ease_out"    then Easing::EaseOut
-                   when "ease_in_out" then Easing::EaseInOut
-                   else                    Easing::Linear
-                   end
-                 else Easing::Linear
-                 end
+        when Easing
+          easing_val
+        when Symbol, String
+          case easing_val.to_s.underscore
+          when "ease_in"
+            Easing::EaseIn
+          when "ease_out"
+            Easing::EaseOut
+          when "ease_in_out"
+            Easing::EaseInOut
+          else
+            Easing::Linear
+          end
+        else
+          Easing::Linear
+        end
 
         properties = Hash(String, PropertyValue).new
         step.each do |key, value|
@@ -74,6 +80,7 @@ module GSDL
 
     def start(loop : Bool = false)
       return if @keyframes.empty?
+
       @loop = loop
       @current_keyframe_index = 0
       @elapsed_time = 0_f32
@@ -103,6 +110,7 @@ module GSDL
       when "x"       then @target.x.to_f32
       when "y"       then @target.y.to_f32
       when "z_index" then @target.z_index.to_f32
+      when "rotation" then @target.rotation.to_f32
       when "scale"   then @target.scale.try { |s| {s[0].to_f32, s[1].to_f32} } || {1_f32, 1_f32}
       when "scale_x" then @target.scale_x.to_f32
       when "scale_y" then @target.scale_y.to_f32
@@ -120,6 +128,8 @@ module GSDL
         @target.y = value.as(Float32)
       when "z_index"
         @target.z_index = value.as(Float32).to_i
+      when "rotation"
+        @target.rotation = value.as(Float32)
       when "scale"
         if val = value.as?(Tuple(Float32, Float32))
           @target.scale = {val[0], val[1]}

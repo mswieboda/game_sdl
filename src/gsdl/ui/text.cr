@@ -35,6 +35,7 @@ module GSDL
       @x = 0,
       @y = 0,
       @origin = {0_f32, 0_f32},
+      @scale = {1_f32, 1_f32},
       color = Color::White,
       align = Font::Align::Left,
       direction = SDL3::TTF::Direction::LTR,
