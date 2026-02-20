@@ -2,6 +2,8 @@ module GSDL
   abstract class Shape
     alias ScaleType = Tuple(Num, Num)
 
+    include Tweenable
+
     enum DrawMode
       Fill
       Outline
@@ -87,6 +89,8 @@ module GSDL
     getter? changed : Bool = true
     property z_index : Int32 = 0
 
+    getter tweens : Array(Tween) = [] of Tween
+
     def initialize(
       @x : Num = 0,
       @y : Num = 0,
@@ -161,6 +165,10 @@ module GSDL
 
     def draw_y : Num
       y - (draw_height * origin_y)
+    end
+
+    def update(dt : Float32)
+      update_tweens(dt)
     end
 
     def draw(draw : Draw)

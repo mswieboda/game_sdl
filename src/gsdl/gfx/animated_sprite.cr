@@ -28,6 +28,7 @@ module GSDL
 
     def update(dt : Float32)
       @animation_player.update(dt)
+      update_tweens(dt)
     end
 
     def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)

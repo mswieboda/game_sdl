@@ -32,6 +32,10 @@ module GSDL
       end
     end
 
+    def update(dt : Float32)
+      update_tweens(dt)
+    end
+
     def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)
       dest_rect = FRect.new(
         x: draw_x.to_f32 - camera_x,

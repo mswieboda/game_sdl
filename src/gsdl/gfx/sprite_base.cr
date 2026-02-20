@@ -2,6 +2,7 @@ module GSDL
   abstract class SpriteBase
     include Collidable
     include Area
+    include Tweenable
 
     property x : Num
     property y : Num
@@ -9,6 +10,8 @@ module GSDL
     property tint : Color? = nil
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
+
+    getter tweens : Array(Tween) = [] of Tween
 
     @texture : SDL3::Texture
 
@@ -101,6 +104,8 @@ module GSDL
       @y = height / 2_f32
       @origin = {0.5_f32, 0.5_f32}
     end
+
+    abstract def update(dt : Float32)
 
     abstract def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)
   end
