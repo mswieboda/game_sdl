@@ -1,6 +1,4 @@
 module GSDL
-  alias FPoint = SDL3::FPoint
-
   class Point
     getter x : Num = 0
     getter y : Num = 0

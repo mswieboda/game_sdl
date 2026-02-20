@@ -99,7 +99,15 @@ module TweenEx
         origin: {0.5_f32, 0.5_f32}
       )
 
-      @objects = [@sprite, @box, @circle, @text, @text_rotated] of GSDL::Tweenable
+      @line = GSDL::Line.new(
+        x1: WIDTH / 2_f32 - 100,
+        y1: HEIGHT / 2_f32 + 100,
+        x2: WIDTH / 2_f32 + 100,
+        y2: HEIGHT / 2_f32 + 100,
+        color: GSDL::Color::White
+      )
+
+      @objects = [@sprite, @box, @circle, @line, @text, @text_rotated] of GSDL::Tweenable
     end
 
     def active_object
@@ -116,6 +124,7 @@ module TweenEx
                when GSDL::Sprite      then "Sprite"
                when GSDL::Box         then "Box"
                when GSDL::Circle      then "Circle"
+               when GSDL::Line        then "Line"
                when GSDL::TextRotated then "Text Rotated"
                when GSDL::Text        then "Text"
                else                        "Unknown"

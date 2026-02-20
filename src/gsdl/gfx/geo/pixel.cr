@@ -1,32 +1,31 @@
-require "./point"
+require "./shape"
 
 module GSDL
-  class Pixel < Point
-    property color : Color = Color::White
-    property z_index : Int32 = 0
-
-    def initialize(@color = Color::White, @z_index = 0)
-      super()
+  class Pixel < Shape
+    def initialize(x : Num = 0, y : Num = 0, color : Color = Color::White, z_index : Int32 = 0)
+      super(x: x, y: y, color: color, z_index: z_index)
     end
 
-    def initialize(x : Num, y : Num, @color = Color::White, @z_index = 0)
-      super(x: x, y: y)
+    def initialize(point : Tuple(Num, Num), color : Color = Color::White, z_index : Int32 = 0)
+      super(x: point[0], y: point[1], color: color, z_index: z_index)
     end
 
-    def initialize(point : Tuple(Num, Num), @color = Color::White, @z_index = 0)
-      super(point: point)
+    def width : Num
+      1
     end
 
-    def to_point
-      Point.new(x: x, y: y)
+    def height : Num
+      1
     end
 
-    def to_fpoint
-      FPoint.new(x: x.to_f32, y: y.to_f32)
+    def update_geometry
+      @changed = false
     end
 
     def draw(draw : Draw)
-      draw.pixel(self)
+      # Rotation on a single pixel doesn't change its appearance, 
+      # but it will correctly pivot around its (x,y) if origin is used.
+      draw.point(draw_x, draw_y, color: color, z_index: z_index)
     end
   end
 end
