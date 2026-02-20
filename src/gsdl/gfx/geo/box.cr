@@ -148,17 +148,17 @@ module GSDL
     private def draw_fill_cross(draw : Draw)
       draw.rects_fill(
         rects: [
-          Rect.new(
-            x: draw_x + draw_border_radius,
-            y: draw_y,
-            w: draw_width - draw_border_radius * 2,
-            h: draw_height,
+          FRect.new(
+            x: draw_x.to_f32 + draw_border_radius.to_f32,
+            y: draw_y.to_f32,
+            w: draw_width.to_f32 - draw_border_radius.to_f32 * 2,
+            h: draw_height.to_f32,
           ),
-          Rect.new(
-            x: draw_x,
-            y: draw_y + draw_border_radius,
-            w: draw_width,
-            h: draw_height - draw_border_radius * 2,
+          FRect.new(
+            x: draw_x.to_f32,
+            y: draw_y.to_f32 + draw_border_radius.to_f32,
+            w: draw_width.to_f32,
+            h: draw_height.to_f32 - draw_border_radius.to_f32 * 2,
           ),
         ],
         color: color,
