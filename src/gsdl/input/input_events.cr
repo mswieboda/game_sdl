@@ -3,7 +3,7 @@ require "./mouse"
 require "./game_pad"
 
 module GSDL
-  module Inputs
+  module InputEvents
     def self.update
       Keys.update
       Mouse.update

@@ -35,7 +35,7 @@ module GSDL
         end
         break if @@exit # Break from event polling if quit is signaled
 
-        Inputs.handle_event(event)
+        InputEvents.handle_event(event)
       end
     end
   end

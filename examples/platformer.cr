@@ -2,6 +2,7 @@ require "../src/game_sdl"
 
 module PlatformerEx
   alias Keys = GSDL::Keys
+  alias Input = GSDL::Input
 
   WIDTH = 800
   HEIGHT = 600
@@ -84,7 +85,8 @@ module PlatformerEx
       @velocity_x = dx * SPEED
 
       # jump
-      jump(JUMP_IMPULSE) if grounded? && Keys.just_pressed?([Keys::W, Keys::Up])
+      # can use Input[:jump] or Input.action?(:jump)
+      jump(JUMP_IMPULSE) if grounded? && Input.action?(:jump)
 
       # physics and collision handling
       move_and_collide(dt, tile_map)
@@ -95,8 +97,8 @@ module PlatformerEx
 
     def dx_from_movement : Int32
       dx = 0
-      dx = -1 if Keys.pressed?([Keys::A, Keys::Left])
-      dx = 1 if Keys.pressed?([Keys::D, Keys::Right])
+      dx = -1 if Input.action?(:left)
+      dx = 1 if Input.action?(:right)
       dx
     end
 
@@ -133,6 +135,12 @@ module PlatformerEx
 
     def initialize
       super(:start)
+
+      # set up input actions, per scene, or even in your scene manager, for the whole game
+      Input.set(:jump) { GSDL::Keys.just_pressed?([GSDL::Keys::W, GSDL::Keys::Up, GSDL::Keys::Space]) }
+      Input.set(:left) { GSDL::Keys.pressed?([GSDL::Keys::A, GSDL::Keys::Left]) }
+      Input.set(:right) { GSDL::Keys.pressed?([GSDL::Keys::D, GSDL::Keys::Right]) }
+      Input.set(:debug) { GSDL::Keys.just_pressed?(GSDL::Keys::Tab) }
 
       # Load the map from a Tiled JSON file
       # NOTE: after exporting a Tiled file to JSON, you'll need to add a
@@ -184,7 +192,7 @@ module PlatformerEx
     end
 
     def update(dt : Float32)
-      @debug = !@debug if Keys.just_pressed?(Keys::Tab)
+      @debug = !@debug if Input.action?(:debug)
 
       @coins.each(&.update(dt))
 

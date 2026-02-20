@@ -107,7 +107,7 @@ module GSDL
       @last_tick = GSDL.ticks
 
       while !exit?
-        Inputs.update
+        InputEvents.update
 
         current_tick = GSDL.ticks
         delta_time_ms = current_tick - @last_tick
