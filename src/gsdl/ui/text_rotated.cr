@@ -1,0 +1,131 @@
+require "./text_base"
+
+module GSDL
+  class TextRotated < TextBase
+    @texture : SDL3::Texture?
+    @needs_refresh = true
+
+    def initialize(
+      font = Font.default,
+      text = "",
+      x = 0,
+      y = 0,
+      origin = {0_f32, 0_f32},
+      scale = {1_f32, 1_f32},
+      color = Color::White,
+      align = Font::Align::Left,
+      direction = SDL3::TTF::Direction::LTR,
+      wrap_width : Int32? = nil,
+      z_index : Int32 = 0,
+      @rotation : Num = 0.0
+    )
+      super(
+        font: font,
+        text: text,
+        x: x,
+        y: y,
+        origin: origin,
+        scale: scale,
+        color: color,
+        align: align,
+        direction: direction,
+        wrap_width: wrap_width,
+        z_index: z_index
+      )
+      @needs_refresh = true
+    end
+
+    def rotation : Num
+      @rotation
+    end
+
+    def rotation=(val : Num)
+      @rotation = val
+    end
+
+    private def on_content_changed
+      @needs_refresh = true
+    end
+
+    def refresh_texture
+      return unless @needs_refresh
+      @texture.try(&.destroy)
+      @texture = nil
+
+      return if @text.empty?
+
+      w, h = size
+      return if w <= 0 || h <= 0
+
+      renderer = TextBase.renderer
+      
+      # Create a target texture
+      # We use RGBA8888 for high quality and alpha support
+      tex = SDL3::Texture.create(
+        renderer, 
+        SDL3::PixelFormat::RGBA8888,
+        SDL3::TextureAccess::Target,
+        w, h
+      )
+      tex.set_blend_mode(LibSDL3::SDL_BLENDMODE_BLEND)
+
+      # Save current target and scale
+      old_target = renderer.get_render_target
+      old_scale = renderer.scale
+
+      # Render text to texture
+      renderer.set_render_target(tex)
+      renderer.scale = {1_f32, 1_f32} # Draw text at 1:1 to its cache
+      
+      # Clear texture to transparent
+      old_color = renderer.draw_color
+      renderer.draw_color = {0_u8, 0_u8, 0_u8, 0_u8}
+      renderer.clear
+      
+      # Draw the TTF_Text at (0,0) on the texture
+      @text_sdl.draw(0_f32, 0_f32)
+
+      # Restore renderer state
+      renderer.set_render_target(old_target)
+      renderer.scale = old_scale
+      renderer.draw_color = {old_color.r, old_color.g, old_color.b, old_color.a}
+
+      @texture = tex
+      @needs_refresh = false
+    end
+
+    def draw(draw : Draw)
+      return if @text.empty?
+      refresh_texture
+      
+      if tex = @texture
+        dest_rect = FRect.new(
+          x: draw_x.to_f32,
+          y: draw_y.to_f32,
+          w: draw_width.to_f32,
+          h: draw_height.to_f32
+        )
+
+        draw.texture_rotated(
+          texture: tex,
+          dest_rect: dest_rect,
+          angle: rotation,
+          z_index: z_index
+        )
+      end
+    end
+
+    # This is called by Draw class
+    def _draw
+      # In TextRotated, we don't use _draw in the same way because 
+      # we want to leverage Draw's texture command sorting if possible,
+      # but Text commands are handled differently.
+      # For now, draw(draw) handles it via draw.texture_rotated.
+    end
+
+    def destroy
+      super
+      @texture.try(&.destroy)
+    end
+  end
+end

@@ -38,7 +38,7 @@ module GSDL
       @draw = Draw.new(window)
       @@draw = @draw
 
-      Text.draw = @draw
+      TextBase.draw = @draw
 
       @scene_manager = SceneManager.new
     end
@@ -52,6 +52,11 @@ module GSDL
       FontManager.setup
       AudioManager.setup
       TileMapManager.setup
+
+      # redundantly setting again as a safety measure
+      # ensuring the renderer is always available in TextBase
+      # before any text objects are instantiated or drawn
+      TextBase.draw = @draw
 
       load_textures
       load_fonts

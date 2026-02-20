@@ -40,6 +40,7 @@ module TweenEx
     @sprite : GSDL::Sprite
     @box : GSDL::Box
     @circle : GSDL::Circle
+    @text_rotated : GSDL::TextRotated
     @objects : Array(GSDL::Tweenable)
     @active_index = 0
 
@@ -54,6 +55,14 @@ module TweenEx
       )
       @text.x = WIDTH / 2_f32
       @text.y = 32
+
+      @text_rotated = GSDL::TextRotated.new(
+        text: "ROTATED TEXT",
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color::Gold
+      )
+      @text_rotated.x = WIDTH / 2_f32
+      @text_rotated.y = HEIGHT - 128
 
       @active_info = GSDL::Text.new(
         text: "Active: Sprite",
@@ -90,7 +99,7 @@ module TweenEx
         origin: {0.5_f32, 0.5_f32}
       )
 
-      @objects = [@sprite, @box, @circle, @text] of GSDL::Tweenable
+      @objects = [@sprite, @box, @circle, @text, @text_rotated] of GSDL::Tweenable
     end
 
     def active_object
@@ -104,11 +113,12 @@ module TweenEx
       if GSDL::Keys.just_pressed?(GSDL::Keys::Tab)
         @active_index = (@active_index + 1) % @objects.size
         name = case active_object
-               when GSDL::Sprite then "Sprite"
-               when GSDL::Box    then "Box"
-               when GSDL::Circle then "Circle"
-               when GSDL::Text   then "Text"
-               else                   "Unknown"
+               when GSDL::Sprite      then "Sprite"
+               when GSDL::Box         then "Box"
+               when GSDL::Circle      then "Circle"
+               when GSDL::TextRotated then "Text Rotated"
+               when GSDL::Text        then "Text"
+               else                        "Unknown"
                end
         @active_info.text = "Active: #{name}"
       end
@@ -146,13 +156,15 @@ module TweenEx
           "color"
         end
 
-        # Rotation property only used for Sprites for now
+        # Rotation property - added to the sequence only for Sprites and TextRotated
+        supports_rotation = obj.is_a?(GSDL::Sprite) || obj.is_a?(GSDL::TextRotated)
+
         tween.add_sequence([
           {
             "duration" => 0.8,
             "x" => WIDTH - 150.0,
             color_prop => GSDL::Color::Red,
-            "rotation" => 90.0,
+            "rotation" => supports_rotation ? 90.0 : 0.0,
             "easing" => "ease_in"
           },
           {
@@ -160,14 +172,14 @@ module TweenEx
             "y" => HEIGHT - 200.0,
             color_prop => GSDL::Color::Green,
             "scale" => 2.0,
-            "rotation" => 180.0,
+            "rotation" => supports_rotation ? 180.0 : 0.0,
             "easing" => :ease_out
           },
           {
             "duration" => 0.4,
             "scale" => 0.5,
             color_prop => GSDL::Color::Blue,
-            "rotation" => 270.0,
+            "rotation" => supports_rotation ? 270.0 : 0.0,
             "easing" => "ease_in_out"
           },
           {
@@ -175,7 +187,7 @@ module TweenEx
             "x" => WIDTH / 2.0,
             "y" => HEIGHT / 2.0,
             "scale" => 1.0,
-            "rotation" => 360.0,
+            "rotation" => supports_rotation ? 360.0 : 0.0,
             color_prop => GSDL::Color::White,
             "easing" => :linear
           }
