@@ -81,6 +81,22 @@ module GSDL
       self.y = y1
     end
 
+    def x=(val : Num)
+      dx = val - @x
+      @x = val
+      @x2 += dx
+      @x3 += dx
+      @changed = true
+    end
+
+    def y=(val : Num)
+      dy = val - @y
+      @y = val
+      @y2 += dy
+      @y3 += dy
+      @changed = true
+    end
+
     def width : Num
       [x1, x2, x3].max - [x1, x2, x3].min
     end
@@ -119,19 +135,21 @@ module GSDL
       draw_y + (y3 - base_min_y) * scale_y
     end
 
-    # TODO: reimplement this, like Shape#center
     def center(width : Num, height : Num)
-      dx = (width / 2_f32) - self.x
-      dy = (height / 2_f32) - self.y
+      # Capture relative vectors for P2 and P3 from P1 (x, y)
+      v2x = x2 - x1
+      v2y = y2 - y1
+      v3x = x3 - x1
+      v3y = y3 - y1
 
-      @x = width / 2_f32
-      @y = height / 2_f32
-      @x2 += dx
-      @y2 += dy
-      @x3 += dx
-      @y3 += dy
+      # Move x1/y1 (inherited as x/y) to center and set origin to 0.5
+      super(width, height)
 
-      @origin = {0.5_f32, 0.5_f32}
+      # Maintain the triangle's shape relative to the new pivot
+      @x2 = x1 + v2x
+      @y2 = y1 + v2y
+      @x3 = x1 + v3x
+      @y3 = y1 + v3y
     end
 
     def vertices : Array(Vertex)

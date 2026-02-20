@@ -35,79 +35,112 @@ module TweenEx
   end
 
   class TweenScene < GSDL::Scene
-    @text : GSDL::Text
     @active_info : GSDL::Text
-    @sprite : GSDL::Sprite
-    @box : GSDL::Box
-    @circle : GSDL::Circle
-    @text_rotated : GSDL::TextRotated
     @objects : Array(GSDL::Tweenable)
     @active_index = 0
 
     def initialize
       super(:tween)
 
-      @text = GSDL::Text.new(
+      @objects = [] of GSDL::Tweenable
+
+      text_origin = {0.5_f32, 0_f32}
+      origin = {0.5_f32, 0.5_f32}
+
+      text = GSDL::Text.new(
         text: "SPACE randomly tweens once\n\nS starts a complex tween looped\n\nTAB toggles sprite / shapes",
-        origin: {0.5_f32, 0_f32},
+        origin: text_origin,
         align: GSDL::Font::Align::Center,
         color: GSDL::Color::Lime
       )
-      @text.x = WIDTH / 2_f32
-      @text.y = 32
+      text.x = WIDTH / 2_f32
+      text.y = 32
 
-      @text_rotated = GSDL::TextRotated.new(
+      text_rotated = GSDL::TextRotated.new(
         text: "ROTATED TEXT",
-        origin: {0.5_f32, 0.5_f32},
+        origin: origin,
         color: GSDL::Color::Gold
       )
-      @text_rotated.x = WIDTH / 2_f32
-      @text_rotated.y = HEIGHT - 128
+      text_rotated.x = WIDTH / 2_f32
+      text_rotated.y = HEIGHT - 128
 
       @active_info = GSDL::Text.new(
         text: "Active: Sprite",
-        origin: {0.5_f32, 0_f32},
+        origin: text_origin,
         color: GSDL::Color::Yellow
       )
       @active_info.x = WIDTH / 2_f32
-      @active_info.y = @text.y + @text.height + 16
+      @active_info.y = text.y + text.height + 16
 
       # Create a sprite to tween
       source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
-      @sprite = GSDL::Sprite.new(
+      sprite = GSDL::Sprite.new(
         key: "ship",
-        origin: {0.5_f32, 0.5_f32},
+        origin: origin,
         source_rect: source_rect
       )
-      @sprite.center(WIDTH, HEIGHT)
+      sprite.center(WIDTH, HEIGHT)
+      @objects << sprite
 
-      @box = GSDL::Box.new(
+      @objects << GSDL::Box.new(
         width: 100,
         height: 100,
         x: WIDTH / 4_f32,
         y: HEIGHT / 2_f32,
         color: GSDL::Color::Crimson,
-        origin: {0.5_f32, 0.5_f32},
+        origin: origin,
         border_radius: 10
       )
 
-      @circle = GSDL::Circle.new(
+      @objects << GSDL::Oval.new(
         x: (WIDTH * 3) / 4_f32,
         y: HEIGHT / 2_f32,
-        radius: 50,
+        radius_x: 64,
+        radius_y: 96,
         color: GSDL::Color::Cyan,
-        origin: {0.5_f32, 0.5_f32}
+        origin: origin
       )
 
-      @line = GSDL::Line.new(
-        x1: WIDTH / 2_f32 - 100,
-        y1: HEIGHT / 2_f32 + 100,
-        x2: WIDTH / 2_f32 + 100,
-        y2: HEIGHT / 2_f32 + 100,
+      @objects << GSDL::Pie.new(
+        x: (WIDTH * 3) / 4_f32,
+        y: HEIGHT / 2_f32 + 128,
+        radius: 96,
+        color: GSDL::Color::Indigo,
+        draw_mode: GSDL::Shape::DrawMode::Outline,
+        origin: origin
+      )
+
+      triangle = GSDL::Triangle.new(
+        x1: WIDTH / 2_f32 - 96,
+        y1: HEIGHT / 2_f32,
+        x2: WIDTH / 2_f32,
+        y2: HEIGHT / 2_f32 + 32,
+        x3: HEIGHT / 2_f32 + 32,
+        y3: HEIGHT / 2_f32 + 64,
         color: GSDL::Color::White
       )
+      triangle.center(WIDTH, HEIGHT)
+      triangle.x -= 192
+      triangle.y += 128
+      @objects << triangle
 
-      @objects = [@sprite, @box, @circle, @line, @text, @text_rotated] of GSDL::Tweenable
+      line = GSDL::Line.new(
+        x1: WIDTH / 2_f32 - 96,
+        y1: HEIGHT / 2_f32 + 96,
+        x2: WIDTH / 2_f32 + 96,
+        y2: HEIGHT / 2_f32 + 96,
+      )
+      line.center(WIDTH, HEIGHT)
+      line.y += 96
+      @objects << line
+
+      @objects << GSDL::Pixel.new(
+        x: WIDTH / 2_f32,
+        y: HEIGHT / 2_f32 + 128
+      )
+
+      @objects << text
+      @objects << text_rotated
     end
 
     def active_object
@@ -120,15 +153,7 @@ module TweenEx
 
       if GSDL::Keys.just_pressed?(GSDL::Keys::Tab)
         @active_index = (@active_index + 1) % @objects.size
-        name = case active_object
-               when GSDL::Sprite      then "Sprite"
-               when GSDL::Box         then "Box"
-               when GSDL::Circle      then "Circle"
-               when GSDL::Line        then "Line"
-               when GSDL::TextRotated then "Text Rotated"
-               when GSDL::Text        then "Text"
-               else                        "Unknown"
-               end
+        name = active_object.class.name.split("::").last
         @active_info.text = "Active: #{name}"
       end
 
@@ -207,7 +232,6 @@ module TweenEx
     end
 
     def draw(draw : GSDL::Draw)
-      @text.draw(draw)
       @active_info.draw(draw)
       @objects.each(&.draw(draw))
     end

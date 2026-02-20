@@ -24,16 +24,28 @@ module GSDL
       x
     end
 
-    def x1=(val : Num)
-      self.x = val
+    def x1=(x1 : Num)
+      self.x = x1
     end
 
     def y1 : Num
       y
     end
 
-    def y1=(val : Num)
-      self.y = val
+    def y1=(y1 : Num)
+      self.y = y1
+    end
+
+    def x=(val : Num)
+      dx = val - @x
+      @x = val
+      @x2 += dx
+    end
+
+    def y=(val : Num)
+      dy = val - @y
+      @y = val
+      @y2 += dy
     end
 
     def width : Num
