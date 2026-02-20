@@ -21,8 +21,8 @@ module GSDL
       outline_arc_points: ArcPoints = [] of Array(FPoint)
     })
 
-    def initialize(@width : Num, @height : Num, @border_radius : Num = 0)
-      super()
+    def initialize(@width : Num, @height : Num, @border_radius : Num = 0, rotation : Num = 0)
+      super(rotation: rotation)
     end
 
     def initialize(
@@ -33,6 +33,7 @@ module GSDL
       color : Color = Color::White,
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
+      rotation : Num = 0,
       z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
@@ -44,6 +45,7 @@ module GSDL
         y: y,
         origin: origin,
         scale: scale,
+        rotation: rotation,
         color: color,
         z_index: z_index,
         draw_mode: draw_mode,
@@ -61,7 +63,31 @@ module GSDL
       @fill_indices = [] of Int32
       @outline_arc_points = [] of Array(FPoint)
 
-      if draw_border_radius > 0
+      if rotation != 0 && draw_border_radius <= 0
+        # For rotated box with sharp corners, we need to generate vertices
+        fcolor = color.to_fcolor
+        
+        # Define 4 corners relative to draw_x, draw_y
+        p1 = rotate_point(draw_x, draw_y)
+        p2 = rotate_point(draw_x + draw_width, draw_y)
+        p3 = rotate_point(draw_x + draw_width, draw_y + draw_height)
+        p4 = rotate_point(draw_x, draw_y + draw_height)
+
+        @fill_vertices << Vertex.new(p1[0], p1[1], fcolor)
+        @fill_vertices << Vertex.new(p2[0], p2[1], fcolor)
+        @fill_vertices << Vertex.new(p3[0], p3[1], fcolor)
+        @fill_vertices << Vertex.new(p4[0], p4[1], fcolor)
+
+        @fill_indices = [0, 1, 2, 0, 2, 3]
+        
+        @outline_arc_points << [
+          FPoint.new(p1[0], p1[1]),
+          FPoint.new(p2[0], p2[1]),
+          FPoint.new(p3[0], p3[1]),
+          FPoint.new(p4[0], p4[1]),
+          FPoint.new(p1[0], p1[1])
+        ]
+      elsif draw_border_radius > 0
         max_border_radius = ([draw_width, draw_height].min / 2).to_f32
         actual_border_radius = [draw_border_radius, max_border_radius].min
 
@@ -84,20 +110,23 @@ module GSDL
       x_dir, y_dir = dir
       resolution = [12, (Math.sqrt(radius) * 4).to_i].max
 
-      # Center vertex
-      @fill_vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)
+      # Center vertex (rotated)
+      cp = rotate_point(center_x, center_y)
+      @fill_vertices << Vertex.new(cp[0], cp[1], color.to_fcolor)
 
       start_v = @fill_vertices.size
 
-      # Arc vertices
+      # Arc vertices (rotated)
       points = [] of FPoint
 
       (resolution + 1).times do |i|
         angle = Math::PI + i * (0.5 * Math::PI / resolution)
-        x = center_x + x_dir * radius * Math.cos(angle)
-        y = center_y + y_dir * radius * Math.sin(angle)
-        @fill_vertices << Vertex.new(x.to_f32, y.to_f32, color.to_fcolor)
-        points << FPoint.new(x.to_f32, y.to_f32)
+        vx = center_x + x_dir * radius * Math.cos(angle)
+        vy = center_y + y_dir * radius * Math.sin(angle)
+        
+        rv = rotate_point(vx, vy)
+        @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
+        points << FPoint.new(rv[0], rv[1])
       end
 
       @outline_arc_points << points
@@ -135,33 +164,63 @@ module GSDL
     end
 
     private def draw_fill(draw : Draw)
-      if draw_border_radius <= 0
-        draw.rect_fill(self)
+      if rotation == 0 && draw_border_radius <= 0
+        draw.rect_fill(to_frect, color: color, z_index: z_index)
       else
         update_geometry if changed?
 
-        draw_fill_cross(draw)
+        if draw_border_radius > 0
+          draw_fill_cross(draw)
+        end
         draw_fill_border_radius(draw)
       end
     end
 
     private def draw_fill_cross(draw : Draw)
-      draw.rects_fill(
-        rects: [
-          FRect.new(
-            x: draw_x.to_f32 + draw_border_radius.to_f32,
-            y: draw_y.to_f32,
-            w: draw_width.to_f32 - draw_border_radius.to_f32 * 2,
-            h: draw_height.to_f32,
-          ),
-          FRect.new(
-            x: draw_x.to_f32,
-            y: draw_y.to_f32 + draw_border_radius.to_f32,
-            w: draw_width.to_f32,
-            h: draw_height.to_f32 - draw_border_radius.to_f32 * 2,
-          ),
+      # Rotate the 4 corners of each cross-rect and draw as geometry
+      fcolor = color.to_fcolor
+      
+      # Horizontal rect
+      hx = draw_x.to_f32 + draw_border_radius.to_f32
+      hy = draw_y.to_f32
+      hw = draw_width.to_f32 - draw_border_radius.to_f32 * 2
+      hh = draw_height.to_f32
+      
+      hp1 = rotate_point(hx, hy)
+      hp2 = rotate_point(hx + hw, hy)
+      hp3 = rotate_point(hx + hw, hy + hh)
+      hp4 = rotate_point(hx, hy + hh)
+      
+      draw.geometry(
+        vertices: [
+          Vertex.new(hp1[0], hp1[1], fcolor),
+          Vertex.new(hp2[0], hp2[1], fcolor),
+          Vertex.new(hp3[0], hp3[1], fcolor),
+          Vertex.new(hp4[0], hp4[1], fcolor)
         ],
-        color: color,
+        indices: [0, 1, 2, 0, 2, 3],
+        z_index: z_index
+      )
+
+      # Vertical rect
+      vx = draw_x.to_f32
+      vy = draw_y.to_f32 + draw_border_radius.to_f32
+      vw = draw_width.to_f32
+      vh = draw_height.to_f32 - draw_border_radius.to_f32 * 2
+
+      vp1 = rotate_point(vx, vy)
+      vp2 = rotate_point(vx + vw, vy)
+      vp3 = rotate_point(vx + vw, vy + vh)
+      vp4 = rotate_point(vx, vy + vh)
+
+      draw.geometry(
+        vertices: [
+          Vertex.new(vp1[0], vp1[1], fcolor),
+          Vertex.new(vp2[0], vp2[1], fcolor),
+          Vertex.new(vp3[0], vp3[1], fcolor),
+          Vertex.new(vp4[0], vp4[1], fcolor)
+        ],
+        indices: [0, 1, 2, 0, 2, 3],
         z_index: z_index
       )
     end
@@ -171,11 +230,13 @@ module GSDL
     end
 
     private def draw_outline(draw : Draw)
-      if draw_border_radius <= 0
-        draw.rect_outline(self)
+      if rotation == 0 && draw_border_radius <= 0
+        draw.rect_outline(to_frect, color: color, z_index: z_index)
       else
         update_geometry if changed?
-        draw_outline_cross(draw)
+        if draw_border_radius > 0
+          draw_outline_cross(draw)
+        end
         draw_outline_border_radius(draw)
       end
     end
@@ -232,44 +293,22 @@ module GSDL
       return if border_thickness <= 0
 
       if draw_border_radius <= 0
-        # draw four fill rectangles for a sharp-cornered border
-        # top
-        draw.rect_fill(
-          rect: FRect.new(x: draw_x, y: draw_y, w: draw_width, h: border_thickness),
-          color: border_color,
-          z_index: z_index
-        )
+        # Draw rotated border lines
+        border_thickness.to_i.times do |i|
+          # Offsets for nested lines if thickness > 1
+          off = i.to_f32
+          
+          # 4 corners
+          p1 = rotate_point(draw_x + off, draw_y + off)
+          p2 = rotate_point(draw_x + draw_width - off, draw_y + off)
+          p3 = rotate_point(draw_x + draw_width - off, draw_y + draw_height - off)
+          p4 = rotate_point(draw_x + off, draw_y + draw_height - off)
 
-        # bottom
-        draw.rect_fill(
-          rect: FRect.new(x: draw_x, y: draw_y + draw_height - border_thickness, w: draw_width, h: border_thickness),
-          color: border_color,
-          z_index: z_index
-        )
-
-        # left (adjust height to avoid overlapping corners)
-        draw.rect_fill(
-          rect: FRect.new(
-            x: draw_x,
-            y: draw_y + border_thickness,
-            w: border_thickness,
-            h: draw_height - 2 * border_thickness
-          ),
-          color: border_color,
-          z_index: z_index
-        )
-
-        # right (adjust height to avoid overlapping corners)
-        draw.rect_fill(
-          rect: FRect.new(
-            x: draw_x + draw_width - border_thickness,
-            y: draw_y + border_thickness,
-            w: border_thickness,
-            h: draw_height - 2 * border_thickness
-          ),
-          color: border_color,
-          z_index: z_index
-        )
+          draw.line(p1[0], p1[1], p2[0], p2[1], color: border_color, z_index: z_index)
+          draw.line(p2[0], p2[1], p3[0], p3[1], color: border_color, z_index: z_index)
+          draw.line(p3[0], p3[1], p4[0], p4[1], color: border_color, z_index: z_index)
+          draw.line(p4[0], p4[1], p1[0], p1[1], color: border_color, z_index: z_index)
+        end
       else
         # use existing logic for rounded borders
         border_thickness.to_i.times do |i|
@@ -283,6 +322,7 @@ module GSDL
               origin: origin,
               x: self.x,
               y: self.y,
+              rotation: self.rotation,
               color: self.border_color,
               z_index: z_index,
               draw_mode: Shape::DrawMode::Outline,

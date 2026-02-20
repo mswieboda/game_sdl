@@ -17,8 +17,8 @@ module GSDL
       outline_arc_points: ArcPoints = [] of Array(FPoint)
     })
 
-    def initialize(@radius_x : Num = 16, @radius_y : Num = 16)
-      super(border_thickness: 1, border_color: Color::White) # Pass default values
+    def initialize(@radius_x : Num = 16, @radius_y : Num = 16, rotation : Num = 0)
+      super(rotation: rotation, border_thickness: 1, border_color: Color::White) # Pass default values
     end
 
     def initialize(
@@ -28,6 +28,7 @@ module GSDL
       @radius_x : Num = 16,
       @radius_y : Num = 16,
       scale = {1_f32, 1_f32},
+      rotation : Num = 0,
       color : Color = Color::White,
       z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
@@ -39,6 +40,7 @@ module GSDL
         y: y,
         origin: origin,
         scale: scale,
+        rotation: rotation,
         color: color,
         z_index: z_index,
         draw_mode: draw_mode,
@@ -116,20 +118,23 @@ module GSDL
       max_radius = [corner_radius_x, corner_radius_y].max
       segments = [12, (Math.sqrt(max_radius) * 4).to_i].max
 
-      # Center vertex
-      @fill_vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)
+      # Center vertex (rotated)
+      cp = rotate_point(center_x, center_y)
+      @fill_vertices << Vertex.new(cp[0], cp[1], color.to_fcolor)
 
       start_v = @fill_vertices.size
 
-      # Arc vertices
+      # Arc vertices (rotated)
       points = [] of FPoint
 
       (segments + 1).times do |i|
         angle = Math::PI + i * (0.5 * Math::PI / segments)
-        x = center_x + x_dir * corner_radius_x * Math.cos(angle)
-        y = center_y + y_dir * corner_radius_y * Math.sin(angle)
-        @fill_vertices << Vertex.new(x.to_f32, y.to_f32, color.to_fcolor)
-        points << FPoint.new(x.to_f32, y.to_f32)
+        vx = center_x + x_dir * corner_radius_x * Math.cos(angle)
+        vy = center_y + y_dir * corner_radius_y * Math.sin(angle)
+        
+        rv = rotate_point(vx, vy)
+        @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
+        points << FPoint.new(rv[0], rv[1])
       end
 
       @outline_arc_points << points
@@ -169,6 +174,7 @@ module GSDL
             radius_x: inner_radius_x / scale_x,
             radius_y: inner_radius_y / scale_y,
             scale: scale,
+            rotation: rotation,
             color: self.border_color,
             z_index: z_index,
             draw_mode: Shape::DrawMode::Outline

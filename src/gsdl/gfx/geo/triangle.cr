@@ -19,6 +19,7 @@ module GSDL
       @x3 : Num = 0,
       @y3 : Num = 0,
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
+      rotation : Num = 0,
       color : Color = Color::White,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
@@ -28,6 +29,7 @@ module GSDL
         x: x1,
         y: y1,
         scale: scale,
+        rotation: rotation,
         color: color,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
@@ -40,6 +42,7 @@ module GSDL
       p2 : Tuple(Num, Num),
       p3 : Tuple(Num, Num),
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
+      rotation : Num = 0,
       color : Color = Color::White,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
@@ -51,6 +54,7 @@ module GSDL
         x: x1,
         y: y1,
         scale: scale,
+        rotation: rotation,
         color: color,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
@@ -134,9 +138,14 @@ module GSDL
       vertices = [] of Vertex
       fcolor = color.to_fcolor
 
-      vertices << Vertex.new(draw_x1.to_f32, draw_y1.to_f32, fcolor)
-      vertices << Vertex.new(draw_x2.to_f32, draw_y2.to_f32, fcolor)
-      vertices << Vertex.new(draw_x3.to_f32, draw_y3.to_f32, fcolor)
+      # Rotate each corner point
+      p1 = rotate_point(draw_x1, draw_y1)
+      p2 = rotate_point(draw_x2, draw_y2)
+      p3 = rotate_point(draw_x3, draw_y3)
+
+      vertices << Vertex.new(p1[0], p1[1], fcolor)
+      vertices << Vertex.new(p2[0], p2[1], fcolor)
+      vertices << Vertex.new(p3[0], p3[1], fcolor)
     end
 
     def indices : Array(Int32)
@@ -151,41 +160,50 @@ module GSDL
     end
 
     private def draw_outline(draw : Draw)
-      lines = vertices.map { |v| FPoint.new(x: v.position.x.to_f32, y: v.position.y.to_f32) }
-      lines << FPoint.new(x: vertices.first.position.x.to_f32, y: vertices.first.position.y.to_f32)
+      v = vertices
+      lines = v.map { |vtx| FPoint.new(x: vtx.position.x.to_f32, y: vtx.position.y.to_f32) }
+      lines << FPoint.new(x: v.first.position.x.to_f32, y: v.first.position.y.to_f32)
 
       draw.lines(points: lines, color: color, z_index: z_index)
     end
 
     private def draw_border(draw : Draw)
-      original_lines = vertices.map { |v| FPoint.new(x: v.position.x.to_f32, y: v.position.y.to_f32) }
-      original_lines << FPoint.new(x: vertices.first.position.x.to_f32, y: vertices.first.position.y.to_f32)
+      v = vertices
+      original_lines = v.map { |vtx| FPoint.new(x: vtx.position.x.to_f32, y: vtx.position.y.to_f32) }
+      original_lines << FPoint.new(x: v.first.position.x.to_f32, y: v.first.position.y.to_f32)
 
       border_thickness.to_i.times do |i|
         current_lines = original_lines.map(&.dup) # Work on a copy of points for each iteration
+        
+        # NOTE: Simple inset for rotated triangle is complex
+        # For now we reuse the min/max logic which works best for axis-aligned
+        # but will be skewed for rotated.
+        # A proper fix requires line insetting (padding).
+        
+        if rotation == 0
+          min_x_point_i = _find_index_by_accessor(current_lines, :min, &.x)
+          min_y_point_i = _find_index_by_accessor(current_lines, :min, &.y)
+          max_x_point_i = _find_index_by_accessor(current_lines, :max, &.x)
+          max_y_point_i = _find_index_by_accessor(current_lines, :max, &.y)
 
-        min_x_point_i = _find_index_by_accessor(current_lines, :min, &.x)
-        min_y_point_i = _find_index_by_accessor(current_lines, :min, &.y)
-        max_x_point_i = _find_index_by_accessor(current_lines, :max, &.x)
-        max_y_point_i = _find_index_by_accessor(current_lines, :max, &.y)
+          min_x_point = current_lines[min_x_point_i]
+          min_x_point.x += i
+          current_lines[min_x_point_i] = min_x_point
 
-        min_x_point = current_lines[min_x_point_i]
-        min_x_point.x += i
-        current_lines[min_x_point_i] = min_x_point
+          min_y_point = current_lines[min_y_point_i]
+          min_y_point.y += i
+          current_lines[min_y_point_i] = min_y_point
 
-        min_y_point = current_lines[min_y_point_i]
-        min_y_point.y += i
-        current_lines[min_y_point_i] = min_y_point
+          max_x_point = current_lines[max_x_point_i]
+          max_x_point.x -= i
+          current_lines[max_x_point_i] = max_x_point
 
-        max_x_point = current_lines[max_x_point_i]
-        max_x_point.x -= i
-        current_lines[max_x_point_i] = max_x_point
+          max_y_point = current_lines[max_y_point_i]
+          max_y_point.y -= i
+          current_lines[max_y_point_i] = max_y_point
 
-        max_y_point = current_lines[max_y_point_i]
-        max_y_point.y -= i
-        current_lines[max_y_point_i] = max_y_point
-
-        current_lines[-1] = current_lines.first
+          current_lines[-1] = current_lines.first
+        end
 
         draw.lines(points: current_lines, color: border_color, z_index: z_index)
       end

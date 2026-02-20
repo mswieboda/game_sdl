@@ -77,7 +77,7 @@ module GSDL
       x: Num = 0,
       y: Num = 0,
       scale: ScaleType = {1_f32, 1_f32},
-      # rotation: Num = 0,
+      rotation: Num = 0,
       color: Color = Color::White,
       draw_mode: DrawMode = DrawMode::Fill,
       border_thickness: Num = 1,
@@ -95,12 +95,37 @@ module GSDL
       @y : Num = 0,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
+      @rotation : Num = 0,
       @color : Color = Color::White,
       @z_index : Int32 = 0,
       @draw_mode : DrawMode = DrawMode::Fill,
       @border_thickness : Num = 1,
       @border_color : Color = Color::White
     )
+    end
+
+    def rotation_radians : Float64
+      rotation.to_f64 * (Math::PI / 180.0)
+    end
+
+    def rotate_point(px : Num, py : Num) : Tuple(Float32, Float32)
+      return {px.to_f32, py.to_f32} if rotation == 0
+
+      # Rotation around the logical (x, y) point (our pivot)
+      cx = x.to_f32
+      cy = y.to_f32
+
+      rad = rotation_radians
+      cos_a = Math.cos(rad)
+      sin_a = Math.sin(rad)
+
+      dx = px.to_f32 - cx
+      dy = py.to_f32 - cy
+
+      nx = cx + dx * cos_a - dy * sin_a
+      ny = cy + dx * sin_a + dy * cos_a
+
+      {nx.to_f32, ny.to_f32}
     end
 
     def scale=(val : Tuple(Num, Num))

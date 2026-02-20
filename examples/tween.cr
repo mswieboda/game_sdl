@@ -156,8 +156,8 @@ module TweenEx
           "color"
         end
 
-        # Rotation property - added to the sequence only for Sprites and TextRotated
-        supports_rotation = obj.is_a?(GSDL::Sprite) || obj.is_a?(GSDL::TextRotated)
+        # Rotation property - added to the sequence for all objects that support it
+        supports_rotation = obj.is_a?(GSDL::Sprite) || obj.is_a?(GSDL::TextRotated) || obj.is_a?(GSDL::Shape)
 
         tween.add_sequence([
           {

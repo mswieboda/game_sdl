@@ -13,8 +13,9 @@ module GSDL
       end_angle: Num = DefaultEndAngle
     })
 
-    def initialize(@start_angle : Num = DefaultStartAngle, @end_angle : Num = DefaultEndAngle)
+    def initialize(@start_angle : Num = DefaultStartAngle, @end_angle : Num = DefaultEndAngle, rotation : Num = 0)
       super()
+      @rotation = rotation
     end
 
     def initialize(
@@ -23,6 +24,7 @@ module GSDL
       origin = {0_f32, 0_f32},
       radius : Num = 16,
       scale = {1_f32, 1_f32},
+      rotation : Num = 0,
       @start_angle : Num = DefaultStartAngle,
       @end_angle : Num = DefaultEndAngle,
       color : Color = Color::White,
@@ -37,6 +39,7 @@ module GSDL
         origin: origin,
         radius: radius,
         scale: scale,
+        rotation: rotation,
         color: color,
         z_index: z_index,
         draw_mode: draw_mode,
@@ -57,19 +60,22 @@ module GSDL
 
         points = [] of FPoint
 
-        # Center vertex
-        @fill_vertices << Vertex.new(center_x.to_f32, center_y.to_f32, color.to_fcolor)
-        center_point = FPoint.new(center_x.to_f32, center_y.to_f32)
+        # Center vertex (rotated)
+        cp = rotate_point(center_x, center_y)
+        @fill_vertices << Vertex.new(cp[0], cp[1], color.to_fcolor)
+        center_point = FPoint.new(cp[0], cp[1])
         points << center_point
 
 
-        # Vertices along the arc
+        # Vertices along the arc (rotated)
         (segments + 1).times do |i|
           angle = start_angle + i * angle_step
           arc_x = center_x + (draw_radius_x / 2) * Math.cos(angle)
           arc_y = center_y + (draw_radius_y / 2) * Math.sin(angle)
-          @fill_vertices << Vertex.new(arc_x.to_f32, arc_y.to_f32, color.to_fcolor)
-          points << FPoint.new(arc_x.to_f32, arc_y.to_f32)
+          
+          rv = rotate_point(arc_x, arc_y)
+          @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
+          points << FPoint.new(rv[0], rv[1])
         end
 
         points << center_point
@@ -90,6 +96,7 @@ module GSDL
     end
 
     private def draw_border(draw : Draw)
+      # We need to use rotated coordinates for the lines
       offset_cx = self.outline_arc_points.first[0].x
       offset_cy = self.outline_arc_points.first[0].y
 
@@ -107,6 +114,7 @@ module GSDL
             origin: origin,
             radius: inner_radius,
             scale: scale,
+            rotation: rotation,
             start_angle: self.start_angle,
             end_angle: self.end_angle,
             color: self.border_color,
@@ -115,26 +123,25 @@ module GSDL
           ).draw(draw)
         end
 
-        # draw lines for straight pie edge
-        # NOTE: this one is better then the second line for some reason
-        Line.new(
-          x1: offset_cx + i * Math.sin(self.start_angle),
-          y1: offset_cy + i * Math.cos(self.start_angle),
-          x2: first_arc_pos.x + i * Math.sin(self.start_angle),
-          y2: first_arc_pos.y + i * Math.cos(self.start_angle),
+        # Draw lines connecting center to arc ends
+        # These are already rotated because the points come from @outline_arc_points
+        draw.line(
+          x1: offset_cx,
+          y1: offset_cy,
+          x2: first_arc_pos.x,
+          y2: first_arc_pos.y,
           color: self.border_color,
           z_index: z_index
-        ).draw(draw)
+        )
 
-        # TODO: this one is not working well for some reason
-        Line.new(
-          x1: offset_cx + i * Math.sin(self.end_angle),
-          y1: offset_cy + i * Math.cos(self.end_angle),
-          x2: last_arc_pos.x + i * Math.sin(self.end_angle),
-          y2: last_arc_pos.y + i * Math.cos(self.end_angle),
+        draw.line(
+          x1: offset_cx,
+          y1: offset_cy,
+          x2: last_arc_pos.x,
+          y2: last_arc_pos.y,
           color: self.border_color,
           z_index: z_index
-        ).draw(draw)
+        )
       end
     end
   end
