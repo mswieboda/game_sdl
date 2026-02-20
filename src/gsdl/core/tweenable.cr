@@ -27,17 +27,17 @@ module GSDL
     abstract def tweens : Array(Tween)
 
     abstract def x : Num
-    abstract def x=(val : Num)
+    abstract def x=(x : Num)
     abstract def y : Num
-    abstract def y=(val : Num)
+    abstract def y=(y : Num)
     abstract def z_index : Int32
-    abstract def z_index=(val : Int32)
+    abstract def z_index=(z_index : Int32)
     abstract def scale : Tuple(Num, Num)
-    abstract def scale=(val : Tuple(Num, Num))
+    abstract def scale=(scale : Tuple(Num, Num))
     abstract def scale_x : Num
-    abstract def scale_x=(val : Num)
+    abstract def scale_x=(scale_x : Num)
     abstract def scale_y : Num
-    abstract def scale_y=(val : Num)
+    abstract def scale_y=(scale_y : Num)
 
     # Optional properties with default implementations
     def tint : Color?; nil; end

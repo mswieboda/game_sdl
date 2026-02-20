@@ -1,10 +1,14 @@
 module GSDL
   class Text
+    include Tweenable
+
     property text
     property x : Num
     property y : Num
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property z_index : Int32 = 0
+    property scale : Tuple(Num, Num) = {1_f32, 1_f32}
+    getter tweens : Array(Tween) = [] of Tween
 
     @@renderer : SDL3::Renderer?
 
@@ -92,12 +96,56 @@ module GSDL
       origin[1]
     end
 
+    def draw_width : Num
+      width * scale_x
+    end
+
+    def draw_height : Num
+      height * scale_y
+    end
+
     def draw_x : Num
-      x - (width * origin_x)
+      x - (draw_width * origin_x)
     end
 
     def draw_y : Num
-      y - (height * origin_y)
+      y - (draw_height * origin_y)
+    end
+
+    def scale_x : Num
+      scale[0]
+    end
+
+    def scale_y : Num
+      scale[1]
+    end
+
+    def scale_x=(scale_x : Num)
+      self.scale = {scale_x, scale_y}
+    end
+
+    def scale_y=(scale_y : Num)
+      self.scale = {scale_x, scale_y}
+    end
+
+    def scale=(scale : Num)
+      self.scale = {scale, scale}
+    end
+
+    def tint : Color?
+      @text_sdl.color
+    end
+
+    def tint=(tint : Color?)
+      @text_sdl.color = tint || Color::White
+    end
+
+    def color : Color
+      @text_sdl.color
+    end
+
+    def color=(color : Color)
+      @text_sdl.color = color
     end
 
     def center(width : Num, height : Num)
@@ -106,6 +154,7 @@ module GSDL
     end
 
     def update(dt : Float32)
+      update_tweens(dt)
     end
 
     def draw(draw : Draw)
@@ -117,7 +166,19 @@ module GSDL
     # NOTE: shouldn't be used outside of Draw class, but Draw needs it public
     #   to access the `@text_sdl` internally here
     def _draw
-      @text_sdl.draw(draw_x.to_f32, draw_y.to_f32)
+      if scale_x == 1_f32 && scale_y == 1_f32
+        @text_sdl.draw(draw_x.to_f32, draw_y.to_f32)
+      else
+        renderer = Text.renderer
+        old_scale = renderer.scale
+        renderer.scale = {scale_x.to_f32, scale_y.to_f32}
+
+        # We must divide our coordinates by the scale
+        # because the renderer's scale multiplies them
+        @text_sdl.draw(draw_x.to_f32 / scale_x.to_f32, draw_y.to_f32 / scale_y.to_f32)
+
+        renderer.scale = old_scale
+      end
     end
 
     def destroy

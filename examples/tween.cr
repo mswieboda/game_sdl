@@ -90,7 +90,7 @@ module TweenEx
         origin: {0.5_f32, 0.5_f32}
       )
 
-      @objects = [@sprite, @box, @circle] of GSDL::Tweenable
+      @objects = [@sprite, @box, @circle, @text] of GSDL::Tweenable
     end
 
     def active_object
@@ -107,6 +107,7 @@ module TweenEx
                when GSDL::Sprite then "Sprite"
                when GSDL::Box    then "Box"
                when GSDL::Circle then "Circle"
+               when GSDL::Text   then "Text"
                else                   "Unknown"
                end
         @active_info.text = "Active: #{name}"
@@ -137,12 +138,15 @@ module TweenEx
         obj = active_object
         obj.tweens.clear
 
-        tween = obj.tween
-
-        # Color property is called 'tint' for Sprites and 'color' for Shapes
-        color_prop = obj.is_a?(GSDL::Sprite) ? "tint" : "color"
-
-        tween.add_sequence([
+                tween = obj.tween
+                
+                # Color property is called 'tint' for Sprites and 'color' for Shapes and Text
+                color_prop = if obj.is_a?(GSDL::Sprite)
+                               "tint"
+                             else
+                               "color"
+                             end
+                tween.add_sequence([
           {
             "duration" => 0.8,
             "x" => WIDTH - 150.0,
