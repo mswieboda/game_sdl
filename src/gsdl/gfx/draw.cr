@@ -248,20 +248,12 @@ module GSDL
       point(x: point.x, y: point.y, color: color, z_index: z_index)
     end
 
-    def point(point : Point, color = Color::White, z_index = 0)
-      point(point.x.to_f32, point.y.to_f32, color: color, z_index: z_index)
-    end
-
     def points(points : Array(FPoint), color = Color::White, z_index = 0)
       @draw_commands << DrawPointsCommand.new(
         points: points,
         color: color,
         z_index: z_index
       )
-    end
-
-    def points(points : Array(Point), color = Color::White, z_index = 0)
-      points(points: points.map(&.to_fpoint), color: color, z_index: z_index)
     end
 
     def pixel(pixel : Pixel)
@@ -303,10 +295,6 @@ module GSDL
         color: color,
         z_index: z_index
       )
-    end
-
-    def lines(points : Array(Point), color = Color::White, z_index = 0)
-      lines(points: points.map(&.to_fpoint), color: color, z_index: z_index)
     end
 
     # rects
