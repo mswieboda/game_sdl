@@ -22,6 +22,10 @@ module PlatformerEx
       GSDL::TextureManager.load("tiles", "gfx/tiles.png")
     end
 
+    def load_fonts
+      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    end
+
     def load_audio
       GSDL::AudioManager.load("coin_audio", "sfx/ding.wav")
     end
@@ -63,7 +67,7 @@ module PlatformerEx
 
     # custom collision box, because of sprite whitespace
     def collision_bounding_box : GSDL::FRect
-      GSDL::FRect.new(x: -8_f32, y: -16_f32, w: 16_f32, h: 48_f32)
+      GSDL::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
     end
 
     def update(dt : Float32, tile_map : GSDL::TileMap)
@@ -122,6 +126,10 @@ module PlatformerEx
     @camera_y : Int32 = 0
     @coins : Array(GSDL::AnimatedSprite)
     @coin_audio : GSDL::Audio
+    @coin_text : GSDL::Text
+    @info_text : GSDL::Text
+
+    property? debug = false
 
     def initialize
       super(:start)
@@ -146,14 +154,38 @@ module PlatformerEx
       spots = [{64, 64}, {320, 320}, {640, 512}, {640, 256}, {256, 256}]
 
       5.times.to_a do |i|
-        coin = GSDL::AnimatedSprite.new(key: "coin", width: 32, height: 32, x: spots[i][0].to_f32, y: spots[i][1].to_f32)
+        x, y = spot = spots[i]
+        coin = GSDL::AnimatedSprite.new(key: "coin", width: 32, height: 32, x: x, y: y)
         coin.add("idle", [0, 1, 2, 3, 4, 3, 2, 1], 8, loops: true)
         coin.play("idle")
         @coins << coin
       end
+
+      GSDL::Data.set("coins_collected", 0)
+      @coin_text = GSDL::Text.new(
+        text: "Coins: 0",
+        x: WIDTH - 32,
+        y: 32,
+        origin: {1.0_f32, 0_f32},
+        color: GSDL::Color::Gold
+      )
+
+      small_font = GSDL::Font.default.copy
+      small_font.size = 12
+
+      @info_text = GSDL::Text.new(
+        font: small_font,
+        text: "TAB to toggle debug",
+        x: WIDTH / 2_f32,
+        y: 16,
+        origin: {0.5_f32, 0_f32},
+        color: GSDL::Color::Lime
+      )
     end
 
     def update(dt : Float32)
+      @debug = !@debug if Keys.just_pressed?(Keys::Tab)
+
       @coins.each(&.update(dt))
 
       @player.update(dt, @tile_map)
@@ -162,6 +194,8 @@ module PlatformerEx
         if @player.collides?(coin)
           @coin_audio.play
           @coins.delete(coin)
+          GSDL::Data.increment("coins_collected")
+          @coin_text.text = "Coins: #{GSDL::Data.get("coins_collected")}"
         end
       end
 
@@ -174,6 +208,38 @@ module PlatformerEx
       @tile_map.draw(draw, @camera_x, @camera_y)
       @coins.each(&.draw(draw, @camera_x.to_f32, @camera_y.to_f32))
       @player.draw(draw, @camera_x.to_f32, @camera_y.to_f32)
+      @coin_text.draw(draw)
+      @info_text.draw(draw)
+
+      return unless debug?
+      # Debug: Draw collision boxes
+      # Player collision box
+      player_box = @player.collision_box
+      draw.rect_outline(
+        rect: GSDL::FRect.new(
+          x: player_box.x - @camera_x,
+          y: player_box.y - @camera_y,
+          w: player_box.w,
+          h: player_box.h
+        ),
+        color: GSDL::Color::Lime,
+        z_index: 100
+      )
+
+      # Coins collision boxes
+      @coins.each do |coin|
+        coin_box = coin.collision_box
+        draw.rect_outline(
+          rect: GSDL::FRect.new(
+            x: coin_box.x - @camera_x,
+            y: coin_box.y - @camera_y,
+            w: coin_box.w,
+            h: coin_box.h
+          ),
+          color: GSDL::Color::Gold,
+          z_index: 100
+        )
+      end
     end
   end
 
