@@ -41,13 +41,13 @@ module PlatformerEx
   class Player < GSDL::AnimatedSprite
     include GSDL::TileMapCollidable
 
-    JUMP_IMPULSE = -500.0_f32
-    SPEED = 150.0_f32
+    JUMP_IMPULSE = -512_f32
+    SPEED = 192_f32
 
     getter? facing_left
 
-    def initialize(key, w, h)
-      super(key, w, h)
+    def initialize(key, width, height)
+      super(key: key, width: width, height: height)
 
       # for flipping the texture horizontally from last movement direction
       @facing_left = false
@@ -55,11 +55,15 @@ module PlatformerEx
       # turns gravity on from TileMapCollidable
       @use_gravity = true
 
-
       # adds animations for AnimatedSprite
       add("idle", [0], 8)
       add("walk", (1..6).to_a, 8)
       add("jump", [17, 18, 19], 8, loops: false)
+    end
+
+    # custom collision box, because of sprite whitespace
+    def collision_bounding_box : GSDL::FRect
+      GSDL::FRect.new(x: -8_f32, y: -16_f32, w: 16_f32, h: 48_f32)
     end
 
     def update(dt : Float32, tile_map : GSDL::TileMap)
@@ -76,9 +80,7 @@ module PlatformerEx
       @velocity_x = dx * SPEED
 
       # jump
-      if grounded? && Keys.just_pressed?([Keys::W, Keys::Up])
-        jump(JUMP_IMPULSE)
-      end
+      jump(JUMP_IMPULSE) if grounded? && Keys.just_pressed?([Keys::W, Keys::Up])
 
       # physics and collision handling
       move_and_collide(dt, tile_map)
@@ -89,22 +91,13 @@ module PlatformerEx
 
     def dx_from_movement : Int32
       dx = 0
-
-      if Keys.pressed?([Keys::A, Keys::Left])
-        dx = -1
-      end
-
-      if Keys.pressed?([Keys::D, Keys::Right])
-        dx = 1
-      end
-
+      dx = -1 if Keys.pressed?([Keys::A, Keys::Left])
+      dx = 1 if Keys.pressed?([Keys::D, Keys::Right])
       dx
     end
 
     def update_animation(dx : Int32)
-      if dx != 0
-        @facing_left = dx < 0
-      end
+      @facing_left = dx < 0 if dx != 0
 
       if !grounded?
         play("jump") unless playing?("jump")
@@ -142,8 +135,7 @@ module PlatformerEx
       @tile_map = GSDL::TileMapManager.get("map")
 
       # player
-      @player = Player.new("player", 32, 64)
-      @player.collision_bounding_box = GSDL::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
+      @player = Player.new(key: "player", width: 32, height: 64)
 
       # TODO: find a way to include player start tile from map.json
       @player.center(WIDTH, HEIGHT - 300)

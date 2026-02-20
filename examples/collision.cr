@@ -90,9 +90,7 @@ module GameEx
     end
 
     def update(dt : Float32)
-      @player.move_and_collide(dt, [@enemy])
-
-      if @player.collides?(@enemy)
+      if @player.move_and_collide?(dt, [@enemy])
         @text.text = "collision!"
       elsif @enemy.in?(@player)
         @text.text = "enemy in area!"

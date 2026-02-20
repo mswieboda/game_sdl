@@ -23,7 +23,7 @@ module GSDL
       Keys.pressed?([Keys::S, Keys::Down])
     end
 
-    def move_and_collide(dt : Float32, collidables : Array(Collidable))
+    def move_and_collide?(dt : Float32, collidables : Array(Collidable)) : Bool
       previous_x = self.x
       previous_y = self.y
 
@@ -32,6 +32,10 @@ module GSDL
       if collidables.any? { |c| collides?(c) }
         self.x = previous_x
         self.y = previous_y
+
+        true
+      else
+        false
       end
     end
 

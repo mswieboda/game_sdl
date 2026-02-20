@@ -37,7 +37,11 @@ module GameEx
     def initialize
       super(:start)
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
-      @text = Text.new(text: "Move mouse or click buttons", color: color)
+      @text = Text.new(
+        text: "Move mouse or click buttons",
+        origin: {0.5_f32, 0.5_f32},
+        color: color
+      )
       @text.center(WIDTH, HEIGHT)
     end
 

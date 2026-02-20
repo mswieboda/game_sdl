@@ -43,7 +43,9 @@ module GameEx
     def initialize
       super(:start)
 
-      @sprite = GSDL::AnimatedSprite.new("player", 32, 64, origin: {0.5_f32, 0.5_f32})
+      origin = {0.5_f32, 0.5_f32}
+
+      @sprite = GSDL::AnimatedSprite.new("player", 32, 64, origin: origin)
       @sprite.center(WIDTH, HEIGHT)
 
       @sprite.add("idle", [0], 8)
@@ -54,8 +56,8 @@ module GameEx
       @sprite.play("idle")
 
       color = GSDL::Color.new(r: 0, g: 255, b: 0, a: 255)
-      @text = GSDL::Text.new(text: "LEFT/RIGHT or A/D to toggle animations!", color: color)
-      @text_animation = GSDL::Text.new(text: "idle", color: color)
+      @text = GSDL::Text.new(text: "LEFT/RIGHT or A/D to toggle animations!", origin: origin, color: color)
+      @text_animation = GSDL::Text.new(text: "idle", origin: origin, color: color)
 
       # Center the text
       @text.center(WIDTH, 96)
