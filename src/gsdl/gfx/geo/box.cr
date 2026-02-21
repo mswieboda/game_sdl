@@ -21,13 +21,13 @@ module GSDL
       outline_arc_points: ArcPoints = [] of Array(FPoint)
     })
 
-    def initialize(@width : Num, @height : Num, @border_radius : Num = 0, rotation : Num = 0)
+    def initialize(@width : Num = 1, @height : Num = 1, @border_radius : Num = 0, rotation : Num = 0)
       super(rotation: rotation)
     end
 
     def initialize(
-      @width,
-      @height,
+      @width : Num = 1,
+      @height : Num = 1,
       x : Num = 0,
       y : Num = 0,
       color : Color = Color::White,
@@ -56,6 +56,8 @@ module GSDL
 
     def draw_border_radius : Num
       border_radius * [scale_x, scale_y].min
+      max_border_radius = ([draw_width, draw_height].min / 2).to_f32
+      [border_radius, max_border_radius].min
     end
 
     def update_geometry
@@ -88,17 +90,17 @@ module GSDL
           FPoint.new(p1[0], p1[1])
         ]
       elsif draw_border_radius > 0
-        max_border_radius = ([draw_width, draw_height].min / 2).to_f32
-        actual_border_radius = [draw_border_radius, max_border_radius].min
-
+        # max_border_radius = ([draw_width, draw_height].min / 2).to_f32
+        # actual_border_radius = [draw_border_radius, max_border_radius].min
+        # puts ">>> update_geometry dbr: #{draw_border_radius} mbr: #{max_border_radius} abr: #{actual_border_radius}"
         # top left, top right, bottom left, bottom right
         [
-          { center: {draw_x + actual_border_radius, draw_y + actual_border_radius}, dir: {1_i8, 1_i8} },
-          { center: {draw_x + draw_width - actual_border_radius, draw_y + actual_border_radius}, dir: {-1_i8, 1_i8} },
-          { center: {draw_x + actual_border_radius, draw_y + draw_height - actual_border_radius}, dir: {1_i8, -1_i8} },
-          { center: {draw_x + draw_width - actual_border_radius, draw_y + draw_height - actual_border_radius}, dir: {-1_i8, -1_i8} }
+          { center: {draw_x + draw_border_radius, draw_y + draw_border_radius}, dir: {1_i8, 1_i8} },
+          { center: {draw_x + draw_width - draw_border_radius, draw_y + draw_border_radius}, dir: {-1_i8, 1_i8} },
+          { center: {draw_x + draw_border_radius, draw_y + draw_height - draw_border_radius}, dir: {1_i8, -1_i8} },
+          { center: {draw_x + draw_width - draw_border_radius, draw_y + draw_height - draw_border_radius}, dir: {-1_i8, -1_i8} }
         ].each do |data|
-          build_corner_radius(center: data[:center], dir: data[:dir], radius: actual_border_radius)
+          build_corner_radius(center: data[:center], dir: data[:dir], radius: draw_border_radius)
         end
       end
 
@@ -108,7 +110,7 @@ module GSDL
     private def build_corner_radius(center, dir : Tuple(Int8, Int8), radius : Num)
       center_x, center_y = center
       x_dir, y_dir = dir
-      resolution = [12, (Math.sqrt(radius) * 4).to_i].max
+      segments = [12, (Math.sqrt(radius) * 4).to_i].max
 
       # Center vertex (rotated)
       cp = rotate_point(center_x, center_y)
@@ -119,8 +121,8 @@ module GSDL
       # Arc vertices (rotated)
       points = [] of FPoint
 
-      (resolution + 1).times do |i|
-        angle = Math::PI + i * (0.5 * Math::PI / resolution)
+      (segments + 1).times do |i|
+        angle = Math::PI + i * (0.5 * Math::PI / segments)
         vx = center_x + x_dir * radius * Math.cos(angle)
         vy = center_y + y_dir * radius * Math.sin(angle)
         
@@ -132,7 +134,7 @@ module GSDL
       @outline_arc_points << points
 
       # Indices for triangle fan
-      resolution.times do |i|
+      segments.times do |i|
         @fill_indices << start_v - 1
         @fill_indices << start_v + i
         @fill_indices << start_v + i + 1

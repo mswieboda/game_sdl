@@ -18,6 +18,40 @@ module GSDL
     SDL3.fcolor(value, a)
   end
 
+  def self.random_color(seed : Int, a : UInt8 = 255) : Color
+    rng = Random.new(seed)
+
+    Color.new(
+      r: rng.rand(256).to_u8,
+      g: rng.rand(256).to_u8,
+      b: rng.rand(256).to_u8,
+      a: a
+    )
+  end
+
+  def self.random_fcolor(seed : Int, a : Float32 = 1_f32) : FColor
+    rng = Random.new(seed)
+
+    FColor.new(
+      r: rng.rand.to_f32,
+      g: rng.rand.to_f32,
+      b: rng.rand.to_f32,
+      a: a
+    )
+  end
+
+  def self.random_chunks_color(seed : Int, size : UInt8 = 8, a : UInt8 = 255) : Color
+    rng = Random.new(seed)
+    rand_max = (256 // size) + 1
+
+    Color.new(
+      r: rng.rand(rand_max) * size,
+      g: rng.rand(rand_max) * size,
+      b: rng.rand(rand_max) * size,
+      a: a
+    )
+  end
+
   struct Color
     # TODO: methods like:
     # - darken
@@ -25,6 +59,18 @@ module GSDL
     # - setting with percentages
     # - lerping to another color
     # - more research color math techniques/options online
+
+    def self.random(seed : Int, a : UInt8 = 255) : Color
+      GSDL.random_color(seed, a)
+    end
+
+    def self.random_f(seed : Int, a : Float32 = 1_f32) : Color
+      GSDL.random_fcolor(seed, a)
+    end
+
+    def self.random_chunks(seed : Int, a : UInt8 = 255) : Color
+      GSDL.random_chunks_color(seed, a)
+    end
 
     Transparent = GSDL.color_all(0, 0)
 
@@ -124,16 +170,24 @@ module GSDL
   alias Palette = Array(Color)
 
   module Palettes
-    Primary = [Red, Blue, Yellow]
+    Primary = [Color::Red, Color::Blue, Color::Yellow]
     RYB = Primary
     PrimaryRYB = Primary
-    RGB = [Red, Green, Blue]
+    RGB = [Color::Red, Color::Green, Color::Blue]
     PrimaryRGB = RGB
 
-    Secondary = [Orange, Green, Purple]
+    Secondary = [Color::Orange, Color::Green, Color::Purple]
     SecondaryRYB = Secondary
-    SecondaryRGB = [Cyan, Magenta, Yellow]
+    SecondaryRGB = [Color::Cyan, Color::Magenta, Color::Yellow]
 
-    Rainbow = [Red, Orange, Yellow, Green, Blue, Indigo, Violet]
+    Rainbow = [
+      Color::Red,
+      Color::Orange,
+      Color::Yellow,
+      Color::Green, # lime is the brighter green
+      Color::Blue,
+      Color::Indigo,
+      Color::Violet # Violet kinda looks like pink here
+    ]
   end
 end
