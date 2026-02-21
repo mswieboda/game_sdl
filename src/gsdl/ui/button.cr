@@ -66,10 +66,12 @@ module GSDL
 
     def draw_border(draw : Draw)
       margin = 4
+      margin_x = margin * scale_x * (1.0_f32 - 2.0_f32 * origin_x)
+      margin_y = margin * scale_y * (1.0_f32 - 2.0_f32 * origin_y)
 
       box = Box.new(
-        x: x + margin,
-        y: y + margin,
+        x: x + margin_x,
+        y: y + margin_y,
         origin: origin,
         scale: scale,
         width: width - margin * 2,

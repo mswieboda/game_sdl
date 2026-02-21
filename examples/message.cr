@@ -72,7 +72,7 @@ module GameEx
         font: font,
         text: "multiple lines\nof some text inside\na message box!",
         x: 512,
-        y: 256,
+        y: 320,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Magenta,
         border_radius: 32
@@ -101,8 +101,10 @@ module GameEx
         on_click: -> on_click(String),
         font: font,
         text: "OK! a large button",
-        x: 320.to_f32,
-        y: 64.to_f32,
+        x: 512.to_f32,
+        y: 128.to_f32,
+        origin: {0.5_f32, 0.5_f32},
+        scale: {2_f32, 3_f32},
         width: 128,
         color: color,
         border_radius: 16
