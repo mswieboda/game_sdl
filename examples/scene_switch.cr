@@ -4,24 +4,23 @@ module GameEx
   alias Keys = GSDL::Keys
   alias Num = GSDL::Num
 
-  WIDTH = 800
-  HEIGHT = 600
-
-  class Game < GSDL::Game
+  class GameEx < GSDL::Game
     def initialize
-      super(title: "Scene Switch Ex", width: WIDTH, height: HEIGHT)
+      super(title: "Scene Switch Ex", width: 800, height: 600)
     end
 
     def init
       super
-      # NOTE: this is the default, but differnt the other examples
-      # so wanted to point it out here
       GSDL::Events.esc_exits = false
       @scene_manager = SceneManager.new
     end
 
     def load_fonts
       GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    end
+
+    def load_textures
+      GSDL::TextureManager.load("tiles", "gfx/tiles.png")
     end
   end
 
@@ -52,13 +51,18 @@ module GameEx
 
     @menu : GSDL::Menu
 
-    # We need to explicitly allow setting @exit if we want to use it as a signal
-    def exit!
-      @exit = true
-    end
-
     def initialize
-      super(:start_menu)
+      transition_in = GSDL::FadeTransition.new(
+        direction: GSDL::TransitionDirection::In,
+        duration: 0.75_f32,
+        started: true
+      )
+      transition_out = GSDL::FadeTransition.new(
+        direction: GSDL::TransitionDirection::Out,
+        duration: 0.5_f32
+      )
+
+      super(name: :start_menu, transition_in: transition_in, transition_out: transition_out)
 
       items = [
         {:start, "start"},
@@ -72,14 +76,14 @@ module GameEx
         is_next: -> { Keys.just_pressed?([Keys::S, Keys::Down]) },
         is_previous: -> { Keys.just_pressed?([Keys::W, Keys::Up]) },
         items: items,
-        x: WIDTH // 2,
-        y: HEIGHT // 2,
+        x: GameEx.width // 2,
+        y: GameEx.height // 2,
         origin: {0.5_f32, 0.5_f32},
         on_select: ->(id : Symbol) {
           if id == :start
             @start_game = true
           else
-            exit!
+            transition_out.start
           end
           nil
         }
@@ -87,6 +91,11 @@ module GameEx
     end
 
     def update(dt : Float32)
+      if Keys.just_pressed?(Keys::Escape)
+        transition_out.start
+        return
+      end
+
       @menu.update(dt)
     end
 
@@ -96,33 +105,53 @@ module GameEx
   end
 
   class MainScene < GSDL::Scene
-    @text : GSDL::Text
-
-    # We need to explicitly allow setting @exit if we want to use it as a signal
-    def exit!
-      @exit = true
-    end
+    @message : GSDL::Message
 
     def initialize
-      super(:main_scene)
-      @text = GSDL::Text.new(
-        text: "Esc to go back to main menu",
-        x: WIDTH // 2,
-        y: HEIGHT // 2,
-        origin: {0.5_f32, 0.5_f32},
-        align: GSDL::Font::Align::Center
+      transition_in = GSDL::SquareTransition.new(
+        direction: GSDL::TransitionDirection::In,
+        duration: 1.5_f32,
+        grid_size: 16,
+        started: true
       )
+      transition_out = GSDL::FadeTransition.new(
+        direction: GSDL::TransitionDirection::Out,
+        duration: 0.5_f32
+      )
+
+      super(name: :main_scene, transition_in: transition_in, transition_out: transition_out)
+
+      @message = GSDL::Message.new(
+        text: "Esc to go back\nto the main menu\n",
+        x: 256,
+        y: 128,
+        color: GSDL::Color::Magenta,
+        align: GSDL::Font::Align::Center,
+        border_radius: 32
+      )
+
+      @sprite = GSDL::Sprite.new("tiles")
     end
 
     def update(dt : Float32)
-      exit! if Keys.just_pressed?(Keys::Escape)
-      @text.update(dt)
+      transition_out.start if Keys.just_pressed?(Keys::Escape)
+
+      @message.update(dt)
     end
 
     def draw(draw : GSDL::Draw)
-      @text.draw(draw)
+      cols = GSDL::Game.width // @sprite.width + 1
+      rows = GSDL::Game.height // @sprite.height + 1
+
+      cols.times do |x|
+        rows.times do |y|
+          @sprite.draw(draw, -x * @sprite.width, -y * @sprite.height)
+        end
+      end
+
+      @message.draw(draw)
     end
   end
 
-  Game.new.run
+  GameEx.new.run
 end

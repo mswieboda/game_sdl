@@ -3,12 +3,9 @@ require "../src/game_sdl"
 module GameEx
   alias Keys = GSDL::Keys
 
-  WIDTH = 800
-  HEIGHT = 600
-
-  class Game < GSDL::Game
+  class GameEx < GSDL::Game
     def initialize
-      super(title: "Sprite Ex", width: WIDTH, height: HEIGHT)
+      super(title: "Sprite Ex", width: 800, height: 600)
     end
 
     def init
@@ -42,13 +39,16 @@ module GameEx
       super(:start)
 
       @text = GSDL::Text.new(text: "UP/DOWN to scale, TAB to tint", origin: {0.5_f32, 0.5_f32}, color: GSDL::Color::Lime)
-      @text.x = WIDTH / 2_f32
+
+      # NOTE: can use either GSDL::Game.width or GameEx.width
+      @text.x = GSDL::Game.width / 2_f32
       @text.y = @text.height + 32
 
       source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
       @sprite = GSDL::Sprite.new(key: "ship", origin: {0.5_f32, 0.5_f32}, source_rect: source_rect)
 
-      @sprite.center(width: WIDTH, height: HEIGHT)
+      # NOTE: can use either GSDL::Game.width or GameEx.width
+      @sprite.center(width: GameEx.width, height: GameEx.height)
     end
 
     def update(dt : Float32)
@@ -73,5 +73,5 @@ module GameEx
     end
   end
 
-  Game.new.run
+  GameEx.new.run
 end

@@ -70,7 +70,5 @@ module TileMapEx
     end
   end
 
-  # Main entry point for the example
-  game = Game.new
-  game.run
+  Game.new.run
 end

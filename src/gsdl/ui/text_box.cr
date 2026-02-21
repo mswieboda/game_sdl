@@ -8,22 +8,37 @@ module GSDL
 
     @text : Text
 
+    delegate origin, to: @text
+    delegate :origin=, to: @text
+    delegate origin_x, to: @text
+    delegate :origin_x=, to: @text
+    delegate origin_y, to: @text
+    delegate :origin_y=, to: @text
+    delegate scale, to: @text
+    delegate :scale=, to: @text
+    delegate scale_x, to: @text
+    delegate :scale_x=, to: @text
+    delegate scale_y, to: @text
+    delegate :scale_y=, to: @text
+
     def initialize(
       font = Font.default,
       text : String = "",
       origin = {0_f32, 0_f32},
+      scale = {1_f32, 1_f32},
       width : Int32? = nil,
       height : Int32? = nil,
       @padding = Padding,
       align = Font::Align::Left,
-      x : Float32 = 0_f32,
-      y : Float32 = 0_f32,
+      x : Num = 0_f32,
+      y : Num = 0_f32,
       color = Color::Black
     )
       @text = Text.new(
         font: font,
         text: text,
         origin: origin,
+        scale: scale,
         color: color,
         align: align,
         wrap_width: width ? width - padding * 2 : 0
@@ -55,7 +70,7 @@ module GSDL
       @text.x - padding
     end
 
-    def x=(x : Float32)
+    def x=(x : Num)
       @text.x = x + padding
     end
 
@@ -63,7 +78,7 @@ module GSDL
       @text.y - padding
     end
 
-    def y=(y : Float32)
+    def y=(y : Num)
       @text.y = y + padding
     end
 

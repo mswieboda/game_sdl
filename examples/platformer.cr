@@ -252,6 +252,5 @@ module PlatformerEx
     end
   end
 
-  game = Game.new
-  game.run
+  Game.new.run
 end

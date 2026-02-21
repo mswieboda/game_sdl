@@ -3,12 +3,22 @@ module GSDL
     getter name
     getter? exit
 
-    def initialize(name = :base)
-      @name = name
+    property transition_in : Transition = EmptyTransition.new
+    property transition_out : Transition = EmptyTransition.new
+
+    def initialize(
+      @name = :base,
+      @transition_in = EmptyTransition.new,
+      @transition_out = EmptyTransition.new
+    )
       @exit = false
     end
 
     def init
+    end
+
+    def exit
+      @exit = true
     end
 
     def reset

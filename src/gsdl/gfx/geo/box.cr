@@ -90,9 +90,6 @@ module GSDL
           FPoint.new(p1[0], p1[1])
         ]
       elsif draw_border_radius > 0
-        # max_border_radius = ([draw_width, draw_height].min / 2).to_f32
-        # actual_border_radius = [draw_border_radius, max_border_radius].min
-        # puts ">>> update_geometry dbr: #{draw_border_radius} mbr: #{max_border_radius} abr: #{actual_border_radius}"
         # top left, top right, bottom left, bottom right
         [
           { center: {draw_x + draw_border_radius, draw_y + draw_border_radius}, dir: {1_i8, 1_i8} },

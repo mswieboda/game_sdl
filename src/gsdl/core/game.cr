@@ -1,21 +1,21 @@
 module GSDL
-  def self.ticks
-    SDL3.get_ticks
-  end
-
-  abstract class Game
-    DefaultBackgroundColor = Color::Black
-
+  module Global
+    @@game : Game?
     @@draw : Draw?
 
-    getter window : SDL3::Window
-    getter scene_manager : SceneManager
-    getter? exit
+    def self.game : Game
+      if game = @@game
+        game
+      else
+        raise "Failed to get global Game instance. Make sure Game.new has been called."
+      end
+    end
 
-    @draw : Draw
-    @last_tick : UInt64 = 0_i64
+    def self.game=(game : Game)
+      @@game = game
+    end
 
-    def self.draw_instance : Draw
+    def self.draw : Draw
       if draw = @@draw
         draw
       else
@@ -23,7 +23,61 @@ module GSDL
       end
     end
 
+    def self.draw=(draw : Draw)
+      @@draw = draw
+    end
+  end
+
+  def self.ticks
+    SDL3.get_ticks
+  end
+
+  abstract class Game
+    DefaultBackgroundColor = Color::Black
+
+    def self.instance : Game
+      Global.game
+    end
+
+    def self.width : Int32
+      Global.game.width
+    end
+
+    def self.height : Int32
+      Global.game.height
+    end
+
+    def self.title : String
+      Global.game.title
+    end
+
+    def self.draw_instance : Draw
+      Global.draw
+    end
+
+    @window : SDL3::Window?
+    @scene_manager : SceneManager?
+    @draw : Draw?
+    @last_tick : UInt64 = 0_i64
+    @exit : Bool = false
+    @title : String?
+    @width : Int32?
+    @height : Int32?
+
+    def window; @window.not_nil!; end
+    def scene_manager; @scene_manager.not_nil!; end
+    def exit?; @exit; end
+    def title; @title.not_nil!; end
+    def width; @width.not_nil!; end
+    def height; @height.not_nil!; end
+
     def initialize(title = "", width = 1920, height = 1080)
+      @title = title
+      @width = width
+      @height = height
+      
+      Global.game = self
+      
       SDL3.init
       SDL3::TTF.init
       SDL3::Mixer.init
@@ -32,13 +86,13 @@ module GSDL
         title,
         width,
         height,
-        flags: 32_u64 # This was changed from SDL::WindowFlags::SHOWN | SDL::WindowFlags::RESIZABLE
+        flags: 32_u64
       )
 
-      @draw = Draw.new(window)
-      @@draw = @draw
+      @draw = Draw.new(@window.not_nil!)
+      Global.draw = @draw.not_nil!
 
-      TextBase.draw = @draw
+      TextBase.draw = @draw.not_nil!
 
       @scene_manager = SceneManager.new
     end
@@ -48,15 +102,12 @@ module GSDL
         AssetManager.load_pack
       {% end %}
 
-      TextureManager.setup(@draw)
+      TextureManager.setup(Game.draw_instance)
       FontManager.setup
       AudioManager.setup
       TileMapManager.setup
 
-      # redundantly setting again as a safety measure
-      # ensuring the renderer is always available in TextBase
-      # before any text objects are instantiated or drawn
-      TextBase.draw = @draw
+      TextBase.draw = Game.draw_instance
 
       load_textures
       load_fonts
@@ -68,7 +119,6 @@ module GSDL
       {% end %}
     end
 
-    # NOTE: to be overridden by inheritted classes
     def load_textures
     end
 
@@ -81,17 +131,14 @@ module GSDL
     def load_tile_maps
     end
 
-    # TODO: check / use
     def vsync
       true
     end
 
-    # TODO: check / use
     def joystick_threshold
       1.0
     end
 
-    # TODO: check / use
     def mouse_cursor_visible
       true
     end
@@ -128,27 +175,25 @@ module GSDL
 
     def update(dt : Float32)
       scene_manager.update(dt)
-
       @exit = true if scene_manager.exit?
     end
 
     def clear_screen
-      @draw.color = background_color
-      @draw.clear
+      Game.draw_instance.color = background_color
+      Game.draw_instance.clear
     end
 
     def draw
-      scene_manager.draw(@draw)
-
-      @draw.draw
+      scene_manager.draw(Game.draw_instance)
+      Game.draw_instance.draw
     end
 
     def destroy
-      TextureManager.clear_all # Unload all textures managed by the singleton
+      TextureManager.clear_all
       FontManager.clear_all
       AudioManager.clear_all
       TileMapManager.clear_all
-      @draw.destroy
+      Game.draw_instance.destroy
       window.destroy
       SDL3.quit
     end

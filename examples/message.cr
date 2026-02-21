@@ -27,6 +27,24 @@ module GameEx
     end
   end
 
+  class BorderedMessage < GSDL::Message
+    def draw_border(draw : GSDL::Draw)
+      return if border_radius > 0
+
+      [2, 4, 6].each_with_index do |margin, i|
+        box = GSDL::Box.new(
+          x: x + margin,
+          y: y + margin,
+          width: (width - padding / 2).to_f32,
+          height: (height - padding / 2).to_f32,
+          color: @text.color,
+          draw_mode: GSDL::Shape::DrawMode::Outline
+        )
+        box.draw(draw)
+      end
+    end
+  end
+
   class StartScene < GSDL::Scene
     @messages : Array(GSDL::Message)
     @buttons : Array(GSDL::Button)
@@ -53,7 +71,7 @@ module GameEx
       margin = 16
       height = 36 + GSDL::TextBox::Padding * 2
 
-      @messages << GSDL::Message.new(
+      @messages << BorderedMessage.new(
         font: font,
         text: "automatically wrapped, with a set width. This could be a dialog box for character dialog, TBD a GSD::Dialog class to come later!",
         x: margin.to_f32,

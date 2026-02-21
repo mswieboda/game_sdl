@@ -168,8 +168,15 @@ module GSDL
       @draw_commands.sort_by!(&.z_index)
 
       @draw_commands.each do |command|
+        color = self.color
+        blend_mode = @r.get_render_draw_blend_mode
+
         if command.is_a?(DrawColorCommand)
           self.color = command.color
+
+          if command.color.a < 255
+            @r.set_render_draw_blend_mode(LibSDL3::SDL_BLENDMODE_BLEND)
+          end
         end
 
         case command
@@ -214,6 +221,14 @@ module GSDL
         when DrawLinesCommand
           slice = Slice.new(command.points.to_unsafe, command.points.size)
           @r.draw_lines(slice)
+        end
+
+        if command.is_a?(DrawColorCommand)
+          self.color = color
+
+          if command.color.a < 255
+            @r.set_render_draw_blend_mode(blend_mode)
+          end
         end
       end
 

@@ -103,27 +103,54 @@ module GSDL
     end
 
     def height
-      had_newlines = @text.includes?("
-")
+      had_newlines = @text.includes?("\n")
       text_size_wrapped = font.text_size_wrapped(@text, width)
       text_size_wrapped[1] - (had_newlines ? font.size.to_i : 0)
     end
 
-    def origin_x : Float32; origin[0]; end
-    def origin_y : Float32; origin[1]; end
+    def origin_x : Float32
+      origin[0]
+    end
 
-    def draw_width : Num; width * scale_x; end
-    def draw_height : Num; height * scale_y; end
+    def origin_y : Float32
+      origin[1]
+    end
 
-    def draw_x : Num; x - (draw_width * origin_x); end
-    def draw_y : Num; y - (draw_height * origin_y); end
+    def draw_width : Num
+      width * scale_x
+    end
 
-    def scale_x : Num; scale[0]; end
-    def scale_y : Num; scale[1]; end
+    def draw_height : Num
+      height * scale_y
+    end
 
-    def scale_x=(val : Num); self.scale = {val, scale_y}; end
-    def scale_y=(val : Num); self.scale = {scale_x, val}; end
-    def scale=(val : Num); self.scale = {val, val}; end
+    def draw_x : Num
+      x - (draw_width * origin_x)
+    end
+
+    def draw_y : Num
+      y - (draw_height * origin_y)
+    end
+
+    def scale_x : Num
+      scale[0]
+    end
+
+    def scale_y : Num
+      scale[1]
+    end
+
+    def scale_x=(val : Num)
+      self.scale = {val, scale_y}
+    end
+
+    def scale_y=(val : Num)
+      self.scale = {scale_x, val}
+    end
+
+    def scale=(val : Num)
+      self.scale = {val, val}
+    end
 
     def update(dt : Float32)
       update_tweens(dt)
