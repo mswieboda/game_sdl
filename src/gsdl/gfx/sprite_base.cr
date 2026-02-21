@@ -1,5 +1,8 @@
+require "./centerable"
+
 module GSDL
   abstract class SpriteBase
+    include Centerable
     include Collidable
     include Area
     include Tweenable
@@ -98,12 +101,6 @@ module GSDL
 
     def draw_y : Num
       y - (draw_height * origin_y)
-    end
-
-    def center(width : Num, height : Num)
-      @x = width / 2_f32
-      @y = height / 2_f32
-      @origin = {0.5_f32, 0.5_f32}
     end
 
     abstract def update(dt : Float32)

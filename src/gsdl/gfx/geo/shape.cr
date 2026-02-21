@@ -1,8 +1,9 @@
 module GSDL
   abstract class Shape
-    alias ScaleType = Tuple(Num, Num)
-
     include Tweenable
+    include Centerable
+
+    alias ScaleType = Tuple(Num, Num)
 
     enum DrawMode
       Fill
@@ -148,12 +149,6 @@ module GSDL
 
     def scale_y=(val : Num)
       self.scale = {scale_x, val}
-    end
-
-    def center(width : Num, height : Num)
-      @x = width / 2_f32
-      @y = height / 2_f32
-      @origin = {0.5_f32, 0.5_f32}
     end
 
     abstract def width : Num

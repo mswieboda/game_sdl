@@ -46,11 +46,11 @@ module GameEx
         color: color,
         align: GSDL::Font::Align::Center
       )
-      @text_box.center(WIDTH, HEIGHT - HEIGHT + 128)
+      @text_box.center(width: WIDTH, height: HEIGHT - HEIGHT + 128)
 
       @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, radius: 6, z_index: 9)
       @circle.origin = {0.5_f32, 0.5_f32}
-      @circle.center(WIDTH, HEIGHT)
+      @circle.center(width: WIDTH, height: HEIGHT)
 
       w = 100
       h = 200
@@ -68,7 +68,7 @@ module GameEx
       @shapes << GSDL::Pixel.new(color: color)
 
       @shapes.each { |s| s.origin = {0.5_f32, 0.5_f32} }
-      @shapes.each(&.center(WIDTH, HEIGHT))
+      @shapes.each(&.center(width: WIDTH, height: HEIGHT))
     end
 
     def update(dt : Float32)

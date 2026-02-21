@@ -2,6 +2,8 @@ require "./shape"
 
 module GSDL
   class Triangle < Shape
+    include Centerable
+
     properties_changed({
       x1: Num = 0,
       y1: Num = 0,
@@ -81,17 +83,17 @@ module GSDL
       self.y = y1
     end
 
-    def x=(val : Num)
-      dx = val - @x
-      @x = val
+    def x=(x : Num)
+      dx = x - @x
+      @x = x
       @x2 += dx
       @x3 += dx
       @changed = true
     end
 
-    def y=(val : Num)
-      dy = val - @y
-      @y = val
+    def y=(y : Num)
+      dy = y - @y
+      @y = y
       @y2 += dy
       @y3 += dy
       @changed = true
@@ -135,7 +137,7 @@ module GSDL
       draw_y + (y3 - base_min_y) * scale_y
     end
 
-    def center(width : Num, height : Num)
+    def center(x : Num = 0, y : Num = 0, width : Num = 1, height : Num = 1)
       # Capture relative vectors for P2 and P3 from P1 (x, y)
       v2x = x2 - x1
       v2y = y2 - y1
@@ -143,7 +145,7 @@ module GSDL
       v3y = y3 - y1
 
       # Move x1/y1 (inherited as x/y) to center and set origin to 0.5
-      super(width, height)
+      _center(x: x, width: width, height: height)
 
       # Maintain the triangle's shape relative to the new pivot
       @x2 = x1 + v2x

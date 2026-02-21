@@ -1,5 +1,6 @@
 module GSDL
   abstract class TextBase
+    include Centerable
     include Tweenable
 
     property text : String
@@ -123,11 +124,6 @@ module GSDL
     def scale_x=(val : Num); self.scale = {val, scale_y}; end
     def scale_y=(val : Num); self.scale = {scale_x, val}; end
     def scale=(val : Num); self.scale = {val, val}; end
-
-    def center(width : Num, height : Num)
-      @x = width / 2_f32
-      @y = height / 2_f32
-    end
 
     def update(dt : Float32)
       update_tweens(dt)

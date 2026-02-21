@@ -67,8 +67,8 @@ module GSDL
       @text.y = y + padding
     end
 
-    def center(width : Num, height : Num)
-      @text.center(width, height)
+    def center(x : Num = 0, y : Num = 0, width : Num = 1, height : Num = 1)
+      @text.center(x: x, width: width, height: height)
     end
 
     def update(dt : Float32)

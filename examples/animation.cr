@@ -46,7 +46,7 @@ module GameEx
       origin = {0.5_f32, 0.5_f32}
 
       @sprite = GSDL::AnimatedSprite.new("player", 32, 64, origin: origin)
-      @sprite.center(WIDTH, HEIGHT)
+      @sprite.center(width: WIDTH, height: HEIGHT)
 
       @sprite.add("idle", [0], 8)
       @sprite.add("walk", (1..6).to_a, 8)
@@ -61,7 +61,7 @@ module GameEx
 
       # Center the text
       @text.center(WIDTH, 96)
-      @text_animation.center(WIDTH, HEIGHT + 256)
+      @text_animation.center(width: WIDTH, height: HEIGHT + 256)
     end
 
     def update(dt : Float32)
@@ -89,7 +89,7 @@ module GameEx
       animation = @animations[@animation_index]
       @sprite.play(animation)
       @text_animation.text = animation
-      @text_animation.center(WIDTH, HEIGHT + 256)
+      @text_animation.center(width: WIDTH, height: HEIGHT + 256)
     end
   end
 

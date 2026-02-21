@@ -42,23 +42,20 @@ module GameEx
         origin: {0.5_f32, 0.5_f32},
         color: color
       )
-      @text.center(WIDTH, HEIGHT)
+      @text.center(width: WIDTH, height: HEIGHT)
     end
 
     def update(dt : Float32)
       if Mouse.just_pressed?(Mouse::ButtonLeft)
         @text.text = "You just pressed Mouse Left!"
-        @text.center(WIDTH, HEIGHT)
       end
 
       if Mouse.just_released?(Mouse::ButtonRight)
         @text.text = "You just released Mouse Right!"
-        @text.center(WIDTH, HEIGHT)
       end
 
       if Mouse.moved?
         @text.text = "Mouse moved: #{Mouse.position}"
-        @text.center(WIDTH, HEIGHT)
       end
     end
 

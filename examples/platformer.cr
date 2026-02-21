@@ -154,7 +154,7 @@ module PlatformerEx
       @player = Player.new(key: "player", width: 32, height: 64)
 
       # TODO: find a way to include player start tile from map.json
-      @player.center(WIDTH, HEIGHT - 300)
+      @player.center(width: WIDTH, height: HEIGHT - 300)
 
       @coin_audio = GSDL::AudioManager.get("coin_audio")
       @coins = [] of GSDL::AnimatedSprite

@@ -79,7 +79,7 @@ module TweenEx
         origin: origin,
         source_rect: source_rect
       )
-      sprite.center(WIDTH, HEIGHT)
+      sprite.center(width: WIDTH, height: HEIGHT)
       @objects << sprite
 
       @objects << GSDL::Box.new(
@@ -119,7 +119,7 @@ module TweenEx
         y3: HEIGHT / 2_f32 + 64,
         color: GSDL::Color::White
       )
-      triangle.center(WIDTH, HEIGHT)
+      triangle.center(width: WIDTH, height: HEIGHT)
       triangle.x -= 192
       triangle.y += 128
       @objects << triangle
@@ -130,7 +130,7 @@ module TweenEx
         x2: WIDTH / 2_f32 + 96,
         y2: HEIGHT / 2_f32 + 96,
       )
-      line.center(WIDTH, HEIGHT)
+      line.center(width: WIDTH, height: HEIGHT)
       line.y += 96
       @objects << line
 

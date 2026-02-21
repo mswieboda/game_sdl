@@ -2,6 +2,8 @@ require "./shape"
 
 module GSDL
   class Line < Shape
+    include Centerable
+
     property x2 : Num = 0
     property y2 : Num = 0
 
@@ -36,15 +38,15 @@ module GSDL
       self.y = y1
     end
 
-    def x=(val : Num)
-      dx = val - @x
-      @x = val
+    def x=(x : Num)
+      dx = x - @x
+      @x = x
       @x2 += dx
     end
 
-    def y=(val : Num)
-      dy = val - @y
-      @y = val
+    def y=(y : Num)
+      dy = y - @y
+      @y = y
       @y2 += dy
     end
 
@@ -64,13 +66,13 @@ module GSDL
       y1 - ((y2 - y1) * scale_y * origin_y)
     end
 
-    def center(width : Num, height : Num)
+    def center(x : Num = 0, y : Num = 0, width : Num = 1, height : Num = 1)
       # Capture the current relative vector before x1/y1 are changed
       vx = x2 - x1
       vy = y2 - y1
 
       # Move x1/y1 (inherited as x/y) to the center and set origin to 0.5
-      super(width, height)
+      _center(x: x, width: width, height: height)
 
       # Adjust x2/y2 so they maintain the same relative distance from x1/y1
       @x2 = x1 + vx
