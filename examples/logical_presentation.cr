@@ -16,6 +16,7 @@ module GameEx
 
     def init
       super
+      GSDL::Events.esc_exits = true
       @scene_manager = SceneManager.new
       @draw.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
     end

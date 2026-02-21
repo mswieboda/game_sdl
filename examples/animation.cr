@@ -13,6 +13,7 @@ module GameEx
 
     def init
       super
+      GSDL::Events.esc_exits = true
       @scene_manager = SceneManager.new
     end
 
@@ -60,7 +61,7 @@ module GameEx
       @text_animation = GSDL::Text.new(text: "idle", origin: origin, color: color)
 
       # Center the text
-      @text.center(WIDTH, 96)
+      @text.center(width: WIDTH, height: 96)
       @text_animation.center(width: WIDTH, height: HEIGHT + 256)
     end
 

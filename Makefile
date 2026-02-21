@@ -36,11 +36,13 @@ examples:
 	@$(MAKE) run EXAMPLE=keys
 	@$(MAKE) run EXAMPLE=mouse
 	@$(MAKE) run EXAMPLE=game_pad
-	@$(MAKE) run EXAMPLE=logical_presentation
 	@$(MAKE) run EXAMPLE=collision
 	@$(MAKE) run EXAMPLE=tile_map
 	@$(MAKE) run EXAMPLE=platformer
 	@$(MAKE) run EXAMPLE=message
+	@$(MAKE) run EXAMPLE=menu
+	@$(MAKE) run EXAMPLE=switch_scene
+	@$(MAKE) run EXAMPLE=logical_presentation
 
 run:
 	@echo "Building and running example: $(EXAMPLE)"

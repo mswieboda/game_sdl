@@ -25,7 +25,7 @@ module GSDL
     property item_width_same : Bool = true
     property item_height_same : Bool = true
     property mouse_hover : Bool = false
-    property hover_text_color : Color? = nil
+    property hover_text_color : Color
 
     @on_select : Symbol -> Nil
     @selected_text_color : (Int32 -> Color)?
@@ -83,7 +83,7 @@ module GSDL
       @item_width_same : Bool = true,
       @item_height_same : Bool = true,
       @mouse_hover : Bool = false,
-      @hover_text_color = nil,
+      @hover_text_color = Color::White,
       @hover_box = nil,
       @on_select : Symbol -> Nil = ->(s : Symbol) { }
     )
@@ -234,11 +234,11 @@ module GSDL
       return @disabled_text_color if disabled?(id)
       
       if index == @selected_index
-        return @selected_text_color.try(&.call(index)) || Color::Yellow
+        return @selected_text_color.try(&.call(index)) || Color::Lime
       end
 
       if @mouse_hover && index == @hovered_index
-        return @hover_text_color || Color::White
+        return @hover_text_color
       end
 
       @text_color.try(&.call(index)) || @default_text_color

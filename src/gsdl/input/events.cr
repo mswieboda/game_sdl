@@ -16,7 +16,12 @@ module GSDL
     GamepadAdded = LibSDL3::SDL_EVENT_GAMEPAD_ADDED
     GamepadRemoved = LibSDL3::SDL_EVENT_GAMEPAD_REMOVED
 
+    @@esc_exits = false
     @@exit = false
+
+    def self.esc_exits=(esc_exits : Bool)
+      @@esc_exits = esc_exits
+    end
 
     def self.exit?
       @@exit
@@ -29,7 +34,7 @@ module GSDL
         when Quit, WindowClose
           @@exit = true
         when KeyDown
-          if event.key.key == Keys::Escape
+          if @@esc_exits && event.key.key == Keys::Escape
             @@exit = true
           end
         end

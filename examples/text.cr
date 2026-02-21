@@ -11,6 +11,7 @@ module GameEx
 
     def init
       super
+      GSDL::Events.esc_exits = true
       @scene_manager = SceneManager.new
     end
 
