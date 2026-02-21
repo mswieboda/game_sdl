@@ -68,6 +68,16 @@ module GameEx
         border_radius: 32
       )
 
+      @messages << GSDL::Message.new(
+        font: font,
+        text: "multiple lines\nof some text inside\na message box!",
+        x: 512,
+        y: 256,
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color::Magenta,
+        border_radius: 32
+      )
+
       margin = 16
       height = 36 + GSDL::TextBox::Padding * 2
 
@@ -95,7 +105,7 @@ module GameEx
         y: 64.to_f32,
         width: 128,
         color: color,
-        border_radius: 64
+        border_radius: 16
       )
     end
 

@@ -11,7 +11,7 @@ RM_CMD := rm -rf
 MKDIR_CMD := mkdir -p
 
 # Phony targets don't represent files
-.PHONY: default clean examples run packer run-release
+.PHONY: default clean examples build run packer run-release
 
 # The default target, executed when you just run `make`
 default:
@@ -44,10 +44,13 @@ examples:
 	@$(MAKE) run EXAMPLE=switch_scene
 	@$(MAKE) run EXAMPLE=logical_presentation
 
-run:
-	@echo "Building and running example: $(EXAMPLE)"
+build:
+	@echo "Building example: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
 	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" --no-debug
+
+run: build
+	@echo "Running example: $(EXAMPLE)"
 	./$(BUILD_DIR)/$(EXAMPLE)
 
 run-release:

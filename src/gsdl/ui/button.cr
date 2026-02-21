@@ -44,29 +44,41 @@ module GSDL
     def update(dt : Float32)
       super
 
-      if Mouse.clicked_in?(x, y, width, height)
+      if Mouse.clicked_in?(draw_x, draw_y, draw_width, draw_height)
         @on_click.call(@text.text)
       end
     end
 
     def draw_background(draw : Draw)
-      box = Box.new(x: x, y: y, width: width, height: height, color: Color::White, border_radius: border_radius)
+      box = Box.new(
+        x: x,
+        y: y,
+        origin: origin,
+        scale: scale,
+        width: width,
+        height: height,
+        color: Color::White,
+        border_radius: border_radius
+      )
+
       box.draw(draw)
     end
 
     def draw_border(draw : Draw)
-      return if border_radius > 0
-
-      margin = 2
+      margin = 4
 
       box = Box.new(
         x: x + margin,
         y: y + margin,
+        origin: origin,
+        scale: scale,
         width: width - margin * 2,
         height: height - margin * 2,
         color: @text.color,
+        border_radius: border_radius - margin,
         draw_mode: Shape::DrawMode::Outline
       )
+
       box.draw(draw)
     end
   end
