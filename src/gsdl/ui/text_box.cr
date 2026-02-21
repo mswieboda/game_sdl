@@ -141,11 +141,11 @@ module GSDL
     def scale_x : Num; scale[0]; end
     def scale_y : Num; scale[1]; end
 
-    def draw_width; width * scale_x; end
-    def draw_height; height * scale_y; end
+    def draw_width : Num; width * scale_x; end
+    def draw_height : Num; height * scale_y; end
 
-    def draw_x; x - (draw_width * origin_x); end
-    def draw_y; y - (draw_height * origin_y); end
+    def draw_x : Num; x - (draw_width * origin_x); end
+    def draw_y : Num; y - (draw_height * origin_y); end
 
     private def on_content_changed
       unless @width_fixed
