@@ -40,6 +40,7 @@ examples:
 	@$(MAKE) run EXAMPLE=tile_map
 	@$(MAKE) run EXAMPLE=platformer
 	@$(MAKE) run EXAMPLE=message
+	@$(MAKE) run EXAMPLE=tween
 	@$(MAKE) run EXAMPLE=menu
 	@$(MAKE) run EXAMPLE=scene_switch
 	@$(MAKE) run EXAMPLE=logical_presentation

@@ -140,6 +140,7 @@ module TweenEx
         y: HEIGHT / 2_f32 + 128
       )
 
+      # add these last, so sprite is first, then shapes, then text
       @objects << text
       @objects << text_rotated
     end
