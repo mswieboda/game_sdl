@@ -49,19 +49,21 @@ module GSDL
           texture: @texture,
           source_rect: source_rect,
           dest_rect: dest_rect,
-          flip: flip_horizontal ? 1 : 0,
           angle: rotation,
-          z_index: z_index,
-          tint: tint
+          center: center_point_from_origin,
+          flip: flip_horizontal ? 1 : 0,
+          tint: tint,
+          z_index: z_index
         )
       else
         draw.texture_rotated(
           texture: @texture,
           dest_rect: dest_rect,
-          flip: flip_horizontal ? 1 : 0,
           angle: rotation,
-          z_index: z_index,
-          tint: tint
+          center: center_point_from_origin,
+          flip: flip_horizontal ? 1 : 0,
+          tint: tint,
+          z_index: z_index
         )
       end
     end

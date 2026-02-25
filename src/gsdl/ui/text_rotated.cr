@@ -110,6 +110,7 @@ module GSDL
           texture: tex,
           dest_rect: dest_rect,
           angle: rotation,
+          center: center_point_from_origin,
           z_index: z_index
         )
       end

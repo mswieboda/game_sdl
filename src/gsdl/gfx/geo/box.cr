@@ -17,8 +17,8 @@ module GSDL
       outline_arc_points: ArcPoints = [] of Points
     })
 
-    def initialize(@width : Num = 1, @height : Num = 1, @border_radius : Num = 0, rotation : Num = 0)
-      super(rotation: rotation)
+    def initialize(@width : Num = 1, @height : Num = 1, @border_radius : Num = 0)
+      super()
     end
 
     def initialize(

@@ -16,5 +16,12 @@ module GSDL
     def center(x : Num = 0, y : Num = 0, width : Num = 1, height : Num = 1)
       _center(x: x, width: width, height: height)
     end
+
+    def center_point_from_origin
+      Point.new(
+        x: origin_x * draw_width,
+        y: origin_y * draw_height
+      )
+    end
   end
 end

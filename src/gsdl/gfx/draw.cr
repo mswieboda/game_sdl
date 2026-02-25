@@ -21,8 +21,9 @@ module GSDL
       property texture : SDL3::Texture
       property source_rect : SDL3::FRect?
       property dest_rect : SDL3::FRect
-      property flip : Int32
       property angle : Float64
+      property center : SDL3::FPoint
+      property flip : Int32
       property tint : Color?
       property? destroy
 
@@ -31,8 +32,9 @@ module GSDL
         @texture : SDL3::Texture,
         @source_rect : SDL3::FRect?,
         @dest_rect : SDL3::FRect,
-        @flip : Int32,
         @angle : Float64 = 0.0,
+        @center : SDL3::FPoint = SDL3::FPoint.new,
+        @flip : Int32 = 0,
         @tint : Color? = nil,
         @destroy : Bool = false
       )
@@ -187,8 +189,9 @@ module GSDL
             texture: command.texture,
             source_rect: command.source_rect,
             dest_rect: command.dest_rect,
-            flip: command.flip,
             angle: command.angle,
+            center: command.center,
+            flip: command.flip,
             tint: command.tint,
             destroy: command.destroy?
           )
@@ -405,13 +408,23 @@ module GSDL
       source_rect : FRect? = nil,
       dest_rect : FRect? = nil,
       flip : Int32 = 0,
-      angle : Num = 0.0,
       z_index : Int32 = 0,
-      color : Color = Color::White,
+      tint : Color = Color::White,
       destroy : Bool = false,
       draw_immediately : Bool = false
     )
-      texture_rotated(texture, x, y, source_rect, dest_rect, flip, angle, z_index, color, destroy, draw_immediately)
+      texture_rotated(
+        texture: texture,
+        x: x,
+        y: y,
+        source_rect: source_rect,
+        dest_rect: dest_rect,
+        flip: flip,
+        z_index: z_index,
+        tint: tint,
+        destroy: destroy,
+        draw_immediately: draw_immediately
+      )
     end
 
     def texture_rotated(
@@ -420,10 +433,11 @@ module GSDL
       y : Float32 = 0.0_f32,
       source_rect : FRect? = nil,
       dest_rect : FRect? = nil,
-      flip : Int32 = 0,
       angle : Num = 0.0,
-      z_index : Int32 = 0,
+      center : Point = Point.new,
+      flip : Int32 = 0,
       tint : Color? = nil,
+      z_index : Int32 = 0,
       destroy : Bool = false,
       draw_immediately : Bool = false
     )
@@ -434,8 +448,9 @@ module GSDL
           texture: texture,
           source_rect: source_rect.try(&.to_sdl),
           dest_rect: actual_dest_rect.to_sdl,
-          flip: flip,
           angle: angle.to_f64,
+          center: center.to_sdl,
+          flip: flip,
           tint: tint,
           destroy: destroy,
         )
@@ -445,8 +460,9 @@ module GSDL
           texture: texture,
           source_rect: source_rect.try(&.to_sdl),
           dest_rect: actual_dest_rect.to_sdl,
-          flip: flip,
           angle: angle.to_f64,
+          center: center.to_sdl,
+          flip: flip,
           tint: tint,
           destroy: destroy
         )
@@ -455,10 +471,11 @@ module GSDL
 
     private def _draw_texture_rotated(
       texture : SDL3::Texture,
-      source_rect : SDL3::FRect? = nil,
-      dest_rect : SDL3::FRect? = nil,
-      flip : Int32 = 0,
+      source_rect : SDL3::FRect?,
+      dest_rect : SDL3::FRect,
       angle : Float64 = 0.0,
+      center : SDL3::FPoint = SDL3::FPoint.new,
+      flip : Int32 = 0,
       tint : Color? = nil,
       destroy : Bool = false
     )
@@ -473,6 +490,7 @@ module GSDL
           dest_rect: dest_rect,
           flip: flip,
           angle: angle,
+          center: center,
           tint: nil,
           destroy: false
         )
@@ -488,6 +506,7 @@ module GSDL
           source_rect: src_rect,
           dest_rect: dest_rect,
           angle: angle,
+          center: center,
           flip: flip
         )
       else
@@ -495,6 +514,7 @@ module GSDL
           texture: texture,
           dest_rect: dest_rect,
           angle: angle,
+          center: center,
           flip: flip
         )
       end
