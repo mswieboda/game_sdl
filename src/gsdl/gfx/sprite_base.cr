@@ -67,23 +67,19 @@ module GSDL
       @scale = {val, val}
     end
 
-    # override in parent class for custom area box
+    # override this method in parent class for custom area box
     def area_bounding_box : FRect
       FRect.new(
-        x: 0_f32,
-        y: 0_f32,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
+        w: draw_width,
+        h: draw_height
       )
     end
 
-    # override in parent class for custom collision box
+    # override this method in parent class for custom collision box
     def collision_bounding_box : FRect
       FRect.new(
-        x: 0_f32,
-        y: 0_f32,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
+        w: draw_width,
+        h: draw_height
       )
     end
 

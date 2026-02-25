@@ -4,20 +4,12 @@ module GameEx
   alias Keys = GSDL::Keys
   alias Mouse = GSDL::Mouse
   alias Font = GSDL::Font
-  alias Text = GSDL::Text
-  alias Menu = GSDL::Menu
   alias Color = GSDL::Color
-  alias Box = GSDL::Box
-  alias AnimatedSprite = GSDL::AnimatedSprite
-  alias FRect = GSDL::FRect
   alias Num = GSDL::Num
-
-  WIDTH = 800
-  HEIGHT = 600
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Menu Ex", width: WIDTH, height: HEIGHT)
+      super(title: "Menu Ex", width: 800, height: 600)
     end
 
     def init
@@ -44,9 +36,9 @@ module GameEx
   end
 
   class MenuScene < GSDL::Scene
-    @menu : Menu
-    @message : Text
-    @rainbow : Bool = false
+    @menu : GSDL::Menu
+    @message : GSDL::Text
+    @rainbow = false
 
     MessageInfo = "Choose: UP / DOWN\n\nSelect: SPACE / ENTER / L MOUSE BUTTON\n\n TAB for rainbow options"
     Rainbow = [
@@ -62,9 +54,9 @@ module GameEx
     def initialize
       super(:menu)
 
-      @message = Text.new(
+      @message = GSDL::Text.new(
         text: MessageInfo,
-        x: WIDTH / 2_f32,
+        x: Game.width / 2_f32,
         y: 32,
         origin: {0.5_f32, 0_f32},
         align: Font::Align::Center
@@ -90,7 +82,7 @@ module GameEx
         nil
       }
 
-      icon = AnimatedSprite.new(
+      icon = GSDL::AnimatedSprite.new(
         key: "coin",
         width: 32,
         height: 32,
@@ -99,7 +91,7 @@ module GameEx
       icon.add("idle", [0, 1, 2, 3, 4, 3, 2, 1], 8, loops: true)
       icon.play("idle")
 
-      @menu = Menu.new(
+      @menu = GSDL::Menu.new(
         is_selected: ->(x : Num, y : Num, w : Num, h : Num) {
           Keys.just_pressed?([Keys::Space, Keys::Return]) ||
             Mouse.clicked_in?(x, y, w, h)
@@ -107,23 +99,23 @@ module GameEx
         is_next: -> { Keys.just_pressed?([Keys::S, Keys::Down]) },
         is_previous: -> { Keys.just_pressed?([Keys::W, Keys::Up]) },
         items: items,
-        x: WIDTH // 2,
-        y: HEIGHT // 2 + 64,
+        x: Game.width // 2,
+        y: Game.height // 2 + 64,
         origin: {0.5_f32, 0.5_f32},
         on_select: on_select,
         text_color: ->(index : Int32) { @rainbow ? rainbow_color(index) : Color::White },
         selected_text_color: ->(index : Int32) { Color::Cyan },
-        background_box: Box.new(color: Color::DarkGray, border_radius: 16),
-        selected_box: Box.new(color: Color::Gray, border_radius: 8),
+        background_box: GSDL::Box.new(color: Color::DarkGray, border_radius: 16),
+        selected_box: GSDL::Box.new(color: Color::Gray, border_radius: 8),
         selected_icon: icon,
-        selected_icon_placement: Menu::IconPlacement::Both,
+        selected_icon_placement: GSDL::Menu::IconPlacement::Both,
         padding: 16,
         separation: 4,
         item_padding: 8,
         items_disabled: [:extra],
         mouse_hover: true,
         hover_text_color: Color::White,
-        hover_box: Box.new(color: Color::Silver, border_radius: 8),
+        hover_box: GSDL::Box.new(color: Color::Silver, border_radius: 8),
       )
     end
 

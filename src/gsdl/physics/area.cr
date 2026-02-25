@@ -16,19 +16,19 @@ module GSDL
       )
     end
 
+    # TODO: maybe rename to target_overlaps? for consistency
     def target_in?(x : Num, y : Num)
-      box = area_box
-
-      x >= box.x && x <= box.x + box.w &&
-        y >= box.y && y <= box.y + box.h
+      area_box.in?(x: x, y: y)
     end
 
+    # TODO: maybe rename to overlaps? for consistency
     def in?(other : Area) : Bool
-      GSDL::Collidable.overlaps?(area_box, other.area_box)
+      other.area_box.overlaps?(area_box)
     end
 
+    # TODO: maybe rename to overlaps? for consistency
     def in?(other : Collidable) : Bool
-      GSDL::Collidable.overlaps?(area_box, other.collision_box)
+      other.collision_box.overlaps?(area_box)
     end
   end
 end

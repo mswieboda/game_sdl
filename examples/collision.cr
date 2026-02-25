@@ -36,7 +36,7 @@ module GameEx
 
   class Enemy < GSDL::Sprite
     def initialize(x : GSDL::Num, y : GSDL::Num)
-      source_rect = GSDL::FRect.new(x: 0, y: 0, w: 128, h: 128)
+      source_rect = GSDL::FRect.new(w: 128)
 
       super(
         key: "ship",
@@ -63,11 +63,11 @@ module GameEx
     include GSDL::MoveController
 
     def area_bounding_box : GSDL::FRect
-      GSDL::FRect.new(-32, -32, width + 64, height + 64)
+      GSDL::FRect.new(-32, -32, width + 64)
     end
 
     def collision_bounding_box : GSDL::FRect
-      GSDL::FRect.new(24, 24, 80, 80)
+      GSDL::FRect.new(24, 24, 80)
     end
 
     def move_speed : GSDL::Num

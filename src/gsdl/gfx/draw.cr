@@ -19,8 +19,8 @@ module GSDL
 
     struct DrawTextureCommand < DrawCommand
       property texture : SDL3::Texture
-      property source_rect : FRect?
-      property dest_rect : FRect
+      property source_rect : SDL3::FRect?
+      property dest_rect : SDL3::FRect
       property flip : Int32
       property angle : Float64
       property tint : Color?
@@ -29,8 +29,8 @@ module GSDL
       def initialize(
         z_index : Int32,
         @texture : SDL3::Texture,
-        @source_rect : FRect?,
-        @dest_rect : FRect,
+        @source_rect : SDL3::FRect?,
+        @dest_rect : SDL3::FRect,
         @flip : Int32,
         @angle : Float64 = 0.0,
         @tint : Color? = nil,
@@ -64,19 +64,19 @@ module GSDL
     end
 
     struct DrawFRectCommand < DrawColorCommand
-      property rect : FRect
+      property rect : SDL3::FRect
       property? outline : Bool
 
-      def initialize(z_index : Int32, color : Color, @rect : FRect, @outline : Bool)
+      def initialize(z_index : Int32, color : Color, @rect : SDL3::FRect, @outline : Bool)
         super(z_index: z_index, color: color)
       end
     end
 
     struct DrawFRectsCommand < DrawColorCommand
-      property rects : Array(FRect)
+      property rects : Array(SDL3::FRect)
       property? outline : Bool
 
-      def initialize(z_index : Int32, color : Color, @rects : Array(FRect), @outline : Bool)
+      def initialize(z_index : Int32, color : Color, @rects : Array(SDL3::FRect), @outline : Bool)
         super(z_index: z_index, color: color)
       end
     end
@@ -321,7 +321,12 @@ module GSDL
     # rects
 
     def rect_fill(rect : FRect, color = Color::White, z_index : Int32 = 0)
-      @draw_commands << DrawFRectCommand.new(z_index: z_index, color: color, rect: rect, outline: false)
+      @draw_commands << DrawFRectCommand.new(
+        rect: rect.to_sdl,
+        color: color,
+        outline: false,
+        z_index: z_index
+      )
     end
 
     def rect_fill(rect : Rect, color = Color::White, z_index : Int32 = 0)
@@ -332,9 +337,9 @@ module GSDL
       rect_fill(rect: box.to_frect, color: box.color, z_index: box.z_index)
     end
 
-    def rects_fill(rects : Array(FRect), color = Color::White, z_index = 0)
+    def rects_fill(rects : FRects, color = Color::White, z_index = 0)
       @draw_commands << DrawFRectsCommand.new(
-        rects: rects,
+        rects: rects.map(&.to_sdl),
         color: color,
         z_index: z_index,
         outline: false
@@ -352,7 +357,7 @@ module GSDL
 
     def rect_outline(rect : FRect, color = Color::White, z_index : Int32 = 0)
       @draw_commands << DrawFRectCommand.new(
-        rect: rect,
+        rect: rect.to_sdl,
         color: color,
         z_index: z_index,
         outline: true
@@ -367,9 +372,9 @@ module GSDL
       rect_outline(rect: box.to_frect, color: box.color, z_index: box.z_index)
     end
 
-    def rects_outline(rects : Array(FRect), color = Color::White, z_index = 0)
+    def rects_outline(rects : FRects, color = Color::White, z_index = 0)
       @draw_commands << DrawFRectsCommand.new(
-        rects: rects,
+        rects: rects.map(&.to_sdl),
         color: color,
         z_index: z_index,
         outline: true
@@ -427,8 +432,8 @@ module GSDL
       if draw_immediately
         _draw_texture_rotated(
           texture: texture,
-          source_rect: source_rect,
-          dest_rect: actual_dest_rect,
+          source_rect: source_rect.try(&.to_sdl),
+          dest_rect: actual_dest_rect.to_sdl,
           flip: flip,
           angle: angle.to_f64,
           tint: tint,
@@ -438,8 +443,8 @@ module GSDL
         @draw_commands << DrawTextureCommand.new(
           z_index: z_index,
           texture: texture,
-          source_rect: source_rect,
-          dest_rect: actual_dest_rect,
+          source_rect: source_rect.try(&.to_sdl),
+          dest_rect: actual_dest_rect.to_sdl,
           flip: flip,
           angle: angle.to_f64,
           tint: tint,
@@ -450,8 +455,8 @@ module GSDL
 
     private def _draw_texture_rotated(
       texture : SDL3::Texture,
-      source_rect : FRect? = nil,
-      dest_rect : FRect? = nil,
+      source_rect : SDL3::FRect? = nil,
+      dest_rect : SDL3::FRect? = nil,
       flip : Int32 = 0,
       angle : Float64 = 0.0,
       tint : Color? = nil,

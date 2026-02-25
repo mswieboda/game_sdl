@@ -74,11 +74,10 @@ module TweenEx
       @active_info.y = text.y + text.height + 16
 
       # Create a sprite to tween
-      source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
       sprite = GSDL::Sprite.new(
         key: "ship",
         origin: origin,
-        source_rect: source_rect
+        source_rect: GSDL::FRect.new(w: 128)
       )
       sprite.center(width: WIDTH, height: HEIGHT)
       @objects << sprite

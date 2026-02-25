@@ -67,7 +67,7 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      alpha = if direction == TransitionDirection::In
+      alpha = if direction.in?
         # Fade in: 1.0 -> 0.0 alpha (revealing scene)
         (1.0_f32 - progress) * 255
       else
@@ -80,8 +80,8 @@ module GSDL
       
       c = @color
       c.a = alpha.to_u8
-      
-      draw.rect_fill(FRect.new(0, 0, w, h), color: c, z_index: 1000)
+
+      draw.rect_fill(FRect.new(w: w, h: h), color: c, z_index: 1000)
     end
   end
 
@@ -111,7 +111,7 @@ module GSDL
       # Out transition: squares appear (hide)
       
       total_squares = @squares.size
-      visible_count = if direction == TransitionDirection::In
+      visible_count = if direction.in?
         # Disappearing: from total to 0
         ((1.0_f32 - progress) * total_squares).to_i
       else
@@ -123,10 +123,9 @@ module GSDL
         x_idx, y_idx = @squares[i]
         draw.rect_fill(
           FRect.new(
-            x: x_idx * @grid_size.to_f32,
-            y: y_idx * @grid_size.to_f32,
-            w: @grid_size.to_f32,
-            h: @grid_size.to_f32
+            x: x_idx * @grid_size,
+            y: y_idx * @grid_size,
+            w: @grid_size
           ),
           color: @color,
           z_index: 1000

@@ -126,7 +126,7 @@ module GameEx
       draw.clear
 
       # Render background, which will be scaled by the logical presentation
-      bg_dest_rect = GSDL::FRect.new(x: 0.0, y: 0.0, w: LOGICAL_WIDTH.to_f32, h: LOGICAL_HEIGHT.to_f32)
+      bg_dest_rect = GSDL::FRect.new(w: LOGICAL_WIDTH, h: LOGICAL_HEIGHT)
       draw.texture(texture: @bg_texture, dest_rect: bg_dest_rect, draw_immediately: true)
 
       # Render text

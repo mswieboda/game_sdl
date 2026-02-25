@@ -38,10 +38,10 @@ module GSDL
 
     def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)
       dest_rect = FRect.new(
-        x: draw_x.to_f32 - camera_x,
-        y: draw_y.to_f32 - camera_y,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
+        x: draw_x - camera_x,
+        y: draw_y - camera_y,
+        w: draw_width,
+        h: draw_height
       )
 
       if source_rect = @source_rect

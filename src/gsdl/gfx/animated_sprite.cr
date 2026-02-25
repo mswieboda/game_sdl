@@ -41,15 +41,15 @@ module GSDL
       source_rect = FRect.new(
         x: frame_x.to_f32,
         y: frame_y.to_f32,
-        w: @width.to_f32,
-        h: @height.to_f32
+        w: @width,
+        h: @height
       )
 
       dest_rect = FRect.new(
-        x: draw_x.to_f32 - camera_x,
-        y: draw_y.to_f32 - camera_y,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
+        x: draw_x - camera_x,
+        y: draw_y - camera_y,
+        w: draw_width,
+        h: draw_height
       )
 
       draw.texture_rotated(

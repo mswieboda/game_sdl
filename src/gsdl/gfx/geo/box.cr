@@ -1,7 +1,6 @@
 require "./shape"
 
 module GSDL
-  alias FRect = SDL3::FRect
   alias Rect = SDL3::Rect
 
   class Box < Shape
@@ -156,7 +155,7 @@ module GSDL
     end
 
     def to_frect
-      FRect.new(x: draw_x.to_f32, y: draw_y.to_f32, w: draw_width.to_f32, h: draw_height.to_f32)
+      FRect.new(x: draw_x, y: draw_y, w: draw_width, h: draw_height)
     end
 
     private def draw_fill(draw : Draw)

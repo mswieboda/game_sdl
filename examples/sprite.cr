@@ -44,8 +44,11 @@ module GameEx
       @text.x = GSDL::Game.width / 2_f32
       @text.y = @text.height + 32
 
-      source_rect = GSDL::FRect.new(x: 0_f32, y: 0_f32, w: 128_f32, h: 128_f32)
-      @sprite = GSDL::Sprite.new(key: "ship", origin: {0.5_f32, 0.5_f32}, source_rect: source_rect)
+      @sprite = GSDL::Sprite.new(
+        key: "ship",
+        origin: {0.5_f32, 0.5_f32},
+        source_rect: GSDL::FRect.new(w: 128_f32)
+      )
 
       # NOTE: can use either GSDL::Game.width or GameEx.width
       @sprite.center(width: GameEx.width, height: GameEx.height)
