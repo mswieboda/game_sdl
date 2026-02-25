@@ -49,13 +49,13 @@ module GSDL
     end
 
     struct DrawGeometryCommand < DrawCommand
-      property vertices : Array(LibSDL3::Vertex)
+      property vertices : Array(SDL3::Vertex)
       property indices : Array(Int32)
       property texture : SDL3::Texture? = nil
 
       def initialize(
         z_index : Int32,
-        @vertices : Array(LibSDL3::Vertex),
+        @vertices : Array(SDL3::Vertex),
         @indices : Array(Int32),
         @texture : SDL3::Texture? = nil
       )
@@ -91,9 +91,9 @@ module GSDL
     end
 
     abstract struct DrawPointsCommandBase < DrawColorCommand
-      property points : Array(LibSDL3::FPoint)
+      property points : Array(SDL3::FPoint)
 
-      def initialize(z_index : Int32, color : Color, @points : Array(LibSDL3::FPoint))
+      def initialize(z_index : Int32, color : Color, @points : Array(SDL3::FPoint))
         super(z_index: z_index, color: color)
       end
     end
@@ -163,13 +163,21 @@ module GSDL
 
       @draw_commands.each do |command|
         color = self.color
-        blend_mode = @r.get_render_draw_blend_mode
+        blend_mode = nil
 
         if command.is_a?(DrawColorCommand)
           self.color = command.color
 
           if command.color.a < 255
-            @r.set_render_draw_blend_mode(LibSDL3::SDL_BLENDMODE_BLEND)
+            blend_mode = self.blend_mode
+            self.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+          end
+        end
+
+        if command.is_a?(DrawGeometryCommand)
+          if command.vertices.any? { |v| v.fcolor.a < 1_f32 }
+            blend_mode = self.blend_mode
+            self.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
           end
         end
 
@@ -219,10 +227,10 @@ module GSDL
 
         if command.is_a?(DrawColorCommand)
           self.color = color
+        end
 
-          if command.color.a < 255
-            @r.set_render_draw_blend_mode(blend_mode)
-          end
+        if b_mode = blend_mode
+          self.blend_mode = b_mode
         end
       end
 

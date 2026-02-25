@@ -172,6 +172,9 @@ module GSDL
       end
     end
 
+    # TODO: this is broken for color alpha < 255, it needs to
+    # instead draw the center rect, and then then 4 sides (border radius height or width)
+    # because right now the cross is overlapping on itself, doubling up the alpha
     # Rotate the 4 corners of each cross-rect and draw as geometry
     private def draw_fill_cross(draw : Draw)
       # Horizontal rect
