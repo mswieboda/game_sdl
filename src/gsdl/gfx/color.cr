@@ -183,7 +183,7 @@ module GSDL
     SeaGreen    = GSDL.color(r: 46, g: 139, b: 87)
     GreenYellow = GSDL.color(r: 173, g: 255, b: 47)
 
-     # Blues
+    # Blues
     Blue          = GSDL.color(b: 255)
     LightBlue     = GSDL.color(r: 173, g: 216, b: 230)
     DarkBlue      = GSDL.color(b: 139)
