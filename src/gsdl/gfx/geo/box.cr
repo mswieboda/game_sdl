@@ -1,8 +1,6 @@
 require "./shape"
 
 module GSDL
-  alias Rect = SDL3::Rect
-
   class Box < Shape
     alias Indices = Array(Int32)
     alias ArcPoints = Array(Points)
