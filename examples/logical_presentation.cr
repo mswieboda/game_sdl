@@ -18,7 +18,7 @@ module GameEx
       super
       GSDL::Events.esc_exits = true
       @scene_manager = SceneManager.new
-      @draw.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
+      Game.draw_instance.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
     end
 
     def load_fonts
@@ -94,9 +94,9 @@ module GameEx
         (0...LOGICAL_WIDTH).step(tile_size) do |x|
           rect = GSDL::Rect.new(x: x, y: y, width: tile_size, height: tile_size)
           if ((x / tile_size) + (y / tile_size)) % 2 == 0
-            surface.fill_rect(rect, color1)
+            surface.fill_rect(rect, color1.to_sdl)
           else
-            surface.fill_rect(rect, color2)
+            surface.fill_rect(rect, color2.to_sdl)
           end
         end
       end

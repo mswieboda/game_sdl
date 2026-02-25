@@ -41,7 +41,7 @@ examples:
 	@$(MAKE) run EXAMPLE=platformer
 	@$(MAKE) run EXAMPLE=message
 	@$(MAKE) run EXAMPLE=menu
-	@$(MAKE) run EXAMPLE=switch_scene
+	@$(MAKE) run EXAMPLE=scene_switch
 	@$(MAKE) run EXAMPLE=logical_presentation
 
 build:

@@ -53,7 +53,7 @@ module GameEx
         types_per_second: 4_u8
       )
 
-      color = GSDL.color_all(160)
+      color = GSDL.gray(160)
       @text << GSDL::Text.new(
         text: "hello world!",
         origin: origin,

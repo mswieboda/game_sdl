@@ -48,14 +48,22 @@ module GameEx
     @message : Text
     @rainbow : Bool = false
 
-    MESSAGE_INFO = "Choose: UP / DOWN\n\nSelect: SPACE / ENTER / L MOUSE BUTTON\n\n TAB for rainbow options"
-    RANDOM_COLOR_SEED = rand(999)
+    MessageInfo = "Choose: UP / DOWN\n\nSelect: SPACE / ENTER / L MOUSE BUTTON\n\n TAB for rainbow options"
+    Rainbow = [
+      GSDL::Color::Red,
+      GSDL::Color::Orange,
+      GSDL::Color::Yellow,
+      GSDL::Color::Green,
+      GSDL::Color::Blue,
+      GSDL::Color::Indigo,
+      GSDL::Color::Violet
+    ]
 
     def initialize
       super(:menu)
 
       @message = Text.new(
-        text: MESSAGE_INFO,
+        text: MessageInfo,
         x: WIDTH / 2_f32,
         y: 32,
         origin: {0.5_f32, 0_f32},
@@ -78,7 +86,7 @@ module GameEx
 
 
       on_select = ->(id : Symbol) {
-        @message.text = MESSAGE_INFO + "\n\n\n\nSelected: #{id}"
+        @message.text = MessageInfo + "\n\n\n\nSelected: #{id}"
         nil
       }
 
@@ -120,7 +128,7 @@ module GameEx
     end
 
     def rainbow_color(index : Int32)
-      GSDL::Palettes::Rainbow[index]
+      Rainbow[index]
     end
 
     def update(dt : Float32)

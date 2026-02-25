@@ -139,7 +139,7 @@ module GSDL
     end
 
     def color : Color
-      @r.draw_color
+      Color.new(@r.draw_color)
     end
 
     def color=(color : Color)
@@ -468,7 +468,7 @@ module GSDL
 
         # save the old tint
         orig_tint = texture.tint
-        texture.tint = t
+        texture.tint = t.to_sdl
       end
 
       if src_rect = source_rect

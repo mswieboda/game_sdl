@@ -1,94 +1,149 @@
 module GSDL
-  alias Color = SDL3::Color
-  alias FColor = SDL3::FColor
+  alias Colors = Array(Color)
 
-  def self.color(r : UInt8 = 0, g : UInt8 = 0, b : UInt8 = 0, a : UInt8 = 255) : Color
-    SDL3.color(r: r, g: g, b: b, a: a)
+  def self.color(r : Int = 0, g : Int = 0, b : Int = 0, a : Int = 255) : Color
+    Color.new(r: r, g: g, b: b, a: a)
   end
 
-  def self.color_all(value : UInt8, a : UInt8 = 255) : Color
-    SDL3.color_all(value, a)
+  def self.gray(v : Int, a : Int = 255) : Color
+    Color.new(r: v, g: v, b: v, a: a)
   end
 
-  def self.fcolor(r : Float32 = 0_f32, g : Float32 = 0_f32, b : Float32 = 0_f32, a : Float32 = 1_f32) : Color
-    SDL3.fcolor(r: r, g: g, b: b, a: a)
-  end
-
-  def self.fcolor_all(value : Float32, a : Float32 = 1_f32) : Color
-    SDL3.fcolor(value, a)
-  end
-
-  def self.random_color(seed : Int, a : UInt8 = 255) : Color
-    rng = Random.new(seed)
-
-    Color.new(
-      r: rng.rand(256).to_u8,
-      g: rng.rand(256).to_u8,
-      b: rng.rand(256).to_u8,
-      a: a
-    )
-  end
-
-  def self.random_fcolor(seed : Int, a : Float32 = 1_f32) : FColor
-    rng = Random.new(seed)
-
-    FColor.new(
-      r: rng.rand.to_f32,
-      g: rng.rand.to_f32,
-      b: rng.rand.to_f32,
-      a: a
-    )
-  end
-
-  def self.random_chunks_color(seed : Int, size : UInt8 = 8, a : UInt8 = 255) : Color
-    rng = Random.new(seed)
-    rand_max = (256 // size) + 1
-
-    Color.new(
-      r: rng.rand(rand_max) * size,
-      g: rng.rand(rand_max) * size,
-      b: rng.rand(rand_max) * size,
-      a: a
-    )
+  def self.grey(v : Int, a : Int = 255) : Color
+    gray(v: v, a: a)
   end
 
   struct Color
-    # TODO: methods like:
-    # - darken
-    # - lighten
-    # - setting with percentages
-    # - lerping to another color
-    # - more research color math techniques/options online
-
-    def self.random(seed : Int, a : UInt8 = 255) : Color
-      GSDL.random_color(seed, a)
+    def self.from_hex(hex : String) : Color
+      Color.new(SDL3::Color.from_hex(hex: hex))
     end
 
-    def self.random_f(seed : Int, a : Float32 = 1_f32) : Color
-      GSDL.random_fcolor(seed, a)
+    def self.random(a : UInt8 = 255_u8) : Color
+      Color.new(SDL3::Color.random(a: a))
     end
 
-    def self.random_chunks(seed : Int, a : UInt8 = 255) : Color
-      GSDL.random_chunks_color(seed, a)
+    def self.random_chunks(size : UInt8 = 8_u8, a : UInt8 = 255_u8) : Color
+      Color.new(SDL3::Color.random_chunks(size: size, a: a))
     end
 
-    Transparent = GSDL.color_all(0, 0)
+    def self.random(seed : Int, a : Int = 255_u8) : Color
+      rng = Random.new(seed)
 
-    Black = GSDL.color_all(0)
-    White = GSDL.color_all(255)
+      Color.new(
+        red: rng.next_u8,
+        green: rng.next_u8,
+        blue: rng.next_u8,
+        alpha: a.to_u8
+      )
+    end
+
+    @internal : LibSDL3::Color
+
+    delegate r, g, b, a, to: @internal
+    delegate :"r=", :"g=", :"b=", :"a=", to: @internal
+    delegate to_fcolor, to_hex, to_u32, to: @internal
+
+    macro alias_property(new_name, old_name)
+      def {{new_name.id}}; {{old_name.id}}; end
+      def {{new_name.id}}=(value); self.{{old_name.id}} = value; end
+    end
+
+    alias_property red, r
+    alias_property green, g
+    alias_property blue, b
+    alias_property alpha, a
+
+    def initialize(color : LibSDL3::Color)
+      @internal = color
+    end
+
+    def initialize(r : Int = 0, g : Int = 0, b : Int = 0, a : Int = 255)
+      @internal = LibSDL3::Color.new(r: r.to_u8, g: g.to_u8, b: b.to_u8, a: a.to_u8)
+    end
+
+    def initialize(*, red : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8)
+    end
+
+    def initialize(*, green : Int)
+      @internal = LibSDL3::Color.new(g: green.to_u8)
+    end
+
+    def initialize(*, blue : Int)
+      @internal = LibSDL3::Color.new(b: blue.to_u8)
+    end
+
+    def initialize(*, red : Int, alpha : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8, a: alpha.to_u8)
+    end
+
+    def initialize(*, green : Int, alpha : Int)
+      @internal = LibSDL3::Color.new(g: green.to_u8, a: alpha.to_u8)
+    end
+
+    def initialize(*, blue : Int, alpha : Int)
+      @internal = LibSDL3::Color.new(b: blue.to_u8, a: alpha.to_u8)
+    end
+
+    def initialize(*, red : Int, green : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8)
+    end
+
+    def initialize(*, red : Int, blue : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8, b: blue.to_u8)
+    end
+
+    def initialize(*, green : Int, blue : Int)
+      @internal = LibSDL3::Color.new(g: green.to_u8, b: blue.to_u8)
+    end
+
+    def initialize(*, red : Int, green : Int, alpha : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8, a: alpha.to_u8)
+    end
+
+    def initialize(*, red : Int, blue : Int, alpha : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8, b: blue.to_u8, a: alpha.to_u8)
+    end
+
+    def initialize(*, green : Int, blue : Int, alpha : Int)
+      @internal = LibSDL3::Color.new(g: green.to_u8, b: blue.to_u8, a: alpha.to_u8)
+    end
+
+    def initialize(*, red : Int, green : Int, blue : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8, b: blue.to_u8)
+    end
+
+    def initialize(*, red : Int, green : Int, blue : Int, alpha : Int)
+      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8, b: blue.to_u8, a: alpha.to_u8)
+    end
+
+    # Returns the pointer to the internal struct for C calls
+    def to_unsafe
+      pointerof(@internal)
+    end
+
+    def to_sdl
+      @internal
+    end
+
+    # Colors
+    Transparent = GSDL.gray(0, 0)
+
+    Black = GSDL.gray(0)
+    White = GSDL.gray(255)
 
     # Grays
-    Gray       = GSDL.color_all(128)
+    Gray       = GSDL.gray(128)
     Grey       = Gray
-    LightGray  = GSDL.color_all(224)
+    LightGray  = GSDL.gray(224)
     LightGrey  = LightGray
-    DarkGray   = GSDL.color_all(160)
+    DarkGray   = GSDL.gray(160)
     DarkGrey   = DarkGray
-    DimGray    = GSDL.color_all(96)
+    DimGray    = GSDL.gray(96)
     DimGrey    = DimGray
-    DarkerGray = GSDL.color_all(64)
+    DarkerGray = GSDL.gray(64)
     DarkerGrey = DarkerGray
-    Silver     = GSDL.color_all(192)
+    Silver     = GSDL.gray(192)
     Snow       = GSDL.color(r: 255, g: 250, b: 250)
     WhiteSmoke = GSDL.color(r: 245, g: 245, b: 245)
     GunSmoke   = GSDL.color(r: 122, g: 124, b: 118)
@@ -164,30 +219,5 @@ module GSDL
     SandyWood   = GSDL.color(r: 244, g: 164, b: 96)
     Tan         = GSDL.color(r: 210, g: 180, b: 140)
     Moccasin    = GSDL.color(r: 255, g: 228, b: 181)
-  end
-
-  # Palettes
-  alias Palette = Array(Color)
-
-  module Palettes
-    Primary = [Color::Red, Color::Blue, Color::Yellow]
-    RYB = Primary
-    PrimaryRYB = Primary
-    RGB = [Color::Red, Color::Green, Color::Blue]
-    PrimaryRGB = RGB
-
-    Secondary = [Color::Orange, Color::Green, Color::Purple]
-    SecondaryRYB = Secondary
-    SecondaryRGB = [Color::Cyan, Color::Magenta, Color::Yellow]
-
-    Rainbow = [
-      Color::Red,
-      Color::Orange,
-      Color::Yellow,
-      Color::Green, # lime is the brighter green
-      Color::Blue,
-      Color::Indigo,
-      Color::Violet # Violet kinda looks like pink here
-    ]
   end
 end

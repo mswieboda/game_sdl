@@ -57,7 +57,7 @@ module GSDL
       text_engine = TextBase.renderer.create_text_engine
       @text_sdl = text_engine.create_text(font, @text)
 
-      @text_sdl.color = color
+      @text_sdl.color = color.to_sdl
       @text_sdl.direction = direction
       @text_sdl.font = font
       @text_sdl.wrap_whitespace_visible = false
@@ -86,11 +86,11 @@ module GSDL
     end
 
     def color : Color
-      @text_sdl.color
+      Color.new(@text_sdl.color)
     end
 
-    def color=(val : Color)
-      @text_sdl.color = val
+    def color=(color : Color)
+      @text_sdl.color = color.to_sdl
       on_content_changed
     end
 
@@ -98,8 +98,8 @@ module GSDL
       color
     end
 
-    def tint=(val : Color?)
-      self.color = val || Color::White
+    def tint=(tint : Color?)
+      self.color = tint || Color::White
     end
 
     def height
