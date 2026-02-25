@@ -40,7 +40,7 @@ module TileMapEx
       # Create a tileset from tiles.png, assuming it's one TILE_SIZE x TILE_SIZE tile
       # first_gid = 1, as 0 is usually reserved for empty tiles
       texture = GSDL::TextureManager.get("tiles")
-      tileset = GSDL::Tileset.new(texture, TILE_SIZE, TILE_SIZE, 1)
+      tileset = GSDL::Tileset.new(texture, TILE_SIZE, TILE_SIZE, first_gid: 1)
       tileset.solid_tiles = [1, 10]
 
       @tile_map = GSDL::TileMap.new(TILE_SIZE, TILE_SIZE)

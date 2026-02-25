@@ -107,16 +107,16 @@ module GSDL
 
     private def get_property(prop : String) : PropertyValue
       case prop
-      when "x"       then @target.x.to_f32
-      when "y"       then @target.y.to_f32
-      when "z_index" then @target.z_index.to_f32
+      when "x"        then @target.x.to_f32
+      when "y"        then @target.y.to_f32
+      when "z_index"  then @target.z_index.to_f32
       when "rotation" then @target.rotation.to_f32
-      when "scale"   then @target.scale.try { |s| {s[0].to_f32, s[1].to_f32} } || {1_f32, 1_f32}
-      when "scale_x" then @target.scale_x.to_f32
-      when "scale_y" then @target.scale_y.to_f32
-      when "tint"    then @target.tint || Color::White
-      when "color"   then @target.color
-      else                0_f32
+      when "scale"    then @target.scale.try { |s| {s[0].to_f32, s[1].to_f32} } || {1_f32, 1_f32}
+      when "scale_x"  then @target.scale_x.to_f32
+      when "scale_y"  then @target.scale_y.to_f32
+      when "tint"     then @target.tint || Color::White
+      when "color"    then @target.color
+      else                 0_f32
       end
     end
 
