@@ -75,7 +75,7 @@ module GSDL
         @fill_vertices << Vertex.new(point: p4, color: color)
 
         @fill_indices = [0, 1, 2, 0, 2, 3]
-        
+
         @outline_arc_points << [
           Point.new(p1),
           Point.new(p2),
@@ -116,7 +116,7 @@ module GSDL
         angle = Math::PI + i * (0.5 * Math::PI / segments)
         vx = center_x + x_dir * radius * Math.cos(angle)
         vy = center_y + y_dir * radius * Math.sin(angle)
-        
+
         rv = rotate_point(vx, vy)
         @fill_vertices << Vertex.new(rv, color)
         points << Point.new(rv)
@@ -169,50 +169,55 @@ module GSDL
       end
     end
 
-    # TODO: this is broken for color alpha < 255, it needs to
-    # instead draw the center rect, and then then 4 sides (border radius height or width)
-    # because right now the cross is overlapping on itself, doubling up the alpha
     # Rotate the 4 corners of each cross-rect and draw as geometry
     private def draw_fill_cross(draw : Draw)
-      # Horizontal rect
-      hx = draw_x.to_f32 + draw_border_radius.to_f32
+      r = draw_border_radius.to_f32
+
+      # 1. Center-vertical strip (spans full height, but not full width)
+      # x ranges from [draw_x + r, draw_x + draw_width - r]
+      # y ranges from [draw_y, draw_y + draw_height]
+      hx = draw_x.to_f32 + r
       hy = draw_y.to_f32
-      hw = draw_width.to_f32 - draw_border_radius.to_f32 * 2
+      hw = draw_width.to_f32 - r * 2
       hh = draw_height.to_f32
-      
-      hp1 = rotate_point(hx, hy)
-      hp2 = rotate_point(hx + hw, hy)
-      hp3 = rotate_point(hx + hw, hy + hh)
-      hp4 = rotate_point(hx, hy + hh)
-      
+
+      draw_rotated_rect(draw, hx, hy, hw, hh)
+
+      # 2. Left side strip (spans partial height, from y + r to y + h - r)
+      # x ranges from [draw_x, draw_x + r]
+      # y ranges from [draw_y + r, draw_y + draw_height - r]
+      lx = draw_x.to_f32
+      ly = draw_y.to_f32 + r
+      lw = r
+      lh = draw_height.to_f32 - r * 2
+
+      draw_rotated_rect(draw, lx, ly, lw, lh)
+
+      # 3. Right side strip (spans partial height, from y + r to y + h - r)
+      # x ranges from [draw_x + draw_width - r, draw_x + draw_width]
+      # y ranges from [draw_y + r, draw_y + draw_height - r]
+      rx = draw_x.to_f32 + draw_width.to_f32 - r
+      ry = draw_y.to_f32 + r
+      rw = r
+      rh = draw_height.to_f32 - r * 2
+
+      draw_rotated_rect(draw, rx, ry, rw, rh)
+    end
+
+    private def draw_rotated_rect(draw : Draw, rx, ry, rw, rh)
+      return if rw <= 0 || rh <= 0
+
+      p1 = rotate_point(rx, ry)
+      p2 = rotate_point(rx + rw, ry)
+      p3 = rotate_point(rx + rw, ry + rh)
+      p4 = rotate_point(rx, ry + rh)
+
       draw.geometry(
         vertices: [
-          Vertex.new(hp1, color),
-          Vertex.new(hp2, color),
-          Vertex.new(hp3, color),
-          Vertex.new(hp4, color)
-        ],
-        indices: [0, 1, 2, 0, 2, 3],
-        z_index: z_index
-      )
-
-      # Vertical rect
-      vx = draw_x.to_f32
-      vy = draw_y.to_f32 + draw_border_radius.to_f32
-      vw = draw_width.to_f32
-      vh = draw_height.to_f32 - draw_border_radius.to_f32 * 2
-
-      vp1 = rotate_point(vx, vy)
-      vp2 = rotate_point(vx + vw, vy)
-      vp3 = rotate_point(vx + vw, vy + vh)
-      vp4 = rotate_point(vx, vy + vh)
-
-      draw.geometry(
-        vertices: [
-          Vertex.new(vp1, color),
-          Vertex.new(vp2, color),
-          Vertex.new(vp3, color),
-          Vertex.new(vp4, color)
+          Vertex.new(p1, color),
+          Vertex.new(p2, color),
+          Vertex.new(p3, color),
+          Vertex.new(p4, color)
         ],
         indices: [0, 1, 2, 0, 2, 3],
         z_index: z_index
@@ -291,7 +296,7 @@ module GSDL
         border_thickness.to_i.times do |i|
           # Offsets for nested lines if thickness > 1
           off = i.to_f32
-          
+
           # 4 corners
           p1 = rotate_point(draw_x + off, draw_y + off)
           p2 = rotate_point(draw_x + draw_width - off, draw_y + off)
