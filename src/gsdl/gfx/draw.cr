@@ -152,8 +152,8 @@ module GSDL
 
     # NOTE: only intended to be used within GSDL, so end-user doesn't
     #   have to deal with SDL3 lib directly
-    def create_texture(surface : SDL3::Surface)
-      SDL3::Texture.from_surface(to_sdl, surface)
+    def create_texture(surface : SDL3::Surface) : Texture
+      Texture.from_surface(self, surface)
     end
 
     def debug_text(*args, **options)
@@ -199,9 +199,9 @@ module GSDL
           command.text._draw
         when DrawGeometryCommand
           if texture = command.texture
-            @r.render_geometry(texture, command.vertices, command.indices)
+            @r.render_geometry(texture: texture, vertices: command.vertices, indices: command.indices)
           else
-            @r.render_geometry(command.vertices, command.indices)
+            @r.render_geometry(vertices: command.vertices, indices: command.indices)
           end
         when DrawFRectCommand
           if command.outline?
@@ -244,12 +244,12 @@ module GSDL
 
     # geometry
 
-    def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : SDL3::Texture? = nil)
+    def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : Texture? = nil)
       @draw_commands << DrawGeometryCommand.new(
         z_index: z_index,
         vertices: vertices.map(&.to_sdl),
         indices: indices,
-        texture: texture
+        texture: texture.try(&.to_sdl)
       )
     end
 
@@ -402,7 +402,7 @@ module GSDL
     # textures
 
     def texture(
-      texture : SDL3::Texture,
+      texture : Texture,
       x : Float32 = 0.0_f32,
       y : Float32 = 0.0_f32,
       source_rect : FRect? = nil,
@@ -428,7 +428,7 @@ module GSDL
     end
 
     def texture_rotated(
-      texture : SDL3::Texture,
+      texture : Texture,
       x : Float32 = 0.0_f32,
       y : Float32 = 0.0_f32,
       source_rect : FRect? = nil,
@@ -445,7 +445,7 @@ module GSDL
 
       if draw_immediately
         _draw_texture_rotated(
-          texture: texture,
+          texture: texture.to_sdl,
           source_rect: source_rect.try(&.to_sdl),
           dest_rect: actual_dest_rect.to_sdl,
           angle: angle.to_f64,
@@ -457,7 +457,7 @@ module GSDL
       else
         @draw_commands << DrawTextureCommand.new(
           z_index: z_index,
-          texture: texture,
+          texture: texture.to_sdl,
           source_rect: source_rect.try(&.to_sdl),
           dest_rect: actual_dest_rect.to_sdl,
           angle: angle.to_f64,
@@ -529,12 +529,12 @@ module GSDL
       end
     end
 
-    def target=(texture : SDL3::Texture?)
-      @r.set_render_target(texture)
+    def target=(texture : Texture?)
+      @r.set_render_target(texture.to_sdl)
     end
 
-    def target : SDL3::Texture?
-      @r.get_render_target
+    def target : Texture?
+      Texture.new(@r.get_render_target)
     end
 
     def to_sdl

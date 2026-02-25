@@ -54,6 +54,7 @@ module GSDL
         font.align = align
       end
 
+      # TODO: do this from the Draw class eventually, instead of SDL3::Renderer
       text_engine = TextBase.renderer.create_text_engine
       @text_sdl = text_engine.create_text(font, @text)
 

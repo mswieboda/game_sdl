@@ -15,7 +15,7 @@ module GSDL
       Point.new(fpoint: vertex.point.to_sdl)
     end
 
-    def initialize(fpoint : LibSDL3::FPoint)
+    def initialize(fpoint : SDL3::FPoint)
       @internal = fpoint
     end
 

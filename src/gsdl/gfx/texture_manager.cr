@@ -3,10 +3,10 @@ module GSDL
     @@instance : TextureManager? = nil
 
     @draw : Draw
-    @textures : Hash(String, SDL3::Texture)
+    @textures : Hash(String, Texture)
 
     private def initialize(@draw : Draw)
-      @textures = Hash(String, SDL3::Texture).new
+      @textures = Hash(String, Texture).new
     end
 
     # Sets up the singleton instance of TextureManager with the given Draw.
@@ -27,7 +27,7 @@ module GSDL
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,
     # prepending GSDL::AssetManager.asset_path.
-    def self.load(key : String, path_key : String) : SDL3::Texture
+    def self.load(key : String, path_key : String) : Texture
       # NOTE: In release builds, 'path_key' refers to the key in the asset pack.
       # In debug builds, 'path_key' refers to the relative path within @@asset_path.
       # example path_key in both cases: 'gfx/skeleton.png'
@@ -54,13 +54,13 @@ module GSDL
 
     # Loads a texture from raw byte data and associates it with a key.
     # This method is primarily intended to be called by load if in release mode
-    def self.load_from_memory(key : String, io : SDL3::IOStream) : SDL3::Texture
+    def self.load_from_memory(key : String, io : SDL3::IOStream) : Texture
       instance.load_from_memory(key, io)
     end
 
     # Retrieves a loaded texture by its key.
     # Returns nil if the texture is not found.
-    def self.get(key : String) : SDL3::Texture
+    def self.get(key : String) : Texture
       instance.get(key) # Delegate to the internal instance method
     end
 
@@ -76,25 +76,27 @@ module GSDL
 
     # --- Instance methods (called by class methods via the singleton instance) ---
 
-    def load(key : String, path : String) : SDL3::Texture
+    def load(key : String, path : String) : Texture
       if @textures.has_key?(key)
         return @textures[key]
       end
-      texture = SDL3::Image.load_texture(@draw.to_sdl, path)
+      texture_sdl = SDL3::Image.load_texture(@draw.to_sdl, path)
+      texture = Texture.new(texture_sdl)
       @textures[key] = texture
       texture
     end
 
-    def load_from_memory(key : String, io : SDL3::IOStream) : SDL3::Texture
+    def load_from_memory(key : String, io : SDL3::IOStream) : Texture
       if @textures.has_key?(key)
         return @textures[key]
       end
-      texture = SDL3::Image.load_texture_io(@draw.to_sdl, io, close_io: true)
+      texture_sdl = SDL3::Image.load_texture_io(@draw.to_sdl, io, close_io: true)
+      texture = Texture.new(texture_sdl)
       @textures[key] = texture
       texture
     end
 
-    def get(key : String) : SDL3::Texture
+    def get(key : String) : Texture
       @textures.fetch(key) do
         raise "Texture with key '#{key}' not found in TextureManager. Was it loaded?"
       end

@@ -1,6 +1,6 @@
 module GSDL
   class Tileset
-    property texture : SDL3::Texture
+    property texture : Texture
     property tile_width : Int32
     property tile_height : Int32
     property columns : Int32

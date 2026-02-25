@@ -17,7 +17,7 @@ module GSDL
 
     getter tweens : Array(Tween) = [] of Tween
 
-    @texture : SDL3::Texture
+    @texture : Texture
 
     delegate size, to: @texture
 

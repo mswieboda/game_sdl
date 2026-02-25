@@ -57,24 +57,20 @@ module GSDL
       w, h = size
       return if w <= 0 || h <= 0
 
+      # TODO: do this from the Draw class eventually, instead of SDL3::Renderer
       renderer = TextBase.renderer
       
       # Create a target texture
       # We use RGBA8888 for high quality and alpha support
-      tex = SDL3::Texture.create(
-        renderer, 
-        SDL3::PixelFormat::RGBA8888,
-        SDL3::TextureAccess::Target,
-        w, h
-      )
-      tex.set_blend_mode(LibSDL3::SDL_BLENDMODE_BLEND)
+      tex = Texture.new(width: w, height: h, access: TextureAccess::Target)
+      tex.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
 
       # Save current target and scale
       old_target = renderer.get_render_target
       old_scale = renderer.scale
 
       # Render text to texture
-      renderer.set_render_target(tex)
+      renderer.set_render_target(tex.to_sdl)
       renderer.scale = {1_f32, 1_f32} # Draw text at 1:1 to its cache
       
       # Clear texture to transparent
