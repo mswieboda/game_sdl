@@ -50,6 +50,22 @@ module GSDL
       @internal = SDL3::FRect.new(x: point.x.to_f32, y: point.y.to_f32, w: w.to_f32, h: height.to_f32)
     end
 
+    def left
+      x
+    end
+
+    def right
+      x + width
+    end
+
+    def top
+      y
+    end
+
+    def bottom
+      y + height
+    end
+
     def to_rect
       Rect.new(x: x.to_i, y: y.to_i, w: w.to_i, h: h.to_i)
     end
@@ -63,11 +79,13 @@ module GSDL
     end
 
     def self.overlaps?(rect_a : FRect, rect_b : FRect) : Bool
-      # Check if the rectangles overlap on both axes
-      rect_a.x < rect_b.x + rect_b.w &&
-      rect_a.x + rect_a.w > rect_b.x &&
-      rect_a.y < rect_b.y + rect_b.h &&
-      rect_a.y + rect_a.h > rect_b.y
+      return false if rect_a.right  <= rect_b.left
+      return false if rect_a.left   >= rect_b.right
+      return false if rect_a.bottom <= rect_b.top
+      return false if rect_a.top    >= rect_b.bottom
+
+      # If no gaps were found, the boxes must be overlapping
+      true
     end
 
     def overlaps?(rect : FRect) : Bool
@@ -75,8 +93,8 @@ module GSDL
     end
 
     def in?(x : Num, y : Num)
-      x >= self.x && x <= self.x + self.w &&
-        y >= self.y && y <= self.y + self.h
+      x >= self.x && x <= self.right &&
+        y >= self.y && y <= self.bottom
     end
   end
 end

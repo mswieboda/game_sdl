@@ -141,11 +141,27 @@ module GSDL
     end
 
     def w=(width : Num)
-      self.width=(width)
+      self.width = width
     end
 
     def h=(height : Num)
-      self.height=(height)
+      self.height = height
+    end
+
+    def left
+      x
+    end
+
+    def right
+      x + width
+    end
+
+    def top
+      y
+    end
+
+    def bottom
+      y + height
     end
 
     def to_rect
