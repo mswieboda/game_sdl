@@ -67,10 +67,7 @@ module GSDL
     end
 
     def distance : Float32
-      dx = x2 - x1
-      dy = y2 - y1
-
-      Math.hypot(dx.to_f32, dy.to_f32)
+      Point.distance(x2 - x1, y2 - y1)
     end
 
     def center(x : Num = 0, y : Num = 0, width : Num = 1, height : Num = 1)

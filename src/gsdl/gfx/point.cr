@@ -7,8 +7,12 @@ module GSDL
     delegate x, :"x=", to: @internal
     delegate y, :"y=", to: @internal
 
+    def self.distance(dx : Num, dy : Num) : Float32
+      Math.hypot(dx.to_f32, dy.to_f32)
+    end
+
     def self.from(vertex : Vertex)
-      Point.new(fpoint: vertex.position)
+      Point.new(fpoint: vertex.point.to_sdl)
     end
 
     def initialize(fpoint : LibSDL3::FPoint)
@@ -23,11 +27,8 @@ module GSDL
       @internal = SDL3::FPoint.new(x: point[0].to_f32, y: point[1].to_f32)
     end
 
-    def distance_to(point : Point) : Float32
-      dx = point.x - x
-      dy = point.y - y
-
-      Math.hypot(dx.to_f32, dy.to_f32)
+    def distance(point : Point | Vertex) : Float32
+      Point.distance(point.x - x, point.y - y)
     end
 
     def to_unsafe

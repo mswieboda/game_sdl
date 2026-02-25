@@ -5,7 +5,6 @@ module GSDL
   alias Rect = SDL3::Rect
 
   class Box < Shape
-    alias Vertices = Array(Vertex)
     alias Indices = Array(Int32)
     alias ArcPoints = Array(Points)
 
@@ -65,20 +64,18 @@ module GSDL
       @fill_indices = [] of Int32
       @outline_arc_points = [] of Points
 
+      # For rotated box with sharp corners, we need to generate vertices
       if rotation != 0 && draw_border_radius <= 0
-        # For rotated box with sharp corners, we need to generate vertices
-        fcolor = color.to_fcolor
-        
         # Define 4 corners relative to draw_x, draw_y
         p1 = rotate_point(draw_x, draw_y)
         p2 = rotate_point(draw_x + draw_width, draw_y)
         p3 = rotate_point(draw_x + draw_width, draw_y + draw_height)
         p4 = rotate_point(draw_x, draw_y + draw_height)
 
-        @fill_vertices << Vertex.new(p1[0], p1[1], fcolor)
-        @fill_vertices << Vertex.new(p2[0], p2[1], fcolor)
-        @fill_vertices << Vertex.new(p3[0], p3[1], fcolor)
-        @fill_vertices << Vertex.new(p4[0], p4[1], fcolor)
+        @fill_vertices << Vertex.new(point: p1, color: color)
+        @fill_vertices << Vertex.new(point: p2, color: color)
+        @fill_vertices << Vertex.new(point: p3, color: color)
+        @fill_vertices << Vertex.new(point: p4, color: color)
 
         @fill_indices = [0, 1, 2, 0, 2, 3]
         
@@ -111,7 +108,7 @@ module GSDL
 
       # Center vertex (rotated)
       cp = rotate_point(center_x, center_y)
-      @fill_vertices << Vertex.new(cp[0], cp[1], color.to_fcolor)
+      @fill_vertices << Vertex.new(cp, color)
 
       start_v = @fill_vertices.size
 
@@ -124,7 +121,7 @@ module GSDL
         vy = center_y + y_dir * radius * Math.sin(angle)
         
         rv = rotate_point(vx, vy)
-        @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
+        @fill_vertices << Vertex.new(rv, color)
         points << Point.new(rv)
       end
 
@@ -175,10 +172,8 @@ module GSDL
       end
     end
 
+    # Rotate the 4 corners of each cross-rect and draw as geometry
     private def draw_fill_cross(draw : Draw)
-      # Rotate the 4 corners of each cross-rect and draw as geometry
-      fcolor = color.to_fcolor
-      
       # Horizontal rect
       hx = draw_x.to_f32 + draw_border_radius.to_f32
       hy = draw_y.to_f32
@@ -192,10 +187,10 @@ module GSDL
       
       draw.geometry(
         vertices: [
-          Vertex.new(hp1[0], hp1[1], fcolor),
-          Vertex.new(hp2[0], hp2[1], fcolor),
-          Vertex.new(hp3[0], hp3[1], fcolor),
-          Vertex.new(hp4[0], hp4[1], fcolor)
+          Vertex.new(hp1, color),
+          Vertex.new(hp2, color),
+          Vertex.new(hp3, color),
+          Vertex.new(hp4, color)
         ],
         indices: [0, 1, 2, 0, 2, 3],
         z_index: z_index
@@ -214,10 +209,10 @@ module GSDL
 
       draw.geometry(
         vertices: [
-          Vertex.new(vp1[0], vp1[1], fcolor),
-          Vertex.new(vp2[0], vp2[1], fcolor),
-          Vertex.new(vp3[0], vp3[1], fcolor),
-          Vertex.new(vp4[0], vp4[1], fcolor)
+          Vertex.new(vp1, color),
+          Vertex.new(vp2, color),
+          Vertex.new(vp3, color),
+          Vertex.new(vp4, color)
         ],
         indices: [0, 1, 2, 0, 2, 3],
         z_index: z_index

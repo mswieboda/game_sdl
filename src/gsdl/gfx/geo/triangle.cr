@@ -154,18 +154,17 @@ module GSDL
       @y3 = y1 + v3y
     end
 
-    def vertices : Array(Vertex)
+    def vertices : Vertices
       vertices = [] of Vertex
-      fcolor = color.to_fcolor
 
       # Rotate each corner point
       p1 = rotate_point(draw_x1, draw_y1)
       p2 = rotate_point(draw_x2, draw_y2)
       p3 = rotate_point(draw_x3, draw_y3)
 
-      vertices << Vertex.new(p1[0], p1[1], fcolor)
-      vertices << Vertex.new(p2[0], p2[1], fcolor)
-      vertices << Vertex.new(p3[0], p3[1], fcolor)
+      vertices << Vertex.new(p1, color)
+      vertices << Vertex.new(p2, color)
+      vertices << Vertex.new(p3, color)
     end
 
     def indices : Array(Int32)

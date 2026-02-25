@@ -41,7 +41,7 @@ module GSDL
 
     delegate r, g, b, a, to: @internal
     delegate :"r=", :"g=", :"b=", :"a=", to: @internal
-    delegate to_fcolor, to_hex, to_u32, to: @internal
+    delegate to_hex, to_u32, to: @internal
 
     macro alias_property(new_name, old_name)
       def {{new_name.id}}; {{old_name.id}}; end
@@ -117,13 +117,18 @@ module GSDL
       @internal = SDL3::Color.new(r: red.to_u8, g: green.to_u8, b: blue.to_u8, a: alpha.to_u8)
     end
 
-    # Returns the pointer to the internal struct for C calls
-    def to_unsafe
-      pointerof(@internal)
+    def to_fcolor
+      FColor.new(@internal.to_fcolor)
     end
 
+    # Returns the wrapped `SDL3::Color`
     def to_sdl
       @internal
+    end
+
+    # Returns the pointer to the internal `SDL3::Color` struct for C calls
+    def to_unsafe
+      pointerof(@internal)
     end
 
     # Colors

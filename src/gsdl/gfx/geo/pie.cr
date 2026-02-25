@@ -2,7 +2,6 @@ require "./shape"
 
 module GSDL
   class Pie < Circle
-    alias Vertices = Array(Vertex)
     alias Indices = Array(Int32)
 
     DefaultStartAngle = 0_f32
@@ -62,7 +61,7 @@ module GSDL
 
         # Center vertex (rotated)
         cp = rotate_point(center_x, center_y)
-        @fill_vertices << Vertex.new(cp[0], cp[1], color.to_fcolor)
+        @fill_vertices << Vertex.new(cp, color)
         center_point = Point.new(cp)
         points << center_point
 
@@ -74,7 +73,7 @@ module GSDL
           arc_y = center_y + (draw_radius_y / 2) * Math.sin(angle)
           
           rv = rotate_point(arc_x, arc_y)
-          @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
+          @fill_vertices << Vertex.new(rv, color)
           points << Point.new(rv)
         end
 

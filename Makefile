@@ -48,7 +48,7 @@ examples:
 build:
 	@echo "Building example: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" --no-debug
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" --no-debug --error-trace
 
 run: build
 	@echo "Running example: $(EXAMPLE)"

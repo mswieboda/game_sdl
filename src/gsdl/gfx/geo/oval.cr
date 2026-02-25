@@ -2,7 +2,6 @@ require "./shape"
 
 module GSDL
   class Oval < Shape
-    alias Vertices = Array(Vertex)
     alias Indices = Array(Int32)
     alias ArcPoints = Array(Points)
 
@@ -120,7 +119,7 @@ module GSDL
 
       # Center vertex (rotated)
       cp = rotate_point(center_x, center_y)
-      @fill_vertices << Vertex.new(cp[0], cp[1], color.to_fcolor)
+      @fill_vertices << Vertex.new(cp, color)
 
       start_v = @fill_vertices.size
 
@@ -133,7 +132,7 @@ module GSDL
         vy = center_y + y_dir * corner_radius_y * Math.sin(angle)
         
         rv = rotate_point(vx, vy)
-        @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
+        @fill_vertices << Vertex.new(rv, color)
         points << Point.new(rv)
       end
 

@@ -1,10 +1,4 @@
 module GSDL
-  alias Vertex = SDL3::Vertex
-
-  def self.vertex(x : Int32 | Float32, y : Int32 | Float32, color : FColor) : Vertex
-    Vertex.new(x.to_f32, y.to_f32, color)
-  end
-
   class Draw
     @r : SDL3::Renderer
 
@@ -55,13 +49,13 @@ module GSDL
     end
 
     struct DrawGeometryCommand < DrawCommand
-      property vertices : Array(Vertex)
+      property vertices : Array(LibSDL3::Vertex)
       property indices : Array(Int32)
       property texture : SDL3::Texture? = nil
 
       def initialize(
         z_index : Int32,
-        @vertices : Array(Vertex),
+        @vertices : Array(LibSDL3::Vertex),
         @indices : Array(Int32),
         @texture : SDL3::Texture? = nil
       )
@@ -239,10 +233,10 @@ module GSDL
 
     # geometry
 
-    def geometry(vertices : Array(Vertex), indices : Array(Int32), z_index : Int32 = 0, texture : SDL3::Texture? = nil)
+    def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : SDL3::Texture? = nil)
       @draw_commands << DrawGeometryCommand.new(
         z_index: z_index,
-        vertices: vertices,
+        vertices: vertices.map(&.to_sdl),
         indices: indices,
         texture: texture
       )

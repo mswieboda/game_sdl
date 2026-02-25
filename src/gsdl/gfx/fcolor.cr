@@ -103,7 +103,16 @@ module GSDL
       @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32, a: alpha.to_f32)
     end
 
-    # Returns the pointer to the internal struct for C calls
+    def to_color
+      Color.new(@internal.to_color)
+    end
+
+    # Returns the wrapped `SDL3::FColor`
+    def to_sdl
+      @internal
+    end
+
+    # Returns the pointer to the internal `SDL3::FColor` struct for C calls
     def to_unsafe
       pointerof(@internal)
     end
