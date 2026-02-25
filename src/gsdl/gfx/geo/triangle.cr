@@ -180,17 +180,17 @@ module GSDL
     end
 
     private def draw_outline(draw : Draw)
-      v = vertices
-      lines = v.map { |vtx| FPoint.new(x: vtx.position.x.to_f32, y: vtx.position.y.to_f32) }
-      lines << FPoint.new(x: v.first.position.x.to_f32, y: v.first.position.y.to_f32)
+      vs = vertices
+      lines = vs.map { |v| Point.from(v) }
+      lines << Point.from(vs.first)
 
       draw.lines(points: lines, color: color, z_index: z_index)
     end
 
     private def draw_border(draw : Draw)
-      v = vertices
-      original_lines = v.map { |vtx| FPoint.new(x: vtx.position.x.to_f32, y: vtx.position.y.to_f32) }
-      original_lines << FPoint.new(x: v.first.position.x.to_f32, y: v.first.position.y.to_f32)
+      vs = vertices
+      original_lines = vs.map { |v| Point.from(v) }
+      original_lines << Point.from(vs.first)
 
       border_thickness.to_i.times do |i|
         current_lines = original_lines.map(&.dup) # Work on a copy of points for each iteration
@@ -229,11 +229,11 @@ module GSDL
       end
     end
 
-    # Generic helper to find the index of the min/max value of a property in an Array(FPoint)
+    # Generic helper to find the index of the min/max value of a `Points` property
     private def _find_index_by_accessor(
-      points : Array(FPoint),
+      points : Points,
       direction : Symbol, # :min or :max
-      &accessor : FPoint -> Num
+      &accessor : Point -> Num
     ) : Int32
       return 0 if points.empty? # Return first index if empty or handle error
 

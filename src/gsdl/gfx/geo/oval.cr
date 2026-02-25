@@ -4,7 +4,7 @@ module GSDL
   class Oval < Shape
     alias Vertices = Array(Vertex)
     alias Indices = Array(Int32)
-    alias ArcPoints = Array(Array(FPoint))
+    alias ArcPoints = Array(Points)
 
     properties_changed({
       radius_x: Num = 16,
@@ -14,7 +14,7 @@ module GSDL
     getters_update_geometry({
       fill_vertices: Vertices = [] of Vertex,
       fill_indices: Indices = [] of Int32,
-      outline_arc_points: ArcPoints = [] of Array(FPoint)
+      outline_arc_points: ArcPoints = [] of Points
     })
 
     def initialize(@radius_x : Num = 16, @radius_y : Num = 16, rotation : Num = 0)
@@ -90,7 +90,7 @@ module GSDL
     def update_geometry
       @fill_vertices = [] of Vertex
       @fill_indices = [] of Int32
-      @outline_arc_points = [] of Array(FPoint)
+      @outline_arc_points = [] of Points
 
       if draw_radius_x > 0 && draw_radius_y > 0
         # top left, top right, bottom left, bottom right
@@ -125,7 +125,7 @@ module GSDL
       start_v = @fill_vertices.size
 
       # Arc vertices (rotated)
-      points = [] of FPoint
+      points = [] of Point
 
       (segments + 1).times do |i|
         angle = Math::PI + i * (0.5 * Math::PI / segments)
@@ -134,7 +134,7 @@ module GSDL
         
         rv = rotate_point(vx, vy)
         @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
-        points << FPoint.new(rv[0], rv[1])
+        points << Point.new(rv)
       end
 
       @outline_arc_points << points

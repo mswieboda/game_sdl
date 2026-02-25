@@ -66,6 +66,13 @@ module GSDL
       y1 - ((y2 - y1) * scale_y * origin_y)
     end
 
+    def distance : Float32
+      dx = x2 - x1
+      dy = y2 - y1
+
+      Math.hypot(dx.to_f32, dy.to_f32)
+    end
+
     def center(x : Num = 0, y : Num = 0, width : Num = 1, height : Num = 1)
       # Capture the current relative vector before x1/y1 are changed
       vx = x2 - x1

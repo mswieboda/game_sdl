@@ -51,19 +51,19 @@ module GSDL
     def update_geometry
       @fill_vertices = [] of Vertex
       @fill_indices = [] of Int32
-      @outline_arc_points = [] of Array(FPoint)
+      @outline_arc_points = [] of Points
 
       if radius > 0
         # TODO: calculate this, like resolution in Oval
         segments = [12, (Math.sqrt(draw_radius_x) * 4).to_i].max
         angle_step = (end_angle - start_angle) / segments
 
-        points = [] of FPoint
+        points = [] of Point
 
         # Center vertex (rotated)
         cp = rotate_point(center_x, center_y)
         @fill_vertices << Vertex.new(cp[0], cp[1], color.to_fcolor)
-        center_point = FPoint.new(cp[0], cp[1])
+        center_point = Point.new(cp)
         points << center_point
 
 
@@ -75,7 +75,7 @@ module GSDL
           
           rv = rotate_point(arc_x, arc_y)
           @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
-          points << FPoint.new(rv[0], rv[1])
+          points << Point.new(rv)
         end
 
         points << center_point

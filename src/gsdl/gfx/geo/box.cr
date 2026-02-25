@@ -7,7 +7,7 @@ module GSDL
   class Box < Shape
     alias Vertices = Array(Vertex)
     alias Indices = Array(Int32)
-    alias ArcPoints = Array(Array(FPoint))
+    alias ArcPoints = Array(Points)
 
     properties_changed({
       width: Num = 0,
@@ -18,7 +18,7 @@ module GSDL
     getters_update_geometry({
       fill_vertices: Vertices = [] of Vertex,
       fill_indices: Indices = [] of Int32,
-      outline_arc_points: ArcPoints = [] of Array(FPoint)
+      outline_arc_points: ArcPoints = [] of Points
     })
 
     def initialize(@width : Num = 1, @height : Num = 1, @border_radius : Num = 0, rotation : Num = 0)
@@ -63,7 +63,7 @@ module GSDL
     def update_geometry
       @fill_vertices = [] of Vertex
       @fill_indices = [] of Int32
-      @outline_arc_points = [] of Array(FPoint)
+      @outline_arc_points = [] of Points
 
       if rotation != 0 && draw_border_radius <= 0
         # For rotated box with sharp corners, we need to generate vertices
@@ -83,11 +83,11 @@ module GSDL
         @fill_indices = [0, 1, 2, 0, 2, 3]
         
         @outline_arc_points << [
-          FPoint.new(p1[0], p1[1]),
-          FPoint.new(p2[0], p2[1]),
-          FPoint.new(p3[0], p3[1]),
-          FPoint.new(p4[0], p4[1]),
-          FPoint.new(p1[0], p1[1])
+          Point.new(p1),
+          Point.new(p2),
+          Point.new(p3),
+          Point.new(p4),
+          Point.new(p1)
         ]
       elsif draw_border_radius > 0
         # top left, top right, bottom left, bottom right
@@ -116,7 +116,7 @@ module GSDL
       start_v = @fill_vertices.size
 
       # Arc vertices (rotated)
-      points = [] of FPoint
+      points = [] of Point
 
       (segments + 1).times do |i|
         angle = Math::PI + i * (0.5 * Math::PI / segments)
@@ -125,7 +125,7 @@ module GSDL
         
         rv = rotate_point(vx, vy)
         @fill_vertices << Vertex.new(rv[0], rv[1], color.to_fcolor)
-        points << FPoint.new(rv[0], rv[1])
+        points << Point.new(rv)
       end
 
       @outline_arc_points << points

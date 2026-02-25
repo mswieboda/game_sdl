@@ -11,5 +11,4 @@ require "./gsdl/input/*"
 
 module GSDL
   alias Num = Int32 | Float32
-  alias FPoint = SDL3::FPoint
 end

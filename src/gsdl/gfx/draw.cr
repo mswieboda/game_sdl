@@ -97,9 +97,9 @@ module GSDL
     end
 
     abstract struct DrawPointsCommandBase < DrawColorCommand
-      property points : Array(FPoint)
+      property points : Array(LibSDL3::FPoint)
 
-      def initialize(z_index : Int32, color : Color, @points : Array(FPoint))
+      def initialize(z_index : Int32, color : Color, @points : Array(LibSDL3::FPoint))
         super(z_index: z_index, color: color)
       end
     end
@@ -259,25 +259,29 @@ module GSDL
       )
     end
 
-    def point(point : FPoint, color = Color::White, z_index = 0)
+    def point(point : Point, color = Color::White, z_index = 0)
       point(x: point.x, y: point.y, color: color, z_index: z_index)
     end
 
-    def points(points : Array(FPoint), color = Color::White, z_index = 0)
+    def points(points : Points, color = Color::White, z_index = 0)
       @draw_commands << DrawPointsCommand.new(
-        points: points,
+        points: points.map(&.to_sdl),
         color: color,
         z_index: z_index
       )
     end
 
+    # draws a single `Pixel`
     def pixel(pixel : Pixel)
       point(x: pixel.x.to_f32, y: pixel.y.to_f32, color: pixel.color, z_index: pixel.z_index)
     end
 
-    def pixels(pixels : Array(Pixel))
+    # draws multiple `Pixel` via SDL3 points,
+    # takes the first pixel's `Pixel#color` and `Pixel#z_index`,
+    # and internally calls `LibSDL3.render_points`
+    def pixels(pixels : Pixels)
       pixel = pixels.first
-      points(points: pixels.map(&.to_fpoint), color: pixel.color, z_index: pixel.z_index)
+      points(points: pixels.map(&.to_point), color: pixel.color, z_index: pixel.z_index)
     end
 
     # lines
@@ -304,9 +308,9 @@ module GSDL
       )
     end
 
-    def lines(points : Array(FPoint), color = Color::White, z_index = 0)
+    def lines(points : Points, color = Color::White, z_index = 0)
       @draw_commands << DrawLinesCommand.new(
-        points: points,
+        points: points.map(&.to_sdl),
         color: color,
         z_index: z_index
       )
