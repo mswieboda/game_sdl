@@ -25,7 +25,7 @@ module GSDL
       )
     end
 
-    @internal : LibSDL3::FColor
+    @internal : SDL3::FColor
 
     delegate r, g, b, a, to_color, to_hex, to_u32, to: @internal
 
@@ -39,68 +39,68 @@ module GSDL
     alias_property blue, b
     alias_property alpha, a
 
-    def initialize(fcolor : LibSDL3::FColor)
+    def initialize(fcolor : SDL3::FColor)
       @internal = fcolor
     end
 
     def initialize(r : Num = 0_f32, g : Num = 0_f32, b : Num = 0_f32, alpha : Num = 1_f32)
-      @internal = LibSDL3::FColor.new(r: r.to_f32, g: g.to_f32, b: b.to_f32, a: a.to_f32)
+      @internal = SDL3::FColor.new(r: r.to_f32, g: g.to_f32, b: b.to_f32, a: a.to_f32)
     end
 
     def initialize(*, red : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32)
     end
 
     def initialize(*, green : Num)
-      @internal = LibSDL3::FColor.new(g: green.to_f32)
+      @internal = SDL3::FColor.new(g: green.to_f32)
     end
 
     def initialize(*, blue : Num)
-      @internal = LibSDL3::FColor.new(b: blue.to_f32)
+      @internal = SDL3::FColor.new(b: blue.to_f32)
     end
 
     def initialize(*, red : Num, alpha : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32, a: alpha.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32, a: alpha.to_f32)
     end
 
     def initialize(*, green : Num, alpha : Num)
-      @internal = LibSDL3::FColor.new(g: green.to_f32, a: alpha.to_f32)
+      @internal = SDL3::FColor.new(g: green.to_f32, a: alpha.to_f32)
     end
 
     def initialize(*, blue : Num, alpha : Num)
-      @internal = LibSDL3::FColor.new(b: blue.to_f32, a: alpha.to_f32)
+      @internal = SDL3::FColor.new(b: blue.to_f32, a: alpha.to_f32)
     end
 
     def initialize(*, red : Num, green : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32, g: green.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32)
     end
 
     def initialize(*, red : Num, blue : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32, b: blue.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32, b: blue.to_f32)
     end
 
     def initialize(*, green : Num, blue : Num)
-      @internal = LibSDL3::FColor.new(g: green.to_f32, b: blue.to_f32)
+      @internal = SDL3::FColor.new(g: green.to_f32, b: blue.to_f32)
     end
 
     def initialize(*, red : Num, green : Num, alpha : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32, g: green.to_f32, a: alpha.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, a: alpha.to_f32)
     end
 
     def initialize(*, red : Num, blue : Num, alpha : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32, b: blue.to_f32, a: alpha.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32, b: blue.to_f32, a: alpha.to_f32)
     end
 
     def initialize(*, green : Num, blue : Num, alpha : Num)
-      @internal = LibSDL3::FColor.new(g: green.to_f32, b: blue.to_f32, a: alpha.to_f32)
+      @internal = SDL3::FColor.new(g: green.to_f32, b: blue.to_f32, a: alpha.to_f32)
     end
 
     def initialize(*, red : Num, green : Num, blue : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32)
     end
 
     def initialize(*, red : Num, green : Num, blue : Num, alpha : Num)
-      @internal = LibSDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32, a: alpha.to_f32)
+      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32, a: alpha.to_f32)
     end
 
     # Returns the pointer to the internal struct for C calls

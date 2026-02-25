@@ -37,7 +37,7 @@ module GSDL
       )
     end
 
-    @internal : LibSDL3::Color
+    @internal : SDL3::Color
 
     delegate r, g, b, a, to: @internal
     delegate :"r=", :"g=", :"b=", :"a=", to: @internal
@@ -53,68 +53,68 @@ module GSDL
     alias_property blue, b
     alias_property alpha, a
 
-    def initialize(color : LibSDL3::Color)
+    def initialize(color : SDL3::Color)
       @internal = color
     end
 
     def initialize(r : Int = 0, g : Int = 0, b : Int = 0, a : Int = 255)
-      @internal = LibSDL3::Color.new(r: r.to_u8, g: g.to_u8, b: b.to_u8, a: a.to_u8)
+      @internal = SDL3::Color.new(r: r.to_u8, g: g.to_u8, b: b.to_u8, a: a.to_u8)
     end
 
     def initialize(*, red : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8)
     end
 
     def initialize(*, green : Int)
-      @internal = LibSDL3::Color.new(g: green.to_u8)
+      @internal = SDL3::Color.new(g: green.to_u8)
     end
 
     def initialize(*, blue : Int)
-      @internal = LibSDL3::Color.new(b: blue.to_u8)
+      @internal = SDL3::Color.new(b: blue.to_u8)
     end
 
     def initialize(*, red : Int, alpha : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8, a: alpha.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8, a: alpha.to_u8)
     end
 
     def initialize(*, green : Int, alpha : Int)
-      @internal = LibSDL3::Color.new(g: green.to_u8, a: alpha.to_u8)
+      @internal = SDL3::Color.new(g: green.to_u8, a: alpha.to_u8)
     end
 
     def initialize(*, blue : Int, alpha : Int)
-      @internal = LibSDL3::Color.new(b: blue.to_u8, a: alpha.to_u8)
+      @internal = SDL3::Color.new(b: blue.to_u8, a: alpha.to_u8)
     end
 
     def initialize(*, red : Int, green : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8, g: green.to_u8)
     end
 
     def initialize(*, red : Int, blue : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8, b: blue.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8, b: blue.to_u8)
     end
 
     def initialize(*, green : Int, blue : Int)
-      @internal = LibSDL3::Color.new(g: green.to_u8, b: blue.to_u8)
+      @internal = SDL3::Color.new(g: green.to_u8, b: blue.to_u8)
     end
 
     def initialize(*, red : Int, green : Int, alpha : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8, a: alpha.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8, g: green.to_u8, a: alpha.to_u8)
     end
 
     def initialize(*, red : Int, blue : Int, alpha : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8, b: blue.to_u8, a: alpha.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8, b: blue.to_u8, a: alpha.to_u8)
     end
 
     def initialize(*, green : Int, blue : Int, alpha : Int)
-      @internal = LibSDL3::Color.new(g: green.to_u8, b: blue.to_u8, a: alpha.to_u8)
+      @internal = SDL3::Color.new(g: green.to_u8, b: blue.to_u8, a: alpha.to_u8)
     end
 
     def initialize(*, red : Int, green : Int, blue : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8, b: blue.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8, g: green.to_u8, b: blue.to_u8)
     end
 
     def initialize(*, red : Int, green : Int, blue : Int, alpha : Int)
-      @internal = LibSDL3::Color.new(r: red.to_u8, g: green.to_u8, b: blue.to_u8, a: alpha.to_u8)
+      @internal = SDL3::Color.new(r: red.to_u8, g: green.to_u8, b: blue.to_u8, a: alpha.to_u8)
     end
 
     # Returns the pointer to the internal struct for C calls
