@@ -2,8 +2,6 @@ require "./shape"
 
 module GSDL
   class Line < Shape
-    include Centerable
-
     property x2 : Num = 0
     property y2 : Num = 0
 

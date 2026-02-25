@@ -117,7 +117,8 @@ module TweenEx
         y2: HEIGHT / 2_f32 + 32,
         x3: HEIGHT / 2_f32 + 32,
         y3: HEIGHT / 2_f32 + 64,
-        color: GSDL::Color::White
+        color: GSDL::Color::White,
+        origin: origin
       )
       triangle.center(width: WIDTH, height: HEIGHT)
       triangle.x -= 192

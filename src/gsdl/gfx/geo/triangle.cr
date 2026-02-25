@@ -2,11 +2,7 @@ require "./shape"
 
 module GSDL
   class Triangle < Shape
-    include Centerable
-
     properties_changed({
-      x1: Num = 0,
-      y1: Num = 0,
       x2: Num = 0,
       y2: Num = 0,
       x3: Num = 0,
@@ -20,9 +16,11 @@ module GSDL
       @y2 : Num = 0,
       @x3 : Num = 0,
       @y3 : Num = 0,
+      origin : Tuple(Float32, Float32) = {0_f32, 0_f32},
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
       rotation : Num = 0,
       color : Color = Color::White,
+      z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
@@ -30,9 +28,11 @@ module GSDL
       super(
         x: x1,
         y: y1,
+        origin: origin,
         scale: scale,
         rotation: rotation,
         color: color,
+        z_index: z_index,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
         border_color: border_color,
@@ -43,9 +43,11 @@ module GSDL
       p1 : Tuple(Num, Num),
       p2 : Tuple(Num, Num),
       p3 : Tuple(Num, Num),
+      origin : Tuple(Float32, Float32) = {0_f32, 0_f32},
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
       rotation : Num = 0,
       color : Color = Color::White,
+      z_index : Int32 = 0,
       draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
@@ -55,9 +57,11 @@ module GSDL
       super(
         x: x1,
         y: y1,
+        origin: origin,
         scale: scale,
         rotation: rotation,
         color: color,
+        z_index: z_index,
         draw_mode: draw_mode,
         border_thickness: border_thickness,
         border_color: border_color,
@@ -144,8 +148,8 @@ module GSDL
       v3x = x3 - x1
       v3y = y3 - y1
 
-      # Move x1/y1 (inherited as x/y) to center and set origin to 0.5
-      _center(x: x, width: width, height: height)
+      # Move x1/y1 (inherited as x/y) to center
+      _center(x: x, y: y, width: width, height: height)
 
       # Maintain the triangle's shape relative to the new pivot
       @x2 = x1 + v2x
