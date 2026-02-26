@@ -4,7 +4,6 @@ BUILD_DIR := build
 LIB_DIR := lib
 SDL3_MIXER_LIB_DIR := $(HOME)/ext_libs/sdl3_mixer/lib
 LINKFLAGS := -L$(SDL3_MIXER_LIB_DIR) -Wl,-rpath,$(SDL3_MIXER_LIB_DIR)
-LIB_NAME := libsdl3.a
 RM_CMD := rm -rf
 MKDIR_CMD := mkdir -p
 
