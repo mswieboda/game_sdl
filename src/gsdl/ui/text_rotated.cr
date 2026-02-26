@@ -14,7 +14,7 @@ module GSDL
       scale = {1_f32, 1_f32},
       color = Color::White,
       align = Font::Align::Left,
-      direction = SDL3::TTF::Direction::LTR,
+      direction = Font::Direction::LTR,
       wrap_width : Int32? = nil,
       z_index : Int32 = 0,
       @rotation : Num = 0.0
@@ -112,7 +112,6 @@ module GSDL
       end
     end
 
-    # This is called by Draw class
     def _draw
       # In TextRotated, we don't use _draw in the same way because 
       # we want to leverage Draw's texture command sorting if possible,

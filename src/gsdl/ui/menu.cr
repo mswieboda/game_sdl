@@ -57,7 +57,7 @@ module GSDL
       @is_selected : (Num, Num, Num, Num -> Bool),
       @is_next : (-> Bool),
       @is_previous : (-> Bool),
-      font : SDL3::TTF::Font = Font.default,
+      font : Font = Font.default,
       @items = [] of Tuple(Symbol, String),
       @x : Num = 0,
       @y : Num = 0,

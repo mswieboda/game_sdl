@@ -24,7 +24,7 @@ module GSDL
       origin = {0_f32, 0_f32},
       color : Color = Color::White,
       align = Font::Align::Left,
-      direction = SDL3::TTF::Direction::LTR,
+      direction = Font::Direction::LTR,
       wrap_width : Int32? = nil,
       z_index : Int32 = 0,
       @types_per_second : UInt8 = 8_u8,

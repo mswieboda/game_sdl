@@ -13,12 +13,12 @@ module GSDL
 
     @@renderer : SDL3::Renderer?
 
+    # TODO: maybe rename to @internal like the other class/struct wrappers
+    # however, maybe TextBase / Text are custom enough so it's okay?
     @text_sdl : SDL3::TTF::Text
 
     delegate direction, to: @text_sdl
     delegate :"direction=", to: @text_sdl
-    delegate text_engine, to: @text_sdl
-    delegate :"text_engine=", to: @text_sdl
     delegate font, to: @text_sdl
     delegate width, to: @text_sdl
     delegate wrap_whitespace_visible?, to: @text_sdl
@@ -45,7 +45,7 @@ module GSDL
       @scale = {1_f32, 1_f32},
       color = Color::White,
       align = Font::Align::Left,
-      direction = SDL3::TTF::Direction::LTR,
+      direction = Font::Direction::LTR,
       wrap_width : Int32? = nil,
       @z_index : Int32 = 0
     )
@@ -56,11 +56,11 @@ module GSDL
 
       # TODO: do this from the Draw class eventually, instead of SDL3::Renderer
       text_engine = TextBase.renderer.create_text_engine
-      @text_sdl = text_engine.create_text(font, @text)
+      @text_sdl = text_engine.create_text(font.to_sdl, @text)
 
       @text_sdl.color = color.to_sdl
       @text_sdl.direction = direction
-      @text_sdl.font = font
+      @text_sdl.font = font.to_sdl
       @text_sdl.wrap_whitespace_visible = false
 
       if ww = wrap_width

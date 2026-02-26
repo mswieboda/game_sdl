@@ -9,8 +9,9 @@ module GSDL
     # def self.load_io(io_stream : IOStream, close_io : Bool = false)
     # def self.load_bmp_io(io_stream : IOStream, close_io : Bool = false)
     # def self.load_png_io(io_stream : IOStream, close_io : Bool = false)
-    def self.create_text_engine : SDL3::TTF::TextEngine
-      SDL3::TTF::TextEngine.create(Type::Surface)
+
+    def self.create_text_engine : TextEngine
+      TextEngine.create_surface_text_engine
     end
 
     delegate destroy, to: @internal

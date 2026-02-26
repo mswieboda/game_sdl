@@ -5,10 +5,10 @@ module GSDL
 
     @@instance : FontManager? = nil
 
-    @fonts : Hash(String, SDL3::TTF::Font)
+    @fonts : Hash(String, Font)
 
     private def initialize
-      @fonts = Hash(String, SDL3::TTF::Font).new
+      @fonts = Hash(String, Font).new
     end
 
     # Sets up the singleton instance of FontManager.
@@ -29,7 +29,7 @@ module GSDL
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,
     # prepending GSDL::AssetManager.asset_path.
-    def self.load(key : String, path_key : String, size : Float32) : SDL3::TTF::Font
+    def self.load(key : String, path_key : String, size : Float32) : Font
       # see TextureManager.load comments for more details on path_key
       # which is a key based on the path like 'fonts/PressStart2P.ttf'
       # and will either load from the asset.pack file in release mode
@@ -53,7 +53,7 @@ module GSDL
 
     # Loads a font from raw byte data and associates it with a key.
     # This method is primarily intended to be called by load if in release mode
-    def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : SDL3::TTF::Font
+    def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : Font
       instance.load_from_memory(key, io, size)
     end
 
@@ -61,12 +61,12 @@ module GSDL
       load(DefaultFontKey, path, size)
     end
 
-    def self.get(key : String, size : Float32) : SDL3::TTF::Font
+    def self.get(key : String, size : Float32) : Font
       instance.get("#{key}-#{size}")
     end
 
     # Retrieves a loaded font by its key.
-    def self.get(key : String) : SDL3::TTF::Font
+    def self.get(key : String) : Font
       instance.get(key)
     end
 
@@ -86,28 +86,28 @@ module GSDL
 
     # --- Instance methods (called by class methods via the singleton instance) ---
 
-    def load(key : String, path : String, size : Float32) : SDL3::TTF::Font
+    def load(key : String, path : String, size : Float32) : Font
       key = "#{key}-#{size}"
       if @fonts.has_key?(key)
         return @fonts[key]
       end
-      font = SDL3::TTF::Font.open(path, size)
+      font = Font.new(SDL3::TTF::Font.open(path, size))
       @fonts[key] = font
       font
     end
 
-    def load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : SDL3::TTF::Font
+    def load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : Font
       font_key = "#{key}-#{size}"
       if @fonts.has_key?(font_key)
         return @fonts[font_key]
       end
 
-      font = SDL3::TTF::Font.open_io(io, size, close_io: true)
+      font = Font.new(SDL3::TTF::Font.open_io(io, size, close_io: true))
       @fonts[font_key] = font
       font
     end
 
-    def get(key : String) : SDL3::TTF::Font
+    def get(key : String) : Font
       @fonts.fetch(key) do
         raise "Font with key '#{key}' not found in FontManager. Was it loaded?"
       end
