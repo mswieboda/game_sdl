@@ -2,6 +2,37 @@
 
 Wrapper / helpers for making a game with SDL3 using [`sdl3.cr`](https://github.com/mswieboda/sdl3.cr)
 
+## Template Repo
+
+If you dont want to add everything manually, and want to use a boilerplate starting point, the https://github.com/mswieboda/template_game_sdl template repo is easy to rename quickly:
+
+```
+git clone git@github.com:mswieboda/template_game_sdl.git
+cd template_game_sdl
+crystal src/rename.cr
+```
+
+Follow the rename script prompts to rename all files, and class naming
+
+to rename your root project folder to `my_foo_game` or whatever the file name you chose:
+
+```
+cd ../
+mv template_game_sdl my_foo_game
+cd my_foo_game
+```
+
+to install `game_sdl` and `sdl3.cr` dependencies:
+```
+shards install
+```
+
+to build your templated game:
+```
+make
+```
+
+
 ## Installation
 
 1. [Install SDL3]([https://wiki.libsdl.org/SDL3/Installation](https://github.com/libsdl-org/SDL/releases))
@@ -16,7 +47,14 @@ brew install sdl3 sdl3_image sdl3_ttf
 
 will install all required libraries
 
-2. Add the dependency to your `shard.yml`:
+2. Make your crystal app
+
+```
+crystal init my_foo_game
+cd my_foo_game
+```
+
+3. Add the dependency to your `shard.yml`:
 
    ```yaml
    dependencies:
@@ -24,13 +62,15 @@ will install all required libraries
        github: mswieboda/game_sdl
    ```
 
-3. Run `shards install`
+4. Run `shards install`
 
 ```
 shards install
 ```
 
-4. Install GameSDL Tools
+5. Install GameSDL Tools
+
+This step is optional, but required when you run `make release` or with any `--release` flagged crystal compile. In the release mode, GameSDL expects a `.pack` file of the packed assets (using in `build/assets.pack`)
 
 ```
 crystal lib/game_sdl/install_gsdl_tools.cr
@@ -45,6 +85,22 @@ see usage via:
 ```
 ./bin/gsdl-packer --help
 ```
+
+you can simply this by adding this to your `Makefile`:
+
+```
+$(PACKER_BIN):
+  @echo "Installing GameSDL tools..."
+  $(CRYSTAL_COMPILER) lib/game_sdl/install_gsdl_tools.cr
+
+install_gsdl_tools: $(PACKER_BIN)
+
+packer: $(PACKER_BIN)
+  @echo "Packing assets via GameSDL packer..."
+  ./$(PACKER_BIN)
+```
+
+or use the https://github.com/mswieboda/template_game_sdl template repo to start from that has it included
 
 ## Usage
 
@@ -68,14 +124,6 @@ crystal docs lib/sdl3/src/sdl3.cr lib/game_sdl/src/game_sdl.cr src/your_game_ent
 
 Unfortunately the `delegate` methods docs will not expand to full method signatures, so you'll need to infer wrapped classes like GSDL::Point that wraps SDL3::FPoint to see those method signatures. Eventually I plan to either document each delegate so the parameters and return types are clear, or fully wrap the methods themselves so it is even more clear.
 
-## TODO:
-
-Add from `sdl3.cr` binding updates:
-
-- [x] audio
-- [x] game pad binding
-- [x] logical presentation
-- [ ] blend mode
 
 ## Contributing
 
@@ -87,8 +135,10 @@ Add from `sdl3.cr` binding updates:
 
 ### New Release
 
+NOTE: this is for maintainers of the repo, to easily update tags and releases
+
 To make a new release after PRs or features merged, make sure you bump the
-version and push the tag. Currently this is done on `master` but might be automated with GitHub Actions/CI or done manually in PRs down the line.
+version and push the tag. Currently this is done on `main` but might be automated with GitHub Actions/CI or done manually in PRs down the line.
 
 script helper to bump version, commit, and tag:
 ```
