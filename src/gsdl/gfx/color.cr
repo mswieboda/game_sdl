@@ -126,11 +126,6 @@ module GSDL
       @internal
     end
 
-    # Returns the pointer to the internal `SDL3::Color` struct for C calls
-    def to_unsafe
-      pointerof(@internal)
-    end
-
     # Colors
     Transparent = GSDL.gray(0, 0)
 

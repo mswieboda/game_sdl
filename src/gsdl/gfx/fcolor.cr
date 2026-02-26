@@ -112,11 +112,6 @@ module GSDL
       @internal
     end
 
-    # Returns the pointer to the internal `SDL3::FColor` struct for C calls
-    def to_unsafe
-      pointerof(@internal)
-    end
-
     macro mirror_colors_to_fcolor
       struct FColor
         {% for name in Color.constants %}

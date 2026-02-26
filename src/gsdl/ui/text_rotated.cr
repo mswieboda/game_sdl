@@ -2,7 +2,7 @@ require "./text_base"
 
 module GSDL
   class TextRotated < TextBase
-    @texture : SDL3::Texture?
+    @texture : Texture?
     @needs_refresh = true
 
     def initialize(

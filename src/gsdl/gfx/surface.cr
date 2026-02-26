@@ -39,10 +39,6 @@ module GSDL
       @internal.fill(color.to_sdl)
     end
 
-    def to_unsafe
-      pointerof(@internal)
-    end
-
     def to_sdl
       @internal
     end

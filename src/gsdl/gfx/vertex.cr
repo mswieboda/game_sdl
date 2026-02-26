@@ -64,10 +64,6 @@ module GSDL
       Point.distance(point.x - x, point.y - y)
     end
 
-    def to_unsafe
-      pointerof(@internal)
-    end
-
     def to_sdl
       @internal
     end

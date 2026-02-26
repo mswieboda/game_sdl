@@ -74,10 +74,6 @@ module GSDL
       @internal
     end
 
-    def to_unsafe
-      pointerof(@internal)
-    end
-
     def self.overlaps?(rect_a : FRect, rect_b : FRect) : Bool
       return false if rect_a.right  <= rect_b.left
       return false if rect_a.left   >= rect_b.right

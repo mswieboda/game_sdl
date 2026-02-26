@@ -42,10 +42,6 @@ module GSDL
       )
     end
 
-    def to_unsafe
-      pointerof(@internal)
-    end
-
     def to_sdl
       @internal
     end
