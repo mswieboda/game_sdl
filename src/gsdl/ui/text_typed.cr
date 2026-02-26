@@ -72,7 +72,7 @@ module GSDL
     def full_text=(value : String)
       @full_text = value
 
-      # update the underlying Text's display and surface, with empty space
+      # update the underlying Text's display and internals, with empty space
       # empty space char ensures height gets calculated
       super(" ")
 

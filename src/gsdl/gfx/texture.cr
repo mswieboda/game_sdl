@@ -2,11 +2,14 @@ module GSDL
   alias PixelFormat = SDL3::PixelFormat
   alias TextureAccess = SDL3::TextureAccess
 
-  struct Texture
+  class Texture
     @internal : SDL3::Texture
 
-    def self.from_surface(draw : Draw, surface : SDL3::Surface) : Texture
-      texture = SDL3::Texture.from_surface(renderer: Game.draw_instance.to_sdl, surface: surface)
+    def self.from_surface(surface : Surface) : Texture
+      texture = SDL3::Texture.from_surface(
+        renderer: Game.draw_instance.to_sdl,
+        surface: surface.to_sdl
+      )
       Texture.new(texture: texture)
     end
 

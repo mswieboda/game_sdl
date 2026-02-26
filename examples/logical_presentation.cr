@@ -38,7 +38,7 @@ module GameEx
     @mode_text : GSDL::Text
     @logical_size_text : GSDL::Text
     @window_size_text : GSDL::Text
-    @bg_texture : SDL3::Texture
+    @bg_texture : GSDL::Texture
     @current_mode_index = 0
 
     @presentation_modes : Array(SDL3::LogicalPresentation) = [
@@ -80,10 +80,7 @@ module GameEx
       @window_size_text.y = 100
 
       # Create a checkerboard background surface (fills logical area)
-      surface = SDL3::Surface.new(LOGICAL_WIDTH, LOGICAL_HEIGHT)
-      unless surface
-        raise "Failed to create checkerboard surface: #{SDL3.get_error}"
-      end
+      surface = GSDL::Surface.new(LOGICAL_WIDTH, LOGICAL_HEIGHT)
 
       # Draw checkerboard pattern
       tile_size = 20
@@ -92,11 +89,11 @@ module GameEx
 
       (0...LOGICAL_HEIGHT).step(tile_size) do |y|
         (0...LOGICAL_WIDTH).step(tile_size) do |x|
-          rect = GSDL::Rect.new(x: x, y: y, width: tile_size, height: tile_size)
+          rect = GSDL::Rect.new(x: x, y: y, w: tile_size, h: tile_size)
           if ((x / tile_size) + (y / tile_size)) % 2 == 0
-            surface.fill_rect(rect, color1.to_sdl)
+            surface.draw_rect_fill(rect, color1)
           else
-            surface.fill_rect(rect, color2.to_sdl)
+            surface.draw_rect_fill(rect, color2)
           end
         end
       end

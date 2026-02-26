@@ -152,8 +152,8 @@ module GSDL
 
     # NOTE: only intended to be used within GSDL, so end-user doesn't
     #   have to deal with SDL3 lib directly
-    def create_texture(surface : SDL3::Surface) : Texture
-      Texture.from_surface(self, surface)
+    def create_texture(surface : Surface) : Texture
+      Texture.from_surface(surface)
     end
 
     def debug_text(*args, **options)
