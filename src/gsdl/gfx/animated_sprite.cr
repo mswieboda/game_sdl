@@ -11,6 +11,7 @@ module GSDL
     delegate add, to: @animation_player
     delegate play, to: @animation_player
     delegate pause, to: @animation_player
+    delegate paused?, to: @animation_player
     delegate playing?, to: @animation_player
 
     def initialize(
