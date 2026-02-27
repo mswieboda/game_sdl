@@ -11,13 +11,12 @@ module TileMapEx
     end
 
     def init
-      super
       GSDL::Events.esc_exits = true
       @scene_manager = SceneManager.new
     end
 
     def load_textures
-      GSDL::TextureManager.load("tiles", "gfx/tiles.png")
+      [{"tiles", "gfx/tiles.png"}]
     end
   end
 

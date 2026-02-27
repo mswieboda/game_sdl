@@ -10,17 +10,16 @@ module GameEx
     end
 
     def init
-      super
       GSDL::Events.esc_exits = false
       @scene_manager = SceneManager.new
     end
 
-    def load_fonts
-      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    def load_default_font
+      "fonts/PressStart2P.ttf"
     end
 
     def load_textures
-      GSDL::TextureManager.load("tiles", "gfx/tiles.png")
+      [{"tiles", "gfx/tiles.png"}]
     end
   end
 

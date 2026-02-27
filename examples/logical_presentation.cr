@@ -15,14 +15,13 @@ module GameEx
     end
 
     def init
-      super
       GSDL::Events.esc_exits = true
       @scene_manager = SceneManager.new
       Game.draw_instance.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
     end
 
-    def load_fonts
-      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    def load_default_font
+      "fonts/PressStart2P.ttf"
     end
   end
 

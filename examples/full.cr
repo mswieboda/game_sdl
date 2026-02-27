@@ -7,24 +7,25 @@ module GameEx
     end
 
     def init
-      super
       # NOTE: setting this to `false` to test transition_out
       GSDL::Events.esc_exits = false
       @scene_manager = SceneManager.new
     end
 
-    def load_textures
-      GSDL::TextureManager.load("ship", "gfx/ship.png")
-      GSDL::TextureManager.load("coin", "gfx/coin.png")
-      GSDL::TextureManager.load("tiles", "gfx/tiles.png")
+    def load_default_font
+      "fonts/PressStart2P.ttf"
     end
 
-    def load_fonts
-      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    def load_textures
+      [
+        {"ship", "gfx/ship.png"},
+        {"coin", "gfx/coin.png"},
+        {"tiles", "gfx/tiles.png"},
+      ]
     end
 
     def load_audio
-      GSDL::AudioManager.load("race_car", "sfx/race_car.wav")
+      [{"race_car", "sfx/race_car.wav"}]
     end
   end
 

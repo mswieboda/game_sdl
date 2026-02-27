@@ -13,27 +13,28 @@ module PlatformerEx
     end
 
     def init
-      super
       GSDL::Events.esc_exits = true
       @scene_manager = SceneManager.new
     end
 
     def load_textures
-      GSDL::TextureManager.load("player", "gfx/skeleton.png")
-      GSDL::TextureManager.load("coin", "gfx/coin.png")
-      GSDL::TextureManager.load("tiles", "gfx/tiles.png")
+      [
+        {"player", "gfx/skeleton.png"},
+        {"coin", "gfx/coin.png"},
+        {"tiles", "gfx/tiles.png"}
+      ]
     end
 
-    def load_fonts
-      GSDL::FontManager.load_default("fonts/PressStart2P.ttf")
+    def load_default_font
+      "fonts/PressStart2P.ttf"
     end
 
     def load_audio
-      GSDL::AudioManager.load("coin_audio", "sfx/ding.wav")
+      [{"coin_audio", "sfx/ding.wav"}]
     end
 
     def load_tile_maps
-      GSDL::TileMapManager.load("map", "gfx/map.json")
+      [{"map", "gfx/map.json"}]
     end
   end
 

@@ -97,7 +97,7 @@ module GSDL
       @scene_manager = SceneManager.new
     end
 
-    def init
+    private def _init
       {% if flag?(:release) %}
         AssetManager.load_pack
       {% end %}
@@ -109,26 +109,63 @@ module GSDL
 
       TextBase.draw = Game.draw_instance
 
-      load_textures
-      load_fonts
-      load_audio
-      load_tile_maps
+      load_assets
 
       {% if flag?(:release) %}
         AssetManager.close_pack
       {% end %}
     end
 
-    def load_textures
+    private def load_assets
+      # fonts
+      default_font_path_key = load_default_font
+
+      unless default_font_path_key.empty?
+        FontManager.load_default(path: default_font_path_key)
+      end
+
+      font_data_data = load_fonts
+      font_data_data.each do |key, path_key, size|
+        FontManager.load(key: key, path_key: path_key, size: size)
+      end
+
+      # textures
+      texture_load_data = load_textures
+      texture_load_data.each do |key, path_key|
+        TextureManager.load(key: key, path_key: path_key)
+      end
+
+      # audio
+      audio_load_data = load_audio
+      audio_load_data.each do |key, path_key|
+        AudioManager.load(key: key, path_key: path_key)
+      end
+
+      # tile maps
+      tile_map_load_data = load_tile_maps
+      tile_map_load_data.each do |key, path_key|
+        TileMapManager.load(key: key, path_key: path_key)
+      end
     end
 
-    def load_fonts
+    def load_default_font : String
+      ""
     end
 
-    def load_audio
+    def load_fonts : Array(Tuple(String, String, Float32))
+      [] of Tuple(String, String, Float32)
     end
 
-    def load_tile_maps
+    def load_textures : Array(Tuple(String, String))
+      [] of Tuple(String, String)
+    end
+
+    def load_audio : Array(Tuple(String, String))
+      [] of Tuple(String, String)
+    end
+
+    def load_tile_maps : Array(Tuple(String, String))
+      [] of Tuple(String, String)
     end
 
     def vsync
@@ -148,6 +185,7 @@ module GSDL
     end
 
     def run
+      _init
       init
 
       @exit = false
