@@ -77,6 +77,17 @@ module GameEx
         border_radius: 32
       )
 
+      @messages << GSDL::MessageTyped.new(
+        font: font,
+        text: "typing out some\nwords slowly!",
+        x: 64,
+        y: 400,
+        color: GSDL::Color::Blue,
+        border_radius: 32,
+        types_per_second: 5_u8,
+        type: GSDL::TextTyped::Type::Word
+      )
+
       margin = 16
       height = 36 + GSDL::TextBox::Padding * 2
 
@@ -115,6 +126,7 @@ module GameEx
     end
 
     def update(dt : Float32)
+      @messages.each(&.update(dt))
       @buttons.each(&.update(dt))
     end
 
