@@ -74,7 +74,7 @@ module GSDL
 
       # update the underlying Text's display and internals, with empty space
       # empty space char ensures height gets calculated
-      super(" ")
+      self.text = " "
 
       restart
     end
