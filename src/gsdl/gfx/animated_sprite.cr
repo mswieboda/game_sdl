@@ -32,7 +32,10 @@ module GSDL
       update_tweens(dt)
     end
 
-    def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)
+    def draw(draw : Draw, camera : Camera? = nil, flip_horizontal : Bool = false)
+      camera_x = camera.try(&.x) || 0_f32
+      camera_y = camera.try(&.y) || 0_f32
+
       texture_width = size[0]
       columns = (texture_width / @width).to_i
 

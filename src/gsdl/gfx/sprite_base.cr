@@ -101,6 +101,6 @@ module GSDL
 
     abstract def update(dt : Float32)
 
-    abstract def draw(draw : Draw, camera_x : Float32 = 0_f32, camera_y : Float32 = 0_f32, flip_horizontal : Bool = false)
+    abstract def draw(draw : Draw, camera : Camera? = nil, flip_horizontal : Bool = false)
   end
 end
