@@ -52,7 +52,10 @@
          "tilecount":18,
          "tileheight":32,
          "tilewidth":32,
-         "solid_tiles": [1, 2, 3, 8, 10, 11, 12, 17]
+         "properties": [{
+              "name": "solid_tiles",
+              "value": [1, 2, 3, 8, 10, 11, 12, 17]
+         }]
         }],
  "tilewidth":32,
  "type":"map",

@@ -2,8 +2,20 @@ require "json"
 
 module GSDL
   class TileMap
-    # Using a 2D array of Int32 to store global tile IDs.
-    property map_data : Array(Array(Int32))
+    # Bits on the far end of the 32-bit global tile ID are used for tile flags
+    FLIPPED_HORIZONTALLY_FLAG  = 0x80000000_u32
+    FLIPPED_VERTICALLY_FLAG    = 0x40000000_u32
+    FLIPPED_DIAGONALLY_FLAG    = 0x20000000_u32 # Tiled's diagonal flip flag, kept for completeness but not actively used for rendering rotation as per instruction.
+    ALL_FLIP_FLAGS             = FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG
+
+    module Flip
+      Horizontal = 0x00000001_i32 # SDL_FLIP_HORIZONTAL
+      Vertical = 0x00000002_i32 # SDL_FLIP_VERTICAL
+      None = 0x00000000_i32 # SDL_FLIP_NONE
+    end
+
+    # Using a 2D array of UInt32 to store global tile IDs and their flags.
+    property map_data : Array(Array(UInt32))
     # Map of tileset key to Tileset object
     property tilesets : Hash(String, Tileset)
     property tile_width : Int32
@@ -13,7 +25,7 @@ module GSDL
     property tiled_tilesets : Array(JSON::Any)
 
     def initialize(@tile_width, @tile_height)
-      @map_data = [] of Array(Int32)
+      @map_data = [] of Array(UInt32)
       @tilesets = {} of String => Tileset
       @map_width_tiles = 0
       @map_height_tiles = 0
@@ -34,7 +46,15 @@ module GSDL
 
       tiled_tilesets.each do |ts_data|
         name = ts_data["name"].as_s
-        image_path = "assets/gfx/" + ts_data["image"].as_s
+        # Handle potential missing "image" key for tilesets that are collections of images etc.
+        # For simplicity here, we assume a path exists or use a placeholder.
+        image_path =
+          if ts_data["image"]?
+            "assets/gfx/" + ts_data["image"].as_s
+          else
+            # A placeholder or more complex logic might be needed for specific tileset types
+            "assets/gfx/missing_image.png"
+          end
 
         texture = GSDL::TextureManager.get(name)
 
@@ -46,12 +66,32 @@ module GSDL
           ts_data["firstgid"].as_i
         )
 
-        tileset.solid_tiles = ts_data["solid_tiles"].as_a.map(&.as_i)
+        # Look for custom properties under the "properties" key in the tileset data
+        if ts_data["properties"].as_a?.is_a?(Array)
+          ts_data["properties"].as_a.each do |prop|
+            if prop["name"].as_s == "solid_tiles"
+              # Assuming "value" holds the array of solid local tile IDs
+              solid_tiles_json = prop["value"]
+              if solid_tiles_json.as_a.is_a?(Array)
+                tileset.solid_tiles = solid_tiles_json.as_a.map { |n| n.as_i - 1 }
+              end
+
+              break # Found solid_tiles, no need to check other properties
+            end
+          end
+        elsif ts_data["properties"]?.is_a?(Hash)
+           # Handle if properties are directly under an object, not an array
+           solid_tiles_json = ts_data["properties"]["solid_tiles"]?
+           if solid_tiles_json.is_a?(Array)
+             tileset.solid_tiles = solid_tiles_json.as_a.map(&.as_i)
+           end
+        end
+
 
         tile_map.add_tileset(name, tileset)
       end
 
-      layer_data = json["layers"][0]["data"].as_a.map(&.as_i)
+      layer_data = json["layers"][0]["data"].as_a.map(&.as_i.to_u32)
       chunked_data = chunk_data(layer_data, map_w)
       tile_map.map_data = chunked_data
       tile_map
@@ -71,14 +111,14 @@ module GSDL
     end
 
     # Loads map data from a simple 2D array for demonstration
-    def load_map_data(data : Array(Array(Int32)))
+    def load_map_data(data : Array(Array(UInt32)))
       @map_data = data
       @map_height_tiles = data.size
       @map_width_tiles = data.empty? ? 0 : data[0].size
     end
 
-    private def self.chunk_data(data : Array(Int32), width : Int32) : Array(Array(Int32))
-      result = [] of Array(Int32)
+    private def self.chunk_data(data : Array(UInt32), width : Int32) : Array(Array(UInt32))
+      result = [] of Array(UInt32)
       (data.size / width).to_i.times do |i|
         start_index = i * width
         end_index = start_index + width
@@ -88,16 +128,30 @@ module GSDL
     end
 
     # Translates a global_gid into a Tileset and its local_tile_id
-    def find_tileset_and_local_id(global_gid : Int32) : TileInfo?
+    def find_tileset_and_local_id(global_gid_with_flags : UInt32) : TileInfo?
       # A global_gid of 0 typically means an empty tile in Tiled
-      return nil if global_gid == 0
+      return nil if global_gid_with_flags == 0
+
+      flipped_horizontally = (global_gid_with_flags & FLIPPED_HORIZONTALLY_FLAG) != 0_u32
+      flipped_vertically = (global_gid_with_flags & FLIPPED_VERTICALLY_FLAG) != 0_u32
+      # flipped_diagonally = (global_gid_with_flags & FLIPPED_DIAGONALLY_FLAG) != 0_u32 # Ignoring for now
+
+      # Clear all flip flags to get the actual global tile ID
+      global_gid = (global_gid_with_flags & ~ALL_FLIP_FLAGS).to_i
 
       @tilesets.each do |key, tileset|
         if tileset.contains_gid?(global_gid)
           local_tile_id = global_gid - tileset.first_gid
-          return TileInfo.new(key, local_tile_id, tileset.solid?(global_gid))
+          return TileInfo.new(
+            key,
+            local_tile_id,
+            tileset.solid?(local_tile_id),
+            flipped_horizontally,
+            flipped_vertically
+          )
         end
       end
+
       nil # No tileset found for this global_gid
     end
 
@@ -110,8 +164,8 @@ module GSDL
 
     def tile_at(x : Int32, y : Int32) : TileInfo?
       return nil if x < 0 || x >= @map_width_tiles || y < 0 || y >= @map_height_tiles
-      global_gid = @map_data[y][x]
-      find_tileset_and_local_id(global_gid)
+      global_gid_with_flags = @map_data[y][x]
+      find_tileset_and_local_id(global_gid_with_flags)
     end
 
     # Checks for solid tiles directly below the bounding box
@@ -146,8 +200,8 @@ module GSDL
       # For simplicity, drawing all tiles for now.
 
       @map_data.each_with_index do |row_data, y_index|
-        row_data.each_with_index do |global_gid, x_index|
-          tile_info = find_tileset_and_local_id(global_gid)
+        row_data.each_with_index do |global_gid_with_flags, x_index|
+          tile_info = find_tileset_and_local_id(global_gid_with_flags)
           next unless tile_info
 
           tileset = @tilesets[tile_info.tileset_key]
@@ -161,7 +215,16 @@ module GSDL
             h: @tile_height
           )
 
-          draw.texture(texture: tileset.texture, source_rect: source_rect, dest_rect: dest_rect)
+          flip_mode = 0_i32
+          flip_mode |= Flip::Horizontal if tile_info.flipped_horizontally
+          flip_mode |= Flip::Vertical if tile_info.flipped_vertically
+
+          draw.texture(
+            texture: tileset.texture,
+            source_rect: source_rect,
+            dest_rect: dest_rect,
+            flip: flip_mode
+          )
         end
       end
     end
