@@ -1,0 +1,39 @@
+merchant_intro:
+  text: "Welcome, adventurer! What can I get for you today?"
+  choices:
+    - text: "I'd like to see your goods."
+      next_id: merchant_shop
+      actions: ["open_shop"]
+    - text: "I have a question."
+      next_id: merchant_question
+    - text: "Nothing, thanks."
+      next_id: exit
+
+merchant_shop:
+  text: "My wares are the finest in the land! ...but I don't have anything to sell yet."
+  choices:
+    - text: "Oh, okay then."
+      next_id: merchant_intro
+
+merchant_question:
+  text: "What do you want to know?"
+  choices:
+    - text: "Heard any rumors?"
+      next_id: merchant_rumors
+      conditions: ["has_met_dwarf"]
+    - text: "Where can I find the blacksmith?"
+      next_id: merchant_blacksmith_location
+    - text: "Nevermind."
+      next_id: merchant_intro
+
+merchant_rumors:
+  text: "They say the old king's treasure is buried in the eastern mountains, but you need a special key."
+  choices:
+    - text: "Interesting. Thanks!"
+      next_id: merchant_intro
+
+merchant_blacksmith_location:
+  text: "He's just down the road, can't miss him. Grumpy old fellow, but his work is solid."
+  choices:
+    - text: "Thanks for the tip."
+      next_id: merchant_intro
