@@ -1,24 +1,17 @@
 module GSDL
   class Tween
-    enum Easing
-      Linear
-      EaseIn
-      EaseOut
-      EaseInOut
-    end
-
     alias PropertyValue = Float32 | Color | Tuple(Float32, Float32)
-    alias SequenceValue = PropertyValue | String | Symbol | Float64 | Int32 | Hash(Symbol, Float32) | Hash(String, Float32) | Easing
+    alias SequenceValue = PropertyValue | String | Symbol | Float64 | Int32 | Hash(Symbol, Float32) | Hash(String, Float32) | GSDL::MathUtils::Easing
 
     struct Keyframe
       property duration : Float32
       property properties : Hash(String, PropertyValue)
-      property easing : Easing
+      property easing : GSDL::MathUtils::Easing
 
       def initialize(
         @duration : Float32,
         @properties : Hash(String, PropertyValue),
-        @easing : Easing = Easing::Linear
+        @easing : GSDL::MathUtils::Easing = GSDL::MathUtils::Easing::Linear
       )
       end
     end
@@ -40,21 +33,21 @@ module GSDL
         duration = step["duration"]?.as?(Float32 | Float64 | Int32).try(&.to_f32) || 0_f32
         easing_val = step["easing"]?
         easing = case easing_val
-        when Easing
+        when GSDL::MathUtils::Easing
           easing_val
         when Symbol, String
           case easing_val.to_s.underscore
           when "ease_in"
-            Easing::EaseIn
+            GSDL::MathUtils::Easing::EaseIn
           when "ease_out"
-            Easing::EaseOut
+            GSDL::MathUtils::Easing::EaseOut
           when "ease_in_out"
-            Easing::EaseInOut
+            GSDL::MathUtils::Easing::EaseInOut
           else
-            Easing::Linear
+            GSDL::MathUtils::Easing::Linear
           end
         else
-          Easing::Linear
+          GSDL::MathUtils::Easing::Linear
         end
 
         properties = Hash(String, PropertyValue).new
@@ -157,7 +150,7 @@ module GSDL
       t = (keyframe.duration > 0) ? (@elapsed_time / keyframe.duration) : 1_f32
       t = 1_f32 if t > 1_f32
 
-      eased_t = apply_easing(t, keyframe.easing)
+      eased_t = GSDL::MathUtils.apply_easing(t, keyframe.easing)
 
       keyframe.properties.each do |prop, end_value|
         start_value = @start_properties[prop]
@@ -183,13 +176,13 @@ module GSDL
 
     private def lerp(start : PropertyValue, finish : PropertyValue, t : Float32) : PropertyValue
       if start.is_a?(Float32) && finish.is_a?(Float32)
-        return start + (finish - start) * t
+        return GSDL::MathUtils.lerp(start, finish, t)
       elsif start.is_a?(Color) && finish.is_a?(Color)
         return GSDL.color(
-          r: (start.r.to_f32 + (finish.r.to_f32 - start.r.to_f32) * t).to_u8,
-          g: (start.g.to_f32 + (finish.g.to_f32 - start.g.to_f32) * t).to_u8,
-          b: (start.b.to_f32 + (finish.b.to_f32 - start.b.to_f32) * t).to_u8,
-          a: (start.a.to_f32 + (finish.a.to_f32 - start.a.to_f32) * t).to_u8,
+          r: (GSDL::MathUtils.lerp(start.r.to_f32, finish.r.to_f32, t)).to_u8,
+          g: (GSDL::MathUtils.lerp(start.g.to_f32, finish.g.to_f32, t)).to_u8,
+          b: (GSDL::MathUtils.lerp(start.b.to_f32, finish.b.to_f32, t)).to_u8,
+          a: (GSDL::MathUtils.lerp(start.a.to_f32, finish.a.to_f32, t)).to_u8,
         )
       else
         # Handle cases where one might be a Tuple and other a Float32 (for scale)
@@ -197,25 +190,11 @@ module GSDL
         f_val = finish.is_a?(Tuple(Float32, Float32)) ? finish : {finish.as(Float32), finish.as(Float32)}
         
         return {
-          s_val[0] + (f_val[0] - s_val[0]) * t,
-          s_val[1] + (f_val[1] - s_val[1]) * t,
+          GSDL::MathUtils.lerp(s_val[0], f_val[0], t),
+          GSDL::MathUtils.lerp(s_val[1], f_val[1], t),
         }
-      end
-    end
-
-    private def apply_easing(t : Float32, easing : Easing) : Float32
-      case easing
-      when Easing::Linear
-        t
-      when Easing::EaseIn
-        t * t
-      when Easing::EaseOut
-        t * (2 - t)
-      when Easing::EaseInOut
-        t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
-      else
-        t
       end
     end
   end
 end
+

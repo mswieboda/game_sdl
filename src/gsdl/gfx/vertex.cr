@@ -17,31 +17,15 @@ module GSDL
     end
 
     def initialize(x : Num = 0, y : Num = 0, color : Color = Color::White, texture_point = Point.new)
-      @internal = SDL3::Vertex.new(
-        x: x.to_f32,
-        y: y.to_f32,
-        fcolor: color.to_sdl.to_fcolor,
-        texture_fpoint: texture_point.to_sdl
-      )
+      @internal = SDL3::Vertex.new(x.to_f32, y.to_f32, color.to_sdl.to_fcolor, texture_point.to_sdl)
     end
 
-    def initialize(point : Tuple(Num, Num), color : Color = Color::White) #, texture_point : Tuple(Num, Num) = {0_f32, 0_f32})
-      # @internal = SDL3::Vertex.new(
-      #   x: point[0].to_f32,
-      #   y: point[1].to_f32,
-      #   fcolor: color.to_sdl.to_fcolor,
-      #   texture_fpoint: Point.new.to_sdl
-      #   # texture_fpoint: Point.new(texture_point).to_sdl
-      # )
+    def initialize(point : Tuple(Num, Num), color : Color = Color::White)
       @internal = SDL3::Vertex.new(point[0].to_f32, point[1].to_f32, color.to_sdl.to_fcolor)
     end
 
     def initialize(point : Point, color : Color = Color::White, texture_point = Point.new)
-      @internal = SDL3::Vertex.new(
-        fpoint: point.to_sdl,
-        fcolor: color.to_sdl.to_fcolor,
-        texture_fpoint: texture_point.to_sdl
-      )
+      @internal = SDL3::Vertex.new(point.to_sdl, color.to_sdl.to_fcolor, texture_point.to_sdl)
     end
 
     def point : Point
@@ -67,5 +51,7 @@ module GSDL
     def to_sdl
       @internal
     end
+
+    delegate x, y, to: @internal
   end
 end

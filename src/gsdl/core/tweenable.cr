@@ -6,7 +6,7 @@ module GSDL
       t
     end
 
-    def tween(to : Hash(String, Tween::PropertyValue), duration : Float32, easing : Tween::Easing = Tween::Easing::Linear)
+    def tween(to : Hash(String, Tween::PropertyValue), duration : Float32, easing : MathUtils::Easing = MathUtils::Easing::Linear)
       t = tween
       step = Hash(String, Tween::SequenceValue).new
       step["duration"] = duration

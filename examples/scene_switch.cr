@@ -144,7 +144,9 @@ module GameEx
 
       cols.times do |x|
         rows.times do |y|
-          @sprite.draw(draw, -x * @sprite.width, -y * @sprite.height)
+          @sprite.x = x * @sprite.width
+          @sprite.y = y * @sprite.height
+          @sprite.draw(draw)
         end
       end
 

@@ -174,7 +174,7 @@ module TweenEx
             "scale" => {target_scale, target_scale}.as(GSDL::Tween::PropertyValue)
           },
           duration: 1.0_f32,
-          easing: GSDL::Tween::Easing::EaseInOut
+          easing: GSDL::MathUtils::Easing::EaseInOut
         )
       end
 

@@ -176,8 +176,8 @@ module GSDL
       Texture.from_surface(surface)
     end
 
-    def debug_text(*args, **options)
-      @r.render_debug_text(*args, **options)
+    def debug_text(text : String, x : Num, y : Num)
+      @r.render_debug_text(x: x.to_f32, y: y.to_f32, text: text)
     end
 
     def draw
