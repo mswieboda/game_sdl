@@ -20,7 +20,7 @@ module GSDL
     @width_fixed : Bool = false
     @height_fixed : Bool = false
 
-    @z_index : Int32 = 1000
+    @z_index : Int32 = 900
 
     delegate z_index, to: @text
 
@@ -36,7 +36,7 @@ module GSDL
       x : Num = 0_f32,
       y : Num = 0_f32,
       color = Color::Black,
-      @z_index : Int32 = 1000
+      @z_index : Int32 = 900
     )
       @text = Text.new(
         font: font,

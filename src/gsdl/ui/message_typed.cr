@@ -19,7 +19,7 @@ module GSDL
       type : TextTyped::Type = TextTyped::Type::Word,
       on_type : TextTyped::Callback | Nil = nil,
       on_complete : TextTyped::Callback | Nil = nil,
-      z_index : Int32 = 1000,
+      z_index : Int32 = 900,
     )
       super(
         font: font,

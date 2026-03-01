@@ -19,7 +19,7 @@ module GSDL
     def initialize(
       on_action : Proc(String, Void)? = nil,
       on_condition : Proc(String, Bool)? = nil,
-      z_index : Int32 = 1000
+      z_index : Int32 = 900
     )
       @on_action = on_action
       @on_condition = on_condition

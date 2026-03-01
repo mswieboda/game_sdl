@@ -17,7 +17,7 @@ module GSDL
       y : Num = 0_f32,
       color = Color::Black,
       @border_radius : Num = 0,
-      z_index : Int32 = 1000,
+      z_index : Int32 = 900,
     )
       super(
         font: font,
