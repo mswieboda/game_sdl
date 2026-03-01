@@ -8,19 +8,21 @@ module GSDL
     getter width : Int32
     getter height : Int32
     getter padding : Int32
+    getter tweens : Array(Tween) = [] of Tween
 
     @text : Text
     @x : Num = 0_f32
     @y : Num = 0_f32
     @origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     @scale : Tuple(Num, Num) = {1_f32, 1_f32}
-    getter tweens : Array(Tween) = [] of Tween
 
     # Explicitly store whether width/height were set manually
     @width_fixed : Bool = false
     @height_fixed : Bool = false
 
-    @z_index : Int32 = 0
+    @z_index : Int32 = 1000
+
+    delegate z_index, to: @text
 
     def initialize(
       font = Font.default,
@@ -34,7 +36,7 @@ module GSDL
       x : Num = 0_f32,
       y : Num = 0_f32,
       color = Color::Black,
-      @z_index : Int32 = 0
+      @z_index : Int32 = 1000
     )
       @text = Text.new(
         font: font,

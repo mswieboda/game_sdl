@@ -18,7 +18,8 @@ module GSDL
       types_per_second : UInt8 = 8_u8,
       type : TextTyped::Type = TextTyped::Type::Word,
       on_type : TextTyped::Callback | Nil = nil,
-      on_complete : TextTyped::Callback | Nil = nil
+      on_complete : TextTyped::Callback | Nil = nil,
+      z_index : Int32 = 1000,
     )
       super(
         font: font,
@@ -32,7 +33,8 @@ module GSDL
         x: x,
         y: y,
         color: color,
-        border_radius: border_radius
+        border_radius: border_radius,
+        z_index: z_index
       )
 
       # Replace @text with TextTyped. The box size was already calculated

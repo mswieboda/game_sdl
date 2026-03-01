@@ -17,6 +17,7 @@ module GSDL
       y : Num = 0_f32,
       color = Color::Black,
       @border_radius : Num = 0,
+      z_index : Int32 = 1000,
     )
       super(
         font: font,
@@ -42,7 +43,8 @@ module GSDL
         width: width,
         height: height,
         color: Color::White,
-        border_radius: border_radius
+        border_radius: border_radius,
+        z_index: z_index
       )
       box.draw(draw)
     end

@@ -14,9 +14,12 @@ module GSDL
     @on_action : Proc(String, Void)? = nil
     @on_condition : Proc(String, Bool)? = nil
 
+    delegate z_index, to: @main_box
+
     def initialize(
       on_action : Proc(String, Void)? = nil,
-      on_condition : Proc(String, Bool)? = nil
+      on_condition : Proc(String, Bool)? = nil,
+      z_index : Int32 = 1000
     )
       @on_action = on_action
       @on_condition = on_condition
@@ -31,8 +34,16 @@ module GSDL
         color: Color::Black,
         border_radius: 8.0_f32,
         type: TextTyped::Type::Word,
-        on_complete: ->{ @show_choices = true }
+        on_complete: ->{ @show_choices = true },
+        z_index: z_index
       )
+    end
+
+    def z_index=(z_index : Int32)
+      @main_box.z_index = z_index
+      @choices_boxes.each do |box|
+        box.z_index = z_index
+      end
     end
 
     def on_action(&callback : String -> Void)
@@ -107,6 +118,7 @@ module GSDL
             color: Color::Black,
             border_radius: 4.0_f32
           )
+          box.z_index = @main_box.z_index
           @choices_boxes << box
           y_offset += 40_f32
         end
