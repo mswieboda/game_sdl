@@ -1,4 +1,5 @@
 require "json"
+require "xml"
 
 module GSDL
   class TileMap
@@ -73,8 +74,14 @@ module GSDL
             if prop["name"].as_s == "solid_tiles"
               # Assuming "value" holds the array of solid local tile IDs
               solid_tiles_json = prop["value"]
-              if solid_tiles_json.as_a.is_a?(Array)
+              if solid_tiles_json.as_a?.is_a?(Array)
                 tileset.solid_tiles = solid_tiles_json.as_a.map { |n| n.as_i - 1 }
+              elsif solid_tiles_json.as_s?.is_a?(String)
+                # Handle stringified array "[1, 2, 3]"
+                val = solid_tiles_json.as_s
+                if val.starts_with?("[") && val.ends_with?("]")
+                  tileset.solid_tiles = val[1...-1].split(",").map { |v| v.strip.to_i - 1 }
+                end
               end
 
               break # Found solid_tiles, no need to check other properties
@@ -98,8 +105,74 @@ module GSDL
       tile_map
     end
 
+    def self.from_tiled_tmx(xml_str : String) : TileMap
+      xml = XML.parse(xml_str)
+      map_node = xml.first_element_child
+      if !map_node || map_node.name != "map"
+        raise "No <map> node found in TMX"
+      end
+
+      tile_w = map_node["tilewidth"].to_i
+      tile_h = map_node["tileheight"].to_i
+      map_w = map_node["width"].to_i
+      map_h = map_node["height"].to_i
+
+      tile_map = TileMap.new(tile_w, tile_h)
+      tile_map.map_width_tiles = map_w
+      tile_map.map_height_tiles = map_h
+
+      map_node.children.each do |node|
+        case node.name
+        when "tileset"
+          name = node["name"]
+          firstgid = node["firstgid"].to_i
+          ts_tile_w = node["tilewidth"].to_i
+          ts_tile_h = node["tileheight"].to_i
+
+          texture = GSDL::TextureManager.get(name)
+          tileset = GSDL::Tileset.new(texture, ts_tile_w, ts_tile_h, firstgid)
+
+          # Parse properties for solid_tiles
+          props_node = node.children.find { |n| n.name == "properties" }
+          if props_node
+            props_node.children.each do |prop|
+              next unless prop.name == "property"
+              if prop["name"] == "solid_tiles"
+                val = prop["value"]
+                if val.starts_with?("[") && val.ends_with?("]")
+                  tileset.solid_tiles = val[1...-1].split(",").map { |v| v.strip.to_i - 1 }
+                end
+              end
+            end
+          end
+
+          tile_map.add_tileset(name, tileset)
+        when "layer"
+          # For now, we only support one layer, like the JSON parser
+          data_node = node.children.find { |n| n.name == "data" }
+          if data_node
+            encoding = data_node["encoding"]?
+            if encoding == "csv"
+              csv_data = data_node.content.strip
+              layer_data = csv_data.split(/[\s,]+/).reject(&.empty?).map(&.to_u32)
+              tile_map.map_data = chunk_data(layer_data, map_w)
+            else
+              raise "Unsupported TMX encoding: #{encoding || "none"}. Only CSV is supported for now."
+            end
+          end
+        end
+      end
+
+      tile_map
+    end
+
     def self.from_tiled_file(filepath : String) : TileMap
-      from_tiled_json(JSON.parse(File.read(filepath)))
+      content = File.read(filepath)
+      if filepath.ends_with?(".tmx") || content.strip.starts_with?("<?xml") || content.strip.starts_with?("<map")
+        from_tiled_tmx(content)
+      else
+        from_tiled_json(JSON.parse(content))
+      end
     end
 
     def self.from_tiled_data(data : Bytes)
