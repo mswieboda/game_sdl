@@ -23,6 +23,7 @@ module GSDL
     property map_width_tiles : Int32
     property map_height_tiles : Int32
     property tiled_tilesets : Array(JSON::Any)
+    property z_index : Int32 = 0
 
     def initialize(@tile_width, @tile_height)
       @map_data = [] of Array(UInt32)
@@ -226,7 +227,8 @@ module GSDL
             texture: tileset.texture,
             source_rect: source_rect,
             dest_rect: dest_rect,
-            flip: flip_mode
+            flip: flip_mode,
+            z_index: @z_index
           )
         end
       end
