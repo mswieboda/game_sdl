@@ -18,3 +18,6 @@
 - Imports or require statements are centralized in `src/game_sdl.cr`. Do not add per-file `require` unless stricly necessary (compile error).
 - Do not run `crystal format`
 - Trim all whitespace for any changes or new files
+
+## Do Not Do
+- Do not edit files inside the `./lib/` folder, if you need to make those changes, summarize them to me so i can make them in the appropriate library repos I own (`sdl3`) or fork any others so that they can be released, and our GSDL game will update to the latest version
