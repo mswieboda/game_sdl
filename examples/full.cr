@@ -228,8 +228,7 @@ module GameEx
     end
 
     def draw(draw : GSDL::Draw)
-      # Note: doesn't have z_index yet
-      @tile_map.draw(draw, camera_x: 0, camera_y: 0)
+      @tile_map.draw(draw)
 
       @text.draw(draw)
       @ship.draw(draw)

@@ -62,10 +62,11 @@ module TileMapEx
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       ]
       @tile_map.load_map_data(map_data)
+      @tile_map.z_index = -5
     end
 
     def draw(draw : GSDL::Draw)
-      @tile_map.draw(draw, @camera_x, @camera_y)
+      @tile_map.draw(draw)
     end
   end
 

@@ -7,6 +7,10 @@ module GSDL
 
       def initialize(@z_index : Int32)
       end
+
+      def y : Num?
+        nil
+      end
     end
 
     abstract struct DrawColorCommand < DrawCommand
@@ -40,6 +44,10 @@ module GSDL
       )
         super(z_index: z_index)
       end
+
+      def y : Num?
+        @dest_rect.y
+      end
     end
 
     struct DrawTextCommand < DrawCommand
@@ -47,6 +55,10 @@ module GSDL
 
       def initialize(@text : Text)
         super(z_index: @text.z_index)
+      end
+
+      def y : Num?
+        @text.y
       end
     end
 
@@ -71,6 +83,10 @@ module GSDL
 
       def initialize(z_index : Int32, color : Color, @rect : SDL3::FRect, @outline : Bool)
         super(z_index: z_index, color: color)
+      end
+
+      def y : Num?
+        @rect.y
       end
     end
 
@@ -114,6 +130,10 @@ module GSDL
 
       def initialize(z_index : Int32, color : Color, @x1, @y1, @x2, @y2)
         super(z_index: z_index, color: color)
+      end
+
+      def y : Num?
+        @y1
       end
     end
 
@@ -161,7 +181,7 @@ module GSDL
     end
 
     def draw
-      @draw_commands.sort_by!(&.z_index)
+      @draw_commands.sort_by! { |c| {c.z_index, c.y.try(&.to_f32) || 0.0_f32} }
 
       @draw_commands.each do |command|
         color = self.color
