@@ -102,6 +102,8 @@ module GSDL
       case prop
       when "x"        then @target.x.to_f32
       when "y"        then @target.y.to_f32
+      when "offset_x" then @target.offset_x.to_f32
+      when "offset_y" then @target.offset_y.to_f32
       when "z_index"  then @target.z_index.to_f32
       when "rotation" then @target.rotation.to_f32
       when "scale"    then @target.scale.try { |s| {s[0].to_f32, s[1].to_f32} } || {1_f32, 1_f32}
@@ -119,6 +121,10 @@ module GSDL
         @target.x = value.as(Float32)
       when "y"
         @target.y = value.as(Float32)
+      when "offset_x"
+        @target.offset_x = value.as(Float32)
+      when "offset_y"
+        @target.offset_y = value.as(Float32)
       when "z_index"
         @target.z_index = value.as(Float32).to_i
       when "rotation"

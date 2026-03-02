@@ -1,5 +1,10 @@
+require "./tween"
+require "./tweenable"
+
 module GSDL
   class Camera
+    include Tweenable
+
     enum Type
       CenterOnTarget
       CenterOnTargetWithBoundary
@@ -28,8 +33,47 @@ module GSDL
       @y = center_y - (@height / (2_f32 * @zoom))
     end
 
-    property x : Num = 0_f32
-    property y : Num = 0_f32
+    @x : Float32 = 0_f32
+    @y : Float32 = 0_f32
+
+    property offset_x : Float32 = 0_f32
+    property offset_y : Float32 = 0_f32
+    
+    property tweens : Array(Tween) = [] of Tween
+
+    def z_index : Int32; 0; end
+    def z_index=(z_index : Int32); end
+    
+    def scale : Tuple(Num, Num)
+      {@zoom, @zoom}
+    end
+
+    def scale=(scale : Tuple(Num, Num))
+      self.zoom = scale[0].to_f32
+    end
+
+    def scale_x : Num; @zoom; end
+    def scale_x=(scale_x : Num); self.zoom = scale_x.to_f32; end
+
+    def scale_y : Num; @zoom; end
+    def scale_y=(scale_y : Num); self.zoom = scale_y.to_f32; end
+
+    def x : Float32
+      @x + @offset_x
+    end
+
+    def x=(x : Num)
+      @x = x.to_f32
+    end
+
+    def y : Float32
+      @y + @offset_y
+    end
+
+    def y=(y : Num)
+      @y = y.to_f32
+    end
+
     property width : Num
     property height : Num
 
@@ -53,7 +97,41 @@ module GSDL
     def initialize(@width : Num, @height : Num)
     end
 
+    def shake(duration : Float32, intensity : Float32 = 10_f32)
+      @offset_x = 0_f32
+      @offset_y = 0_f32
+      
+      steps = [] of Hash(String, Tween::SequenceValue)
+      
+      num_steps = (duration / 0.05).to_i
+      num_steps = 1 if num_steps < 1
+      step_duration = duration / num_steps
+
+      num_steps.times do |i|
+        current_intensity = intensity * (1.0_f32 - (i.to_f32 / num_steps.to_f32))
+        dx = (Random.rand * 2.0 - 1.0) * current_intensity
+        dy = (Random.rand * 2.0 - 1.0) * current_intensity
+        
+        steps << {
+          "duration" => step_duration.as(Tween::SequenceValue),
+          "offset_x" => dx.as(Tween::SequenceValue),
+          "offset_y" => dy.as(Tween::SequenceValue)
+        }
+      end
+
+      steps << {
+        "duration" => 0.05_f32.as(Tween::SequenceValue),
+        "offset_x" => 0_f32.as(Tween::SequenceValue),
+        "offset_y" => 0_f32.as(Tween::SequenceValue)
+      }
+
+      t = tween
+      t.add_sequence(steps)
+      t.start
+    end
+
     def update(dt : Float32)
+      update_tweens(dt)
       case @type
       when Type::CenterOnTarget
         update_center_on_target
@@ -102,17 +180,17 @@ module GSDL
 
       if @boundary_width > 0 && @boundary_height > 0
         if @boundary_width > effective_width
-          @x = @boundary_x if @x < @boundary_x
-          @x = @boundary_x + @boundary_width - effective_width if @x + effective_width > @boundary_x + @boundary_width
+          @x = @boundary_x.to_f32 if @x < @boundary_x
+          @x = @boundary_x.to_f32 + @boundary_width - effective_width if @x + effective_width > @boundary_x.to_f32 + @boundary_width
         else
-          @x = @boundary_x + (@boundary_width / 2_f32) - (effective_width / 2_f32)
+          @x = @boundary_x.to_f32 + (@boundary_width / 2_f32) - (effective_width / 2_f32)
         end
 
         if @boundary_height > effective_height
-          @y = @boundary_y if @y < @boundary_y
-          @y = @boundary_y + @boundary_height - effective_height if @y + effective_height > @boundary_y + @boundary_height
+          @y = @boundary_y.to_f32 if @y < @boundary_y
+          @y = @boundary_y.to_f32 + @boundary_height - effective_height if @y + effective_height > @boundary_y.to_f32 + @boundary_height
         else
-          @y = @boundary_y + (@boundary_height / 2_f32) - (effective_height / 2_f32)
+          @y = @boundary_y.to_f32 + (@boundary_height / 2_f32) - (effective_height / 2_f32)
         end
       end
     end

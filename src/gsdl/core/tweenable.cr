@@ -40,6 +40,10 @@ module GSDL
     abstract def scale_y=(scale_y : Num)
 
     # Optional properties with default implementations
+    def offset_x : Num; 0_f32; end
+    def offset_x=(val : Num); end
+    def offset_y : Num; 0_f32; end
+    def offset_y=(val : Num); end
     def rotation : Num; 0.0_f32; end
     def rotation=(rotation : Num); end
     def tint : Color?; nil; end

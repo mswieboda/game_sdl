@@ -92,6 +92,7 @@ module CameraEx
       Input.set(:switch_mode) { Keys.just_pressed?(Keys::Space) }
       Input.set(:zoom_in) { Keys.pressed?(Keys::E) }
       Input.set(:zoom_out) { Keys.pressed?(Keys::Q) }
+      Input.set(:shake) { Keys.just_pressed?(Keys::X) }
 
       @boundary = GSDL::Rect.new(x: 0, y: 0, w: Game.width + GRID_SIZE * 4, h: Game.height + GRID_SIZE * 4)
 
@@ -147,7 +148,12 @@ module CameraEx
         @camera.zoom -= 1.0_f32 * dt
         @camera.zoom = 0.1_f32 if @camera.zoom < 0.1_f32
       end
-      @zoom_text.text = "Zoom: #{sprintf("%.2f", @camera.zoom)} (Q/E to zoom)"
+
+      if Input.action?(:shake)
+        @camera.shake(0.5_f32, 20_f32)
+      end
+
+      @zoom_text.text = "Zoom: #{sprintf("%.2f", @camera.zoom)} (Q/E to zoom, X to shake)"
 
       @camera.update(dt)
     end
