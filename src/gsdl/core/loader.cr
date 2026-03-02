@@ -88,6 +88,14 @@ module GSDL
       @tasks << AssetTask.new(:TileMap, key, path_key)
     end
 
+    def add_tasks(tasks : Array(AssetTask))
+      @tasks.concat(tasks)
+    end
+
+    def busy? : Bool
+      !complete? && (@task_mutex.synchronize { !@task_queue.empty? } || @result_mutex.synchronize { !@result_queue.empty? })
+    end
+
     def start_async(workers : Int32 = 4)
       # Cap workers to prevent resource exhaustion
       @max_workers = workers.clamp(1, 8)

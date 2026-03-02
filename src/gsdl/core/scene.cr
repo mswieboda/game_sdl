@@ -7,11 +7,15 @@ module GSDL
     property transition_out : Transition = EmptyTransition.new
 
     def initialize(
-      @name = :base,
-      @transition_in = EmptyTransition.new,
-      @transition_out = EmptyTransition.new
+      @name : Symbol = :base,
+      @transition_in : Transition = EmptyTransition.new,
+      @transition_out : Transition = EmptyTransition.new
     )
       @exit = false
+    end
+
+    def self.manifest : Array(Loader::AssetTask)
+      [] of Loader::AssetTask
     end
 
     def init

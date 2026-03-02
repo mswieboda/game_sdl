@@ -38,6 +38,19 @@ module GSDL
       @scene.init
     end
 
+    def switch_async(scene_class : T.class) forall T
+      loader = Game.instance.loader
+      tasks = T.manifest
+      
+      if tasks.empty?
+        switch(T.new)
+      else
+        loader.add_tasks(tasks)
+        loader.start_async
+        switch(LoadingScene(T).new(scene_class))
+      end
+    end
+
     def update(dt : Float32)
       update_transitions(dt)
 
