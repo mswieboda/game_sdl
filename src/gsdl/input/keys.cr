@@ -108,6 +108,11 @@ module GSDL
     Down = LibSDL3::DOWN
     Up = LibSDL3::UP
 
+    # modifier keys
+    # TODO: we still need all the others (see list in LibSDL3::Keymod)
+    LShift = LibSDL3::LSHIFT
+    RShift = LibSDL3::RSHIFT
+
     enum State
       JustPressed
       Pressed
