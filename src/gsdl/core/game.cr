@@ -58,6 +58,7 @@ module GSDL
     @window : SDL3::Window?
     @scene_manager : SceneManager?
     @draw : Draw?
+    @loader : Loader?
     @last_tick : UInt64 = 0_i64
     @exit : Bool = false
     @title : String?
@@ -66,6 +67,7 @@ module GSDL
 
     def window; @window.not_nil!; end
     def scene_manager; @scene_manager.not_nil!; end
+    def loader; @loader ||= Loader.new; end
     def exit?; @exit; end
     def title; @title.not_nil!; end
     def width; @width.not_nil!; end
@@ -193,6 +195,7 @@ module GSDL
 
       while !exit?
         InputEvents.update
+        # loader.update
 
         current_tick = GSDL.ticks
         delta_time_ms = current_tick - @last_tick

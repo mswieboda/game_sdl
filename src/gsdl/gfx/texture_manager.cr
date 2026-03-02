@@ -58,6 +58,11 @@ module GSDL
       instance.load_from_memory(key, io)
     end
 
+    # Loads a texture from an SDL surface and associates it with a key.
+    def self.load_from_surface(key : String, surface : Surface) : Texture
+      instance.load_from_surface(key, surface)
+    end
+
     # Retrieves a loaded texture by its key.
     # Returns nil if the texture is not found.
     def self.get(key : String) : Texture
@@ -91,6 +96,16 @@ module GSDL
         return @textures[key]
       end
       texture_sdl = SDL3::Image.load_texture_io(@draw.to_sdl, io, close_io: true)
+      texture = Texture.new(texture_sdl)
+      @textures[key] = texture
+      texture
+    end
+
+    def load_from_surface(key : String, surface : Surface) : Texture
+      if @textures.has_key?(key)
+        return @textures[key]
+      end
+      texture_sdl = SDL3::Texture.from_surface(@draw.to_sdl, surface.to_sdl)
       texture = Texture.new(texture_sdl)
       @textures[key] = texture
       texture
