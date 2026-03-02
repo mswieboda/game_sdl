@@ -26,6 +26,14 @@ module GSDL
     property tiled_tilesets : Array(JSON::Any)
     property z_index : Int32 = 0
 
+    def width : Int32
+      @map_width_tiles * @tile_width
+    end
+
+    def height : Int32
+      @map_height_tiles * @tile_height
+    end
+
     def initialize(@tile_width, @tile_height)
       @map_data = [] of Array(UInt32)
       @tilesets = {} of String => Tileset
