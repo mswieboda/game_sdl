@@ -46,20 +46,15 @@ module PlatformerEx
   end
 
   class Player < GSDL::AnimatedSprite
-    include GSDL::TileMapCollidable
+    include GSDL::PlatformerController
 
     JUMP_IMPULSE = -512_f32
     SPEED = 192_f32
 
-    getter? facing_left
-
     def initialize(key, width, height)
       super(key: key, width: width, height: height)
 
-      # for flipping the texture horizontally from last movement direction
-      @facing_left = false
-
-      # turns gravity on from TileMapCollidable
+      # turns gravity on from PlatformerController / TileMapCollidable
       @use_gravity = true
 
       # adds animations for AnimatedSprite
@@ -68,44 +63,22 @@ module PlatformerEx
       add("jump", [17, 18, 19], 8, loops: false)
     end
 
+    # Required by PlatformerController
+    def move_speed : GSDL::Num; SPEED; end
+    def jump_impulse : GSDL::Num; JUMP_IMPULSE; end
+
     # custom collision box, because of sprite whitespace
     def collision_bounding_box : GSDL::FRect
       GSDL::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
     end
 
-    def update(dt : Float32, tile_map : GSDL::TileMap)
-      update_movement(dt, tile_map)
-
-      # calls AnimatedSprite#update for animation playback
-      super(dt)
-    end
-
-    def update_movement(dt : Float32, tile_map : GSDL::TileMap)
-      # horizontal input Handling
-      dx = dx_from_movement
-
-      @velocity_x = dx * SPEED
-
-      # jump
-      # can use Input[:jump] or Input.action?(:jump)
-      jump(JUMP_IMPULSE) if grounded? && Input.action?(:jump)
-
-      # physics and collision handling
-      move_and_collide(dt, tile_map)
+    def update(dt : Float32, tile_map : GSDL::TileMap, collidables : Array(GSDL::Collidable), world_bounds : GSDL::FRect)
+      platformer_update(dt, tile_map: tile_map, collidables: collidables, world_bounds: world_bounds)
 
       # animation from movement changes
-      update_animation(dx)
-    end
-
-    def dx_from_movement : Int32
       dx = 0
-      dx = -1 if Input.action?(:left)
-      dx = 1 if Input.action?(:right)
-      dx
-    end
-
-    def update_animation(dx : Int32)
-      @facing_left = dx < 0 if dx != 0
+      dx = -1 if GSDL::Input.action?(:left)
+      dx = 1 if GSDL::Input.action?(:right)
 
       if !grounded?
         play("jump") unless playing?("jump")
@@ -114,10 +87,35 @@ module PlatformerEx
       else
         play("idle")
       end
+
+      # calls AnimatedSprite#update for animation playback
+      super(dt)
     end
 
     def draw(draw : GSDL::Draw, camera : GSDL::Camera? = nil)
-      super(draw, camera: camera, flip_horizontal: facing_left?)
+      super(draw, camera: camera, flip_horizontal: direction.left?)
+    end
+  end
+
+  class Coin < GSDL::AnimatedSprite
+    def initialize(x, y)
+      super(key: "coin", width: 32, height: 32, x: x, y: y)
+
+      @z_index = 1
+      add("idle", [0, 1, 2, 3, 4, 3, 2, 1], 8, loops: true)
+      play("idle")
+    end
+  end
+
+  class CustomPlatform < GSDL::Sprite
+    def initialize(x, y, w, h)
+      super(key: "tiles", x: x, y: y)
+
+      @z_index = 1
+
+      # Use a solid tile from the tileset
+      @source_rect = GSDL::FRect.new(x: 0, y: 0, w: 32, h: 32)
+      self.scale = {w / 32.0_f32, h / 32.0_f32}
     end
   end
 
@@ -129,6 +127,7 @@ module PlatformerEx
     @camera : GSDL::Camera
     @coins : Array(GSDL::AnimatedSprite)
     @coin_audio : GSDL::Audio
+    @collidables : Array(GSDL::Collidable)
     @coin_text : GSDL::Text
     @info_text : GSDL::Text
 
@@ -185,6 +184,10 @@ module PlatformerEx
         color: GSDL::Color::Gold
       )
 
+      # Add a floating sprite block, instead of tiles
+      @collidables = [] of GSDL::Collidable
+      @collidables << CustomPlatform.new(x: 160, y: 384, w: 160, h: 16)
+
       small_font = GSDL::Font.default.copy
       small_font.size = 12
 
@@ -197,6 +200,9 @@ module PlatformerEx
         origin: {0.5_f32, 0_f32},
         color: GSDL::Color::Lime
       )
+
+      # World bounds: slightly larger than the tile map to see them working
+      @bounds = GSDL::FRect.new(-16, -16, @tile_map.width + 32, @tile_map.height + 32)
     end
 
     def update(dt : Float32)
@@ -204,7 +210,7 @@ module PlatformerEx
 
       @coins.each(&.update(dt))
 
-      @player.update(dt, @tile_map)
+      @player.update(dt, @tile_map, @collidables, @bounds)
 
       @coins.each do |coin|
         if @player.collides?(coin)
@@ -221,7 +227,19 @@ module PlatformerEx
     end
 
     def draw(draw : GSDL::Draw)
+      # Draw bounds in red
+      bounds_camera = GSDL::FRect.new(x: @bounds.x - @camera.x, y: @bounds.y - @camera.y, w: @bounds.w, h: @bounds.h)
+      draw.rect_outline(bounds_camera, GSDL::Color::Red, z_index: 1)
+
       @tile_map.draw(draw, @camera)
+
+      @collidables.each do |b|
+        # could loop through Collidables and draw each kind separately
+        if b.is_a?(GSDL::Sprite)
+          b.draw(draw, @camera)
+        end
+      end
+
       @coins.each(&.draw(draw, @camera))
       @player.draw(draw, @camera)
       @coin_text.draw(draw)
