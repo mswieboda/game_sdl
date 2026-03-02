@@ -8,7 +8,25 @@ module GSDL
 
     property type : Type = Type::CenterOnTarget
 
-    property zoom : Float32 = 1.0_f32
+    @zoom : Float32 = 1.0_f32
+
+    def zoom
+      @zoom
+    end
+
+    def zoom=(new_zoom : Float32)
+      return if @zoom == new_zoom
+      
+      # Calculate the world coordinates of the center of the current camera view
+      center_x = @x + (@width / (2_f32 * @zoom))
+      center_y = @y + (@height / (2_f32 * @zoom))
+
+      @zoom = new_zoom
+
+      # Update @x and @y so that center_x and center_y are still at the center of the view
+      @x = center_x - (@width / (2_f32 * @zoom))
+      @y = center_y - (@height / (2_f32 * @zoom))
+    end
 
     property x : Num = 0_f32
     property y : Num = 0_f32

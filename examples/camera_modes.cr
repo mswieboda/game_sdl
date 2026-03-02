@@ -37,7 +37,7 @@ module CameraEx
     @velocity_y = 0_f32
 
     def initialize(key, width, height)
-      super(key: key, width: width, height: height)
+      super(key: key, width: width, height: height, origin: {0.5_f32, 0.5_f32})
       add("idle", [0], 8)
       add("walk", (1..6).to_a, 8)
       play("idle")
