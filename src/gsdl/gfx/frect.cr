@@ -4,12 +4,53 @@ module GSDL
   struct FRect
     @internal : SDL3::FRect
 
-    delegate x, :"x=", to: @internal
-    delegate y, :"y=", to: @internal
-    delegate w, :"w=", to: @internal
-    delegate h, :"h=", to: @internal
-    delegate width, :"width=", to: @internal
-    delegate height, :"height=", to: @internal
+    def x : Float32
+      @internal.x
+    end
+
+    def x=(value : Float32)
+      @internal.x = value
+    end
+
+    def y : Float32
+      @internal.y
+    end
+
+    def y=(value : Float32)
+      @internal.y = value
+    end
+
+    def w : Float32
+      @internal.w
+    end
+
+    def w=(value : Float32)
+      @internal.w = value
+    end
+
+    def h : Float32
+      @internal.h
+    end
+
+    def h=(value : Float32)
+      @internal.h = value
+    end
+
+    def width : Float32
+      @internal.width
+    end
+
+    def width=(value : Float32)
+      @internal.width = value
+    end
+
+    def height : Float32
+      @internal.height
+    end
+
+    def height=(value : Float32)
+      @internal.height = value
+    end
 
     def initialize(frect : FRect)
       @internal = frect

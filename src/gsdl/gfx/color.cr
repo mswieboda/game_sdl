@@ -39,9 +39,45 @@ module GSDL
 
     @internal : SDL3::Color
 
-    delegate r, g, b, a, to: @internal
-    delegate :"r=", :"g=", :"b=", :"a=", to: @internal
-    delegate to_hex, to_u32, to: @internal
+    def r : UInt8
+      @internal.r
+    end
+
+    def r=(value : UInt8)
+      @internal.r = value
+    end
+
+    def g : UInt8
+      @internal.g
+    end
+
+    def g=(value : UInt8)
+      @internal.g = value
+    end
+
+    def b : UInt8
+      @internal.b
+    end
+
+    def b=(value : UInt8)
+      @internal.b = value
+    end
+
+    def a : UInt8
+      @internal.a
+    end
+
+    def a=(value : UInt8)
+      @internal.a = value
+    end
+
+    def to_hex(with_alpha = false) : String
+      @internal.to_hex(with_alpha)
+    end
+
+    def to_u32 : UInt32
+      @internal.to_u32
+    end
 
     macro alias_property(new_name, old_name)
       def {{new_name.id}}; {{old_name.id}}; end

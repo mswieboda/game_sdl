@@ -4,8 +4,21 @@ module GSDL
   struct Point
     @internal : SDL3::FPoint
 
-    delegate x, :"x=", to: @internal
-    delegate y, :"y=", to: @internal
+    def x : Float32
+      @internal.x
+    end
+
+    def x=(value : Float32)
+      @internal.x = value
+    end
+
+    def y : Float32
+      @internal.y
+    end
+
+    def y=(value : Float32)
+      @internal.y = value
+    end
 
     def self.distance(dx : Num, dy : Num) : Float32
       Math.hypot(dx.to_f32, dy.to_f32)

@@ -13,15 +13,53 @@ module GSDL
       Texture.new(texture: texture)
     end
 
-    delegate blend_mode, :"blend_mode=", to: @internal
-    delegate :"color_mod=", to: @internal
-    delegate destroy, to: @internal
-    delegate lock, to: @internal
-    delegate scale_mode, :"scale_mode=", to: @internal
-    delegate size, to: @internal
-    delegate tint, :"tint=", to: @internal
-    delegate unlock, to: @internal
-    delegate update, to: @internal
+    def blend_mode : LibSDL3::BlendMode
+      @internal.blend_mode
+    end
+
+    def blend_mode=(blend_mode : LibSDL3::BlendMode)
+      @internal.blend_mode = blend_mode
+    end
+
+    def color_mod=(color : Color)
+      @internal.color_mod = color.to_sdl
+    end
+
+    def destroy : Void
+      @internal.destroy
+    end
+
+    def lock(rect : LibSDL3::Rect?) : Tuple(Pointer(Void), Int32)
+      @internal.lock(rect)
+    end
+
+    def scale_mode : LibSDL3::ScaleMode
+      @internal.scale_mode
+    end
+
+    def scale_mode=(scale_mode : LibSDL3::ScaleMode) : Bool
+      @internal.scale_mode = scale_mode
+    end
+
+    def size : Tuple(Float32, Float32)
+      @internal.size
+    end
+
+    def tint=(color : Color)
+      @internal.tint = color.to_sdl
+    end
+
+    def tint : Color
+      Color.new(@internal.tint)
+    end
+
+    def unlock : Void
+      @internal.unlock
+    end
+
+    def update(rect : LibSDL3::Rect?, pixels : Pointer(Void), pitch : Int32) : Bool
+      @internal.update(rect, pixels, pitch)
+    end
 
     def initialize(texture : SDL3::Texture)
       @internal = texture

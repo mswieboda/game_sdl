@@ -19,7 +19,9 @@ module GSDL
 
     @texture : Texture
 
-    delegate size, to: @texture
+    def size : Tuple(Float32, Float32)
+      @texture.size
+    end
 
     def initialize(
       @key : String,

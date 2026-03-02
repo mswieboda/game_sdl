@@ -30,39 +30,153 @@ module GSDL
 
     @internal : SDL3::TTF::Font
 
-    delegate ascent, to: @internal
-    delegate clear_fallbacks, to: @internal
-    delegate close, to: @internal
-    delegate descent, to: @internal
-    delegate faces, to: @internal
-    delegate family_name, to: @internal
-    delegate :"fixed_width?", to: @internal
-    delegate height, to: @internal
-    delegate kerning, :"kerning=", to: @internal
-    delegate line_skip, :"line_skip=", to: @internal
-    delegate measure, to: @internal
-    delegate outline, :"outline=", to: @internal
-    delegate render_glyph_blended, to: @internal
-    delegate render_glyph_lcd, to: @internal
-    delegate render_glyph_shaded, to: @internal
-    delegate render_glyph_solid, to: @internal
-    delegate render_text_blended, to: @internal
-    delegate render_text_blended_wrapped, to: @internal
-    delegate render_text_lcd, to: @internal
-    delegate render_text_lcd_wrapped, to: @internal
-    delegate render_text_shaded, to: @internal
-    delegate render_text_shaded_wrapped, to: @internal
-    delegate render_text_solid, to: @internal
-    delegate render_text_solid_wrapped, to: @internal
-    delegate set_dpi, to: @internal
-    delegate :"scalable?", to: @internal
-    delegate sdf, :"sdf=", to: @internal
-    delegate size, :"size=", to: @internal
-    delegate size_dpi, to: @internal
-    delegate style_name, to: @internal
-    delegate text_size, to: @internal
-    delegate text_size_wrapped, to: @internal
-    delegate weight, to: @internal
+    def ascent : Int32
+      @internal.ascent
+    end
+
+    def clear_fallbacks : Void
+      @internal.clear_fallbacks
+    end
+
+    def close : Void
+      @internal.close
+    end
+
+    def descent : Int32
+      @internal.descent
+    end
+
+    def faces : Int32
+      @internal.faces
+    end
+
+    def family_name : String
+      @internal.family_name
+    end
+
+    def fixed_width? : Bool
+      @internal.fixed_width?
+    end
+
+    def height : Int32
+      @internal.height
+    end
+
+    def kerning : Bool
+      @internal.kerning
+    end
+
+    def kerning=(enabled : Bool)
+      @internal.kerning = enabled
+    end
+
+    def line_skip : Int32
+      @internal.line_skip
+    end
+
+    def line_skip=(line_skip : Int32)
+      @internal.line_skip = line_skip
+    end
+
+    def measure(text : String, max_width : Int32) : Tuple(Int32, UInt64)
+      @internal.measure(text, max_width)
+    end
+
+    def outline : Int32
+      @internal.outline
+    end
+
+    def outline=(outline : Int32)
+      @internal.outline = outline
+    end
+
+    def render_glyph_blended(char : UInt32, color : Color) : Surface
+      @internal.render_glyph_blended(char, color.to_sdl)
+    end
+
+    def render_glyph_lcd(char : UInt32, fg_color : Color, bg_color : Color) : Surface
+      @internal.render_glyph_lcd(char, fg_color.to_sdl, bg_color.to_sdl)
+    end
+
+    def render_glyph_shaded(char : UInt32, fg_color : Color, bg_color : Color) : Surface
+      @internal.render_glyph_shaded(char, fg_color.to_sdl, bg_color.to_sdl)
+    end
+
+    def render_glyph_solid(char : UInt32, color : Color) : Surface
+      @internal.render_glyph_solid(char, color.to_sdl)
+    end
+
+    def render_text_blended(text : String, color : Color) : Surface
+      @internal.render_text_blended(text, color.to_sdl)
+    end
+
+    def render_text_blended_wrapped(text : String, color : Color, wrap_length : Int32) : Surface
+      @internal.render_text_blended_wrapped(text, color.to_sdl, wrap_length)
+    end
+
+    def render_text_lcd(text : String, fg_color : Color, bg_color : Color) : Surface
+      @internal.render_text_lcd(text, fg_color.to_sdl, bg_color.to_sdl)
+    end
+
+    def render_text_lcd_wrapped(text : String, fg_color : Color, bg_color : Color, wrap_length : Int32) : Surface
+      @internal.render_text_lcd_wrapped(text, fg_color.to_sdl, bg_color.to_sdl, wrap_length)
+    end
+
+    def render_text_shaded(text : String, fg_color : Color, bg_color : Color) : Surface
+      @internal.render_text_shaded(text, fg_color.to_sdl, bg_color.to_sdl)
+    end
+
+    def render_text_shaded_wrapped(text : String, fg_color : Color, bg_color : Color, wrap_length : Int32) : Surface
+      @internal.render_text_shaded_wrapped(text, fg_color.to_sdl, bg_color.to_sdl, wrap_length)
+    end
+
+    def render_text_solid(text : String, color : Color) : Surface
+      @internal.render_text_solid(text, color.to_sdl)
+    end
+
+    def render_text_solid_wrapped(text : String, color : Color, wrap_length : Int32) : Surface
+      @internal.render_text_solid_wrapped(text, color.to_sdl, wrap_length)
+    end
+
+    def set_dpi(point_size : Float32, hdpi : Int32, vdpi : Int32) : Bool
+      @internal.set_dpi(point_size, hdpi, vdpi)
+    end
+
+    def scalable? : Bool
+      @internal.scalable?
+    end
+
+    def sdf : Bool
+      @internal.sdf
+    end
+
+    def sdf=(enabled : Bool)
+      @internal.sdf = enabled
+    end
+
+    def size : Float32
+      @internal.size
+    end
+
+    def size_dpi(hdpi : Int32, vdpi : Int32) : Bool
+      @internal.size_dpi(hdpi, vdpi)
+    end
+
+    def style_name : String
+      @internal.style_name
+    end
+
+    def text_size(text : String) : Tuple(Int32, Int32)
+      @internal.text_size(text)
+    end
+
+    def text_size_wrapped(text : String, wrap_width : Int32) : Tuple(Int32, Int32)
+      @internal.text_size_wrapped(text, wrap_width)
+    end
+
+    def weight : Int32
+      @internal.weight
+    end
 
     def initialize(font : SDL3::TTF::Font)
       @internal = font

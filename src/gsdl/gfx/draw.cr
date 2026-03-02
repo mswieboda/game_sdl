@@ -140,10 +140,21 @@ module GSDL
     # add more for text, geo etc
     @draw_commands : Array(DrawCommand)
 
-    delegate clear, to: @r
-    delegate destroy, to: @r
-    delegate get_logical_presentation, to: @r
-    delegate set_logical_presentation, to: @r
+    def clear : Bool
+      @r.clear
+    end
+
+    def destroy : Void
+      @r.destroy
+    end
+
+    def get_logical_presentation(w : Int32, h : Int32, mode : LibSDL3::RendererLogicalPresentation)
+      @r.get_logical_presentation(w, h, mode)
+    end
+
+    def set_logical_presentation(w : Int32, h : Int32, mode : LibSDL3::RendererLogicalPresentation) : Bool
+      @r.set_logical_presentation(w, h, mode)
+    end
 
     def initialize(window : SDL3::Window)
       @r = SDL3::Renderer.new(window)

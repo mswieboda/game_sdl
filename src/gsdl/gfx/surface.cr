@@ -14,7 +14,9 @@ module GSDL
       TextEngine.create_surface_text_engine
     end
 
-    delegate destroy, to: @internal
+    def destroy : Void
+      @internal.destroy
+    end
 
     def initialize(surface : SDL3::Surface)
       @internal = surface

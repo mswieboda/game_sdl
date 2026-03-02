@@ -52,6 +52,12 @@ module GSDL
       @internal
     end
 
-    delegate x, y, to: @internal
+    def x : Float32
+      @internal.fpoint.x
+    end
+
+    def y : Float32
+      @internal.fpoint.y
+    end
   end
 end

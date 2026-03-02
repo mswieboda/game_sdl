@@ -12,8 +12,13 @@ module GSDL
 
     @internal : SDL3::TTF::TextEngine
 
-    delegate destroy, to: @internal
-    delegate type, to: @internal
+    def destroy : Void
+      @internal.destroy
+    end
+
+    def type : Type
+      @internal.type
+    end
 
     def initialize(engine : SDL3::TTF::TextEngine)
       @internal = engine

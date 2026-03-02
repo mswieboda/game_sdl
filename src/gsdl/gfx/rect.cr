@@ -5,12 +5,53 @@ module GSDL
   struct Rect
     @internal : SDL3::Rect
 
-    delegate x, :"x=", to: @internal
-    delegate y, :"y=", to: @internal
-    delegate w, :"w=", to: @internal
-    delegate h, :"h=", to: @internal
-    delegate width, :"width=", to: @internal
-    delegate height, :"height=", to: @internal
+    def x : Int32
+      @internal.x
+    end
+
+    def x=(value : Int32)
+      @internal.x = value
+    end
+
+    def y : Int32
+      @internal.y
+    end
+
+    def y=(value : Int32)
+      @internal.y = value
+    end
+
+    def w : Int32
+      @internal.w
+    end
+
+    def w=(value : Int32)
+      @internal.w = value
+    end
+
+    def h : Int32
+      @internal.h
+    end
+
+    def h=(value : Int32)
+      @internal.h = value
+    end
+
+    def width : Int32
+      @internal.width
+    end
+
+    def width=(value : Int32)
+      @internal.width = value
+    end
+
+    def height : Int32
+      @internal.height
+    end
+
+    def height=(value : Int32)
+      @internal.height = value
+    end
 
     def initialize(frect : Rect)
       @internal = frect
