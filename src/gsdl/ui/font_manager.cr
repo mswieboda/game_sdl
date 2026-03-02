@@ -6,9 +6,11 @@ module GSDL
     @@instance : FontManager? = nil
 
     @fonts : Hash(String, Font)
+    @base_fonts : Hash(String, Font)
 
     private def initialize
       @fonts = Hash(String, Font).new
+      @base_fonts = Hash(String, Font).new
     end
 
     # Sets up the singleton instance of FontManager.
@@ -62,7 +64,7 @@ module GSDL
     end
 
     def self.get(key : String, size : Float32) : Font
-      instance.get("#{key}-#{size}")
+      instance.get(key, size)
     end
 
     # Retrieves a loaded font by its key.
@@ -87,12 +89,13 @@ module GSDL
     # --- Instance methods (called by class methods via the singleton instance) ---
 
     def load(key : String, path : String, size : Float32) : Font
-      key = "#{key}-#{size}"
-      if @fonts.has_key?(key)
-        return @fonts[key]
+      font_key = "#{key}-#{size}"
+      if @fonts.has_key?(font_key)
+        return @fonts[font_key]
       end
       font = Font.new(SDL3::TTF::Font.open(path, size))
-      @fonts[key] = font
+      @fonts[font_key] = font
+      @base_fonts[key] = font unless @base_fonts.has_key?(key)
       font
     end
 
@@ -104,26 +107,60 @@ module GSDL
 
       font = Font.new(SDL3::TTF::Font.open_io(io, size, close_io: true))
       @fonts[font_key] = font
+      @base_fonts[key] = font unless @base_fonts.has_key?(key)
       font
     end
 
+    def get(key : String, size : Float32) : Font
+      font_key = "#{key}-#{size}"
+      @fonts.fetch(font_key) do
+        # If we don't have the sized font, try to copy it from a base font
+        if base_font = @base_fonts[key]?
+          new_font = base_font.copy
+          new_font.size = size
+          @fonts[font_key] = new_font
+          new_font
+        else
+          raise "Font with key '#{key}' (and size #{size}) not found in FontManager. Was it loaded?"
+        end
+      end
+    end
+
     def get(key : String) : Font
-      @fonts.fetch(key) do
+      @fonts[key]? || @base_fonts.fetch(key) do
         raise "Font with key '#{key}' not found in FontManager. Was it loaded?"
       end
     end
 
     def unload(key : String) : Nil
-      if font = @fonts.delete(key)
+      # This unloads ALL sizes for this key if it's a base key,
+      # or just the specific size if it's a compound key
+      if @base_fonts.has_key?(key)
+        @base_fonts.delete(key)
+        # Also delete all sized versions
+        prefix = "#{key}-"
+        @fonts.reject! do |k, font|
+          if k.starts_with?(prefix)
+            font.close
+            true
+          else
+            false
+          end
+        end
+      elsif font = @fonts.delete(key)
+        # If this font was used as a base, remove it from base_fonts too
+        @base_fonts.reject! { |_, v| v == font }
         font.close
       end
     end
 
     def clear_all : Nil
-      @fonts.each_value do |font|
+      # Close all unique fonts
+      @fonts.values.uniq.each do |font|
         font.close
       end
       @fonts.clear
+      @base_fonts.clear
     end
   end
 end
