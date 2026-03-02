@@ -23,6 +23,7 @@ module GSDL
 
     # The File object for the opened assets.pack. Kept open for direct access.
     @@packfile_io : File? = nil
+    @@mutex = Mutex.new
 
     # Base path for loading loose assets in debug mode
     @@asset_path : String = "assets"
@@ -133,21 +134,23 @@ module GSDL
     # Reads raw byte data for a given path_key from the loaded packfile.
     # Returns a Bytes object.
     def self.load_raw_data(path_key : String) : Bytes
-      unless initialized?
-        raise "GSDL::AssetManager: Packfile not loaded. Call AssetManager.load_pack first."
+      @@mutex.synchronize do
+        unless initialized?
+          raise "GSDL::AssetManager: Packfile not loaded. Call AssetManager.load_pack first."
+        end
+
+        entry = @@manifest[path_key]?
+        unless entry
+          raise "GSDL::AssetManager: Asset '#{path_key}' not found in packfile manifest."
+        end
+
+        file = @@packfile_io.not_nil!
+        file.seek(entry.offset, IO::Seek::Set)
+
+        data = Bytes.new(entry.size)
+        file.read_fully(data)
+        data
       end
-
-      entry = @@manifest[path_key]?
-      unless entry
-        raise "GSDL::AssetManager: Asset '#{path_key}' not found in packfile manifest."
-      end
-
-      file = @@packfile_io.not_nil!
-      file.seek(entry.offset, IO::Seek::Set)
-
-      data = Bytes.new(entry.size)
-      file.read_fully(data)
-      data
     end
 
     # --- SDL3::IOStream Creation from Raw Data ---

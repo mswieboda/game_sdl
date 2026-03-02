@@ -195,7 +195,7 @@ module GSDL
 
       while !exit?
         InputEvents.update
-        # loader.update
+        loader.update
 
         current_tick = GSDL.ticks
         delta_time_ms = current_tick - @last_tick

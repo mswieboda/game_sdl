@@ -33,7 +33,6 @@ module GSDL
 
     # called within check_scenes in child classes
     protected def switch(scene : Scene)
-      puts "GSDL::SceneManager: Switching to scene '#{scene.name}'"
       @scene.reset
       @scene = scene
       @scene.init
