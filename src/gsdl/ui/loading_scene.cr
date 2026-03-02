@@ -1,8 +1,12 @@
 module GSDL
-  class LoadingScene(T) < Scene
+  class LoadingScene(T) < LoadingSceneBase
     @text : Text
     @progress_text : Text
     @next_scene_class : T.class
+
+    def next_scene_class : Scene.class
+      @next_scene_class
+    end
 
     def initialize(@next_scene_class : T.class)
       super(:loading)

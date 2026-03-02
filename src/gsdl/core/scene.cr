@@ -3,19 +3,25 @@ module GSDL
     getter name
     getter? exit
 
-    property transition_in : Transition = EmptyTransition.new
-    property transition_out : Transition = EmptyTransition.new
+    property transition_in : Transition
+    property transition_out : Transition
 
     def initialize(
       @name : Symbol = :base,
-      @transition_in : Transition = EmptyTransition.new,
-      @transition_out : Transition = EmptyTransition.new
+      transition_in : Transition? = nil,
+      transition_out : Transition? = nil
     )
+      @transition_in = transition_in || EmptyTransition.new
+      @transition_out = transition_out || EmptyTransition.new
       @exit = false
     end
 
     def self.manifest : Array(Loader::AssetTask)
       [] of Loader::AssetTask
+    end
+
+    def self.loading_scene_class(target_scene_class : T.class) : LoadingSceneBase forall T
+      LoadingScene(T).new(target_scene_class)
     end
 
     def init
@@ -34,5 +40,9 @@ module GSDL
 
     def draw(draw : Draw)
     end
+  end
+
+  abstract class LoadingSceneBase < Scene
+    abstract def next_scene_class : Scene.class
   end
 end

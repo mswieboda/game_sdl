@@ -97,6 +97,7 @@ module AsyncLoadingEx
 
     def initialize
       super(:main)
+
       @ship = GSDL::Sprite.new(key: "ship_0", origin: {0.5_f32, 0.5_f32})
       @ship.center(width: GSDL::Game.width, height: GSDL::Game.height)
       

@@ -47,7 +47,7 @@ module GSDL
       else
         loader.add_tasks(tasks)
         loader.start_async
-        switch(LoadingScene(T).new(scene_class))
+        switch(T.loading_scene_class(scene_class))
       end
     end
 
