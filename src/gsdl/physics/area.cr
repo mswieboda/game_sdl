@@ -30,5 +30,48 @@ module GSDL
     def in?(other : Collidable) : Bool
       other.collision_box.overlaps?(area_box)
     end
+
+    # Returns true if this object (if Directionable) is facing the other Area's draw coordinates.
+    # Always returns true if this object is not Directionable.
+    def facing_area?(other : Area) : Bool
+      if self.is_a?(Directionable)
+        self.facing?(other.draw_x, other.draw_y)
+      else
+        true
+      end
+    end
+
+    # Checks if this Area intersects with another Area, is facing it, and (optionally) an input action is active.
+    def area_triggered?(other : Area, action : Symbol | String | Nil = nil) : Bool
+      if action && !Input.action?(action)
+        return false
+      end
+      in?(other) && facing_area?(other)
+    end
+
+    # Iterates over given areas and yields the first one that triggers the interaction condition.
+    def on_area_trigger(others : Array(Area), action : Symbol | String | Nil = nil, &block : Area ->)
+      others.find do |other|
+        if area_triggered?(other, action)
+          block.call(other)
+          true
+        else
+          false
+        end
+      end
+    end
+
+    # Iterates over an array of mixed objects, filters by the given type (which must include Area),
+    # and yields the first one that triggers the interaction condition.
+    def on_area_trigger(others : Array, type : U.class, action : Symbol | String | Nil = nil, &block : U ->) forall U
+      others.find do |other|
+        if other.is_a?(U) && other.is_a?(Area) && area_triggered?(other, action)
+          block.call(other)
+          true
+        else
+          false
+        end
+      end
+    end
   end
 end

@@ -5,6 +5,7 @@ module GSDL
     include Centerable
     include Collidable
     include Area
+    include Directionable
     include Tweenable
 
     property x : Num
