@@ -156,6 +156,7 @@ module PlatformerEx
 
       # player
       @player = Player.new(key: "player", width: 32, height: 64)
+      @player.z_index = 1
 
       # TODO: find a way to include player start tile from map.json
       @player.center(width: WIDTH, height: HEIGHT - 300)
@@ -168,6 +169,7 @@ module PlatformerEx
       5.times.to_a do |i|
         x, y = spot = spots[i]
         coin = GSDL::AnimatedSprite.new(key: "coin", width: 32, height: 32, x: x, y: y)
+        coin.z_index = 1
         coin.add("idle", [0, 1, 2, 3, 4, 3, 2, 1], 8, loops: true)
         coin.play("idle")
         @coins << coin
@@ -179,6 +181,7 @@ module PlatformerEx
         x: WIDTH - 32,
         y: 32,
         origin: {1.0_f32, 0_f32},
+        z_index: 5,
         color: GSDL::Color::Gold
       )
 
@@ -190,6 +193,7 @@ module PlatformerEx
         text: "TAB to toggle debug",
         x: WIDTH / 2_f32,
         y: 16,
+        z_index: 5,
         origin: {0.5_f32, 0_f32},
         color: GSDL::Color::Lime
       )
