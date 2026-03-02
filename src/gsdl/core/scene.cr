@@ -9,6 +9,7 @@ module GSDL
     property transition_out : Transition
     property switch_data : SwitchData?
     property z_index : Int32 = 0
+    property pause_scene : Scene?
 
     def initialize(
       @name : Symbol = :base,

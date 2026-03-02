@@ -23,6 +23,74 @@ module PauseEx
     end
   end
 
+  class CustomPauseScene < GSDL::Scene
+    @menu : GSDL::Menu
+    @title : GSDL::Text
+    @background : GSDL::Box
+
+    def initialize
+      super(:custom_pause)
+      @z_index = 2000
+
+      @title = GSDL::Text.new(
+        text: "CUSTOM PAUSE",
+        x: GSDL::Game.width / 2_f32,
+        y: GSDL::Game.height / 2_f32 - 100,
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color::Gold,
+        scale: {3_f32, 3_f32},
+        z_index: @z_index
+      )
+
+      items = [{:resume, "Resume"}, {:settings, "Settings"}, {:credits, "Credits"}, {:quit, "Quit"}]
+      @menu = GSDL::Menu.new(
+        is_selected: ->(x : GSDL::Num, y : GSDL::Num, w : GSDL::Num, h : GSDL::Num) {
+          GSDL::Keys.just_pressed?([GSDL::Keys::Space, GSDL::Keys::Return])
+        },
+        is_next: -> { GSDL::Keys.just_pressed?([GSDL::Keys::S, GSDL::Keys::Down]) },
+        is_previous: -> { GSDL::Keys.just_pressed?([GSDL::Keys::W, GSDL::Keys::Up]) },
+        items: items,
+        x: GSDL::Game.width // 2,
+        y: GSDL::Game.height // 2,
+        origin: {0.5_f32, 0.5_f32},
+        on_select: ->(id : Symbol) {
+          if id == :resume
+            Game.instance.paused = false
+          elsif id == :quit
+            Game.instance.scene_manager.exit
+          end
+          nil
+        },
+        separation: 16,
+        default_text_color: GSDL::Color::Orange,
+        selected_text_color: ->(index : Int32) { GSDL::Color::White },
+        z_index: @z_index
+      )
+      @background = GSDL::Box.new(
+        x: 0,
+        y: 0,
+        width: Game.width,
+        height: Game.height,
+        color: GSDL::Color.new(0, 0, 0, 192),
+        z_index: @z_index
+      )
+    end
+
+    def update(dt : Float32)
+      if GSDL::Keys.just_pressed?(GSDL::Keys::Escape)
+        GSDL::Game.instance.paused = false
+        return
+      end
+      @menu.update(dt)
+    end
+
+    def draw(draw : GSDL::Draw)
+      @background.draw(draw)
+      @title.draw(draw)
+      @menu.draw(draw)
+    end
+  end
+
   class MainScene < GSDL::Scene
     @text : GSDL::Text
     @rotation : Float32 = 0_f32
@@ -30,22 +98,19 @@ module PauseEx
     def initialize
       super(:main)
       @text = GSDL::Text.new(
-        text: "GAME RUNNING\n\nPress ENTER to Pause",
+        text: "GAME RUNNING\n\nPress ESC to Pause",
         x: GSDL::Game.width / 2_f32,
         y: GSDL::Game.height / 2_f32,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Lime,
         align: GSDL::Font::Align::Center
       )
+      self.pause_scene = CustomPauseScene.new
     end
 
     def update(dt : Float32)
-      if GSDL::Keys.just_pressed?(GSDL::Keys::Return)
-        GSDL::Game.instance.paused = true
-      end
-
       if GSDL::Keys.just_pressed?(GSDL::Keys::Escape)
-        GSDL::Game.instance.scene_manager.exit
+        GSDL::Game.instance.paused = true
       end
 
       @rotation += 100 * dt

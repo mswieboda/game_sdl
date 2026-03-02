@@ -58,7 +58,7 @@ module GSDL
     end
 
     def update_paused(dt : Float32)
-      pause_scene.try &.update(dt)
+      (scene.pause_scene || pause_scene).try &.update(dt)
     end
 
     def update(dt : Float32)
@@ -78,7 +78,7 @@ module GSDL
       scene.transition_out.draw(draw) if scene.transition_out.started?
 
       if Game.instance.paused?
-        pause_scene.try &.draw(draw)
+        (scene.pause_scene || pause_scene).try &.draw(draw)
       end
     end
   end
