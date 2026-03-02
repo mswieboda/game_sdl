@@ -13,3 +13,6 @@
 
 # pi AI agent specfic project settings, context, skills, extensions
 .pi/
+
+# Gemini CLI AI agent specfic project settings, context, skills, extensions
+.gemini/
