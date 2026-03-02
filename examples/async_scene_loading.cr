@@ -65,10 +65,11 @@ module AsyncSceneLoadingEx
   class CustomLoadingScene(T) < GSDL::LoadingSceneBase
     @text : GSDL::Text
     @next_scene_class : T.class
+    @data : GSDL::SwitchData?
 
     def next_scene_class : GSDL::Scene.class; @next_scene_class; end
 
-    def initialize(@next_scene_class : T.class)
+    def initialize(@next_scene_class : T.class, @data : GSDL::SwitchData? = nil)
       super(:custom_loading)
       @text = GSDL::Text.new(
         text: "CUSTOM LOADING...",
@@ -82,7 +83,7 @@ module AsyncSceneLoadingEx
     def update(dt : Float32)
       loader = GSDL::Game.instance.loader
       if loader.complete?
-        GSDL::Game.instance.scene_manager.switch(T.new)
+        GSDL::Game.instance.scene_manager.switch(T.new, @data)
       end
     end
 

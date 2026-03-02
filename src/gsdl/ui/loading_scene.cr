@@ -3,12 +3,13 @@ module GSDL
     @text : Text
     @progress_text : Text
     @next_scene_class : T.class
+    @data : SwitchData?
 
     def next_scene_class : Scene.class
       @next_scene_class
     end
 
-    def initialize(@next_scene_class : T.class)
+    def initialize(@next_scene_class : T.class, @data : SwitchData? = nil)
       super(:loading)
       @text = Text.new(
         text: "Loading Assets...",
@@ -33,7 +34,7 @@ module GSDL
       @progress_text.text = "#{progress.percentage.to_i}%"
       
       if loader.complete?
-        Game.instance.scene_manager.switch(T.new)
+        Game.instance.scene_manager.switch(T.new, @data)
       end
     end
 

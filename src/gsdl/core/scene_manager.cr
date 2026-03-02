@@ -32,22 +32,23 @@ module GSDL
     end
 
     # called within check_scenes in child classes
-    protected def switch(scene : Scene)
+    protected def switch(scene : Scene, data : SwitchData? = nil)
       @scene.reset
       @scene = scene
+      @scene.switch_data = data if data
       @scene.init
     end
 
-    def switch_async(scene_class : T.class) forall T
+    def switch_async(scene_class : T.class, data : SwitchData? = nil) forall T
       loader = Game.instance.loader
       tasks = T.manifest
       
       if tasks.empty?
-        switch(T.new)
+        switch(T.new, data)
       else
         loader.add_tasks(tasks)
         loader.start_async
-        switch(T.loading_scene_class(scene_class))
+        switch(T.loading_scene_class(scene_class, data))
       end
     end
 

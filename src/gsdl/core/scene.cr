@@ -1,15 +1,19 @@
 module GSDL
+  alias SwitchData = Hash(Symbol, String | Int32 | Float32 | Bool | Symbol)
+
   class Scene
     getter name
     getter? exit
 
     property transition_in : Transition
     property transition_out : Transition
+    property switch_data : SwitchData?
 
     def initialize(
       @name : Symbol = :base,
       transition_in : Transition? = nil,
-      transition_out : Transition? = nil
+      transition_out : Transition? = nil,
+      @switch_data : SwitchData? = nil
     )
       @transition_in = transition_in || EmptyTransition.new
       @transition_out = transition_out || EmptyTransition.new
@@ -20,8 +24,8 @@ module GSDL
       [] of Loader::AssetTask
     end
 
-    def self.loading_scene_class(target_scene_class : T.class) : LoadingSceneBase forall T
-      LoadingScene(T).new(target_scene_class)
+    def self.loading_scene_class(target_scene_class : T.class, data : SwitchData? = nil) : LoadingSceneBase forall T
+      LoadingScene(T).new(target_scene_class, data)
     end
 
     def init
