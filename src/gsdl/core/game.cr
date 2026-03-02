@@ -64,6 +64,7 @@ module GSDL
     @title : String?
     @width : Int32?
     @height : Int32?
+    @paused : Bool = false
 
     def window; @window.not_nil!; end
     def scene_manager; @scene_manager.not_nil!; end
@@ -72,6 +73,12 @@ module GSDL
     def title; @title.not_nil!; end
     def width; @width.not_nil!; end
     def height; @height.not_nil!; end
+    def paused?; @paused; end
+    def paused=(@paused : Bool); end
+
+    def toggle_pause
+      @paused = !@paused
+    end
 
     def initialize(title = "", width = 1920, height = 1080)
       @title = title
@@ -190,6 +197,8 @@ module GSDL
       _init
       init
 
+      scene_manager.pause_scene ||= PauseScene.new
+
       @exit = false
       @last_tick = GSDL.ticks
 
@@ -215,7 +224,12 @@ module GSDL
     end
 
     def update(dt : Float32)
-      scene_manager.update(dt)
+      if paused?
+        scene_manager.update_paused(dt)
+      else
+        scene_manager.update(dt)
+      end
+
       @exit = true if scene_manager.exit?
     end
 

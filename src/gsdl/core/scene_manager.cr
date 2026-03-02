@@ -2,10 +2,15 @@ module GSDL
   class SceneManager
     getter scene : Scene
     getter? exit
+    property pause_scene : Scene?
 
     def initialize
       @scene = Scene.new
       @exit = false
+    end
+
+    def exit
+      @exit = true
     end
 
     private def update_transitions(dt : Float32)
@@ -52,6 +57,10 @@ module GSDL
       end
     end
 
+    def update_paused(dt : Float32)
+      pause_scene.try &.update(dt)
+    end
+
     def update(dt : Float32)
       update_transitions(dt)
 
@@ -67,6 +76,10 @@ module GSDL
       scene.draw(draw) unless exit?
       scene.transition_in.draw(draw) if scene.transition_in.running?
       scene.transition_out.draw(draw) if scene.transition_out.started?
+
+      if Game.instance.paused?
+        pause_scene.try &.draw(draw)
+      end
     end
   end
 end

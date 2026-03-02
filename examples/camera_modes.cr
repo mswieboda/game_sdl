@@ -97,8 +97,6 @@ module CameraEx
       @boundary = GSDL::Rect.new(x: 0, y: 0, w: Game.width + GRID_SIZE * 4, h: Game.height + GRID_SIZE * 4)
 
       @camera = GSDL::Camera.new(width: Game.width, height: Game.height)
-      puts ">>> win size: #{{Game.width, Game.height}} @boundary: #{@boundary}"
-      puts ">>> @boundary.h: #{@boundary.h} @boundary.height: #{@boundary.height}"
       @camera.set_boundary(@boundary)
       @camera.type = GSDL::Camera::Type::CenterOnTargetWithBoundary
 
@@ -174,10 +172,9 @@ module CameraEx
     def draw_floor(draw : GSDL::Draw)
       end_x = @boundary.right
       end_y = @boundary.bottom
-      # puts ">>> draw_floor end_y: #{end_y}"
+
       (0...end_x).step(GRID_SIZE) do |x|
         (0...end_y).step(GRID_SIZE) do |y|
-          # puts ">>> draw_floor end_y: #{end_y} row, y: #{y}"
           # Checkerboard logic
           color = ((x / GRID_SIZE).to_i + (y / GRID_SIZE).to_i) % 2 == 0 ? GSDL::Color::Gray : GSDL::Color::DarkGray
 

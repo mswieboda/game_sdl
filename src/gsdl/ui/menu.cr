@@ -26,6 +26,7 @@ module GSDL
     property item_height_same : Bool = true
     property mouse_hover : Bool = false
     property hover_text_color : Color
+    property z_index : Int32 = 0
 
     @on_select : Symbol -> Nil
     @selected_text_color : (Int32 -> Color)?
@@ -85,6 +86,7 @@ module GSDL
       @mouse_hover : Bool = false,
       @hover_text_color = Color::White,
       @hover_box = nil,
+      @z_index : Int32 = 0,
       @on_select : Symbol -> Nil = ->(s : Symbol) { }
     )
       @items_text = [] of Text
@@ -158,6 +160,7 @@ module GSDL
         item.origin = {item.origin_x, 0.5_f32}
         
         item.scale = @scale
+        item.z_index = @z_index
 
         if @vertical
           current_pos_y += h + @separation * scale_y
@@ -289,6 +292,7 @@ module GSDL
     private def draw_box_at(draw : Draw, box : Box | SpriteBase, x : Num, y : Num, w : Num, h : Num)
       box.x = x
       box.y = y
+      box.z_index = @z_index
       if box.is_a?(Box)
         box.width = w
         box.height = h
@@ -301,6 +305,7 @@ module GSDL
       icon_h = icon.draw_height
       
       icon_y = rect[:y] + (rect[:h] - icon_h) / 2.0_f32
+      icon.z_index = @z_index
 
       if @selected_icon_placement == IconPlacement::Left || @selected_icon_placement == IconPlacement::Both
         icon.x = rect[:x] - icon_w - 5_f32
