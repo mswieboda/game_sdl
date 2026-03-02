@@ -20,4 +20,6 @@
 - Trim all whitespace for any changes or new files
 
 ## Do Not Do
-- Do not edit files inside the `./lib/` folder, if you need to make those changes, summarize them to me so i can make them in the appropriate library repos I own (`sdl3`) or fork any others so that they can be released, and our GSDL game will update to the latest version
+- **Library Files:** NEVER edit files in `./lib/`. Summarize proposed changes for the user to apply to the source repositories (e.g., `sdl3`).
+- **Git Operations:** NO write commands (`git add`, `git commit`, `git stage`). Use read-only commands only.
+- **Trello:** DO NOT modify the Trello board or cards.
