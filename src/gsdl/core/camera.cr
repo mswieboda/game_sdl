@@ -8,6 +8,8 @@ module GSDL
 
     property type : Type = Type::CenterOnTarget
 
+    property zoom : Float32 = 1.0_f32
+
     property x : Num = 0_f32
     property y : Num = 0_f32
     property width : Num
@@ -71,25 +73,28 @@ module GSDL
 
     private def update_center_on_target
       if (tx = @target_x) && (ty = @target_y)
-        @x = tx - (@width / 2_f32)
-        @y = ty - (@height / 2_f32)
+        @x = tx - (@width / (2_f32 * @zoom))
+        @y = ty - (@height / (2_f32 * @zoom))
       end
     end
 
     private def apply_boundary
+      effective_width = @width / @zoom
+      effective_height = @height / @zoom
+
       if @boundary_width > 0 && @boundary_height > 0
-        if @boundary_width > @width
+        if @boundary_width > effective_width
           @x = @boundary_x if @x < @boundary_x
-          @x = @boundary_x + @boundary_width - @width if @x + @width > @boundary_x + @boundary_width
+          @x = @boundary_x + @boundary_width - effective_width if @x + effective_width > @boundary_x + @boundary_width
         else
-          @x = @boundary_x + (@boundary_width / 2_f32) - (@width / 2_f32)
+          @x = @boundary_x + (@boundary_width / 2_f32) - (effective_width / 2_f32)
         end
 
-        if @boundary_height > @height
+        if @boundary_height > effective_height
           @y = @boundary_y if @y < @boundary_y
-          @y = @boundary_y + @boundary_height - @height if @y + @height > @boundary_y + @boundary_height
+          @y = @boundary_y + @boundary_height - effective_height if @y + effective_height > @boundary_y + @boundary_height
         else
-          @y = @boundary_y + (@boundary_height / 2_f32) - (@height / 2_f32)
+          @y = @boundary_y + (@boundary_height / 2_f32) - (effective_height / 2_f32)
         end
       end
     end

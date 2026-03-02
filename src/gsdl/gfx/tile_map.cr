@@ -278,8 +278,15 @@ module GSDL
 
     # Draws the tilemap
     def draw(draw : Draw, camera : Camera? = nil)
-      camera_x = camera.try(&.x.to_i32) || 0
-      camera_y = camera.try(&.y.to_i32) || 0
+      old_scale_x = draw.current_scale_x
+      old_scale_y = draw.current_scale_y
+
+      if camera
+        draw.scale = camera.zoom
+      end
+
+      camera_x = camera.try(&.x.to_f32) || 0_f32
+      camera_y = camera.try(&.y.to_f32) || 0_f32
 
       # TODO: Implement frustum culling here
       # For simplicity, drawing all tiles for now.
@@ -312,6 +319,10 @@ module GSDL
             z_index: @z_index
           )
         end
+      end
+
+      if camera
+        draw.scale = {old_scale_x, old_scale_y}
       end
     end
   end

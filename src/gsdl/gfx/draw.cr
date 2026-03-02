@@ -4,6 +4,8 @@ module GSDL
 
     abstract struct DrawCommand
       property z_index : Int32
+      property scale_x : Float32 = 1.0_f32
+      property scale_y : Float32 = 1.0_f32
 
       def initialize(@z_index : Int32)
       end
@@ -156,6 +158,30 @@ module GSDL
       @r.set_logical_presentation(w, h, mode)
     end
 
+    property current_scale_x : Float32 = 1_f32
+    property current_scale_y : Float32 = 1_f32
+
+    def scale=(val : Float32)
+      @current_scale_x = val
+      @current_scale_y = val
+    end
+
+    def scale=(val : Tuple(Float32, Float32))
+      @current_scale_x = val[0]
+      @current_scale_y = val[1]
+    end
+
+    def scale
+      {@current_scale_x, @current_scale_y}
+    end
+
+    private def push_cmd(cmd)
+      c = cmd
+      c.scale_x = @current_scale_x
+      c.scale_y = @current_scale_y
+      @draw_commands << c
+    end
+
     def initialize(window : SDL3::Window)
       @r = SDL3::Renderer.new(window)
       @draw_commands = [] of DrawCommand
@@ -194,7 +220,17 @@ module GSDL
     def draw
       @draw_commands.sort_by! { |c| {c.z_index, c.y.try(&.to_f32) || 0.0_f32} }
 
+      active_scale_x = 1_f32
+      active_scale_y = 1_f32
+      @r.scale = {1_f32, 1_f32}
+
       @draw_commands.each do |command|
+        if command.scale_x != active_scale_x || command.scale_y != active_scale_y
+          active_scale_x = command.scale_x
+          active_scale_y = command.scale_y
+          @r.scale = {active_scale_x, active_scale_y}
+        end
+
         color = self.color
         blend_mode = nil
 
@@ -269,6 +305,7 @@ module GSDL
       end
 
       @draw_commands.clear
+      @r.scale = {1_f32, 1_f32}
 
       @r.present
     end
@@ -276,23 +313,23 @@ module GSDL
     # geometry
 
     def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : Texture? = nil)
-      @draw_commands << DrawGeometryCommand.new(
+      push_cmd(DrawGeometryCommand.new(
         z_index: z_index,
         vertices: vertices.map(&.to_sdl),
         indices: indices,
         texture: texture.try(&.to_sdl)
-      )
+      ))
     end
 
     # points
 
     def point(x : Num, y : Num, color = Color::White, z_index = 0)
-      @draw_commands << DrawPointCommand.new(
+      push_cmd(DrawPointCommand.new(
         z_index: z_index,
         color: color,
         x: x.to_f32,
         y: y.to_f32
-      )
+      ))
     end
 
     def point(point : Point, color = Color::White, z_index = 0)
@@ -300,11 +337,11 @@ module GSDL
     end
 
     def points(points : Points, color = Color::White, z_index = 0)
-      @draw_commands << DrawPointsCommand.new(
+      push_cmd(DrawPointsCommand.new(
         points: points.map(&.to_sdl),
         color: color,
         z_index: z_index
-      )
+      ))
     end
 
     # draws a single `Pixel`
@@ -323,14 +360,14 @@ module GSDL
     # lines
 
     def line(x1 : Num, y1 : Num, x2 : Num, y2 : Num, color = Color::White, z_index = 0)
-      @draw_commands << DrawLineCommand.new(
+      push_cmd(DrawLineCommand.new(
         z_index: z_index,
         color: color,
         x1: x1.to_f32,
         y1: y1.to_f32,
         x2: x2.to_f32,
         y2: y2.to_f32
-      )
+      ))
     end
 
     def line(line : Line)
@@ -345,22 +382,22 @@ module GSDL
     end
 
     def lines(points : Points, color = Color::White, z_index = 0)
-      @draw_commands << DrawLinesCommand.new(
+      push_cmd(DrawLinesCommand.new(
         points: points.map(&.to_sdl),
         color: color,
         z_index: z_index
-      )
+      ))
     end
 
     # rects
 
     def rect_fill(rect : FRect, color = Color::White, z_index : Int32 = 0)
-      @draw_commands << DrawFRectCommand.new(
+      push_cmd(DrawFRectCommand.new(
         rect: rect.to_sdl,
         color: color,
         outline: false,
         z_index: z_index
-      )
+      ))
     end
 
     def rect_fill(rect : Rect, color = Color::White, z_index : Int32 = 0)
@@ -372,12 +409,12 @@ module GSDL
     end
 
     def rects_fill(rects : FRects, color = Color::White, z_index = 0)
-      @draw_commands << DrawFRectsCommand.new(
+      push_cmd(DrawFRectsCommand.new(
         rects: rects.map(&.to_sdl),
         color: color,
         z_index: z_index,
         outline: false
-      )
+      ))
     end
 
     def rects_fill(rects : Array(Rect), color = Color::White, z_index = 0)
@@ -390,12 +427,12 @@ module GSDL
     end
 
     def rect_outline(rect : FRect, color = Color::White, z_index : Int32 = 0)
-      @draw_commands << DrawFRectCommand.new(
+      push_cmd(DrawFRectCommand.new(
         rect: rect.to_sdl,
         color: color,
         z_index: z_index,
         outline: true
-      )
+      ))
     end
 
     def rect_outline(rect : Rect, color = Color::White, z_index : Int32 = 0)
@@ -407,12 +444,12 @@ module GSDL
     end
 
     def rects_outline(rects : FRects, color = Color::White, z_index = 0)
-      @draw_commands << DrawFRectsCommand.new(
+      push_cmd(DrawFRectsCommand.new(
         rects: rects.map(&.to_sdl),
         color: color,
         z_index: z_index,
         outline: true
-      )
+      ))
     end
 
     def rects_outline(rects : Array(Rect), color = Color::White, z_index = 0)
@@ -427,7 +464,7 @@ module GSDL
     # text
 
     def text(text : Text)
-      @draw_commands << DrawTextCommand.new(text)
+      push_cmd(DrawTextCommand.new(text))
     end
 
     # textures
@@ -475,6 +512,9 @@ module GSDL
       actual_dest_rect = dest_rect || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)
 
       if draw_immediately
+        current_active_scale = @r.scale
+        @r.scale = {@current_scale_x, @current_scale_y}
+
         _draw_texture_rotated(
           texture: texture.to_sdl,
           source_rect: source_rect.try(&.to_sdl),
@@ -485,8 +525,10 @@ module GSDL
           tint: tint,
           destroy: destroy,
         )
+
+        @r.scale = current_active_scale
       else
-        @draw_commands << DrawTextureCommand.new(
+        push_cmd(DrawTextureCommand.new(
           z_index: z_index,
           texture: texture.to_sdl,
           source_rect: source_rect.try(&.to_sdl),
@@ -496,7 +538,7 @@ module GSDL
           flip: flip,
           tint: tint,
           destroy: destroy
-        )
+        ))
       end
     end
 

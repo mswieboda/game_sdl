@@ -72,6 +72,7 @@ module CameraEx
     @camera : GSDL::Camera
     @player : Player
     @info_text : GSDL::Text
+    @zoom_text : GSDL::Text
 
     GRID_SIZE = 32
 
@@ -89,6 +90,8 @@ module CameraEx
       Input.set(:camera_down) { Keys.pressed?(Keys::K) }
 
       Input.set(:switch_mode) { Keys.just_pressed?(Keys::Space) }
+      Input.set(:zoom_in) { Keys.pressed?(Keys::E) }
+      Input.set(:zoom_out) { Keys.pressed?(Keys::Q) }
 
       @boundary = GSDL::Rect.new(x: 0, y: 0, w: Game.width + GRID_SIZE * 4, h: Game.height + GRID_SIZE * 4)
 
@@ -106,6 +109,12 @@ module CameraEx
         text: "Mode: CenterOnTargetWithBoundary (SPACE to switch)",
         x: 10,
         y: 10,
+        color: GSDL::Color::White
+      )
+      @zoom_text = GSDL::Text.new(
+        text: "Zoom: 1.0 (Q/E to zoom)",
+        x: 10,
+        y: 40,
         color: GSDL::Color::White
       )
     end
@@ -131,14 +140,29 @@ module CameraEx
         @camera.look_at(@player)
       end
 
+      if Input.action?(:zoom_in)
+        @camera.zoom += 1.0_f32 * dt
+      end
+      if Input.action?(:zoom_out)
+        @camera.zoom -= 1.0_f32 * dt
+        @camera.zoom = 0.1_f32 if @camera.zoom < 0.1_f32
+      end
+      @zoom_text.text = "Zoom: #{sprintf("%.2f", @camera.zoom)} (Q/E to zoom)"
+
       @camera.update(dt)
     end
 
     def draw(draw : GSDL::Draw)
+      old_scale = draw.scale
+      draw.scale = @camera.zoom
+
       draw_floor(draw)
+
+      draw.scale = old_scale
 
       @player.draw(draw, @camera)
       @info_text.draw(draw)
+      @zoom_text.draw(draw)
     end
 
     def draw_floor(draw : GSDL::Draw)
