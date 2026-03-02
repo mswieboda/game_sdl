@@ -45,8 +45,8 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @messages : Array(GSDL::Message)
-    @buttons : Array(GSDL::Button)
+    @messages : Array(GSDL::Message | GSDL::MessageRotated)
+    @buttons : Array(GSDL::Button | GSDL::ButtonRotated)
 
     def initialize
       super(:start)
@@ -55,8 +55,8 @@ module GameEx
       font.size = 12
       color = GSDL::Color::Red
 
-      @messages = [] of GSDL::Message
-      @buttons = [] of GSDL::Button
+      @messages = [] of GSDL::Message | GSDL::MessageRotated
+      @buttons = [] of GSDL::Button | GSDL::ButtonRotated
 
       @messages << GSDL::Message.new(
         font: font,
@@ -118,6 +118,28 @@ module GameEx
         width: 128,
         color: color,
         border_radius: 16
+      )
+
+      @messages << GSDL::MessageRotated.new(
+        font: font,
+        text: "Rotated\nmessage\nwow!",
+        x: 400.to_f32,
+        y: 400.to_f32,
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color::Green,
+        border_radius: 16,
+        rotation: 15.0_f32
+      )
+
+      @buttons << GSDL::ButtonRotated.new(
+        on_click: -> on_click(String),
+        text: "Rotated OK!",
+        x: 600.to_f32,
+        y: 450.to_f32,
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color::Cyan,
+        border_radius: 16,
+        rotation: -25.0_f32
       )
     end
 

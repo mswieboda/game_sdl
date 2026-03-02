@@ -258,44 +258,24 @@ module GSDL
 
     private def draw_outline_cross(draw : Draw)
       # top
-      draw.line(
-        x1: draw_x + draw_border_radius,
-        y1: draw_y,
-        x2: draw_x + draw_width - draw_border_radius,
-        y2: draw_y,
-        color: color,
-        z_index: z_index
-      )
+      p1 = rotate_point(draw_x + draw_border_radius, draw_y)
+      p2 = rotate_point(draw_x + draw_width - draw_border_radius, draw_y)
+      draw.line(p1[0], p1[1], p2[0], p2[1], color: color, z_index: z_index)
 
       # bottom
-      draw.line(
-        x1: draw_x + draw_border_radius,
-        y1: draw_y + draw_height,
-        x2: draw_x + draw_width - draw_border_radius,
-        y2: draw_y + draw_height,
-        color: color,
-        z_index: z_index
-      )
+      p3 = rotate_point(draw_x + draw_border_radius, draw_y + draw_height)
+      p4 = rotate_point(draw_x + draw_width - draw_border_radius, draw_y + draw_height)
+      draw.line(p3[0], p3[1], p4[0], p4[1], color: color, z_index: z_index)
 
       # left
-      draw.line(
-        x1: draw_x,
-        y1: draw_y + draw_border_radius,
-        x2: draw_x,
-        y2: draw_y + draw_height - draw_border_radius,
-        color: color,
-        z_index: z_index
-      )
+      p5 = rotate_point(draw_x, draw_y + draw_border_radius)
+      p6 = rotate_point(draw_x, draw_y + draw_height - draw_border_radius)
+      draw.line(p5[0], p5[1], p6[0], p6[1], color: color, z_index: z_index)
 
       # right
-      draw.line(
-        x1: draw_x + draw_width,
-        y1: draw_y + draw_border_radius,
-        x2: draw_x + draw_width,
-        y2: draw_y + draw_height - draw_border_radius,
-        color: color,
-        z_index: z_index
-      )
+      p7 = rotate_point(draw_x + draw_width, draw_y + draw_border_radius)
+      p8 = rotate_point(draw_x + draw_width, draw_y + draw_height - draw_border_radius)
+      draw.line(p7[0], p7[1], p8[0], p8[1], color: color, z_index: z_index)
     end
 
     private def draw_outline_border_radius(draw : Draw)
