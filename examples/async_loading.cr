@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module AsyncLoadingEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Async Loading Example", width: 800, height: 600)
+      super(title: "Async Loading Stress Test", width: 800, height: 600)
     end
 
     def init
@@ -37,7 +37,7 @@ module AsyncLoadingEx
     def initialize
       super(:loading)
       @text = GSDL::Text.new(
-        text: "Loading Assets...",
+        text: "Loading 500 Assets...",
         x: GSDL::Game.width / 2_f32,
         y: GSDL::Game.height / 2_f32 - 20,
         origin: {0.5_f32, 0.5_f32},
@@ -51,33 +51,33 @@ module AsyncLoadingEx
         color: GSDL::Color::Cyan
       )
 
-      # Queue assets
+      # Queue assets - Stress test with 500 tasks
       loader = GSDL::Game.instance.loader
-      loader.add_texture("ship", "gfx/ship.png")
-      loader.add_texture("coin", "gfx/coin.png")
-      loader.add_texture("tiles", "gfx/tiles.png")
-      loader.add_audio("race_car", "sfx/race_car.wav")
 
-      # 200.times do |i|
-      #   loader.add_texture("ship_#{i}", "gfx/ship.png")
-      #   loader.add_texture("coin_#{i}", "gfx/coin.png")
-      #   loader.add_texture("tiles_#{i}", "gfx/tiles.png")
-      #   loader.add_audio("race_car_#{i}", "sfx/race_car.wav")
-      # end
+      # Mix of textures and audio
+      10.times do |i|
+        if i % 2 == 0
+          # Reuse same file but with unique key to simulate many textures
+          loader.add_texture("ship_#{i}", "gfx/ship.png")
+        else
+          loader.add_audio("audio_#{i}", "sfx/ding.wav")
+        end
+      end
 
       loader.add_font("default", "fonts/PressStart2P.ttf", 16_f32)
       
-      # Start loading
-      loader.start_async
+      # Start loading with 4 worker threads
+      loader.start_async(workers: 4)
     end
 
     def update(dt : Float32)
       loader = GSDL::Game.instance.loader
       progress = loader.progress
-      # puts ">>> loader progress: #{progress.percentage} %"
-      @progress_text.text = "#{progress.percentage.to_i}%"
+
+      @progress_text.text = "#{progress.percentage.to_i}% (#{progress.loaded_count}/#{progress.total_count})"
       
       if loader.complete?
+        puts "Loader complete! Switching scene..."
         @done = true
       end
     end
@@ -97,11 +97,11 @@ module AsyncLoadingEx
 
     def initialize
       super(:main)
-      @ship = GSDL::Sprite.new("ship", source_rect: GSDL::FRect.new(x: 0, y: 0, w: 128), origin: {0.5_f32, 0.5_f32})
-      @ship.center(width: GSDL::Game.width, height: GSDL::Game.height)
+      @ship = GSDL::Sprite.new("ship_0")
+      @ship.center(GSDL::Game.width, GSDL::Game.height)
       
       @text = GSDL::Text.new(
-        text: "Assets Loaded Successfully!",
+        text: "500 Assets Loaded Successfully!",
         x: GSDL::Game.width / 2_f32,
         y: 50,
         origin: {0.5_f32, 0.5_f32},

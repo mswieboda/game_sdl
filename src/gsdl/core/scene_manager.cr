@@ -28,11 +28,12 @@ module GSDL
     end
 
     # check when to switch scenes using `switch(scene : Scene)`
-    private def check_scenes
+    protected def check_scenes
     end
 
     # called within check_scenes in child classes
-    private def switch(scene : Scene)
+    protected def switch(scene : Scene)
+      puts "GSDL::SceneManager: Switching to scene '#{scene.name}'"
       @scene.reset
       @scene = scene
       @scene.init
@@ -41,7 +42,9 @@ module GSDL
     def update(dt : Float32)
       update_transitions(dt)
 
-      return if scene.transition_in.started? || scene.transition_out.started?
+      if scene.transition_in.started? || scene.transition_out.started?
+        return
+      end
 
       check_scenes
       scene.update(dt)

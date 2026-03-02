@@ -4,6 +4,7 @@ module GSDL
 
     @mixer : LibSDL3Mixer::Mixer*
     @audio_assets : Hash(String, GSDL::Audio)
+    @mutex = Mutex.new
 
     private def initialize
       # Initialize SDL_mixer and create the mixer instance
@@ -82,80 +83,90 @@ module GSDL
     # --- Instance methods (called by class methods via the singleton instance) ---
 
     def load(key : String, path : String) : GSDL::Audio
-      if @audio_assets.has_key?(key)
-        return @audio_assets[key]
-      end
+      @mutex.synchronize do
+        if @audio_assets.has_key?(key)
+          return @audio_assets[key]
+        end
 
-      audio_lib = LibSDL3Mixer.load_audio(@mixer, path.to_unsafe, true)
-      if audio_lib.null?
-        raise "Failed to load audio file '#{path}': #{SDL3.get_error}"
-      end
+        audio_lib = LibSDL3Mixer.load_audio(@mixer, path.to_unsafe, true)
+        if audio_lib.null?
+          raise "Failed to load audio file '#{path}': #{SDL3.get_error}"
+        end
 
-      track_lib = LibSDL3Mixer.create_track(@mixer)
-      if track_lib.null?
-        LibSDL3Mixer.destroy_audio(audio_lib)
-        raise "Failed to create track for '#{path}': #{SDL3.get_error}"
-      end
+        track_lib = LibSDL3Mixer.create_track(@mixer)
+        if track_lib.null?
+          LibSDL3Mixer.destroy_audio(audio_lib)
+          raise "Failed to create track for '#{path}': #{SDL3.get_error}"
+        end
 
-      unless LibSDL3Mixer.set_track_audio(track_lib, audio_lib)
-        LibSDL3Mixer.destroy_track(track_lib)
-        LibSDL3Mixer.destroy_audio(audio_lib)
-        raise "Failed to set audio to track for '#{path}': #{SDL3.get_error}"
-      end
+        unless LibSDL3Mixer.set_track_audio(track_lib, audio_lib)
+          LibSDL3Mixer.destroy_track(track_lib)
+          LibSDL3Mixer.destroy_audio(audio_lib)
+          raise "Failed to set audio to track for '#{path}': #{SDL3.get_error}"
+        end
 
-      audio_instance = GSDL::Audio.new(path, audio_lib, track_lib)
-      @audio_assets[key] = audio_instance
-      audio_instance
+        audio_instance = GSDL::Audio.new(path, audio_lib, track_lib)
+        @audio_assets[key] = audio_instance
+        audio_instance
+      end
     end
 
     def load_from_memory(key : String, io : SDL3::IOStream) : GSDL::Audio
-      if @audio_assets.has_key?(key)
-        return @audio_assets[key]
-      end
+      @mutex.synchronize do
+        if @audio_assets.has_key?(key)
+          return @audio_assets[key]
+        end
 
-      audio_lib = LibSDL3Mixer.load_audio_io(@mixer, io, predecode: true, closeio: true)
-      if audio_lib.null?
-        raise "Failed to load audio from memory for key '#{key}': #{SDL3.get_error}"
-      end
+        audio_lib = LibSDL3Mixer.load_audio_io(@mixer, io, predecode: true, closeio: true)
+        if audio_lib.null?
+          raise "Failed to load audio from memory for key '#{key}': #{SDL3.get_error}"
+        end
 
-      track_lib = LibSDL3Mixer.create_track(@mixer)
-      if track_lib.null?
-        LibSDL3Mixer.destroy_audio(audio_lib)
-        raise "Failed to create track for key '#{key}': #{SDL3.get_error}"
-      end
+        track_lib = LibSDL3Mixer.create_track(@mixer)
+        if track_lib.null?
+          LibSDL3Mixer.destroy_audio(audio_lib)
+          raise "Failed to create track for key '#{key}': #{SDL3.get_error}"
+        end
 
-      unless LibSDL3Mixer.set_track_audio(track_lib, audio_lib)
-        LibSDL3Mixer.destroy_track(track_lib)
-        LibSDL3Mixer.destroy_audio(audio_lib)
-        raise "Failed to set audio to track for key '#{key}': #{SDL3.get_error}"
-      end
+        unless LibSDL3Mixer.set_track_audio(track_lib, audio_lib)
+          LibSDL3Mixer.destroy_track(track_lib)
+          LibSDL3Mixer.destroy_audio(audio_lib)
+          raise "Failed to set audio to track for key '#{key}': #{SDL3.get_error}"
+        end
 
-      audio_instance = GSDL::Audio.new(key, audio_lib, track_lib) # Using key as path for now
-      @audio_assets[key] = audio_instance
-      audio_instance
+        audio_instance = GSDL::Audio.new(key, audio_lib, track_lib) # Using key as path for now
+        @audio_assets[key] = audio_instance
+        audio_instance
+      end
     end
 
     def get(key : String) : GSDL::Audio
-      @audio_assets.fetch(key) do
-        raise "Audio with key '#{key}' not found in AudioManager. Was it loaded?"
+      @mutex.synchronize do
+        @audio_assets.fetch(key) do
+          raise "Audio with key '#{key}' not found in AudioManager. Was it loaded?"
+        end
       end
     end
 
     def unload(key : String) : Nil
-      if audio_instance = @audio_assets.delete(key)
-        audio_instance.destroy # This will destroy the underlying LibSDL3Mixer::Audio* and Track*
+      @mutex.synchronize do
+        if audio_instance = @audio_assets.delete(key)
+          audio_instance.destroy # This will destroy the underlying LibSDL3Mixer::Audio* and Track*
+        end
       end
     end
 
     def clear_all : Nil
-      @audio_assets.each_value do |audio_instance|
-        audio_instance.destroy
-      end
-      @audio_assets.clear
+      @mutex.synchronize do
+        @audio_assets.each_value do |audio_instance|
+          audio_instance.destroy
+        end
+        @audio_assets.clear
 
-      if @mixer
-        LibSDL3Mixer.destroy_mixer(@mixer)
-        @mixer = Pointer(Void).null
+        if @mixer
+          LibSDL3Mixer.destroy_mixer(@mixer)
+          @mixer = Pointer(Void).null
+        end
       end
     end
   end

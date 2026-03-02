@@ -4,6 +4,7 @@ module GSDL
 
     @draw : Draw
     @textures : Hash(String, Texture)
+    @mutex = Mutex.new
 
     private def initialize(@draw : Draw)
       @textures = Hash(String, Texture).new
@@ -82,52 +83,64 @@ module GSDL
     # --- Instance methods (called by class methods via the singleton instance) ---
 
     def load(key : String, path : String) : Texture
-      if @textures.has_key?(key)
-        return @textures[key]
+      @mutex.synchronize do
+        if @textures.has_key?(key)
+          return @textures[key]
+        end
+        texture_sdl = SDL3::Image.load_texture(@draw.to_sdl, path)
+        texture = Texture.new(texture_sdl)
+        @textures[key] = texture
+        texture
       end
-      texture_sdl = SDL3::Image.load_texture(@draw.to_sdl, path)
-      texture = Texture.new(texture_sdl)
-      @textures[key] = texture
-      texture
     end
 
     def load_from_memory(key : String, io : SDL3::IOStream) : Texture
-      if @textures.has_key?(key)
-        return @textures[key]
+      @mutex.synchronize do
+        if @textures.has_key?(key)
+          return @textures[key]
+        end
+        texture_sdl = SDL3::Image.load_texture_io(@draw.to_sdl, io, close_io: true)
+        texture = Texture.new(texture_sdl)
+        @textures[key] = texture
+        texture
       end
-      texture_sdl = SDL3::Image.load_texture_io(@draw.to_sdl, io, close_io: true)
-      texture = Texture.new(texture_sdl)
-      @textures[key] = texture
-      texture
     end
 
     def load_from_surface(key : String, surface : Surface) : Texture
-      if @textures.has_key?(key)
-        return @textures[key]
+      @mutex.synchronize do
+        if @textures.has_key?(key)
+          return @textures[key]
+        end
+        texture_sdl = SDL3::Texture.from_surface(@draw.to_sdl, surface.to_sdl)
+        texture = Texture.new(texture_sdl)
+        @textures[key] = texture
+        texture
       end
-      texture_sdl = SDL3::Texture.from_surface(@draw.to_sdl, surface.to_sdl)
-      texture = Texture.new(texture_sdl)
-      @textures[key] = texture
-      texture
     end
 
     def get(key : String) : Texture
-      @textures.fetch(key) do
-        raise "Texture with key '#{key}' not found in TextureManager. Was it loaded?"
+      @mutex.synchronize do
+        @textures.fetch(key) do
+          raise "Texture with key '#{key}' not found in TextureManager. Was it loaded?"
+        end
       end
     end
 
     def unload(key : String) : Nil
-      if texture = @textures.delete(key)
-        texture.destroy
+      @mutex.synchronize do
+        if texture = @textures.delete(key)
+          texture.destroy
+        end
       end
     end
 
     def clear_all : Nil
-      @textures.each_value do |texture|
-        texture.destroy
+      @mutex.synchronize do
+        @textures.each_value do |texture|
+          texture.destroy
+        end
+        @textures.clear
       end
-      @textures.clear
     end
   end
 end

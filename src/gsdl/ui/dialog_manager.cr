@@ -21,6 +21,7 @@ module GSDL
     @@instance : DialogManager? = nil
 
     @dialogs : Hash(String, DialogNode) = {} of String => DialogNode
+    @mutex = Mutex.new
 
     def self.instance : DialogManager
       @@instance ||= new
@@ -35,19 +36,23 @@ module GSDL
     end
 
     def load(path_key : String)
-      {% if flag?(:release) %}
-        data = GSDL::AssetManager.load_raw_data(path_key)
-        @dialogs = Hash(String, DialogNode).from_yaml(String.new(data))
-      {% else %}
-        full_path = GSDL::AssetManager.asset_path + path_key
-        File.open(full_path) do |file|
-          @dialogs = Hash(String, DialogNode).from_yaml(file)
-        end
-      {% end %}
+      @mutex.synchronize do
+        {% if flag?(:release) %}
+          data = GSDL::AssetManager.load_raw_data(path_key)
+          @dialogs = Hash(String, DialogNode).from_yaml(String.new(data))
+        {% else %}
+          full_path = GSDL::AssetManager.asset_path + path_key
+          File.open(full_path) do |file|
+            @dialogs = Hash(String, DialogNode).from_yaml(file)
+          end
+        {% end %}
+      end
     end
 
     def get_node(id : String) : DialogNode?
-      @dialogs[id]?
+      @mutex.synchronize do
+        @dialogs[id]?
+      end
     end
   end
 end

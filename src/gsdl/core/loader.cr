@@ -50,11 +50,16 @@ module GSDL
 
     @tasks = Array(AssetTask).new
     @progress = Progress.new
+    
+    @task_queue = Deque(AssetTask).new
+    @task_mutex = Mutex.new
+    
     @surface_queue = Deque(Tuple(String, Surface)).new
     @surface_mutex = Mutex.new
-
-    @loading_thread : Thread? = nil
-    @done = Atomic(Bool).new(false)
+    
+    @worker_threads = Array(Thread).new
+    @max_workers = 4
+    property max_assets_per_frame : Int32 = 10
 
     def initialize
     end
@@ -79,24 +84,38 @@ module GSDL
       @tasks << AssetTask.new(:TileMap, key, path_key)
     end
 
-    def start_async
+    def start_async(workers : Int32 = 4)
+      @max_workers = workers
       @progress.set_total(@tasks.size)
-      @loading_thread = Thread.new do
-        load_assets_internal
-        @done.set(true)
+      
+      @task_mutex.synchronize do
+        @tasks.each { |t| @task_queue.push(t) }
+        @tasks.clear
+      end
+
+      @max_workers.times do
+        @worker_threads << Thread.new { worker_loop }
       end
     end
 
     def update
       # Main thread: convert surfaces to textures
-      @surface_mutex.synchronize do
-        while !@surface_queue.empty?
-          key, surface = @surface_queue.shift
-          # SDL3: Create texture from surface (must be on main thread)
-          TextureManager.instance.load_from_surface(key, surface)
-          # Surface can be destroyed after texture creation if not needed
-          surface.destroy
+      # Process a limited number of surfaces per frame to keep UI responsive
+      count = 0
+      while count < @max_assets_per_frame
+        task_data = @surface_mutex.synchronize do
+          @surface_queue.empty? ? nil : @surface_queue.shift
         end
+
+        break unless task_data
+        
+        key, surface = task_data
+        # SDL3: Create texture from surface (must be on main thread)
+        TextureManager.instance.load_from_surface(key, surface)
+        surface.destroy
+        @progress.increment_loaded
+        puts "GSDL::Loader: Processed texture '#{key}' (#{progress.loaded_count}/#{progress.total_count})"
+        count += 1
       end
     end
 
@@ -105,43 +124,60 @@ module GSDL
     end
 
     def complete? : Bool
-      @done.get && @surface_mutex.synchronize { @surface_queue.empty? }
+      # Complete when all assets are loaded by workers AND all surfaces are processed by main thread
+      @progress.complete? && @surface_mutex.synchronize { @surface_queue.empty? }
     end
 
-    private def load_assets_internal
-      @tasks.each do |task|
-        case task.type
-        when AssetType::Texture
-          # Background: Load Surface from file/pack
-          path = task.path_key
-          surface = uninitialized Surface
-          {% if flag?(:release) %}
-            data = AssetManager.load_raw_data(path)
-            io = SDL3::IOStream.from_memory(data, data.size)
-            sdl_surface = SDL3::Image.load_io(io, close_io: true)
-            surface = Surface.new(sdl_surface)
-          {% else %}
-            full_path = GSDL::AssetManager.asset_path + path
-            sdl_surface = SDL3::Image.load(full_path)
-            surface = Surface.new(sdl_surface)
-          {% end %}
-
-          @surface_mutex.synchronize do
-            @surface_queue.push({task.key, surface})
-          end
-
-          TextureManager.load(task.key, task.path_key)
-        when AssetType::Audio
-          AudioManager.load(task.key, task.path_key)
-        when AssetType::Font
-          FontManager.load(task.key, task.path_key, task.size)
-        when AssetType::Dialog
-          DialogManager.load(task.path_key)
-        when AssetType::TileMap
-          TileMapManager.load(task.key, task.path_key)
+    private def worker_loop
+      loop do
+        task = @task_mutex.synchronize do
+          @task_queue.empty? ? nil : @task_queue.shift
         end
+
+        break unless task
+        begin
+          load_single_asset(task)
+        rescue ex
+          puts "GSDL::Loader: Error loading asset '#{task.path_key}': #{ex.message}"
+          # We still increment progress so complete? can eventually return true,
+          # or maybe we should have a failed count
+          @progress.increment_loaded
+        end
+      end
+    end
+
+    private def load_single_asset(task : AssetTask)
+      case task.type
+      when AssetType::Texture
+        # Background: Load Surface from file/pack
+        path = task.path_key
+        surface = uninitialized Surface
+        {% if flag?(:release) %}
+          data = AssetManager.load_raw_data(path)
+          io = SDL3::IOStream.from_memory(data, data.size)
+          sdl_surface = SDL3::Image.load_io(io, close_io: true)
+          surface = Surface.new(sdl_surface)
+        {% else %}
+          full_path = GSDL::AssetManager.asset_path + path
+          sdl_surface = SDL3::Image.load(full_path)
+          surface = Surface.new(sdl_surface)
+        {% end %}
+
+        @surface_mutex.synchronize do
+          @surface_queue.push({task.key, surface})
+        end
+      when AssetType::Audio
+        AudioManager.load(task.key, task.path_key)
+      when AssetType::Font
+        FontManager.load(task.key, task.path_key, task.size)
+      when AssetType::Dialog
+        DialogManager.load(task.path_key)
+      when AssetType::TileMap
+        TileMapManager.load(task.key, task.path_key)
+      end
+      unless task.type == AssetType::Texture
         @progress.increment_loaded
-        puts ">>> load_assets_internal progress: #{@progress.percentage.to_i} %    task: #{task}"
+        puts "GSDL::Loader: Loaded #{task.type} '#{task.key}' (#{progress.loaded_count}/#{progress.total_count})"
       end
     end
   end

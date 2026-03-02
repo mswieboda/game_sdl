@@ -5,6 +5,7 @@ module GSDL
     @@instance : TileMapManager? = nil
 
     @tile_maps : Hash(String, TileMap)
+    @mutex = Mutex.new
 
     private def initialize
       @tile_maps = Hash(String, TileMap).new
@@ -70,35 +71,45 @@ module GSDL
     # --- Instance methods (called by class methods via the singleton instance) ---
 
     def load(key : String, path : String) : TileMap
-      if @tile_maps.has_key?(key)
-        return @tile_maps[key]
+      @mutex.synchronize do
+        if @tile_maps.has_key?(key)
+          return @tile_maps[key]
+        end
+        tile_map = TileMap.from_tiled_file(path)
+        @tile_maps[key] = tile_map
+        tile_map
       end
-      tile_map = TileMap.from_tiled_file(path)
-      @tile_maps[key] = tile_map
-      tile_map
     end
 
     def load_from_memory(key : String, data : Bytes) : TileMap
-      if @tile_maps.has_key?(key)
-        return @tile_maps[key]
+      @mutex.synchronize do
+        if @tile_maps.has_key?(key)
+          return @tile_maps[key]
+        end
+        tile_map = TileMap.from_tiled_data(data)
+        @tile_maps[key] = tile_map
+        tile_map
       end
-      tile_map = TileMap.from_tiled_data(data)
-      @tile_maps[key] = tile_map
-      tile_map
     end
 
     def get(key : String) : TileMap
-      @tile_maps.fetch(key) do
-        raise "TileMap with key '#{key}' not found in TileMapManager. Was it loaded?"
+      @mutex.synchronize do
+        @tile_maps.fetch(key) do
+          raise "TileMap with key '#{key}' not found in TileMapManager. Was it loaded?"
+        end
       end
     end
 
     def unload(key : String) : Nil
-      @tile_maps.delete(key)
+      @mutex.synchronize do
+        @tile_maps.delete(key)
+      end
     end
 
     def clear_all : Nil
-      @tile_maps.clear
+      @mutex.synchronize do
+        @tile_maps.clear
+      end
     end
   end
 end
