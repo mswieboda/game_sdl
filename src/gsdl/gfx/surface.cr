@@ -30,6 +30,22 @@ module GSDL
       )
     end
 
+    def w
+      @internal.w
+    end
+
+    def h
+      @internal.h
+    end
+
+    def width
+      w
+    end
+
+    def height
+      h
+    end
+
     def draw_rect_fill(rect : Rect, color : Color)
       @internal.fill_rect(rect: rect.to_sdl, color: color.to_sdl)
     end

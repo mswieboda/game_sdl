@@ -35,12 +35,13 @@ module GameEx
     @default_cursor : Cursor?
     @crosshair_cursor : Cursor
     @coin_cursor : Cursor
+    @tile_cursor : Cursor
 
     def initialize
       super(:cursor)
       color = GSDL::Color.new(r: 255, g: 255, b: 255, a: 255)
       @text = Text.new(
-        text: "1: Default, 2: Crosshair, 3: Coin Texture",
+        text: "1: Default, 2: Crosshair, 3: Coin, 4: Tile",
         origin: {0.5_f32, 0.5_f32},
         color: color
       )
@@ -53,7 +54,8 @@ module GameEx
       end
 
       @crosshair_cursor = Cursor.create_system(LibSDL3::SystemCursor::CROSSHAIR)
-      @coin_cursor = Cursor.load("gfx/coin.png", hot_x: 16, hot_y: 16)
+      @coin_cursor = Cursor.load("gfx/coin.png", centered: true)
+      @tile_cursor = Cursor.load("gfx/tiles.png", hot_x: 0, hot_y: 0, source_rect: GSDL::Rect.new(x: 0, y: 0, w: 32, h: 32))
     end
 
     def update(dt : Float32)
@@ -69,6 +71,10 @@ module GameEx
 
       if GSDL::Keys.just_pressed?(GSDL::Keys::Three)
         Mouse.cursor = @coin_cursor
+      end
+
+      if GSDL::Keys.just_pressed?(GSDL::Keys::Four)
+        Mouse.cursor = @tile_cursor
       end
     end
 
