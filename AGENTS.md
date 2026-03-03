@@ -19,6 +19,15 @@
 - Do not run `crystal format`
 - Trim all whitespace for any changes or new files
 
+## Compiling, and Testing
+- **Full Verification:** Usually compile `examples/full.cr` to verify library-wide integrity and catch regressions. Or build the specific example we're working on first `examples/foo.cr`.
+  - Command: `make build EXAMPLE=full`
+- **Functional Testing:** Run a specific example to exercise changes. Capture logs and exit automatically:
+  - Command: `timeout 5s make run EXAMPLE=foo || true`
+- **Regression Checks:** If your task affects a specific subsystem (e.g., `GSDL::Audio`), identify and run the relevant example (e.g., `examples/audio.cr`).
+- **Error Resolution:** The `Makefile` includes `--error-trace`. Focus on the first few lines of a compile error to identify the root cause.
+- **Validation Mandate:** Frequent compilation checks are mandatory. A task is not complete until behavioral correctness is verified through a successful build and run.
+
 ## Do Not Do
 - **Library Files:** NEVER edit files in `./lib/`. Summarize proposed changes for the user to apply to the source repositories (e.g., `sdl3`).
 - **Git Operations:** NO write commands (`git add`, `git commit`, `git stage`). Use read-only commands only.
