@@ -2,6 +2,8 @@ require "./shape"
 
 module GSDL
   class Triangle < Shape
+    include Collidable
+
     properties_changed({
       x2: Num = 0,
       y2: Num = 0,
@@ -21,7 +23,7 @@ module GSDL
       rotation : Num = 0,
       color : Color = Color::White,
       z_index : Int32 = 0,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      draw_mode : GSDL::Shape::DrawMode = GSDL::Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
     )
@@ -48,7 +50,7 @@ module GSDL
       rotation : Num = 0,
       color : Color = Color::White,
       z_index : Int32 = 0,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      draw_mode : GSDL::Shape::DrawMode = GSDL::Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
     )
@@ -173,6 +175,19 @@ module GSDL
 
     def indices : Array(Int32)
       [0, 1, 2]
+    end
+
+    def collision_shape : GSDL::Collidable::Shape
+      GSDL::Collidable::Shape::Polygon
+    end
+
+    def collision_polygon_vertices : Points
+      vertices.map { |v| Point.from(v) }
+    end
+
+    def collision_bounding_box : FRect
+      # Rough bounding box for Collidable requirements
+      FRect.new(x: [x1, x2, x3].min - x, y: [y1, y2, y3].min - y, w: width, h: height)
     end
 
     def update_geometry

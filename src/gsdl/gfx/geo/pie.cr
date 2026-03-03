@@ -28,7 +28,7 @@ module GSDL
       @end_angle : Num = DefaultEndAngle,
       color : Color = Color::White,
       z_index : Int32 = 0,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      draw_mode : GSDL::Shape::DrawMode = GSDL::Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
     )
@@ -118,7 +118,7 @@ module GSDL
             end_angle: self.end_angle,
             color: self.border_color,
             z_index: z_index,
-            draw_mode: Shape::DrawMode::Outline
+            draw_mode: GSDL::Shape::DrawMode::Outline
           ).draw(draw)
         end
 

@@ -2,6 +2,7 @@ require "./shape"
 
 module GSDL
   class Box < Shape
+    include Collidable
     alias Indices = Array(Int32)
     alias ArcPoints = Array(Points)
 
@@ -31,7 +32,7 @@ module GSDL
       scale = {1_f32, 1_f32},
       rotation : Num = 0,
       z_index : Int32 = 0,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      draw_mode : GSDL::Shape::DrawMode = GSDL::Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White,
       @border_radius : Num = 0
@@ -162,6 +163,37 @@ module GSDL
 
     def bottom
       y + height
+    end
+
+    def collision_shape : GSDL::Collidable::Shape
+      if rotation != 0
+        GSDL::Collidable::Shape::Polygon
+      else
+        GSDL::Collidable::Shape::Rect
+      end
+    end
+
+    def collision_polygon_vertices : Points
+      [
+        Point.new(rotate_point(draw_x, draw_y)),
+        Point.new(rotate_point(draw_x + draw_width, draw_y)),
+        Point.new(rotate_point(draw_x + draw_width, draw_y + draw_height)),
+        Point.new(rotate_point(draw_x, draw_y + draw_height))
+      ]
+    end
+
+    def collision_bounding_box : FRect
+      if rotation == 0
+        FRect.new(x: -draw_width * origin_x, y: -draw_height * origin_y, w: draw_width, h: draw_height)
+      else
+        # For rotated, return a box that contains all rotated vertices
+        vs = collision_polygon_vertices
+        min_x = vs.min_of(&.x)
+        max_x = vs.max_of(&.x)
+        min_y = vs.min_of(&.y)
+        max_y = vs.max_of(&.y)
+        FRect.new(x: min_x - x, y: min_y - y, w: max_x - min_x, h: max_y - min_y)
+      end
     end
 
     def to_rect
@@ -320,7 +352,7 @@ module GSDL
               rotation: self.rotation,
               color: self.border_color,
               z_index: z_index,
-              draw_mode: Shape::DrawMode::Outline,
+              draw_mode: GSDL::Shape::DrawMode::Outline,
               border_radius: self.draw_border_radius
             ).draw(draw)
           end

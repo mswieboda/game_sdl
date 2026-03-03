@@ -15,7 +15,7 @@ module GSDL
       rotation : Num = 0,
       color : Color = Color::White,
       z_index : Int32 = 0,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      draw_mode : GSDL::Shape::DrawMode = GSDL::Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
     )

@@ -2,6 +2,7 @@ require "./shape"
 
 module GSDL
   class Oval < Shape
+    include Collidable
     alias Indices = Array(Int32)
     alias ArcPoints = Array(Points)
 
@@ -30,7 +31,7 @@ module GSDL
       rotation : Num = 0,
       color : Color = Color::White,
       z_index : Int32 = 0,
-      draw_mode : Shape::DrawMode = Shape::DrawMode::Fill,
+      draw_mode : GSDL::Shape::DrawMode = GSDL::Shape::DrawMode::Fill,
       border_thickness : Num = 1,
       border_color : Color = Color::White
     )
@@ -84,6 +85,20 @@ module GSDL
     # TODO: add setter
     def center_y : Num
       draw_y + draw_radius_y
+    end
+
+    def collision_shape : GSDL::Collidable::Shape
+      GSDL::Collidable::Shape::Polygon
+    end
+
+    def collision_polygon_vertices : Points
+      update_geometry if changed?
+      # Arc points are already rotated in build_corner
+      @outline_arc_points.flatten
+    end
+
+    def collision_bounding_box : FRect
+      FRect.new(x: -draw_radius_x * origin_x, y: -draw_radius_y * origin_y, w: draw_radius_x * 2, h: draw_radius_y * 2)
     end
 
     def update_geometry
@@ -176,7 +191,7 @@ module GSDL
             rotation: rotation,
             color: self.border_color,
             z_index: z_index,
-            draw_mode: Shape::DrawMode::Outline
+            draw_mode: GSDL::Shape::DrawMode::Outline
           ).draw(draw)
         end
       end
