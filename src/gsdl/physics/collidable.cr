@@ -84,6 +84,20 @@ module GSDL
       false
     end
 
+    def collides?(rect : Rect | FRect) : Bool
+      # If both are Rects, use fast AABB check
+      if collision_shape.rect?
+        return collision_box.overlaps?(rect)
+      end
+
+      # Circle vs Rect
+      if collision_shape.circle?
+        return circle_collides_with_rect?(self, rect)
+      end
+
+      false
+    end
+
     private def sat_collision?(a : Collidable, b : Collidable) : Bool
       # Circle vs Polygon needs special SAT or closest point check
       if a.collision_shape.circle? || b.collision_shape.circle?
@@ -320,6 +334,18 @@ module GSDL
     end
 
     private def circle_collides_with_rect?(circle : Collidable, rect : Collidable) : Bool
+      closest_x, closest_y = closest_point_on_rect(circle, rect.collision_box)
+
+      c_center = circle.collision_center
+      distance_x = c_center.x - closest_x
+      distance_y = c_center.y - closest_y
+
+      # If the distance is less than the circle's radius, an intersection occurs
+      distance_squared = (distance_x * distance_x) + (distance_y * distance_y)
+      distance_squared < (circle.collision_radius * circle.collision_radius)
+    end
+
+    private def circle_collides_with_rect?(circle : Collidable, rect : Rect | FRect) : Bool
       closest_x, closest_y = closest_point_on_rect(circle, rect)
 
       c_center = circle.collision_center
@@ -331,13 +357,12 @@ module GSDL
       distance_squared < (circle.collision_radius * circle.collision_radius)
     end
 
-    private def closest_point_on_rect(circle : Collidable, rect : Collidable) : Tuple(Float32, Float32)
+    private def closest_point_on_rect(circle : Collidable, rect : Rect | FRect) : Tuple(Float32, Float32)
       c_center = circle.collision_center
-      r_box = rect.collision_box
 
       # Find the closest point to the circle within the rectangle
-      closest_x = Math.max(r_box.x, Math.min(c_center.x, r_box.right))
-      closest_y = Math.max(r_box.y, Math.min(c_center.y, r_box.bottom))
+      closest_x = Math.max(rect.x, Math.min(c_center.x, rect.right))
+      closest_y = Math.max(rect.y, Math.min(c_center.y, rect.bottom))
 
       {closest_x, closest_y}
     end

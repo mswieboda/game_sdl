@@ -3,8 +3,8 @@ module GSDL
     # Requires x, y and collision box
     abstract def x : Num
     abstract def y : Num
-    abstract def x=(value : Num)
-    abstract def y=(value : Num)
+    abstract def x=(x : Num)
+    abstract def y=(y : Num)
     abstract def collision_bounding_box : FRect
 
     property velocity_x : Float32 = 0_f32
@@ -16,6 +16,7 @@ module GSDL
     property restitution : Float32 = 0.5_f32 # Bounciness (0 to 1)
     property mass : Float32 = 1.0_f32
     property use_gravity : Bool = true
+    property? physics_enabled : Bool = true
 
     def apply_force(fx : Num, fy : Num)
       @acceleration_x += fx.to_f32 / mass

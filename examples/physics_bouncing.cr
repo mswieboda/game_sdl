@@ -11,9 +11,9 @@ module GameEx
     @y : GSDL::Num = 0
 
     def x : GSDL::Num; @x; end
-    def x=(value : GSDL::Num); @x = value; end
+    def x=(x : GSDL::Num); @x = x; end
     def y : GSDL::Num; @y; end
-    def y=(value : GSDL::Num); @y = value; end
+    def y=(y : GSDL::Num); @y = y; end
 
     property radius : Float32 = 16_f32
     @circle : GSDL::Circle
@@ -57,9 +57,9 @@ module GameEx
     @y : GSDL::Num = 0
 
     def x : GSDL::Num; @x; end
-    def x=(value : GSDL::Num); @x = value; end
+    def x=(x : GSDL::Num); @x = x; end
     def y : GSDL::Num; @y; end
-    def y=(value : GSDL::Num); @y = value; end
+    def y=(y : GSDL::Num); @y = y; end
 
     @triangle : GSDL::Triangle
 
@@ -111,9 +111,9 @@ module GameEx
     @y : GSDL::Num = 0
 
     def x : GSDL::Num; @x; end
-    def x=(value : GSDL::Num); @x = value; end
+    def x=(x : GSDL::Num); @x = x; end
     def y : GSDL::Num; @y; end
-    def y=(value : GSDL::Num); @y = value; end
+    def y=(y : GSDL::Num); @y = y; end
 
     @box : GSDL::Box
 
@@ -164,9 +164,9 @@ module GameEx
     @y : GSDL::Num = 0
 
     def x : GSDL::Num; @x; end
-    def x=(value : GSDL::Num); @x = value; end
+    def x=(x : GSDL::Num); @x = x; end
     def y : GSDL::Num; @y; end
-    def y=(value : GSDL::Num); @y = value; end
+    def y=(y : GSDL::Num); @y = y; end
 
     @oval : GSDL::Oval
 

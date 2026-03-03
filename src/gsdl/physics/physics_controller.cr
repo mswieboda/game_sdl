@@ -14,6 +14,8 @@ module GSDL
     # 5. Resolve collisions with bounce (restitution)
 
     def physics_update(dt : Float32, collidables : Array(GSDL::Collidable) = [] of GSDL::Collidable, tile_map : TileMap? = nil)
+      return unless physics_enabled?
+
       # 1. Update acceleration from gravity (if enabled)
       if use_gravity
         self.acceleration_x += Physics.gravity.x
@@ -185,7 +187,6 @@ module GSDL
         end
       end
     end
-
 
     private def collides_with_anything?(collidables : Array(GSDL::Collidable), tile_map : GSDL::TileMap?) : GSDL::Collidable?
       collidables.each do |c|

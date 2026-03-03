@@ -32,7 +32,7 @@ module GSDL
       self.y += self.dy * speed
     end
 
-    def move_and_collide(dt : Float32, collidables : Array(Collidable), tile_map : TileMap?)
+    def move_and_collide?(dt : Float32, collidables : Array(Collidable), tile_map : TileMap? = nil)
       speed = move_speed * dt
 
       # Move X
@@ -40,6 +40,7 @@ module GSDL
       self.x += dx * speed
       if collides_with_anything?(collidables, tile_map)
         self.x = previous_x
+        return true
       end
 
       # Move Y
@@ -47,7 +48,14 @@ module GSDL
       self.y += dy * speed
       if collides_with_anything?(collidables, tile_map)
         self.y = previous_y
+        return true
       end
+
+      false
+    end
+
+    def move_and_collide(dt : Float32, collidables : Array(Collidable), tile_map : TileMap?)
+      move_and_collide?(dt, collidables, tile_map)
     end
 
     private def collides_with_anything?(collidables : Array(Collidable), tile_map : TileMap?) : Bool

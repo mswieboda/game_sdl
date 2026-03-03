@@ -2,13 +2,11 @@ require "../src/game_sdl"
 
 module GameEx
   alias Keys = GSDL::Keys
-
-  WIDTH = 800
-  HEIGHT = 600
+  alias Input = GSDL::Input
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Collision Ex", width: WIDTH, height: HEIGHT)
+      super(title: "Collision Ex", width: 800, height: 640)
     end
 
     def init
@@ -58,6 +56,18 @@ module GameEx
     end
   end
 
+  class CircleObject < GSDL::Circle
+    include GSDL::Collidable
+
+    def collision_bounding_box : GSDL::FRect
+      GSDL::FRect.new(x: radius / 2_f32, y: radius / 2_f32, w: radius, h: radius)
+    end
+
+    def collision_shape : GSDL::Collidable::Shape
+      GSDL::Collidable::Shape::Circle
+    end
+  end
+
   class Player < Enemy
     include GSDL::MoveController
 
@@ -78,22 +88,33 @@ module GameEx
     @text : GSDL::Text
     @enemy : Enemy
     @player : Player
+    @circle : CircleObject
 
     def initialize
       super(:start)
 
+      Input.set(:move_left) { Keys.pressed?([Keys::A, Keys::Left]) }
+      Input.set(:move_right) { Keys.pressed?([Keys::D, Keys::Right]) }
+      Input.set(:move_up) { Keys.pressed?([Keys::W, Keys::Up]) }
+      Input.set(:move_down) { Keys.pressed?([Keys::S, Keys::Down]) }
+
       @text = GSDL::Text.new(text: "", y: 32, origin: {0.5_f32, 0.5_f32})
-      @text.x = WIDTH / 2_f32
+      @text.x = Game.width / 2_f32
 
       @enemy = Enemy.new(x: 320, y: 320)
       @player = Player.new(x: 128, y: 128)
+      @circle = CircleObject.new(x: 512, y: 448, radius: 128, origin: {0.5_f32, 0.5_f32})
     end
 
     def update(dt : Float32)
-      if @player.move_and_collide?(dt, [@enemy])
+      @player.move_input
+
+      if @player.move_and_collide?(dt, [@enemy, @circle.as(GSDL::Collidable)])
         @text.text = "collision!"
-      elsif @enemy.in?(@player)
+      elsif @player.overlaps?(@enemy)
         @text.text = "enemy in area!"
+      elsif @player.overlaps?(@circle)
+        @text.text = "circle in area!"
       elsif !@text.text.empty?
         @text.text = ""
       end
@@ -102,6 +123,8 @@ module GameEx
     def draw(draw : GSDL::Draw)
       @enemy.draw(draw)
       @player.draw(draw)
+      @circle.draw(draw)
+
       @text.draw(draw)
     end
   end

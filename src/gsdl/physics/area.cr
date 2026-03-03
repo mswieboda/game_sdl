@@ -18,17 +18,15 @@ module GSDL
 
     # TODO: maybe rename to target_overlaps? for consistency
     def target_in?(x : Num, y : Num)
-      area_box.in?(x: x, y: y)
+      area_box.overlaps?(x: x, y: y)
     end
 
-    # TODO: maybe rename to overlaps? for consistency
-    def in?(other : Area) : Bool
+    def overlaps?(other : Area) : Bool
       other.area_box.overlaps?(area_box)
     end
 
-    # TODO: maybe rename to overlaps? for consistency
-    def in?(other : Collidable) : Bool
-      other.collision_box.overlaps?(area_box)
+    def overlaps?(other : Collidable) : Bool
+      other.collides?(area_box)
     end
 
     # Returns true if this object (if Directionable) is facing the other Area's draw coordinates.

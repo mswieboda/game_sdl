@@ -130,7 +130,7 @@ module GSDL
       Rect.overlaps?(self, rect)
     end
 
-    def in?(x : Num, y : Num)
+    def overlaps?(x : Num, y : Num)
       x >= self.x && x <= self.right &&
         y >= self.y && y <= self.bottom
     end
