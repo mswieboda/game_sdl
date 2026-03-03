@@ -58,7 +58,7 @@ module GSDL
     end
 
     # *h* (height) is optional, and defaults to *w* internally to make a square
-    def initialize(x : Int = 0, y : Int = 0, w : Int = 0, h : Int? = nil)
+    def initialize(x : Int32 = 0, y : Int32 = 0, w : Int32 = 0, h : Int32? = nil)
       height = w
 
       if height_param = h
@@ -82,7 +82,7 @@ module GSDL
     end
 
     # *h* (height) is optional, and defaults to *w* internally to make a square
-    def initialize(point : Point, w : Int = 0, h : Int? = nil)
+    def initialize(point : Point, w : Int32 = 0, h : Int32? = nil)
       height = w
 
       if height_param = h
