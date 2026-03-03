@@ -117,6 +117,14 @@ module GSDL
     def self.visible=(value : Bool)
       value ? show : hide
     end
+
+    def self.cursor=(cursor : Cursor)
+      SDL3::Mouse.set_cursor(cursor.to_sdl)
+    end
+
+    def self.set_cursor(cursor : Cursor)
+      self.cursor = cursor
+    end
   end
 end
 
