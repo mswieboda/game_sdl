@@ -389,6 +389,24 @@ module GSDL
       ))
     end
 
+    # circles
+
+    def circle_fill(x : Num, y : Num, radius : Num, color = Color::White, z_index = 0)
+      Circle.new(x: x, y: y, radius: radius, color: color, z_index: z_index, draw_mode: Shape::DrawMode::Fill).draw(self)
+    end
+
+    def circle_fill(circle : Circle)
+      circle_fill(x: circle.x, y: circle.y, radius: circle.radius, color: circle.color, z_index: circle.z_index)
+    end
+
+    def circle_outline(x : Num, y : Num, radius : Num, color = Color::White, z_index = 0)
+      Circle.new(x: x, y: y, radius: radius, color: color, z_index: z_index, draw_mode: Shape::DrawMode::Outline).draw(self)
+    end
+
+    def circle_outline(circle : Circle)
+      circle_outline(x: circle.x, y: circle.y, radius: circle.radius, color: circle.color, z_index: circle.z_index)
+    end
+
     # rects
 
     def rect_fill(rect : FRect, color = Color::White, z_index : Int32 = 0)

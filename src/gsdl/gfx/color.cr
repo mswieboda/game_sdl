@@ -162,6 +162,15 @@ module GSDL
       @internal
     end
 
+    def lerp(other : Color, t : Float32) : Color
+      Color.new(
+        r: MathUtils.lerp(r.to_f32, other.r.to_f32, t).to_u8,
+        g: MathUtils.lerp(g.to_f32, other.g.to_f32, t).to_u8,
+        b: MathUtils.lerp(b.to_f32, other.b.to_f32, t).to_u8,
+        a: MathUtils.lerp(a.to_f32, other.a.to_f32, t).to_u8
+      )
+    end
+
     # Colors
     Transparent = GSDL.gray(0, 0)
 
