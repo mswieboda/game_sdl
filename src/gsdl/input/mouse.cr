@@ -101,6 +101,22 @@ module GSDL
     def self.just_released?(buttons : Array(UInt8))
       buttons.any? { |button| just_released?(button) }
     end
+
+    def self.show
+      SDL3::Mouse.show
+    end
+
+    def self.hide
+      SDL3::Mouse.hide
+    end
+
+    def self.visible?
+      SDL3::Mouse.visible?
+    end
+
+    def self.visible=(value : Bool)
+      value ? show : hide
+    end
   end
 end
 
