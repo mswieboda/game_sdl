@@ -15,6 +15,10 @@ module TileMapEx
       @scene_manager = SceneManager.new
     end
 
+    def load_default_font
+      "fonts/PressStart2P.ttf"
+    end
+
     def load_textures
       [{"tiles", "gfx/tiles.png"}]
     end

@@ -213,5 +213,11 @@ module GSDL
         @y += dy * @speed * dt
       end
     end
+
+    # TODO: required if trying to draw Tweenable objects
+    # using `obj.each(&.draw(draw))`
+    # think of a better solution
+    def draw(draw : Draw)
+    end
   end
 end
