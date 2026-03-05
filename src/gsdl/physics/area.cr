@@ -44,7 +44,7 @@ module GSDL
       if action && !Input.action?(action)
         return false
       end
-      in?(other) && facing_area?(other)
+      overlaps?(other) && facing_area?(other)
     end
 
     # Iterates over given areas and yields the first one that triggers the interaction condition.

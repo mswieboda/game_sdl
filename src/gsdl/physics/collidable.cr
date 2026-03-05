@@ -422,7 +422,7 @@ module GSDL
       circle = collision_shape.circle? ? self : other
       rect = collision_shape.rect? ? self : other
 
-      closest_x, closest_y = closest_point_on_rect(circle, rect)
+      closest_x, closest_y = closest_point_on_rect(circle, rect.collision_box)
       c_center = circle.collision_center
 
       nx = c_center.x - closest_x
