@@ -17,6 +17,8 @@ module GSDL
 
     # Collection of TileLayers
     property layers : Array(TileLayer)
+    # Collection of TileObjects
+    property objects : Array(TileObject)
     # Map of tileset key to Tileset object
     property tilesets : Hash(String, Tileset)
     property tile_width : Int32
@@ -36,6 +38,7 @@ module GSDL
 
     def initialize(@tile_width, @tile_height)
       @layers = [] of TileLayer
+      @objects = [] of TileObject
       @tilesets = {} of String => Tileset
       @map_width_tiles = 0
       @map_height_tiles = 0
@@ -98,30 +101,67 @@ module GSDL
       end
 
       json["layers"].as_a.each do |layer_json|
-        next if layer_json["type"].as_s != "tilelayer"
+        type = layer_json["type"].as_s
+        case type
+        when "tilelayer"
+          layer_name = layer_json["name"].as_s
+          visible = layer_json["visible"]? ? layer_json["visible"].as_bool : true
+          opacity = layer_json["opacity"]? ? (layer_json["opacity"].as_f? || layer_json["opacity"].as_i.to_f32).to_f32 : 1.0_f32
+          offset_x = layer_json["offsetx"]? ? layer_json["offsetx"].as_i : 0
+          offset_y = layer_json["offsety"]? ? layer_json["offsety"].as_i : 0
+          parallax_x = layer_json["parallaxx"]? ? (layer_json["parallaxx"].as_f? || layer_json["parallaxx"].as_i.to_f32).to_f32 : 1.0_f32
+          parallax_y = layer_json["parallaxy"]? ? (layer_json["parallaxy"].as_f? || layer_json["parallaxy"].as_i.to_f32).to_f32 : 1.0_f32
 
-        layer_name = layer_json["name"].as_s
-        visible = layer_json["visible"]? ? layer_json["visible"].as_bool : true
-        opacity = layer_json["opacity"]? ? layer_json["opacity"].as_f.to_f32 : 1.0_f32
-        offset_x = layer_json["offsetx"]? ? layer_json["offsetx"].as_i : 0
-        offset_y = layer_json["offsety"]? ? layer_json["offsety"].as_i : 0
-        parallax_x = layer_json["parallaxx"]? ? layer_json["parallaxx"].as_f.to_f32 : 1.0_f32
-        parallax_y = layer_json["parallaxy"]? ? layer_json["parallaxy"].as_f.to_f32 : 1.0_f32
+          raw_data = layer_json["data"].as_a.map(&.as_i.to_u32)
+          chunked_data = chunk_data(raw_data, map_w)
 
-        raw_data = layer_json["data"].as_a.map(&.as_i.to_u32)
-        chunked_data = chunk_data(raw_data, map_w)
+          layer = TileLayer.new(
+            name: layer_name,
+            data: chunked_data,
+            visible: visible,
+            opacity: opacity,
+            offset_x: offset_x,
+            offset_y: offset_y,
+            parallax_x: parallax_x,
+            parallax_y: parallax_y
+          )
+          tile_map.layers << layer
+        when "objectgroup"
+          layer_json["objects"].as_a.each do |obj_json|
+            id = obj_json["id"].as_i
+            name = obj_json["name"].as_s
+            # Tiled 1.9+ uses "class" instead of "type"
+            obj_type = (obj_json["type"]? || obj_json["class"]? || JSON::Any.new("")).as_s
+            x = (obj_json["x"].as_f? || obj_json["x"].as_i.to_f32).to_f32
+            y = (obj_json["y"].as_f? || obj_json["y"].as_i.to_f32).to_f32
+            width = (obj_json["width"].as_f? || obj_json["width"].as_i.to_f32).to_f32
+            height = (obj_json["height"].as_f? || obj_json["height"].as_i.to_f32).to_f32
+            rotation = (obj_json["rotation"].as_f? || obj_json["rotation"].as_i.to_f32).to_f32
+            visible = obj_json["visible"]? ? obj_json["visible"].as_bool : true
+            gid = obj_json["gid"]?.try(&.as_i.to_u32)
 
-        layer = TileLayer.new(
-          name: layer_name,
-          data: chunked_data,
-          visible: visible,
-          opacity: opacity,
-          offset_x: offset_x,
-          offset_y: offset_y,
-          parallax_x: parallax_x,
-          parallax_y: parallax_y
-        )
-        tile_map.layers << layer
+            properties = {} of String => JSON::Any
+            if props = obj_json["properties"]?.try(&.as_a)
+              props.each do |prop|
+                properties[prop["name"].as_s] = prop["value"]
+              end
+            end
+
+            tile_map.objects << TileObject.new(
+              id: id,
+              name: name,
+              type: obj_type,
+              x: x,
+              y: y,
+              width: width,
+              height: height,
+              rotation: rotation,
+              visible: visible,
+              gid: gid,
+              properties: properties
+            )
+          end
+        end
       end
 
       tile_map
@@ -200,11 +240,62 @@ module GSDL
               raise "Unsupported TMX encoding: #{encoding || "none"}. Only CSV is supported for now."
             end
           end
+        when "objectgroup"
+          node.children.each do |obj_node|
+            next unless obj_node.name == "object"
+            id = obj_node["id"].to_i
+            name = obj_node["name"]? || ""
+            obj_type = obj_node["type"]? || obj_node["class"]? || ""
+            x = obj_node["x"].to_f32
+            y = obj_node["y"].to_f32
+            width = obj_node["width"]?.try(&.to_f32) || 0_f32
+            height = obj_node["height"]?.try(&.to_f32) || 0_f32
+            rotation = obj_node["rotation"]?.try(&.to_f32) || 0_f32
+            visible = obj_node["visible"]? != "0"
+            gid = obj_node["gid"]?.try(&.to_u32)
+
+            properties = {} of String => JSON::Any
+            props_node = obj_node.children.find { |n| n.name == "properties" }
+            if props_node
+              props_node.children.each do |prop|
+                next unless prop.name == "property"
+                # TODO: handle property types (int, float, bool) correctly
+                # For now assuming string or numeric
+                val = prop["value"]
+                if val == "true"
+                  properties[prop["name"]] = JSON::Any.new(true)
+                elsif val == "false"
+                  properties[prop["name"]] = JSON::Any.new(false)
+                elsif i_val = val.to_i?
+                  properties[prop["name"]] = JSON::Any.new(i_val.to_i64)
+                elsif f_val = val.to_f?
+                  properties[prop["name"]] = JSON::Any.new(f_val.to_f64)
+                else
+                  properties[prop["name"]] = JSON::Any.new(val)
+                end
+              end
+            end
+
+            tile_map.objects << TileObject.new(
+              id: id,
+              name: name,
+              type: obj_type,
+              x: x,
+              y: y,
+              width: width,
+              height: height,
+              rotation: rotation,
+              visible: visible,
+              gid: gid,
+              properties: properties
+            )
+          end
         end
       end
 
       tile_map
     end
+
 
     def self.from_tiled_file(filepath : String) : TileMap
       content = File.read(filepath)
@@ -293,6 +384,18 @@ module GSDL
         return true if tile_info && tile_info.solid?
       end
 
+      # Check objects (if they have a gid and are solid in their tileset)
+      # Note: This is a simple point-in-rect check for objects
+      @objects.each do |obj|
+        next unless obj.visible && (gid = obj.gid)
+        # Tiled tile objects have origin at bottom-left
+        obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
+        if obj_rect.in?(x.to_f32, y.to_f32)
+          tile_info = find_tileset_and_local_id(gid)
+          return true if tile_info && tile_info.solid?
+        end
+      end
+
       false
     end
 
@@ -305,6 +408,15 @@ module GSDL
         global_gid_with_flags = layer.data[y][x]
         tile_info = find_tileset_and_local_id(global_gid_with_flags)
         return tile_info if tile_info
+      end
+
+      # Check objects (if they have a gid)
+      @objects.each do |obj|
+        next unless obj.visible && (gid = obj.gid)
+        obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
+        if obj_rect.in?((x * @tile_width).to_f32, (y * @tile_height).to_f32)
+          return find_tileset_and_local_id(gid)
+        end
       end
 
       nil
@@ -341,6 +453,21 @@ module GSDL
       @layers.find { |l| l.name == name }
     end
 
+    # Returns objects of a specific type (or class)
+    def get_objects_by_type(type : String) : Array(TileObject)
+      @objects.select { |o| o.type == type }
+    end
+
+    # Returns an object by name
+    def get_object_by_name(name : String) : TileObject?
+      @objects.find { |o| o.name == name }
+    end
+
+    # Returns objects with a specific property
+    def get_objects_by_property(key : String, value : JSON::Any) : Array(TileObject)
+      @objects.select { |o| o.properties[key]? == value }
+    end
+
     # Sets layer visibility
     def set_layer_visibility(name : String, visible : Bool)
       if layer = get_layer(name)
@@ -364,8 +491,45 @@ module GSDL
         draw.scale = camera.zoom
       end
 
+      camera_x = camera.try(&.x.to_f32) || 0_f32
+      camera_y = camera.try(&.y.to_f32) || 0_f32
+
       @layers.each do |layer|
         layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index)
+      end
+
+      # Draw objects with GID
+      @objects.each do |obj|
+        next unless obj.visible && (gid = obj.gid)
+        
+        tile_info = find_tileset_and_local_id(gid)
+        next unless tile_info
+        
+        tileset = @tilesets[tile_info.tileset_key]
+        next unless tileset
+        
+        source_rect = tileset.get_local_tile_source_rect(tile_info.local_tile_id)
+        
+        # Tiled tile objects have origin at bottom-left
+        dest_rect = FRect.new(
+          x: obj.x - camera_x,
+          y: (obj.y - obj.height) - camera_y,
+          w: obj.width,
+          h: obj.height
+        )
+        
+        flip_mode = 0_i32
+        flip_mode |= Flip::Horizontal if tile_info.flipped_horizontally
+        flip_mode |= Flip::Vertical if tile_info.flipped_vertically
+
+        draw.texture_rotated(
+          texture: tileset.texture,
+          source_rect: source_rect,
+          dest_rect: dest_rect,
+          angle: obj.rotation.to_f32,
+          flip: flip_mode,
+          z_index: @z_index
+        )
       end
 
       if camera
@@ -374,3 +538,5 @@ module GSDL
     end
   end
 end
+
+

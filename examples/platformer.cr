@@ -20,6 +20,7 @@ module PlatformerEx
     def load_textures
       [
         {"player", "gfx/skeleton.png"},
+        {"barrel", "gfx/barrel.png"},
         {"coin", "gfx/coin.png"},
         {"tiles", "gfx/tiles.png"}
       ]
@@ -34,7 +35,7 @@ module PlatformerEx
     end
 
     def load_tile_maps
-      [{"map", "gfx/map.json"}]
+      [{"map", "data/maps/map.json"}]
     end
   end
 
@@ -157,8 +158,13 @@ module PlatformerEx
       @player = Player.new(key: "player", width: 32, height: 64)
       @player.z_index = 1
 
-      # TODO: find a way to include player start tile from map.json
-      @player.center(width: WIDTH, height: HEIGHT - 300)
+      # Spawn player at Tiled object location if available
+      if spawn = @tile_map.get_objects_by_type("PlayerStart").first?
+        @player.x = spawn.x
+        @player.y = spawn.y
+      else
+        @player.center(width: WIDTH, height: HEIGHT - 300)
+      end
 
       @coin_audio = GSDL::AudioManager.get("coin_audio")
       @coins = [] of GSDL::AnimatedSprite
