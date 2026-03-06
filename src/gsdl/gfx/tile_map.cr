@@ -55,6 +55,22 @@ module GSDL
       all_objects
     end
 
+    def get_objects_at(px : Float32, py : Float32) : Array(TileObject)
+      objects.select(&.contains?(px, py))
+    end
+
+    def get_objects_in(rect : FRect) : Array(TileObject)
+      objects.select { |obj| rect.overlaps?(obj.get_collision_rect) }
+    end
+
+    def update(dt : Float32)
+      @layers.each do |layer|
+        if layer.is_a?(ObjectGroup)
+          layer.update(dt)
+        end
+      end
+    end
+
     def self.from_tiled_json(json : JSON::Any) : TileMap
       tile_w = json["tilewidth"].as_i
       tile_h = json["tileheight"].as_i
@@ -164,7 +180,7 @@ module GSDL
                 end
               end
 
-              objects << TileObject.new(
+              objects << TileObjectFactory.create(
                 id: id,
                 name: name,
                 type: obj_type,
@@ -317,7 +333,7 @@ module GSDL
               end
             end
 
-            objects << TileObject.new(
+            objects << TileObjectFactory.create(
               id: id,
               name: name,
               type: obj_type,
@@ -442,9 +458,7 @@ module GSDL
         elsif layer.is_a?(ObjectGroup)
           layer.objects.each do |obj|
             next unless obj.visible && (gid = obj.gid)
-            # Tiled tile objects have origin at bottom-left
-            obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
-            if obj_rect.in?(x.to_f32, y.to_f32)
+            if obj.contains?(x.to_f32, y.to_f32)
               tile_info = find_tileset_and_local_id(gid)
               return true if tile_info && tile_info.solid?
             end
@@ -469,8 +483,7 @@ module GSDL
         elsif layer.is_a?(ObjectGroup)
           layer.objects.each do |obj|
             next unless obj.visible && (gid = obj.gid)
-            obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
-            if obj_rect.in?((x * @tile_width).to_f32, (y * @tile_height).to_f32)
+            if obj.contains?((x * @tile_width).to_f32, (y * @tile_height).to_f32)
               return find_tileset_and_local_id(gid)
             end
           end

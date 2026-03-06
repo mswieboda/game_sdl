@@ -13,6 +13,10 @@ module GSDL
     def initialize(@name, @objects = [] of TileObject, @visible = true, @opacity = 1.0_f32, @offset_x = 0, @offset_y = 0, @parallax_x = 1.0_f32, @parallax_y = 1.0_f32, @z_index = 0)
     end
 
+    def update(dt : Float32)
+      @objects.each(&.update(dt))
+    end
+
     def draw(draw : Draw, tilesets : Hash(String, Tileset), tile_width : Int32, tile_height : Int32, camera : Camera? = nil, z_index : Int32 = 0)
       return unless @visible
       return if @opacity <= 0.0_f32
