@@ -15,8 +15,8 @@ module GSDL
       None = 0x00000000_i32 # SDL_FLIP_NONE
     end
 
-    # Using a 2D array of UInt32 to store global tile IDs and their flags.
-    property map_data : Array(Array(UInt32))
+    # Collection of TileLayers
+    property layers : Array(TileLayer)
     # Map of tileset key to Tileset object
     property tilesets : Hash(String, Tileset)
     property tile_width : Int32
@@ -35,7 +35,7 @@ module GSDL
     end
 
     def initialize(@tile_width, @tile_height)
-      @map_data = [] of Array(UInt32)
+      @layers = [] of TileLayer
       @tilesets = {} of String => Tileset
       @map_width_tiles = 0
       @map_height_tiles = 0
@@ -56,19 +56,15 @@ module GSDL
 
       tiled_tilesets.each do |ts_data|
         name = ts_data["name"].as_s
-        # Handle potential missing "image" key for tilesets that are collections of images etc.
-        # For simplicity here, we assume a path exists or use a placeholder.
         image_path =
           if ts_data["image"]?
             "assets/gfx/" + ts_data["image"].as_s
           else
-            # A placeholder or more complex logic might be needed for specific tileset types
             "assets/gfx/missing_image.png"
           end
 
         texture = GSDL::TextureManager.get(name)
 
-        # Create and configure the tileset
         tileset = GSDL::Tileset.new(
           texture,
           ts_data["tilewidth"].as_i,
@@ -76,40 +72,58 @@ module GSDL
           ts_data["firstgid"].as_i
         )
 
-        # Look for custom properties under the "properties" key in the tileset data
         if ts_data["properties"].as_a?.is_a?(Array)
           ts_data["properties"].as_a.each do |prop|
             if prop["name"].as_s == "solid_tiles"
-              # Assuming "value" holds the array of solid local tile IDs
               solid_tiles_json = prop["value"]
               if solid_tiles_json.as_a?.is_a?(Array)
                 tileset.solid_tiles = solid_tiles_json.as_a.map { |n| n.as_i - 1 }
               elsif solid_tiles_json.as_s?.is_a?(String)
-                # Handle stringified array "[1, 2, 3]"
                 val = solid_tiles_json.as_s
                 if val.starts_with?("[") && val.ends_with?("]")
                   tileset.solid_tiles = val[1...-1].split(",").map { |v| v.strip.to_i - 1 }
                 end
               end
-
-              break # Found solid_tiles, no need to check other properties
+              break
             end
           end
         elsif ts_data["properties"]?.is_a?(Hash)
-           # Handle if properties are directly under an object, not an array
            solid_tiles_json = ts_data["properties"]["solid_tiles"]?
            if solid_tiles_json.is_a?(Array)
              tileset.solid_tiles = solid_tiles_json.as_a.map(&.as_i)
            end
         end
 
-
         tile_map.add_tileset(name, tileset)
       end
 
-      layer_data = json["layers"][0]["data"].as_a.map(&.as_i.to_u32)
-      chunked_data = chunk_data(layer_data, map_w)
-      tile_map.map_data = chunked_data
+      json["layers"].as_a.each do |layer_json|
+        next if layer_json["type"].as_s != "tilelayer"
+
+        layer_name = layer_json["name"].as_s
+        visible = layer_json["visible"]? ? layer_json["visible"].as_bool : true
+        opacity = layer_json["opacity"]? ? layer_json["opacity"].as_f.to_f32 : 1.0_f32
+        offset_x = layer_json["offsetx"]? ? layer_json["offsetx"].as_i : 0
+        offset_y = layer_json["offsety"]? ? layer_json["offsety"].as_i : 0
+        parallax_x = layer_json["parallaxx"]? ? layer_json["parallaxx"].as_f.to_f32 : 1.0_f32
+        parallax_y = layer_json["parallaxy"]? ? layer_json["parallaxy"].as_f.to_f32 : 1.0_f32
+
+        raw_data = layer_json["data"].as_a.map(&.as_i.to_u32)
+        chunked_data = chunk_data(raw_data, map_w)
+
+        layer = TileLayer.new(
+          name: layer_name,
+          data: chunked_data,
+          visible: visible,
+          opacity: opacity,
+          offset_x: offset_x,
+          offset_y: offset_y,
+          parallax_x: parallax_x,
+          parallax_y: parallax_y
+        )
+        tile_map.layers << layer
+      end
+
       tile_map
     end
 
@@ -140,7 +154,6 @@ module GSDL
           texture = GSDL::TextureManager.get(name)
           tileset = GSDL::Tileset.new(texture, ts_tile_w, ts_tile_h, firstgid)
 
-          # Parse properties for solid_tiles
           props_node = node.children.find { |n| n.name == "properties" }
           if props_node
             props_node.children.each do |prop|
@@ -156,14 +169,33 @@ module GSDL
 
           tile_map.add_tileset(name, tileset)
         when "layer"
-          # For now, we only support one layer, like the JSON parser
+          layer_name = node["name"]
+          visible = node["visible"]? != "0"
+          opacity = node["opacity"]?.try(&.to_f32) || 1.0_f32
+          offset_x = node["offsetx"]?.try(&.to_i) || 0
+          offset_y = node["offsety"]?.try(&.to_i) || 0
+          parallax_x = node["parallaxx"]?.try(&.to_f32) || 1.0_f32
+          parallax_y = node["parallaxy"]?.try(&.to_f32) || 1.0_f32
+
           data_node = node.children.find { |n| n.name == "data" }
           if data_node
             encoding = data_node["encoding"]?
             if encoding == "csv"
               csv_data = data_node.content.strip
               layer_data = csv_data.split(/[\s,]+/).reject(&.empty?).map(&.to_u32)
-              tile_map.map_data = chunk_data(layer_data, map_w)
+              chunked_data = chunk_data(layer_data, map_w)
+
+              layer = TileLayer.new(
+                name: layer_name,
+                data: chunked_data,
+                visible: visible,
+                opacity: opacity,
+                offset_x: offset_x,
+                offset_y: offset_y,
+                parallax_x: parallax_x,
+                parallax_y: parallax_y
+              )
+              tile_map.layers << layer
             else
               raise "Unsupported TMX encoding: #{encoding || "none"}. Only CSV is supported for now."
             end
@@ -194,9 +226,16 @@ module GSDL
 
     # Loads map data from a simple 2D array for demonstration
     def load_map_data(data : Array(Array(Int32)))
-      @map_data = data.map { |d| d.map(&.to_u32)  }
+      chunked_data = data.map { |d| d.map(&.to_u32)  }
       @map_height_tiles = data.size
       @map_width_tiles = data.empty? ? 0 : data[0].size
+
+      @layers = [
+        TileLayer.new(
+          name: "main",
+          data: chunked_data
+        )
+      ]
     end
 
     private def self.chunk_data(data : Array(UInt32), width : Int32) : Array(Array(UInt32))
@@ -210,18 +249,17 @@ module GSDL
     end
 
     # Translates a global_gid into a Tileset and its local_tile_id
-    def find_tileset_and_local_id(global_gid_with_flags : UInt32) : TileInfo?
+    def self.find_tileset_and_local_id(global_gid_with_flags : UInt32, tilesets : Hash(String, Tileset)) : TileInfo?
       # A global_gid of 0 typically means an empty tile in Tiled
       return nil if global_gid_with_flags == 0
 
       flipped_horizontally = (global_gid_with_flags & FLIPPED_HORIZONTALLY_FLAG) != 0_u32
       flipped_vertically = (global_gid_with_flags & FLIPPED_VERTICALLY_FLAG) != 0_u32
-      # flipped_diagonally = (global_gid_with_flags & FLIPPED_DIAGONALLY_FLAG) != 0_u32 # Ignoring for now
 
       # Clear all flip flags to get the actual global tile ID
       global_gid = (global_gid_with_flags & ~ALL_FLIP_FLAGS).to_i
 
-      @tilesets.each do |key, tileset|
+      tilesets.each do |key, tileset|
         if tileset.contains_gid?(global_gid)
           local_tile_id = global_gid - tileset.first_gid
           return TileInfo.new(
@@ -237,17 +275,39 @@ module GSDL
       nil # No tileset found for this global_gid
     end
 
+    def find_tileset_and_local_id(global_gid_with_flags : UInt32) : TileInfo?
+      TileMap.find_tileset_and_local_id(global_gid_with_flags, @tilesets)
+    end
+
     def solid_at?(x : Int32, y : Int32) : Bool
       tile_x = x // @tile_width
       tile_y = y // @tile_height
-      tile = tile_at(tile_x, tile_y)
-      !!tile && tile.solid?
+
+      # Check layers from top to bottom
+      @layers.reverse_each do |layer|
+        next unless layer.visible
+        return false if tile_x < 0 || tile_x >= @map_width_tiles || tile_y < 0 || tile_y >= @map_height_tiles
+
+        global_gid_with_flags = layer.data[tile_y][tile_x]
+        tile_info = find_tileset_and_local_id(global_gid_with_flags)
+        return true if tile_info && tile_info.solid?
+      end
+
+      false
     end
 
     def tile_at(x : Int32, y : Int32) : TileInfo?
       return nil if x < 0 || x >= @map_width_tiles || y < 0 || y >= @map_height_tiles
-      global_gid_with_flags = @map_data[y][x]
-      find_tileset_and_local_id(global_gid_with_flags)
+
+      # Return the first tile info found from top to bottom
+      @layers.reverse_each do |layer|
+        next unless layer.visible
+        global_gid_with_flags = layer.data[y][x]
+        tile_info = find_tileset_and_local_id(global_gid_with_flags)
+        return tile_info if tile_info
+      end
+
+      nil
     end
 
     # Checks for solid tiles directly below the bounding box
@@ -276,6 +336,25 @@ module GSDL
         solid_at?((x + width).to_i, (y + height - 1).to_i)
     end
 
+    # Returns a layer by name
+    def get_layer(name : String) : TileLayer?
+      @layers.find { |l| l.name == name }
+    end
+
+    # Sets layer visibility
+    def set_layer_visibility(name : String, visible : Bool)
+      if layer = get_layer(name)
+        layer.visible = visible
+      end
+    end
+
+    # Draws a specific layer
+    def draw_layer(draw : Draw, layer_name : String, camera : Camera? = nil)
+      if layer = get_layer(layer_name)
+        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index)
+      end
+    end
+
     # Draws the tilemap
     def draw(draw : Draw, camera : Camera? = nil)
       old_scale_x = draw.current_scale_x
@@ -285,40 +364,8 @@ module GSDL
         draw.scale = camera.zoom
       end
 
-      camera_x = camera.try(&.x.to_f32) || 0_f32
-      camera_y = camera.try(&.y.to_f32) || 0_f32
-
-      # TODO: Implement frustum culling here
-      # For simplicity, drawing all tiles for now.
-
-      @map_data.each_with_index do |row_data, y_index|
-        row_data.each_with_index do |global_gid_with_flags, x_index|
-          tile_info = find_tileset_and_local_id(global_gid_with_flags)
-          next unless tile_info
-
-          tileset = @tilesets[tile_info.tileset_key]
-          next unless tileset # Should not happen if find_tileset_and_local_id returns TileInfo
-
-          source_rect = tileset.get_local_tile_source_rect(tile_info.local_tile_id)
-          dest_rect = FRect.new(
-            x: x_index * @tile_width - camera_x,
-            y: y_index * @tile_height - camera_y,
-            w: @tile_width,
-            h: @tile_height
-          )
-
-          flip_mode = 0_i32
-          flip_mode |= Flip::Horizontal if tile_info.flipped_horizontally
-          flip_mode |= Flip::Vertical if tile_info.flipped_vertically
-
-          draw.texture(
-            texture: tileset.texture,
-            source_rect: source_rect,
-            dest_rect: dest_rect,
-            flip: flip_mode,
-            z_index: @z_index
-          )
-        end
+      @layers.each do |layer|
+        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index)
       end
 
       if camera

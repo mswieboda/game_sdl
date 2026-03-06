@@ -21,6 +21,10 @@ module TileMapEx
     def load_textures
       [{"tiles", "gfx/tiles.png"}]
     end
+
+    def load_tile_maps
+      [{"map", "data/maps/map.tmx"}]
+    end
   end
 
   class SceneManager < GSDL::SceneManager
@@ -35,9 +39,8 @@ module TileMapEx
 
     def initialize
       super(:start)
-      # This will load assets/gfx/map.tmx if it exists, otherwise it might fail
-      # if it's not found. We created it earlier.
-      @tile_map = GSDL::TileMap.from_tiled_file("assets/gfx/map.tmx")
+
+      @tile_map = GSDL::TileMapManager.get("map")
       @tile_map.z_index = -5
     end
 
