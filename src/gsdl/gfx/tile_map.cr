@@ -2,11 +2,13 @@ require "json"
 require "xml"
 
 module GSDL
+  alias MapLayer = TileLayer | ObjectGroup
+
   class TileMap
     # Bits on the far end of the 32-bit global tile ID are used for tile flags
     FLIPPED_HORIZONTALLY_FLAG  = 0x80000000_u32
     FLIPPED_VERTICALLY_FLAG    = 0x40000000_u32
-    FLIPPED_DIAGONALLY_FLAG    = 0x20000000_u32 # Tiled's diagonal flip flag, kept for completeness but not actively used for rendering rotation as per instruction.
+    FLIPPED_DIAGONALLY_FLAG    = 0x20000000_u32 # Tiled's diagonal flip flag
     ALL_FLIP_FLAGS             = FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG
 
     module Flip
@@ -15,10 +17,8 @@ module GSDL
       None = 0x00000000_i32 # SDL_FLIP_NONE
     end
 
-    # Collection of TileLayers
-    property layers : Array(TileLayer)
-    # Collection of TileObjects
-    property objects : Array(TileObject)
+    # Collection of MapLayers (TileLayer or ObjectGroup)
+    property layers : Array(MapLayer)
     # Map of tileset key to Tileset object
     property tilesets : Hash(String, Tileset)
     property tile_width : Int32
@@ -37,12 +37,22 @@ module GSDL
     end
 
     def initialize(@tile_width, @tile_height)
-      @layers = [] of TileLayer
-      @objects = [] of TileObject
+      @layers = [] of MapLayer
       @tilesets = {} of String => Tileset
       @map_width_tiles = 0
       @map_height_tiles = 0
       @tiled_tilesets = [] of JSON::Any
+    end
+
+    # Returns all objects across all object layers
+    def objects : Array(TileObject)
+      all_objects = [] of TileObject
+      @layers.each do |layer|
+        if layer.is_a?(ObjectGroup)
+          all_objects.concat(layer.objects)
+        end
+      end
+      all_objects
     end
 
     def self.from_tiled_json(json : JSON::Any) : TileMap
@@ -75,8 +85,8 @@ module GSDL
           ts_data["firstgid"].as_i
         )
 
-        if ts_data["properties"].as_a?.is_a?(Array)
-          ts_data["properties"].as_a.each do |prop|
+        if ts_data["properties"]? && (props_json = ts_data["properties"]).as_a?
+          props_json.as_a.each do |prop|
             if prop["name"].as_s == "solid_tiles"
               solid_tiles_json = prop["value"]
               if solid_tiles_json.as_a?.is_a?(Array)
@@ -100,18 +110,22 @@ module GSDL
         tile_map.add_tileset(name, tileset)
       end
 
-      json["layers"].as_a.each do |layer_json|
+      json["layers"].as_a.each_with_index do |layer_json, index|
         type = layer_json["type"].as_s
+        layer_name = layer_json["name"]? ? layer_json["name"].as_s : "layer_#{index}"
+        visible = layer_json["visible"]? ? layer_json["visible"].as_bool : true
+        opacity = layer_json["opacity"]? ? (layer_json["opacity"].as_f? || layer_json["opacity"].as_i.to_f32).to_f32 : 1.0_f32
+        offset_x = layer_json["offsetx"]? ? layer_json["offsetx"].as_i : 0
+        offset_y = layer_json["offsety"]? ? layer_json["offsety"].as_i : 0
+        parallax_x = layer_json["parallaxx"]? ? (layer_json["parallaxx"].as_f? || layer_json["parallaxx"].as_i.to_f32).to_f32 : 1.0_f32
+        parallax_y = layer_json["parallaxy"]? ? (layer_json["parallaxy"].as_f? || layer_json["parallaxy"].as_i.to_f32).to_f32 : 1.0_f32
+        
+        # Determine z_index based on order in file (bottom layers first)
+        # We start from 0 and increment.
+        layer_z = index
+
         case type
         when "tilelayer"
-          layer_name = layer_json["name"].as_s
-          visible = layer_json["visible"]? ? layer_json["visible"].as_bool : true
-          opacity = layer_json["opacity"]? ? (layer_json["opacity"].as_f? || layer_json["opacity"].as_i.to_f32).to_f32 : 1.0_f32
-          offset_x = layer_json["offsetx"]? ? layer_json["offsetx"].as_i : 0
-          offset_y = layer_json["offsety"]? ? layer_json["offsety"].as_i : 0
-          parallax_x = layer_json["parallaxx"]? ? (layer_json["parallaxx"].as_f? || layer_json["parallaxx"].as_i.to_f32).to_f32 : 1.0_f32
-          parallax_y = layer_json["parallaxy"]? ? (layer_json["parallaxy"].as_f? || layer_json["parallaxy"].as_i.to_f32).to_f32 : 1.0_f32
-
           raw_data = layer_json["data"].as_a.map(&.as_i.to_u32)
           chunked_data = chunk_data(raw_data, map_w)
 
@@ -123,44 +137,61 @@ module GSDL
             offset_x: offset_x,
             offset_y: offset_y,
             parallax_x: parallax_x,
-            parallax_y: parallax_y
+            parallax_y: parallax_y,
+            z_index: layer_z
           )
           tile_map.layers << layer
         when "objectgroup"
-          layer_json["objects"].as_a.each do |obj_json|
-            id = obj_json["id"].as_i
-            name = obj_json["name"].as_s
-            # Tiled 1.9+ uses "class" instead of "type"
-            obj_type = (obj_json["type"]? || obj_json["class"]? || JSON::Any.new("")).as_s
-            x = (obj_json["x"].as_f? || obj_json["x"].as_i.to_f32).to_f32
-            y = (obj_json["y"].as_f? || obj_json["y"].as_i.to_f32).to_f32
-            width = (obj_json["width"].as_f? || obj_json["width"].as_i.to_f32).to_f32
-            height = (obj_json["height"].as_f? || obj_json["height"].as_i.to_f32).to_f32
-            rotation = (obj_json["rotation"].as_f? || obj_json["rotation"].as_i.to_f32).to_f32
-            visible = obj_json["visible"]? ? obj_json["visible"].as_bool : true
-            gid = obj_json["gid"]?.try(&.as_i.to_u32)
+          objects = [] of TileObject
+          if objs_json = layer_json["objects"]?.try(&.as_a)
+            objs_json.each do |obj_json|
+              id = obj_json["id"].as_i
+              name = obj_json["name"]? ? obj_json["name"].as_s : ""
+              # Tiled 1.9+ uses "class" instead of "type"
+              obj_type = (obj_json["type"]? || obj_json["class"]? || JSON::Any.new("")).as_s
+              x = (obj_json["x"].as_f? || obj_json["x"].as_i.to_f32).to_f32
+              y = (obj_json["y"].as_f? || obj_json["y"].as_i.to_f32).to_f32
+              width = (obj_json["width"]? ? (obj_json["width"].as_f? || obj_json["width"].as_i.to_f32).to_f32 : 0_f32)
+              height = (obj_json["height"]? ? (obj_json["height"].as_f? || obj_json["height"].as_i.to_f32).to_f32 : 0_f32)
+              rotation = (obj_json["rotation"]? ? (obj_json["rotation"].as_f? || obj_json["rotation"].as_i.to_f32).to_f32 : 0_f32)
+              obj_visible = obj_json["visible"]? ? obj_json["visible"].as_bool : true
+              gid = obj_json["gid"]?.try(&.as_i.to_u32)
 
-            properties = {} of String => JSON::Any
-            if props = obj_json["properties"]?.try(&.as_a)
-              props.each do |prop|
-                properties[prop["name"].as_s] = prop["value"]
+              properties = {} of String => JSON::Any
+              if props = obj_json["properties"]?.try(&.as_a)
+                props.each do |prop|
+                  properties[prop["name"].as_s] = prop["value"]
+                end
               end
-            end
 
-            tile_map.objects << TileObject.new(
-              id: id,
-              name: name,
-              type: obj_type,
-              x: x,
-              y: y,
-              width: width,
-              height: height,
-              rotation: rotation,
-              visible: visible,
-              gid: gid,
-              properties: properties
-            )
+              objects << TileObject.new(
+                id: id,
+                name: name,
+                type: obj_type,
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                rotation: rotation,
+                visible: obj_visible,
+                gid: gid,
+                properties: properties
+              )
+            end
           end
+
+          group = ObjectGroup.new(
+            name: layer_name,
+            objects: objects,
+            visible: visible,
+            opacity: opacity,
+            offset_x: offset_x,
+            offset_y: offset_y,
+            parallax_x: parallax_x,
+            parallax_y: parallax_y,
+            z_index: layer_z
+          )
+          tile_map.layers << group
         end
       end
 
@@ -183,6 +214,7 @@ module GSDL
       tile_map.map_width_tiles = map_w
       tile_map.map_height_tiles = map_h
 
+      layer_count = 0
       map_node.children.each do |node|
         case node.name
         when "tileset"
@@ -209,7 +241,7 @@ module GSDL
 
           tile_map.add_tileset(name, tileset)
         when "layer"
-          layer_name = node["name"]
+          layer_name = node["name"]? || "layer_#{layer_count}"
           visible = node["visible"]? != "0"
           opacity = node["opacity"]?.try(&.to_f32) || 1.0_f32
           offset_x = node["offsetx"]?.try(&.to_i) || 0
@@ -233,14 +265,25 @@ module GSDL
                 offset_x: offset_x,
                 offset_y: offset_y,
                 parallax_x: parallax_x,
-                parallax_y: parallax_y
+                parallax_y: parallax_y,
+                z_index: layer_count
               )
               tile_map.layers << layer
+              layer_count += 1
             else
               raise "Unsupported TMX encoding: #{encoding || "none"}. Only CSV is supported for now."
             end
           end
         when "objectgroup"
+          layer_name = node["name"]? || "layer_#{layer_count}"
+          visible = node["visible"]? != "0"
+          opacity = node["opacity"]?.try(&.to_f32) || 1.0_f32
+          offset_x = node["offsetx"]?.try(&.to_i) || 0
+          offset_y = node["offsety"]?.try(&.to_i) || 0
+          parallax_x = node["parallaxx"]?.try(&.to_f32) || 1.0_f32
+          parallax_y = node["parallaxy"]?.try(&.to_f32) || 1.0_f32
+
+          objects = [] of TileObject
           node.children.each do |obj_node|
             next unless obj_node.name == "object"
             id = obj_node["id"].to_i
@@ -251,7 +294,7 @@ module GSDL
             width = obj_node["width"]?.try(&.to_f32) || 0_f32
             height = obj_node["height"]?.try(&.to_f32) || 0_f32
             rotation = obj_node["rotation"]?.try(&.to_f32) || 0_f32
-            visible = obj_node["visible"]? != "0"
+            obj_visible = obj_node["visible"]? != "0"
             gid = obj_node["gid"]?.try(&.to_u32)
 
             properties = {} of String => JSON::Any
@@ -259,8 +302,6 @@ module GSDL
             if props_node
               props_node.children.each do |prop|
                 next unless prop.name == "property"
-                # TODO: handle property types (int, float, bool) correctly
-                # For now assuming string or numeric
                 val = prop["value"]
                 if val == "true"
                   properties[prop["name"]] = JSON::Any.new(true)
@@ -276,7 +317,7 @@ module GSDL
               end
             end
 
-            tile_map.objects << TileObject.new(
+            objects << TileObject.new(
               id: id,
               name: name,
               type: obj_type,
@@ -285,11 +326,25 @@ module GSDL
               width: width,
               height: height,
               rotation: rotation,
-              visible: visible,
+              visible: obj_visible,
               gid: gid,
               properties: properties
             )
           end
+
+          group = ObjectGroup.new(
+            name: layer_name,
+            objects: objects,
+            visible: visible,
+            opacity: opacity,
+            offset_x: offset_x,
+            offset_y: offset_y,
+            parallax_x: parallax_x,
+            parallax_y: parallax_y,
+            z_index: layer_count
+          )
+          tile_map.layers << group
+          layer_count += 1
         end
       end
 
@@ -377,22 +432,23 @@ module GSDL
       # Check layers from top to bottom
       @layers.reverse_each do |layer|
         next unless layer.visible
-        return false if tile_x < 0 || tile_x >= @map_width_tiles || tile_y < 0 || tile_y >= @map_height_tiles
+        
+        if layer.is_a?(TileLayer)
+          return false if tile_x < 0 || tile_x >= @map_width_tiles || tile_y < 0 || tile_y >= @map_height_tiles
 
-        global_gid_with_flags = layer.data[tile_y][tile_x]
-        tile_info = find_tileset_and_local_id(global_gid_with_flags)
-        return true if tile_info && tile_info.solid?
-      end
-
-      # Check objects (if they have a gid and are solid in their tileset)
-      # Note: This is a simple point-in-rect check for objects
-      @objects.each do |obj|
-        next unless obj.visible && (gid = obj.gid)
-        # Tiled tile objects have origin at bottom-left
-        obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
-        if obj_rect.in?(x.to_f32, y.to_f32)
-          tile_info = find_tileset_and_local_id(gid)
+          global_gid_with_flags = layer.data[tile_y][tile_x]
+          tile_info = find_tileset_and_local_id(global_gid_with_flags)
           return true if tile_info && tile_info.solid?
+        elsif layer.is_a?(ObjectGroup)
+          layer.objects.each do |obj|
+            next unless obj.visible && (gid = obj.gid)
+            # Tiled tile objects have origin at bottom-left
+            obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
+            if obj_rect.in?(x.to_f32, y.to_f32)
+              tile_info = find_tileset_and_local_id(gid)
+              return true if tile_info && tile_info.solid?
+            end
+          end
         end
       end
 
@@ -405,17 +461,19 @@ module GSDL
       # Return the first tile info found from top to bottom
       @layers.reverse_each do |layer|
         next unless layer.visible
-        global_gid_with_flags = layer.data[y][x]
-        tile_info = find_tileset_and_local_id(global_gid_with_flags)
-        return tile_info if tile_info
-      end
-
-      # Check objects (if they have a gid)
-      @objects.each do |obj|
-        next unless obj.visible && (gid = obj.gid)
-        obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
-        if obj_rect.in?((x * @tile_width).to_f32, (y * @tile_height).to_f32)
-          return find_tileset_and_local_id(gid)
+        
+        if layer.is_a?(TileLayer)
+          global_gid_with_flags = layer.data[y][x]
+          tile_info = find_tileset_and_local_id(global_gid_with_flags)
+          return tile_info if tile_info
+        elsif layer.is_a?(ObjectGroup)
+          layer.objects.each do |obj|
+            next unless obj.visible && (gid = obj.gid)
+            obj_rect = FRect.new(obj.x, obj.y - obj.height, obj.width, obj.height)
+            if obj_rect.in?((x * @tile_width).to_f32, (y * @tile_height).to_f32)
+              return find_tileset_and_local_id(gid)
+            end
+          end
         end
       end
 
@@ -449,23 +507,42 @@ module GSDL
     end
 
     # Returns a layer by name
-    def get_layer(name : String) : TileLayer?
+    def get_layer(name : String) : MapLayer?
       @layers.find { |l| l.name == name }
     end
 
     # Returns objects of a specific type (or class)
     def get_objects_by_type(type : String) : Array(TileObject)
-      @objects.select { |o| o.type == type }
+      all_objects = [] of TileObject
+      @layers.each do |layer|
+        if layer.is_a?(ObjectGroup)
+          all_objects.concat(layer.objects.select { |o| o.type == type })
+        end
+      end
+      all_objects
     end
 
     # Returns an object by name
     def get_object_by_name(name : String) : TileObject?
-      @objects.find { |o| o.name == name }
+      @layers.each do |layer|
+        if layer.is_a?(ObjectGroup)
+          if obj = layer.objects.find { |o| o.name == name }
+            return obj
+          end
+        end
+      end
+      nil
     end
 
     # Returns objects with a specific property
     def get_objects_by_property(key : String, value : JSON::Any) : Array(TileObject)
-      @objects.select { |o| o.properties[key]? == value }
+      all_objects = [] of TileObject
+      @layers.each do |layer|
+        if layer.is_a?(ObjectGroup)
+          all_objects.concat(layer.objects.select { |o| o.properties[key]? == value })
+        end
+      end
+      all_objects
     end
 
     # Sets layer visibility
@@ -478,7 +555,7 @@ module GSDL
     # Draws a specific layer
     def draw_layer(draw : Draw, layer_name : String, camera : Camera? = nil)
       if layer = get_layer(layer_name)
-        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index)
+        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index + layer.z_index)
       end
     end
 
@@ -491,45 +568,8 @@ module GSDL
         draw.scale = camera.zoom
       end
 
-      camera_x = camera.try(&.x.to_f32) || 0_f32
-      camera_y = camera.try(&.y.to_f32) || 0_f32
-
       @layers.each do |layer|
-        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index)
-      end
-
-      # Draw objects with GID
-      @objects.each do |obj|
-        next unless obj.visible && (gid = obj.gid)
-        
-        tile_info = find_tileset_and_local_id(gid)
-        next unless tile_info
-        
-        tileset = @tilesets[tile_info.tileset_key]
-        next unless tileset
-        
-        source_rect = tileset.get_local_tile_source_rect(tile_info.local_tile_id)
-        
-        # Tiled tile objects have origin at bottom-left
-        dest_rect = FRect.new(
-          x: obj.x - camera_x,
-          y: (obj.y - obj.height) - camera_y,
-          w: obj.width,
-          h: obj.height
-        )
-        
-        flip_mode = 0_i32
-        flip_mode |= Flip::Horizontal if tile_info.flipped_horizontally
-        flip_mode |= Flip::Vertical if tile_info.flipped_vertically
-
-        draw.texture_rotated(
-          texture: tileset.texture,
-          source_rect: source_rect,
-          dest_rect: dest_rect,
-          angle: obj.rotation.to_f32,
-          flip: flip_mode,
-          z_index: @z_index
-        )
+        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index + layer.z_index)
       end
 
       if camera
@@ -538,5 +578,3 @@ module GSDL
     end
   end
 end
-
-
