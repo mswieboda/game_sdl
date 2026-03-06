@@ -158,9 +158,9 @@ module PlatformerEx
       # player
       @player = Player.new(key: "player", width: 32, height: 64)
       # Set map z_index to -1 so layers are at -1, 0, 1.
-      # Player at 0 will be above Ground and Objects, but below Foreground (1).
+      # Player at 1 will be above Ground and Objects, but below Foreground (1).
       @tile_map.z_index = -1
-      @player.z_index = 0
+      @player.z_index = 1
 
       # Spawn player at Tiled object location if available
       if spawn = @tile_map.get_objects_by_type("PlayerStart").first?

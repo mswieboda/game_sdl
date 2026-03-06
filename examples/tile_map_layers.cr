@@ -6,7 +6,7 @@ module MultiLayerMapEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Tile Ma Multi-Layer Example", width: WIDTH, height: HEIGHT)
+      super(title: "Tile Map Example", width: WIDTH, height: HEIGHT)
     end
 
     def init
@@ -19,11 +19,16 @@ module MultiLayerMapEx
     end
 
     def load_textures
-      [{"tiles", "gfx/tiles.png"}]
+      [
+        {"tiles", "gfx/tiles.png"},
+        {"barrel", "gfx/barrel.png"},
+        {"palm-tree", "gfx/palm-tree.png"},
+      ]
     end
 
     def load_tile_maps
-      [{"map", "data/maps/multi_layer_map.json"}]
+      # tile map supports both .json and .tmx for now
+      [{"map", "data/maps/map.json"}]
     end
   end
 
@@ -38,6 +43,7 @@ module MultiLayerMapEx
     @tile_map : GSDL::TileMap
     @bg_visible : Bool = true
     @fg_visible : Bool = true
+    @objs_visible : Bool = true
 
     def initialize
       super(:map)
@@ -53,7 +59,12 @@ module MultiLayerMapEx
 
       if GSDL::Keys.just_pressed?(GSDL::Keys::F)
         @fg_visible = !@fg_visible
-        @tile_map.set_layer_visibility("Foreground", @fg_visible)
+        @tile_map.set_layer_visibility("Foreground Tiles", @fg_visible)
+      end
+
+      if GSDL::Keys.just_pressed?(GSDL::Keys::O)
+        @objs_visible = !@objs_visible
+        @tile_map.set_layer_visibility("Objects", @objs_visible)
       end
     end
 
@@ -61,11 +72,10 @@ module MultiLayerMapEx
       @tile_map.draw(draw)
 
       font = GSDL::Font.default(16_f32)
-      draw.text(GSDL::Text.new(font: font, text: "Press 'B' to toggle Background", x: 10, y: 10))
-      draw.text(GSDL::Text.new(font: font, text: "Press 'F' to toggle Foreground", x: 10, y: 35))
+      text = "Press 'B' to toggle Background\nPress 'F' to toggle Foreground\nPress 'O' to toggle Objects"
+      draw.text(GSDL::Text.new(font: font, text: text, x: 16, y: 16, z_index: 99))
 
       # Demonstrate independent layer rendering
-      # draw.text(GSDL::Text.new(font: font, text: "Foreground only:", x: 10, y: 60))
       # @tile_map.draw_layer(draw, "Foreground")
     end
   end
