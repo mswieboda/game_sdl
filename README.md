@@ -35,17 +35,9 @@ make
 
 ## Installation
 
-1. [Install SDL3]([https://wiki.libsdl.org/SDL3/Installation](https://github.com/libsdl-org/SDL/releases))
+1. Install SDL3
 
-or install with favorite library / package manager
-
-for example for macOS:
-
-```
-brew install sdl3 sdl3_image sdl3_ttf
-```
-
-will install all required libraries
+follow [sdl3.cr install instructions](https://github.com/mswieboda/sdl3.cr) to get all the available SDL3 packages, image, TTY, mixer
 
 2. Make your crystal app
 
