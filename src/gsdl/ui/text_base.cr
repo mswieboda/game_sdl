@@ -11,7 +11,7 @@ module GSDL
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
     getter tweens : Array(Tween) = [] of Tween
 
-    @@renderer : SDL3::Renderer?
+    @@draw : Draw?
 
     # TODO: maybe rename to @internal like the other class/struct wrappers
     # however, maybe TextBase / Text are custom enough so it's okay?
@@ -77,9 +77,8 @@ module GSDL
         font.align = align
       end
 
-      # TODO: do this from the Draw class eventually, instead of SDL3::Renderer
-      text_engine = TextBase.renderer.create_text_engine
-      @text_sdl = text_engine.create_text(font.to_sdl, @text)
+      # Use the shared text_engine from the Draw instance
+      @text_sdl = TextBase.draw.text_engine.create_text(font.to_sdl, @text)
 
       @text_sdl.color = color.to_sdl
       @text_sdl.direction = direction
@@ -92,15 +91,20 @@ module GSDL
     end
 
     def self.draw=(draw : Draw)
-      @@renderer = draw.to_sdl
+      @@draw = draw
     end
 
-    def self.renderer : SDL3::Renderer
-      if renderer = @@renderer
-        renderer
+    def self.draw : Draw
+      if draw = @@draw
+        draw
       else
-        raise "GSDL::Text.renderer not set, should be set via GSDL::Game.init"
+        raise "GSDL::TextBase.draw not set, should be set via GSDL::Game.init"
       end
+    end
+
+    # NOTE: used in TextRotated for example
+    def self.renderer : SDL3::Renderer
+      draw.to_sdl
     end
 
     def text=(text : String)
@@ -188,7 +192,6 @@ module GSDL
     abstract def _draw
 
     def destroy
-      @text_sdl.text_engine.destroy
       @text_sdl.destroy
     end
   end

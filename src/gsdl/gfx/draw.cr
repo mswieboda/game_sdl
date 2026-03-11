@@ -141,12 +141,18 @@ module GSDL
 
     # add more for text, geo etc
     @draw_commands : Array(DrawCommand)
+    @text_engine : SDL3::TTF::TextEngine?
+
+    def text_engine : SDL3::TTF::TextEngine
+      @text_engine ||= @r.create_text_engine
+    end
 
     def clear : Bool
       @r.clear
     end
 
     def destroy : Void
+      @text_engine.try(&.destroy)
       @r.destroy
     end
 
