@@ -10,6 +10,7 @@ module GSDL
     property switch_data : SwitchData?
     property z_index : Int32 = 0
     property pause_scene : Scene?
+    property hud : HUD?
 
     def initialize(
       @name : Symbol = :base,
@@ -42,9 +43,11 @@ module GSDL
     end
 
     def update(dt : Float32)
+      @hud.try &.update(dt)
     end
 
     def draw(draw : Draw)
+      @hud.try &.draw(draw)
     end
   end
 

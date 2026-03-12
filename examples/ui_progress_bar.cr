@@ -27,12 +27,14 @@ module UIExample
     @health_bar : GSDL::ProgressBar
     @mana_bar : GSDL::ProgressBar
     @exp_bar : GSDL::ProgressBar
+    @thick_border_bar : GSDL::ProgressBar
     @vertical_bar : GSDL::ProgressBar
     @rotated_bar : GSDL::ProgressBar
     @instructions : GSDL::Text
     @health_label : GSDL::Text
     @mana_label : GSDL::Text
     @exp_label : GSDL::Text
+    @thick_border_label : GSDL::Text
     @flashes : Array(GSDL::NumberFlash) = [] of GSDL::NumberFlash
 
     def initialize
@@ -50,6 +52,7 @@ module UIExample
       @health_label = GSDL::Text.new(x: 50, y: 35, color: GSDL::Color::White)
       @mana_label = GSDL::Text.new(x: 50, y: 85, color: GSDL::Color::White)
       @exp_label = GSDL::Text.new(x: 50, y: 135, color: GSDL::Color::White)
+      @thick_border_label = GSDL::Text.new(x: 50, y: 185, color: GSDL::Color::White, text: "Thick Border: 5px")
 
       @health_bar = GSDL::ProgressBar.new(
         x: 50, y: 50, width: 200, height: 30,
@@ -77,6 +80,16 @@ module UIExample
         border_width: 0
       )
 
+      @thick_border_bar = GSDL::ProgressBar.new(
+        x: 50, y: 200, width: 200, height: 40,
+        value: 0.6,
+        background_color: GSDL::Color::DarkGray,
+        foreground_color: GSDL::Color::Orange,
+        border_color: GSDL::Color::White,
+        border_width: 5,
+        border_radius: 8
+      )
+
       @vertical_bar = GSDL::ProgressBar.new(
         x: 300, y: 50, width: 30, height: 200,
         value: 0.5,
@@ -101,6 +114,7 @@ module UIExample
       @health_bar.update(dt)
       @mana_bar.update(dt)
       @exp_bar.update(dt)
+      @thick_border_bar.update(dt)
       @vertical_bar.update(dt)
       @rotated_bar.update(dt)
       @instructions.update(dt)
@@ -133,6 +147,9 @@ module UIExample
 
         @exp_bar.value = 0.0_f32
         @exp_bar.tween({"value" => 1.0_f32}, 2.0_f32, GSDL::MathUtils::Easing::Linear)
+
+        new_thick = (@thick_border_bar.value.to_f32 > 0.5_f32 ? 0.3_f32 : 0.8_f32)
+        @thick_border_bar.tween({"value" => new_thick}, 1.5_f32, GSDL::MathUtils::Easing::EaseInOut)
         
         new_vert = (@vertical_bar.value.to_f32 > 0.5_f32 ? 0.1_f32 : 0.9_f32)
         @vertical_bar.tween({"value" => new_vert}, 0.5_f32, GSDL::MathUtils::Easing::EaseOut)
@@ -145,12 +162,14 @@ module UIExample
       @health_bar.draw(draw)
       @mana_bar.draw(draw)
       @exp_bar.draw(draw)
+      @thick_border_bar.draw(draw)
       @vertical_bar.draw(draw)
       @rotated_bar.draw(draw)
       @instructions.draw(draw)
       @health_label.draw(draw)
       @mana_label.draw(draw)
       @exp_label.draw(draw)
+      @thick_border_label.draw(draw)
       @flashes.each(&.draw(draw))
     end
   end

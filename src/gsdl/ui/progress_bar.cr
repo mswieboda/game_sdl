@@ -146,7 +146,7 @@ module GSDL
           scale: scale,
           rotation: rotation,
           z_index: z_index + 2,
-          draw_mode: Shape::DrawMode::Outline,
+          draw_mode: Shape::DrawMode::Border,
           border_thickness: border_width,
           border_color: border_color,
           border_radius: border_radius
