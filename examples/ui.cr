@@ -33,12 +33,13 @@ module UIExample
     @health_label : GSDL::Text
     @mana_label : GSDL::Text
     @exp_label : GSDL::Text
+    @flashes : Array(GSDL::NumberFlash) = [] of GSDL::NumberFlash
 
     def initialize
       super(:main)
 
       @instructions = GSDL::Text.new(
-        text: "Press SPACE to test progress bar animations",
+        text: "SPACE to animate bars | CLICK to spawn flashes",
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::White,
         z_index: 10
@@ -108,6 +109,23 @@ module UIExample
       @mana_label.text = "Mana: #{(@mana_bar.value.to_f32 * 100).to_i}%"
       @exp_label.text = "EXP: #{(@exp_bar.value.to_f32 * 100).to_i}%"
 
+      @flashes.each(&.update(dt))
+      @flashes.reject!(&.dead?)
+
+      if GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
+        # Spawn a damage-like flash
+        val = rand(10..99)
+        color = val > 80 ? GSDL::Color::Red : GSDL::Color::White
+        @flashes << GSDL::NumberFlash.new(
+          text: val.to_s,
+          x: GSDL::Mouse.x,
+          y: GSDL::Mouse.y,
+          color: color,
+          velocity: GSDL::Point.new(rand(-20..20), rand(-150..-100)),
+          lifetime: 0.75_f32
+        )
+      end
+
       if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
         # Test tweening
         new_health = (@health_bar.value.to_f32 > 0.5_f32 ? 0.2_f32 : 1.0_f32)
@@ -133,6 +151,7 @@ module UIExample
       @health_label.draw(draw)
       @mana_label.draw(draw)
       @exp_label.draw(draw)
+      @flashes.each(&.draw(draw))
     end
   end
 
