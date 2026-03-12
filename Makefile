@@ -42,6 +42,7 @@ examples:
 	@$(MAKE) run EXAMPLE=menu
 	@$(MAKE) run EXAMPLE=scene_switch
 	@$(MAKE) run EXAMPLE=logical_presentation
+	@$(MAKE) run EXAMPLE=shoot_em_up_movement
 
 build:
 	@echo "Building example: $(EXAMPLE)"
