@@ -12,6 +12,8 @@ module GSDL
     end
 
     @@states = {} of UInt8 => State
+    @@drag_start_x = {} of UInt8 => Int32
+    @@drag_start_y = {} of UInt8 => Int32
     @@x = 0
     @@y = 0
     @@prev_x = 0
@@ -26,12 +28,34 @@ module GSDL
       @@y
     end
 
+    def self.dx
+      @@x - @@prev_x
+    end
+
+    def self.dy
+      @@y - @@prev_y
+    end
+
     def self.position
       {@@x, @@y}
     end
 
     def self.moved?
       @@moved
+    end
+
+    def self.dragging?(button : UInt8 = ButtonLeft)
+      pressed?(button)
+    end
+
+    def self.drag_offset_x(button : UInt8 = ButtonLeft)
+      return 0 if !pressed?(button) || !@@drag_start_x.has_key?(button)
+      @@x - @@drag_start_x[button]
+    end
+
+    def self.drag_offset_y(button : UInt8 = ButtonLeft)
+      return 0 if !pressed?(button) || !@@drag_start_y.has_key?(button)
+      @@y - @@drag_start_y[button]
     end
 
     def self.in?(x : Num, y : Num, width : Num, height : Num)
@@ -71,11 +95,16 @@ module GSDL
       button = event.button.button
       unless pressed?(button)
         @@states[button] = State::JustPressed
+        @@drag_start_x[button] = event.button.x.to_i
+        @@drag_start_y[button] = event.button.y.to_i
       end
     end
 
     def self.handle_mouse_button_up(event : Event)
-      @@states[event.button.button] = State::JustReleased
+      button = event.button.button
+      @@states[button] = State::JustReleased
+      @@drag_start_x.delete(button)
+      @@drag_start_y.delete(button)
     end
 
     def self.pressed?(button : UInt8)
