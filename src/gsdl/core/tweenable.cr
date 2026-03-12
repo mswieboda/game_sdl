@@ -134,6 +134,18 @@ module GSDL
 
     def rotation=(rotation : Num); end
 
+    def scroll_speed_x : Num
+      0_f32
+    end
+
+    def scroll_speed_x=(val : Num); end
+
+    def scroll_speed_y : Num
+      0_f32
+    end
+
+    def scroll_speed_y=(val : Num); end
+
     def tint : Color?
       nil
     end

@@ -9,9 +9,14 @@ module GSDL
       CenterOnTarget
       CenterOnTargetWithBoundary
       Manual
+      Fixed
+      AutoScroll
     end
 
     property type : Type = Type::CenterOnTarget
+
+    property scroll_speed_x : Float32 = 0_f32
+    property scroll_speed_y : Float32 = 0_f32
 
     property offset_x : Float32 = 0_f32
     property offset_y : Float32 = 0_f32
@@ -163,6 +168,11 @@ module GSDL
         apply_boundary
       when Type::Manual
         update_manual_movement(dt)
+      when Type::Fixed
+        # Maintains current coordinates
+      when Type::AutoScroll
+        @x += @scroll_speed_x * dt
+        @y += @scroll_speed_y * dt
       end
     end
 

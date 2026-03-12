@@ -109,6 +109,8 @@ module GSDL
       when "scale"    then @target.scale.try { |s| {s[0].to_f32, s[1].to_f32} } || {1_f32, 1_f32}
       when "scale_x"  then @target.scale_x.to_f32
       when "scale_y"  then @target.scale_y.to_f32
+      when "scroll_speed_x" then @target.scroll_speed_x.to_f32
+      when "scroll_speed_y" then @target.scroll_speed_y.to_f32
       when "tint"     then @target.tint || Color::White
       when "color"    then @target.color
       when "value"    then @target.value.to_f32
@@ -140,6 +142,10 @@ module GSDL
         @target.scale_x = value.as(Float32)
       when "scale_y"
         @target.scale_y = value.as(Float32)
+      when "scroll_speed_x"
+        @target.scroll_speed_x = value.as(Float32)
+      when "scroll_speed_y"
+        @target.scroll_speed_y = value.as(Float32)
       when "tint"
         @target.tint = value.as(Color)
       when "color"

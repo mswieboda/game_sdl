@@ -128,14 +128,24 @@ module CameraEx
           @camera.type = GSDL::Camera::Type::CenterOnTarget
           @info_text.text = "Mode: CenterOnTarget (SPACE to switch)"
         when GSDL::Camera::Type::CenterOnTarget
+          @camera.type = GSDL::Camera::Type::Fixed
+          @info_text.text = "Mode: Fixed (SPACE to switch)"
+        when GSDL::Camera::Type::Fixed
+          @camera.type = GSDL::Camera::Type::AutoScroll
+          @camera.scroll_speed_x = 100_f32
+          @camera.scroll_speed_y = 50_f32
+          @info_text.text = "Mode: AutoScroll (100, 50) (SPACE to switch)"
+        when GSDL::Camera::Type::AutoScroll
           @camera.type = GSDL::Camera::Type::CenterOnTargetWithBoundary
+          @camera.scroll_speed_x = 0_f32
+          @camera.scroll_speed_y = 0_f32
           @info_text.text = "Mode: CenterOnTargetWithBoundary (SPACE to switch)"
         end
       end
 
       @player.update(dt, @boundary)
 
-      if @camera.type != GSDL::Camera::Type::Manual
+      if @camera.type == GSDL::Camera::Type::CenterOnTarget || @camera.type == GSDL::Camera::Type::CenterOnTargetWithBoundary
         @camera.look_at(@player)
       end
 
