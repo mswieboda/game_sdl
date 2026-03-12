@@ -219,10 +219,6 @@ module GSDL
       Texture.from_surface(surface)
     end
 
-    def debug_text(text : String, x : Num, y : Num)
-      @r.render_debug_text(x: x.to_f32, y: y.to_f32, text: text)
-    end
-
     def draw
       @draw_commands.sort_by! { |c| {c.z_index, c.y.try(&.to_f32) || 0.0_f32} }
 

@@ -145,5 +145,11 @@ module GSDL
     end
 
     def color=(val : Color); end
+
+    def value : Num
+      0_f32
+    end
+
+    def value=(val : Num); end
   end
 end

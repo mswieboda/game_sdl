@@ -111,6 +111,7 @@ module GSDL
       when "scale_y"  then @target.scale_y.to_f32
       when "tint"     then @target.tint || Color::White
       when "color"    then @target.color
+      when "value"    then @target.value.to_f32
       else                 0_f32
       end
     end
@@ -143,6 +144,8 @@ module GSDL
         @target.tint = value.as(Color)
       when "color"
         @target.color = value.as(Color)
+      when "value"
+        @target.value = value.as(Float32)
       end
     end
 
