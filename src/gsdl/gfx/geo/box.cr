@@ -319,43 +319,49 @@ module GSDL
     private def draw_border(draw : Draw)
       return if border_thickness <= 0
 
-      if draw_border_radius <= 0
-        # Draw rotated border lines
-        border_thickness.to_i.times do |i|
-          # Offsets for nested lines if thickness > 1
-          off = i.to_f32
+      border_thickness.to_i.times do |i|
+        off = i.to_f32
+        
+        # Calculate concentric dimensions and position
+        new_width = width - (off * 2)
+        new_height = height - (off * 2)
+        
+        next if new_width <= 0 || new_height <= 0
+        
+        # Shift the position to keep the box centered regardless of the origin
+        new_x = x.to_f32 + off * (1.0_f32 - 2.0_f32 * origin_x)
+        new_y = y.to_f32 + off * (1.0_f32 - 2.0_f32 * origin_y)
+        
+        # Radius must shrink as we move inward to stay concentric
+        new_radius = Math.max(0_f32, border_radius.to_f32 - off)
 
-          # 4 corners
-          p1 = rotate_point(draw_x + off, draw_y + off)
-          p2 = rotate_point(draw_x + draw_width - off, draw_y + off)
-          p3 = rotate_point(draw_x + draw_width - off, draw_y + draw_height - off)
-          p4 = rotate_point(draw_x + off, draw_y + draw_height - off)
-
-          draw.line(p1[0], p1[1], p2[0], p2[1], color: border_color, z_index: z_index)
-          draw.line(p2[0], p2[1], p3[0], p3[1], color: border_color, z_index: z_index)
-          draw.line(p3[0], p3[1], p4[0], p4[1], color: border_color, z_index: z_index)
-          draw.line(p4[0], p4[1], p1[0], p1[1], color: border_color, z_index: z_index)
-        end
-      else
-        # use existing logic for rounded borders
-        border_thickness.to_i.times do |i|
-          inner_width = self.draw_width - (i * 2)
-          inner_height = self.draw_height - (i * 2)
-
-          if inner_width > 0 && inner_height > 0
-            Box.new(
-              width: inner_width,
-              height: inner_height,
-              origin: origin,
-              x: self.x,
-              y: self.y,
-              rotation: self.rotation,
-              color: self.border_color,
-              z_index: z_index,
-              draw_mode: GSDL::Shape::DrawMode::Outline,
-              border_radius: self.draw_border_radius
-            ).draw(draw)
-          end
+        if rotation == 0 && new_radius <= 0
+          # Fast path for simple rects
+          draw.rect_outline(
+            rect: FRect.new(
+              x: new_x - new_width * origin_x,
+              y: new_y - new_height * origin_y,
+              w: new_width,
+              h: new_height
+            ),
+            color: border_color,
+            z_index: z_index
+          )
+        else
+          # Fallback for complex shapes (rotated or rounded)
+          # Note: We use the border_color as the main color for the outline Box
+          Box.new(
+            width: new_width,
+            height: new_height,
+            origin: origin,
+            x: new_x,
+            y: new_y,
+            rotation: rotation,
+            color: border_color,
+            z_index: z_index,
+            draw_mode: GSDL::Shape::DrawMode::Outline,
+            border_radius: new_radius
+          ).draw(draw)
         end
       end
     end
