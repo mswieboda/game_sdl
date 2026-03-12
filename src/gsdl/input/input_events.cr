@@ -25,6 +25,8 @@ module GSDL
         Mouse.handle_mouse_button_down(event)
       when Events::MouseUp
         Mouse.handle_mouse_button_up(event)
+      when Events::MouseWheel
+        Mouse.handle_mouse_wheel(event)
       when Events::GamepadButtonDown
         GamePad.handle_gamepad_button_down(event)
       when Events::GamepadButtonUp

@@ -18,6 +18,8 @@ module GSDL
     @@y = 0
     @@prev_x = 0
     @@prev_y = 0
+    @@wheel_x = 0_f32
+    @@wheel_y = 0_f32
     @@moved = false
 
     def self.x
@@ -26,6 +28,14 @@ module GSDL
 
     def self.y
       @@y
+    end
+
+    def self.wheel_x
+      @@wheel_x
+    end
+
+    def self.wheel_y
+      @@wheel_y
     end
 
     def self.dx
@@ -81,6 +91,9 @@ module GSDL
         end
       end
 
+      @@wheel_x = 0_f32
+      @@wheel_y = 0_f32
+
       @@moved = (@@x != @@prev_x || @@y != @@prev_y)
       @@prev_x = @@x
       @@prev_y = @@y
@@ -105,6 +118,11 @@ module GSDL
       @@states[button] = State::JustReleased
       @@drag_start_x.delete(button)
       @@drag_start_y.delete(button)
+    end
+
+    def self.handle_mouse_wheel(event : Event)
+      @@wheel_x = event.wheel.x
+      @@wheel_y = event.wheel.y
     end
 
     def self.pressed?(button : UInt8)
