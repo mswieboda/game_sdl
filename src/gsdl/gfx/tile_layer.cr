@@ -22,8 +22,38 @@ module GSDL
 
       tint = Color.new(255, 255, 255, (@opacity * 255).to_u8)
 
-      @data.each_with_index do |row_data, y_index|
-        row_data.each_with_index do |global_gid_with_flags, x_index|
+      min_y = 0
+      max_y = @data.size - 1
+      min_x = 0
+      max_x = Int32::MAX
+
+      if draw.culling_enabled
+        screen_w = GSDL::Game.width.to_f32
+        screen_h = GSDL::Game.height.to_f32
+
+        view_x = (camera_x * @parallax_x) - @offset_x
+        view_y = (camera_y * @parallax_y) - @offset_y
+        view_w = screen_w / draw.current_scale_x
+        view_h = screen_h / draw.current_scale_y
+
+        min_x = (view_x / tile_width).floor.to_i
+        max_x = ((view_x + view_w) / tile_width).ceil.to_i
+        min_y = (view_y / tile_height).floor.to_i
+        max_y = ((view_y + view_h) / tile_height).ceil.to_i
+
+        min_x = Math.max(0, min_x)
+        min_y = Math.max(0, min_y)
+        max_y = Math.min(@data.size - 1, max_y)
+      end
+
+      (min_y..max_y).each do |y_index|
+        row_data = @data[y_index]
+        row_max_x = draw.culling_enabled ? Math.min(row_data.size - 1, max_x) : row_data.size - 1
+        
+        next if min_x > row_max_x
+
+        (min_x..row_max_x).each do |x_index|
+          global_gid_with_flags = row_data[x_index]
           tile_info = TileMap.find_tileset_and_local_id(global_gid_with_flags, tilesets)
           next unless tile_info
 

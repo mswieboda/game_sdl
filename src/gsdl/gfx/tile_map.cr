@@ -71,6 +71,14 @@ module GSDL
       end
     end
 
+    def update(dt : Float32, camera : Camera)
+      @layers.each do |layer|
+        if layer.is_a?(ObjectGroup)
+          layer.update(dt, camera)
+        end
+      end
+    end
+
     def self.from_tiled_json(json : JSON::Any) : TileMap
       tile_w = json["tilewidth"].as_i
       tile_h = json["tileheight"].as_i

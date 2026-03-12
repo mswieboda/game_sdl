@@ -9,8 +9,25 @@ module GSDL
     property parallax_x : Float32
     property parallax_y : Float32
     property z_index : Int32 = 0
+    property update_off_screen : Bool = true
 
     def initialize(@name, @objects = [] of TileObject, @visible = true, @opacity = 1.0_f32, @offset_x = 0, @offset_y = 0, @parallax_x = 1.0_f32, @parallax_y = 1.0_f32, @z_index = 0)
+    end
+
+    def on_screen?(camera : Camera) : Bool
+      screen_w = GSDL::Game.width.to_f32
+      screen_h = GSDL::Game.height.to_f32
+      
+      @objects.any? do |obj|
+        obj_x = obj.x.to_f32 + @offset_x - (camera.x * @parallax_x)
+        obj_y = (obj.y - obj.height).to_f32 + @offset_y - (camera.y * @parallax_y)
+        !(obj_x + obj.width < 0 || obj_x > screen_w || obj_y + obj.height < 0 || obj_y > screen_h)
+      end
+    end
+
+    def update(dt : Float32, camera : Camera)
+      return if !@update_off_screen && !on_screen?(camera)
+      update(dt)
     end
 
     def update(dt : Float32)

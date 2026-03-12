@@ -13,6 +13,10 @@ module GSDL
       def y : Num?
         nil
       end
+
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+        true
+      end
     end
 
     abstract struct DrawColorCommand < DrawCommand
@@ -50,6 +54,17 @@ module GSDL
       def y : Num?
         @dest_rect.y
       end
+
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+        # basic bounding box check with circumscribed circle to account for arbitrary rotation
+        cx = @dest_rect.x + @dest_rect.w / 2_f32
+        cy = @dest_rect.y + @dest_rect.h / 2_f32
+        
+        radius = Math.max(@dest_rect.w, @dest_rect.h) * 0.75_f32
+        radius *= Math.max(scale_x.abs, scale_y.abs)
+
+        cx + radius >= 0_f32 && cx - radius <= screen_w && cy + radius >= 0_f32 && cy - radius <= screen_h
+      end
     end
 
     struct DrawTextCommand < DrawCommand
@@ -61,6 +76,15 @@ module GSDL
 
       def y : Num?
         @text.y
+      end
+
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+        r_x = @text.x.to_f32
+        r_y = @text.y.to_f32
+        r_w = @text.width.to_f32 * scale_x.abs
+        r_h = @text.height.to_f32 * scale_y.abs
+
+        r_x + r_w >= 0_f32 && r_x <= screen_w && r_y + r_h >= 0_f32 && r_y <= screen_h
       end
     end
 
@@ -90,6 +114,15 @@ module GSDL
       def y : Num?
         @rect.y
       end
+
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+        r_x = @rect.x
+        r_y = @rect.y
+        r_w = @rect.w * scale_x.abs
+        r_h = @rect.h * scale_y.abs
+
+        r_x + r_w >= 0_f32 && r_x <= screen_w && r_y + r_h >= 0_f32 && r_y <= screen_h
+      end
     end
 
     struct DrawFRectsCommand < DrawColorCommand
@@ -107,6 +140,10 @@ module GSDL
 
       def initialize(z_index : Int32, color : Color, @x : Float32, @y : Float32)
         super(z_index: z_index, color: color)
+      end
+
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+        @x >= 0_f32 && @x <= screen_w && @y >= 0_f32 && @y <= screen_h
       end
     end
 
@@ -142,6 +179,8 @@ module GSDL
     # add more for text, geo etc
     @draw_commands : Array(DrawCommand)
     @text_engine : SDL3::TTF::TextEngine?
+
+    property culling_enabled : Bool = true
 
     def text_engine : SDL3::TTF::TextEngine
       @text_engine ||= @r.create_text_engine
@@ -185,6 +224,11 @@ module GSDL
       c = cmd
       c.scale_x = @current_scale_x
       c.scale_y = @current_scale_y
+
+      if @culling_enabled && !c.on_screen?(GSDL::Game.width.to_f32, GSDL::Game.height.to_f32)
+        return
+      end
+
       @draw_commands << c
     end
 

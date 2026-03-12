@@ -35,7 +35,8 @@ examples:
 	@$(MAKE) run EXAMPLE=mouse
 	@$(MAKE) run EXAMPLE=game_pad
 	@$(MAKE) run EXAMPLE=collision
-	@$(MAKE) run EXAMPLE=tile_map
+	@$(MAKE) run EXAMPLE=tile_map_data
+	@$(MAKE) run EXAMPLE=tile_map_layers
 	@$(MAKE) run EXAMPLE=platformer
 	@$(MAKE) run EXAMPLE=message
 	@$(MAKE) run EXAMPLE=tween

@@ -125,6 +125,10 @@ module GSDL
       @y = center_y - (@height / (2_f32 * @zoom))
     end
 
+    def viewport_rect : FRect
+      FRect.new(x: @x, y: @y, w: @width / @zoom, h: @height / @zoom)
+    end
+
     def shake(duration : Float32, intensity : Float32 = 10_f32)
       @offset_x = 0_f32
       @offset_y = 0_f32

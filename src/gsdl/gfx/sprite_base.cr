@@ -15,6 +15,7 @@ module GSDL
     property tint : Color? = nil
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
+    property update_off_screen : Bool = true
 
     getter tweens : Array(Tween) = [] of Tween
 
@@ -37,6 +38,21 @@ module GSDL
 
     abstract def width : Num
     abstract def height : Num
+
+    def on_screen?(camera : Camera) : Bool
+      cam_rect = camera.viewport_rect
+      sx = draw_x
+      sy = draw_y
+      sw = draw_width
+      sh = draw_height
+      
+      sx + sw >= cam_rect.x && sx <= cam_rect.x + cam_rect.w && sy + sh >= cam_rect.y && sy <= cam_rect.y + cam_rect.h
+    end
+
+    def update(dt : Float32, camera : Camera)
+      return if !@update_off_screen && !on_screen?(camera)
+      update(dt)
+    end
 
     def origin_x : Float32
       origin[0]
