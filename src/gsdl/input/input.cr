@@ -32,5 +32,31 @@ module GSDL
     def self.delete(name : Symbol)
       @@actions.delete(name)
     end
+
+    @@text_input_this_frame : String = ""
+
+    def self.text_input_this_frame : String
+      @@text_input_this_frame
+    end
+
+    def self.append_text_input(text : String)
+      @@text_input_this_frame += text
+    end
+
+    def self.clear_text_input
+      @@text_input_this_frame = ""
+    end
+
+    def self.start_text_input
+      LibSDL3.start_text_input(Game.instance.window.to_unsafe)
+    end
+
+    def self.stop_text_input
+      LibSDL3.stop_text_input(Game.instance.window.to_unsafe)
+    end
+
+    def self.text_input_active? : Bool
+      LibSDL3.text_input_active(Game.instance.window.to_unsafe)
+    end
   end
 end

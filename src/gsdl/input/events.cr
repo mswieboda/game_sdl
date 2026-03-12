@@ -15,6 +15,7 @@ module GSDL
     GamepadButtonUp = LibSDL3::SDL_EVENT_GAMEPAD_BUTTON_UP
     GamepadAdded = LibSDL3::SDL_EVENT_GAMEPAD_ADDED
     GamepadRemoved = LibSDL3::SDL_EVENT_GAMEPAD_REMOVED
+    TextInput = LibSDL3::SDL_EVENT_TEXT_INPUT
 
     @@esc_exits = false
     @@exit = false

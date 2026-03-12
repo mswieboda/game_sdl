@@ -5,6 +5,7 @@ require "./game_pad"
 module GSDL
   module InputEvents
     def self.update
+      Input.clear_text_input
       Keys.update
       Mouse.update
       GamePad.update
@@ -12,6 +13,8 @@ module GSDL
 
     def self.handle_event(event : Event)
       case event.type
+      when Events::TextInput
+        Input.append_text_input(String.new(event.text.text))
       when Events::KeyDown
         Keys.handle_key_down(event)
       when Events::KeyUp
