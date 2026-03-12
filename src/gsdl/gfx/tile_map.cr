@@ -397,7 +397,7 @@ module GSDL
           name: "main",
           data: chunked_data
         )
-      ]
+      ] of ObjectGroup | TileLayer
     end
 
     private def self.chunk_data(data : Array(UInt32), width : Int32) : Array(Array(UInt32))
