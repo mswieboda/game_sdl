@@ -186,6 +186,30 @@ module GSDL
       y - (draw_height * origin_y)
     end
 
+    def in?(px : Num, py : Num) : Bool
+      if rotation == 0
+        return px >= draw_x && px <= draw_x + draw_width &&
+               py >= draw_y && py <= draw_y + draw_height
+      end
+
+      # For rotated, use point-in-polygon (only if we have collision_polygon_vertices)
+      if self.responds_to?(:collision_polygon_vertices)
+        vs = self.collision_polygon_vertices
+        inside = false
+        j = vs.size - 1
+        vs.size.times do |i|
+          if ((vs[i].y > py) != (vs[j].y > py)) &&
+             (px < (vs[j].x - vs[i].x) * (py - vs[i].y) / (vs[j].y - vs[i].y) + vs[i].x)
+            inside = !inside
+          end
+          j = i
+        end
+        return inside
+      end
+
+      false
+    end
+
     def update(dt : Float32)
       update_tweens(dt)
     end
