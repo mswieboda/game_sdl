@@ -50,13 +50,12 @@ module SliderExample
       )
 
       @h_label = GSDL::Text.new(text: "Value: 50", x: 400, y: 150, origin: {0.5_f32, 0.5_f32})
-      @v_label = GSDL::Text.new(text: "Volume: 0.5", x: 100, y: 120, origin: {0.5_f32, 0.5_f32}, scale: {0.75_f32, 0.75_f32})
+      @v_label = GSDL::Text.new(text: "Volume: 0.5", x: 100, y: 120, origin: {0.5_f32, 0.5_f32})
       
       @instructions = GSDL::Text.new(
         text: "Drag the sliders to change values",
         x: 400, y: 550,
-        origin: {0.5_f32, 0.5_f32},
-        scale: {0.75_f32, 0.75_f32}
+        origin: {0.5_f32, 0.5_f32}
       )
     end
 
