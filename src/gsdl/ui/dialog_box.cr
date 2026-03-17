@@ -3,6 +3,7 @@ module GSDL
     getter current_node : DialogNode?
     getter is_active : Bool = false
     getter selected_choice : Int32 = 0
+    getter style : DialogStyle
 
     # UI Elements
     @main_box : MessageTyped
@@ -17,24 +18,26 @@ module GSDL
     delegate z_index, to: @main_box
 
     def initialize(
+      @style : DialogStyle = DialogStyle.classic_rpg,
       on_action : Proc(String, Void)? = nil,
       on_condition : Proc(String, Bool)? = nil,
-      z_index : Int32 = 900
+      z_index : Int32 = 900,
     )
       @on_action = on_action
       @on_condition = on_condition
 
       @main_box = MessageTyped.new(
         text: "",
-        x: 400_f32,
-        y: 400_f32,
-        origin: {0.5_f32, 0.0_f32},
-        width: 700,
-        height: 100,
-        color: Color::Black,
-        border_radius: 8.0_f32,
+        x: @style.x,
+        y: @style.y,
+        origin: @style.origin,
+        width: @style.width,
+        height: @style.height,
+        color: @style.color,
+        bg_color: @style.bg_color,
+        border_radius: @style.border_radius,
         type: TextTyped::Type::Word,
-        on_complete: ->{ @show_choices = true },
+        on_complete: -> { @show_choices = true },
         z_index: z_index
       )
     end
@@ -103,24 +106,29 @@ module GSDL
           end
         end
 
-        y_offset = 510_f32
+        y_offset = @style.choices_y
         @valid_choices.each_with_index do |choice, i|
           # Add a prefix for unselected choices initially
-          text = "  #{choice.text}"
+          text = "#{@style.unselected_prefix}#{choice.text}"
 
           box = Message.new(
             text: text,
-            x: 400_f32,
+            x: @style.choices_x,
             y: y_offset,
-            origin: {0.5_f32, 0.0_f32},
-            width: 650,
-            height: 35,
-            color: Color::Black,
-            border_radius: 4.0_f32
+            origin: @style.choices_origin,
+            width: @style.choice_width,
+            height: @style.choice_height,
+            color: @style.choice_color,
+            bg_color: @style.choice_bg_color,
+            border_radius: @style.choice_border_radius
           )
           box.z_index = @main_box.z_index
           @choices_boxes << box
-          y_offset += 40_f32
+
+          # If spacing is provided, use it. Otherwise, use box height + some small default.
+          # Here we assume choice_spacing is the total vertical step.
+          # If choice_spacing is small (e.g. < box height), we ensure we at least move by box height.
+          y_offset += {@style.choice_spacing, box.height.to_f32 + 4.0_f32}.max
         end
       else
         @valid_choices = [] of DialogChoice
@@ -172,9 +180,9 @@ module GSDL
       @choices_boxes.each_with_index do |box, i|
         choice = @valid_choices[i]
         if i == @selected_choice
-          box.text = "> #{choice.text}"
+          box.text = "#{@style.selected_prefix}#{choice.text}"
         else
-          box.text = "  #{choice.text}"
+          box.text = "#{@style.unselected_prefix}#{choice.text}"
         end
       end
     end

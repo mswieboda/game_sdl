@@ -14,6 +14,7 @@ module GSDL
       x : Num = 0_f32,
       y : Num = 0_f32,
       color = Color::Black,
+      bg_color : Color = Color::White,
       border_radius : Num = 0,
       types_per_second : UInt8 = 8_u8,
       type : TextTyped::Type = TextTyped::Type::Word,
@@ -33,6 +34,7 @@ module GSDL
         x: x,
         y: y,
         color: color,
+        bg_color: bg_color,
         border_radius: border_radius,
         z_index: z_index
       )

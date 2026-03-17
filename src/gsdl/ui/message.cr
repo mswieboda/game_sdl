@@ -3,6 +3,7 @@ require "./text_box"
 module GSDL
   class Message < TextBox
     getter border_radius : Num
+    getter bg_color : Color
 
     def initialize(
       font = Font.default,
@@ -16,6 +17,7 @@ module GSDL
       x : Num = 0_f32,
       y : Num = 0_f32,
       color = Color::Black,
+      @bg_color : Color = Color::White,
       @border_radius : Num = 0,
       z_index : Int32 = 900,
     )
@@ -42,7 +44,7 @@ module GSDL
         scale: scale,
         width: width,
         height: height,
-        color: Color::White,
+        color: bg_color,
         border_radius: border_radius,
         z_index: z_index
       )
