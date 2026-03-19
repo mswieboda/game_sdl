@@ -11,25 +11,20 @@ module GameEx
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(TransitionScene.new(0))
+    end
+
+    def check_scenes
+      s = scene
+      if s.name == :transition_scene && s.exit?
+        next_index = s.as(TransitionScene).index + 1
+        next_index = 0 if next_index > 5
+        switch(TransitionScene.new(next_index))
+      end
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = TransitionScene.new(0)
-    end
-
-    def check_scenes
-      if scene.exit?
-        next_index = (scene.as(TransitionScene).index + 1) % 6
-        switch(TransitionScene.new(next_index))
-      end
     end
   end
 

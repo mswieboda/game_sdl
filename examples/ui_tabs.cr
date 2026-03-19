@@ -4,22 +4,15 @@ module TabsExample
   class Game < GSDL::Game
     def initialize
       super(title: "UI Tab Container Example", width: 800, height: 600)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(MainScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MainScene.new
     end
   end
 
@@ -29,7 +22,7 @@ module TabsExample
 
     def initialize
       super(:main)
-      
+
       @tabs = GSDL::TabContainer.new(
         tabs: ["Stats", "Inventory", "Settings"],
         x: 400, y: 300,

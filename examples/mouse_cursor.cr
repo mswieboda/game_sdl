@@ -11,22 +11,15 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Mouse Cursor Ex", width: WIDTH, height: HEIGHT)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(CursorScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = CursorScene.new
     end
   end
 

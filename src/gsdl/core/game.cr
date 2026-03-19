@@ -55,8 +55,43 @@ module GSDL
       Global.draw
     end
 
+    def self.quit!
+      instance.quit!
+    end
+
+    def self.scene
+      instance.scene
+    end
+
+    def self.push(scene : Scene, data : SwitchData? = nil)
+      instance.push(scene, data)
+    end
+
+    def self.pop
+      instance.pop
+    end
+
+    def self.replace(scene : Scene, data : SwitchData? = nil)
+      instance.replace(scene, data)
+    end
+
+    def self.switch(scene : Scene, data : SwitchData? = nil)
+      instance.switch(scene, data)
+    end
+
+    def self.loader
+      instance.loader
+    end
+
+    def self.paused?
+      instance.paused?
+    end
+
+    def self.paused=(val : Bool)
+      instance.paused = val
+    end
+
     @window : SDL3::Window?
-    @scene_manager : SceneManager?
     @draw : Draw?
     @loader : Loader?
     @last_tick : UInt64 = 0_i64
@@ -65,11 +100,12 @@ module GSDL
     @width : Int32?
     @height : Int32?
     @paused : Bool = false
+    @scenes : Array(Scene) = [] of Scene
 
     def window; @window.not_nil!; end
-    def scene_manager; @scene_manager.not_nil!; end
     def loader; @loader ||= Loader.new; end
     def exit?; @exit; end
+    def exit=(@exit : Bool); end
     def title; @title.not_nil!; end
     def width; @width.not_nil!; end
     def height; @height.not_nil!; end
@@ -78,6 +114,67 @@ module GSDL
 
     def toggle_pause
       @paused = !@paused
+    end
+
+    def quit!
+      @exit = true
+    end
+
+    def scene : Scene
+      @scenes.last
+    end
+
+    def push(scene : Scene, data : SwitchData? = nil)
+      scene.switch_data = data if data
+      scene.init
+      @scenes << scene
+    end
+
+    def pop
+      @scenes.pop?
+    end
+
+    def replace(scene : Scene, data : SwitchData? = nil)
+      pop
+      push(scene, data)
+    end
+
+    def switch(scene : Scene, data : SwitchData? = nil)
+      replace(scene, data)
+    end
+
+    def switch_async(scene_class : T.class, data : SwitchData? = nil) forall T
+      tasks = T.manifest
+      
+      if tasks.empty?
+        switch(T.new, data)
+      else
+        loader.add_tasks(tasks)
+        loader.start_async
+        switch(T.loading_scene_class(scene_class, data))
+      end
+    end
+
+    protected def check_scenes
+    end
+
+    private def update_transitions(dt : Float32)
+      if scene.transition_in.running?
+        scene.transition_in.update(dt)
+
+        scene.transition_in.clear if scene.transition_in.done?
+
+        return
+      end
+
+      if scene.transition_out.running?
+        scene.transition_out.update(dt)
+
+        if scene.transition_out.done?
+          scene.transition_out.clear
+          scene.exit
+        end
+      end
     end
 
     def initialize(title = "", width = 1920, height = 1080)
@@ -102,8 +199,6 @@ module GSDL
       Global.draw = @draw.not_nil!
 
       TextBase.draw = @draw.not_nil!
-
-      @scene_manager = SceneManager.new
     end
 
     private def _init
@@ -155,6 +250,12 @@ module GSDL
       tile_map_load_data.each do |key, path_key|
         TileMapManager.load(key: key, path_key: path_key)
       end
+
+      # dialogs
+      dialog_load_data = load_dialogs
+      dialog_load_data.each do |path_key|
+        DialogManager.load(path_key: path_key)
+      end
     end
 
     def load_default_font : String
@@ -177,6 +278,10 @@ module GSDL
       [] of Tuple(String, String)
     end
 
+    def load_dialogs : Array(String)
+      [] of String
+    end
+
     def vsync
       true
     end
@@ -197,7 +302,8 @@ module GSDL
       _init
       init
 
-      scene_manager.pause_scene ||= PauseScene.new
+      # If the user didn't push a scene in `init`, add a default one
+      push(Scene.new) if @scenes.empty?
 
       @exit = false
       @last_tick = GSDL.ticks
@@ -224,13 +330,35 @@ module GSDL
     end
 
     def update(dt : Float32)
-      if paused?
-        scene_manager.update_paused(dt)
-      else
-        scene_manager.update(dt)
+      return if @scenes.empty?
+
+      to_update = [] of Scene
+      @scenes.reverse_each do |s|
+        to_update << s
+        break unless s.update_underlying?
       end
 
-      @exit = true if scene_manager.exit?
+      to_update.reverse_each do |s|
+        if s == scene
+          update_transitions(dt)
+          next if s.transition_in.started? || s.transition_out.started?
+        end
+        
+        if paused?
+          s.pause_scene.try &.update(dt)
+        else
+          s.update(dt)
+        end
+      end
+
+      check_scenes
+
+      if !@scenes.empty? && @scenes.last.exit?
+        @scenes.pop
+        if @scenes.empty?
+          self.exit = true
+        end
+      end
     end
 
     def clear_screen
@@ -239,7 +367,30 @@ module GSDL
     end
 
     def draw
-      scene_manager.draw(Game.draw_instance)
+      # Find the index of the first non-transparent scene from the top
+      start_index = 0
+      (@scenes.size - 1).downto(0) do |i|
+        if !@scenes[i].transparent?
+          start_index = i
+          break
+        end
+      end
+
+      # Draw from that index upward
+      (start_index...@scenes.size).each do |i|
+        s = @scenes[i]
+        s.draw(Game.draw_instance) unless exit?
+        
+        if s == scene
+          s.transition_in.draw(Game.draw_instance) if s.transition_in.running?
+          s.transition_out.draw(Game.draw_instance) if s.transition_out.started?
+        end
+
+        if paused?
+          s.pause_scene.try &.draw(Game.draw_instance)
+        end
+      end
+
       Game.draw_instance.draw
     end
 

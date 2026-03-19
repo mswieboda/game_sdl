@@ -10,12 +10,12 @@ module PlatformerEx
   class Game < GSDL::Game
     def initialize
       super(title: "Platformer Example", width: WIDTH, height: HEIGHT)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(StartScene.new)
+        end
 
     def load_textures
       [
@@ -37,13 +37,6 @@ module PlatformerEx
 
     def load_tile_maps
       [{"map", "data/maps/map.json"}]
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
     end
   end
 

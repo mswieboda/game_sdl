@@ -4,27 +4,19 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Dialog Example", width: 800, height: 600)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(DialogScene.new)
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
     end
-  end
 
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      GSDL::DialogManager.load("data/dialog.yml")
-      super
-      @scene = DialogScene.new
-
-      GSDL::Input.set(:menu_up) { GSDL::Keys.just_pressed?([GSDL::Keys::W, GSDL::Keys::Up]) }
-      GSDL::Input.set(:menu_down) { GSDL::Keys.just_pressed?([GSDL::Keys::S, GSDL::Keys::Down]) }
-      GSDL::Input.set(:menu_select) { GSDL::Keys.just_pressed?([GSDL::Keys::Return, GSDL::Keys::Space, GSDL::Keys::E]) }
+    def load_dialogs
+      ["data/dialog.yml"]
     end
   end
 
@@ -37,6 +29,10 @@ module GameEx
     def initialize
       super(:dialog)
       @game_state = Hash(String, Bool).new
+
+      GSDL::Input.set(:menu_up) { GSDL::Keys.just_pressed?([GSDL::Keys::W, GSDL::Keys::Up]) }
+      GSDL::Input.set(:menu_down) { GSDL::Keys.just_pressed?([GSDL::Keys::S, GSDL::Keys::Down]) }
+      GSDL::Input.set(:menu_select) { GSDL::Keys.just_pressed?([GSDL::Keys::Return, GSDL::Keys::Space, GSDL::Keys::E]) }
 
       @dialog_box_rpg = GSDL::DialogBox.new(style: GSDL::DialogStyle.classic_rpg)
       @dialog_box_side = GSDL::DialogBox.new(style: GSDL::DialogStyle.side_panel)

@@ -7,21 +7,24 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Area Action Example", width: WIDTH, height: HEIGHT)
-    end
+      GSDL::Game.push(StartScene.new)
+        end
 
     def init
       GSDL::Events.esc_exits = true
 
-      GSDL::TextureManager.load("player", "gfx/top_down_player.png")
-      GSDL::TextureManager.load("npc", "gfx/skeleton.png")
-
       GSDL::Input.set(:action) { GSDL::Keys.just_pressed?([GSDL::Keys::Space, GSDL::Keys::Return]) }
-
-      @scene_manager = SceneManager.new
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
+    end
+
+    def load_textures
+      [
+        {"player", "gfx/top_down_player.png"},
+        {"npc", "gfx/skeleton.png"},
+      ]
     end
   end
 
@@ -141,13 +144,6 @@ module GameEx
       text.x = x
       text.y = y - draw_height / 2 - 4
       text.draw(draw)
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
     end
   end
 

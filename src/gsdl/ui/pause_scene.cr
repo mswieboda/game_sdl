@@ -36,9 +36,9 @@ module GSDL
         origin: {0.5_f32, 0.5_f32},
         on_select: ->(id : Symbol) {
           if id == :resume
-            Game.instance.paused = false
+            Game.paused = false
           elsif id == :exit
-            Game.instance.scene_manager.exit
+            Game.quit!
           end
           nil
         },
@@ -63,7 +63,7 @@ module GSDL
       @menu.update(dt)
 
       if Keys.just_pressed?([Keys::Escape])
-        Game.instance.paused = false
+        Game.paused = false
         return
       end
     end

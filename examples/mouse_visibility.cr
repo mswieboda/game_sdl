@@ -10,22 +10,15 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Mouse Visibility Ex", width: WIDTH, height: HEIGHT)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(VisibilityScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = VisibilityScene.new
     end
   end
 

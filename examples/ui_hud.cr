@@ -4,22 +4,15 @@ module HUDEx
   class Game < GSDL::Game
     def initialize
       super(title: "HUD Example", width: 800, height: 600)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(StartScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
     end
   end
 
@@ -36,9 +29,9 @@ module HUDEx
       GSDL::Data.set("status", "Active")
 
       @camera = GSDL::Camera.new(800, 600)
-      
+
       h = GSDL::HUD.new
-      
+
       # Top Left: Score (Data Bound)
       h << GSDL::HUDText.new(
         text: "Score: 0",
@@ -108,7 +101,7 @@ module HUDEx
         GSDL::Data.set("health", health)
         GSDL::Data.set("status", "Draining...")
       end
-      
+
       if GSDL::Keys.just_pressed?(GSDL::Keys::R)
         GSDL::Data.set("health", 1.0)
         GSDL::Data.set("status", "Active")

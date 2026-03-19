@@ -8,29 +8,18 @@ module AsyncSceneLoadingEx
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(MenuScene.new)
+    end
+
+    def check_scenes
+      s = scene
+      if s.name == :menu && s.as(MenuScene).start_game?
+        switch_async(MainScene)
+      end
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      # Start with a menu that will then async load the main scene
-      @scene = MenuScene.new
-    end
-
-    def check_scenes
-      case current_scene = scene
-      when MenuScene
-        if current_scene.start_game?
-          # Dynamic async switch!
-          switch_async(MainScene)
-        end
-      end
     end
   end
 
@@ -83,7 +72,7 @@ module AsyncSceneLoadingEx
     def update(dt : Float32)
       loader = GSDL::Game.instance.loader
       if loader.complete?
-        GSDL::Game.instance.scene_manager.switch(T.new, @data)
+        GSDL::Game.switch(T.new, @data)
       end
     end
 
@@ -124,9 +113,9 @@ module AsyncSceneLoadingEx
     def initialize
       super(:main)
 
-      @ship = GSDL::Sprite.new(key: "ship_0", origin: {0.5_f32, 0.5_f32})
+      @ship = GSDL::Sprite.new(key: "ship", origin: {0.5_f32, 0.5_f32})
       @ship.center(width: GSDL::Game.width, height: GSDL::Game.height)
-      
+
       @text = GSDL::Text.new(
         text: "Main Scene Loaded with Custom Loader!",
         x: GSDL::Game.width / 2_f32,
@@ -138,7 +127,7 @@ module AsyncSceneLoadingEx
 
     def update(dt : Float32)
       @ship.rotation += 100 * dt
-      
+
       if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
         GSDL::AudioManager.get("ding").play
       end

@@ -7,12 +7,12 @@ module CameraEx
   class Game < GSDL::Game
     def initialize
       super(title: "Camera Modes Example", width: 800, height: 640)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(StartScene.new)
+        end
 
     def load_textures
       [{"player", "gfx/skeleton.png"}]
@@ -20,13 +20,6 @@ module CameraEx
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
     end
   end
 
@@ -84,7 +77,7 @@ module CameraEx
       Input.set(:right) { Keys.pressed?([Keys::D, Keys::Right]) }
       Input.set(:up) { Keys.pressed?([Keys::W, Keys::Up]) }
       Input.set(:down) { Keys.pressed?([Keys::S, Keys::Down]) }
-      
+
       Input.set(:camera_left) { Keys.pressed?(Keys::J) }
       Input.set(:camera_right) { Keys.pressed?(Keys::L) }
       Input.set(:camera_up) { Keys.pressed?(Keys::I) }

@@ -12,23 +12,16 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Logical Presentation Example", width: WIDTH, height: HEIGHT)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
       Game.draw_instance.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
-    end
+      GSDL::Game.push(StartScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
     end
   end
 

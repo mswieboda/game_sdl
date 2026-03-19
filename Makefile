@@ -8,7 +8,7 @@ RM_CMD := rm -rf
 MKDIR_CMD := mkdir -p
 
 # Phony targets don't represent files
-.PHONY: default clean examples build run packer run-release
+.PHONY: default clean examples examples_full build_examples_full build run packer run-release
 
 # The default target, executed when you just run `make`
 default:
@@ -25,25 +25,51 @@ packer:
 
 examples:
 	@echo "Building and running all examples..."
-	@$(MAKE) run EXAMPLE=full
-	@$(MAKE) run EXAMPLE=text
-	@$(MAKE) run EXAMPLE=shapes
-	@$(MAKE) run EXAMPLE=sprite
-	@$(MAKE) run EXAMPLE=animation
-	@$(MAKE) run EXAMPLE=audio
-	@$(MAKE) run EXAMPLE=keys
-	@$(MAKE) run EXAMPLE=mouse
-	@$(MAKE) run EXAMPLE=game_pad
-	@$(MAKE) run EXAMPLE=collision
-	@$(MAKE) run EXAMPLE=tile_map_data
-	@$(MAKE) run EXAMPLE=tile_map_layers
-	@$(MAKE) run EXAMPLE=platformer
-	@$(MAKE) run EXAMPLE=message
-	@$(MAKE) run EXAMPLE=tween
-	@$(MAKE) run EXAMPLE=menu
-	@$(MAKE) run EXAMPLE=scene_switch
-	@$(MAKE) run EXAMPLE=logical_presentation
-	@$(MAKE) run EXAMPLE=shoot_em_up_movement
+	@$(MAKE) run EXAMPLE=full || exit 1
+	@$(MAKE) run EXAMPLE=text || exit 1
+	@$(MAKE) run EXAMPLE=shapes || exit 1
+	@$(MAKE) run EXAMPLE=sprite || exit 1
+	@$(MAKE) run EXAMPLE=animation || exit 1
+	@$(MAKE) run EXAMPLE=audio || exit 1
+	@$(MAKE) run EXAMPLE=keys || exit 1
+	@$(MAKE) run EXAMPLE=mouse || exit 1
+	@$(MAKE) run EXAMPLE=game_pad || exit 1
+	@$(MAKE) run EXAMPLE=collision || exit 1
+	@$(MAKE) run EXAMPLE=tile_map_data || exit 1
+	@$(MAKE) run EXAMPLE=tile_map_layers || exit 1
+	@$(MAKE) run EXAMPLE=platformer || exit 1
+	@$(MAKE) run EXAMPLE=message || exit 1
+	@$(MAKE) run EXAMPLE=tween || exit 1
+	@$(MAKE) run EXAMPLE=menu || exit 1
+	@$(MAKE) run EXAMPLE=scene_switch || exit 1
+	@$(MAKE) run EXAMPLE=logical_presentation || exit 1
+	@$(MAKE) run EXAMPLE=shoot_em_up_movement || exit 1
+
+examples_full:
+	@echo "Building and running all examples in folder..."
+	@started=0; \
+	for f in examples/*.cr; do \
+		name=$$(basename $$f .cr); \
+		if [ -n "$(START)" ]; then \
+			if [ "$$name" = "$(START)" ]; then started=1; fi; \
+			if [ $$started -eq 0 ]; then continue; fi; \
+		fi; \
+		$(MAKE) run EXAMPLE=$$name || exit 1; \
+	done
+
+build_examples_full:
+	@echo "Building all examples in folder..."
+	@started=0; \
+	for f in examples/*.cr; do \
+		name=$$(basename $$f .cr); \
+		if [ -n "$(START)" ]; then \
+			if [ "$$name" = "$(START)" ]; then started=1; fi; \
+			if [ $$started -eq 0 ]; then continue; fi; \
+		fi; \
+		printf "Building $$name... "; \
+		$(CRYSTAL_COMPILER) build $$f -o /dev/null --link-flags "$(LINKFLAGS)" --no-debug > /dev/null 2>&1 && echo "OK" || (echo "FAILED"; $(MAKE) build EXAMPLE=$$name; exit 1); \
+	done; \
+	echo "All examples compiled successfully!"
 
 build:
 	@echo "Building example: $(EXAMPLE)"

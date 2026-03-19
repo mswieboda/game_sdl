@@ -8,18 +8,11 @@ module PauseEx
 
     def init
       GSDL::Events.esc_exits = false
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(MainScene.new)
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MainScene.new
     end
   end
 
@@ -55,9 +48,9 @@ module PauseEx
         origin: {0.5_f32, 0.5_f32},
         on_select: ->(id : Symbol) {
           if id == :resume
-            Game.instance.paused = false
+            GSDL::Game.paused = false
           elsif id == :quit
-            Game.instance.scene_manager.exit
+            GSDL::Game.quit!
           end
           nil
         },
@@ -78,7 +71,7 @@ module PauseEx
 
     def update(dt : Float32)
       if GSDL::Keys.just_pressed?(GSDL::Keys::Escape)
-        GSDL::Game.instance.paused = false
+        GSDL::Game.paused = false
         return
       end
       @menu.update(dt)
@@ -110,7 +103,7 @@ module PauseEx
 
     def update(dt : Float32)
       if GSDL::Keys.just_pressed?(GSDL::Keys::Escape)
-        GSDL::Game.instance.paused = true
+        GSDL::Game.paused = true
       end
 
       @rotation += 100 * dt

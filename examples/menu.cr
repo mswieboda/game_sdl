@@ -10,12 +10,12 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Menu Ex", width: 800, height: 600)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(MenuScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
@@ -23,14 +23,6 @@ module GameEx
 
     def load_textures
       [{"coin", "gfx/coin.png"}]
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-
-      @scene = MenuScene.new
     end
   end
 

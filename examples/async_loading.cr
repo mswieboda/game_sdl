@@ -3,7 +3,6 @@ require "../src/game_sdl"
 module AsyncLoadingEx
   AssetTotal = 1000
 
-
   class Game < GSDL::Game
     def initialize
       super(title: "Async Loading Stress Test", width: 800, height: 600)
@@ -11,24 +10,18 @@ module AsyncLoadingEx
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(LoadingScene.new)
+    end
+
+    def check_scenes
+      s = scene
+      if s.name == :loading && s.as(LoadingScene).done?
+        switch(MainScene.new)
+      end
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = LoadingScene.new
-    end
-
-    def check_scenes
-      if scene.is_a?(LoadingScene) && scene.as(LoadingScene).done?
-        switch(MainScene.new)
-      end
     end
   end
 
@@ -66,7 +59,7 @@ module AsyncLoadingEx
           loader.add_audio("audio_#{i}", "sfx/race_car.wav")
         end
       end
-      
+
       # Start loading with 4 worker threads
       loader.start_async(workers: 4)
     end
@@ -76,7 +69,7 @@ module AsyncLoadingEx
       progress = loader.progress
 
       @progress_text.text = "#{progress.percentage.to_i}% (#{progress.loaded_count}/#{progress.total_count})"
-      
+
       if loader.complete?
         @done = true
       end
@@ -100,7 +93,7 @@ module AsyncLoadingEx
 
       @ship = GSDL::Sprite.new(key: "ship_0", origin: {0.5_f32, 0.5_f32})
       @ship.center(width: GSDL::Game.width, height: GSDL::Game.height)
-      
+
       @text = GSDL::Text.new(
         text: "#{AssetTotal} Assets Loaded Successfully!",
         x: GSDL::Game.width / 2_f32,

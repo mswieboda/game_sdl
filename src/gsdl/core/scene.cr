@@ -1,5 +1,6 @@
 module GSDL
-  alias SwitchData = Hash(Symbol, String | Int32 | Float32 | Bool | Symbol)
+  alias SwitchDataValue = String | Int32 | Float32 | Bool | Symbol
+  alias SwitchData = Hash(Symbol, SwitchDataValue)
 
   class Scene
     getter name
@@ -11,6 +12,11 @@ module GSDL
     property z_index : Int32 = 0
     property pause_scene : Scene?
     property hud : HUD?
+    
+    # Whether to draw scenes below this one
+    property? transparent : Bool = false
+    # Whether to update scenes below this one (e.g. for pause overlays)
+    property? update_underlying : Bool = false
 
     def initialize(
       @name : Symbol = :base,

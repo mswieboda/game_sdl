@@ -8,19 +8,18 @@ module TileMapStress
   class Game < GSDL::Game
     def initialize
       super(title: "TileMap Stress Test", width: WIDTH, height: HEIGHT)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      
+
       # Map camera movement actions
       GSDL::Input.set(:camera_up) { GSDL::Keys.pressed?(GSDL::Keys::W) || GSDL::Keys.pressed?(GSDL::Keys::Up) }
       GSDL::Input.set(:camera_down) { GSDL::Keys.pressed?(GSDL::Keys::S) || GSDL::Keys.pressed?(GSDL::Keys::Down) }
       GSDL::Input.set(:camera_left) { GSDL::Keys.pressed?(GSDL::Keys::A) || GSDL::Keys.pressed?(GSDL::Keys::Left) }
       GSDL::Input.set(:camera_right) { GSDL::Keys.pressed?(GSDL::Keys::D) || GSDL::Keys.pressed?(GSDL::Keys::Right) }
-
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(StartScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
@@ -28,13 +27,6 @@ module TileMapStress
 
     def load_textures
       [{"tiles", "gfx/tiles.png"}]
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
     end
   end
 
@@ -69,7 +61,7 @@ module TileMapStress
 
     def update(dt : Float32)
       @camera.update(dt)
-      
+
       # Test update culling
       @tile_map.update(dt, @camera)
 
@@ -81,7 +73,7 @@ module TileMapStress
 
     def draw(draw : GSDL::Draw)
       @tile_map.draw(draw, @camera)
-      
+
       # debug info
       culling_active = draw.culling_enabled
       status_text = culling_active ? "ENABLED" : "DISABLED"

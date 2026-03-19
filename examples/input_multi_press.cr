@@ -7,22 +7,15 @@ module MultiPressEx
   class Game < GSDL::Game
     def initialize
       super(title: "Multi-Press Ex", width: WIDTH, height: HEIGHT)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(MultiPressScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MultiPressScene.new
     end
   end
 
@@ -36,9 +29,9 @@ module MultiPressEx
       @box = GSDL::Box.new(width: 32, height: 32, color: GSDL::Color::White)
       @box.x = 400
       @box.y = 300
-      
+
       @text = GSDL::TextBox.new(
-        text: "Double-tap Arrow Keys to dash.\nDouble-click Mouse Left to teleport and turn red.", 
+        text: "Double-tap Arrow Keys to dash.\nDouble-click Mouse Left to teleport and turn red.",
         color: GSDL::Color::White
       )
       @text.x = 10

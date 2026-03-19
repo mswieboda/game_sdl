@@ -4,22 +4,15 @@ module UIExample
   class Game < GSDL::Game
     def initialize
       super(title: "UI Progress Bar Example", width: 800, height: 600)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(MainScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MainScene.new
     end
   end
 
@@ -150,7 +143,7 @@ module UIExample
 
         new_thick = (@thick_border_bar.value.to_f32 > 0.5_f32 ? 0.3_f32 : 0.8_f32)
         @thick_border_bar.tween({"value" => new_thick}, 1.5_f32, GSDL::MathUtils::Easing::EaseInOut)
-        
+
         new_vert = (@vertical_bar.value.to_f32 > 0.5_f32 ? 0.1_f32 : 0.9_f32)
         @vertical_bar.tween({"value" => new_vert}, 0.5_f32, GSDL::MathUtils::Easing::EaseOut)
 

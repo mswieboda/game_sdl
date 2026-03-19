@@ -8,35 +8,22 @@ module SceneDataEx
 
     def init
       GSDL::Events.esc_exits = false
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(MenuScene.new)
+    end
+
+    def check_scenes
+      s = scene
+      if s.name == :menu && s.as(MenuScene).start_game?
+        data = {:from => :menu, :player_pos => "100,200"} of Symbol => GSDL::SwitchDataValue
+        switch(MainScene.new, data)
+      elsif s.name == :main && s.as(MainScene).back_to_menu?
+        data = {:from => :main, :status => :completed} of Symbol => GSDL::SwitchDataValue
+        switch(MenuScene.new, data)
+      end
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MenuScene.new
-    end
-
-    def check_scenes
-      case current_scene = scene
-      when MenuScene
-        if current_scene.start_game?
-          data = GSDL::SwitchData{:from => :menu, :player_pos => 100}
-          switch(MainScene.new, data)
-        elsif current_scene.exit?
-          @exit = true
-        end
-      when MainScene
-        if current_scene.back_to_menu?
-          data = GSDL::SwitchData{:from => :main, :status => :completed}
-          switch(MenuScene.new, data)
-        end
-      end
     end
   end
 
@@ -48,9 +35,7 @@ module SceneDataEx
     def initialize
       super(:menu)
       @text = GSDL::Text.new(
-        text: "MENU
-
-Press SPACE to Start",
+        text: "MENU\n\nPress SPACE to Start",
         x: GSDL::Game.width / 2_f32,
         y: GSDL::Game.height / 2_f32,
         origin: {0.5_f32, 0.5_f32},
@@ -60,6 +45,8 @@ Press SPACE to Start",
     end
 
     def init
+      GSDL::Input.set(:start_game) { GSDL::Keys.just_pressed?(GSDL::Keys::Space) }
+
       if data = switch_data
         @info = GSDL::Text.new(
           text: "Returned from: #{data[:from]}\nStatus: #{data[:status]}",
@@ -72,12 +59,12 @@ Press SPACE to Start",
     end
 
     def update(dt : Float32)
-      if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
+      if GSDL::Input.action?(:start_game)
         @start_game = true
       end
 
       if GSDL::Keys.just_pressed?(GSDL::Keys::Escape)
-        @exit = true
+        GSDL::Game.quit!
       end
     end
 
@@ -95,9 +82,7 @@ Press SPACE to Start",
     def initialize
       super(:main)
       @text = GSDL::Text.new(
-        text: "MAIN SCENE
-
-Press ESC to go back",
+        text: "MAIN SCENE\n\nPress ESC to go back",
         x: GSDL::Game.width / 2_f32,
         y: GSDL::Game.height / 2_f32,
         origin: {0.5_f32, 0.5_f32},
@@ -107,6 +92,8 @@ Press ESC to go back",
     end
 
     def init
+      GSDL::Input.set(:back_to_menu) { GSDL::Keys.just_pressed?(GSDL::Keys::Escape) }
+
       if data = switch_data
         @info = GSDL::Text.new(
           text: "Came from: #{data[:from]}\nPlayer Pos: #{data[:player_pos]}",
@@ -119,7 +106,7 @@ Press ESC to go back",
     end
 
     def update(dt : Float32)
-      if GSDL::Keys.just_pressed?(GSDL::Keys::Escape)
+      if GSDL::Input.action?(:back_to_menu)
         @back_to_menu = true
       end
     end

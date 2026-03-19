@@ -13,7 +13,7 @@ module GameEx
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(StartScene.new)
     end
 
     def load_default_font
@@ -22,13 +22,6 @@ module GameEx
 
     def load_audio
       [{"race_car_audio", "sfx/race_car.wav"}]
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
     end
   end
 

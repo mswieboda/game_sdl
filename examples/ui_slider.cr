@@ -4,22 +4,15 @@ module SliderExample
   class Game < GSDL::Game
     def initialize
       super(title: "UI Slider Example", width: 800, height: 600)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(MainScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MainScene.new
     end
   end
 
@@ -51,7 +44,7 @@ module SliderExample
 
       @h_label = GSDL::Text.new(text: "Value: 50", x: 400, y: 150, origin: {0.5_f32, 0.5_f32})
       @v_label = GSDL::Text.new(text: "Volume: 0.5", x: 100, y: 120, origin: {0.5_f32, 0.5_f32})
-      
+
       @instructions = GSDL::Text.new(
         text: "Drag the sliders to change values",
         x: 400, y: 550,

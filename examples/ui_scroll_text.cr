@@ -4,26 +4,18 @@ module ScrollTextEx
   class Game < GSDL::Game
     def initialize
       super(title: "Scrollable Text View Example", width: 800, height: 600)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      
+
       GSDL::Input.set(:scroll_up) { GSDL::Keys.pressed?(GSDL::Keys::Up) }
       GSDL::Input.set(:scroll_down) { GSDL::Keys.pressed?(GSDL::Keys::Down) }
-
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(MainScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MainScene.new
     end
   end
 
@@ -36,36 +28,36 @@ module ScrollTextEx
 
       long_text = <<-TEXT
       SCROLLABLE TEXT VIEW
-      
+
       This component allows you to display large blocks of text within a fixed viewport.
-      
+
       FEATURES:
       - Automatic line wrapping
       - Clipping within the viewport
       - Mouse wheel scrolling
       - Origin-based positioning
       - Tweenable properties
-      
+
       GSDL is a game framework built on Crystal and SDL3. It aims to be simple yet powerful for 2D game development.
-      
+
       STORY OF THE VOID:
-      Deep in the code, where the segments meet the stack, lies the Void. It is a place of uninitialized variables and dangling pointers. 
-      
+      Deep in the code, where the segments meet the stack, lies the Void. It is a place of uninitialized variables and dangling pointers.
+
       Many have ventured there, but few have returned with their memory intact. Some say the Garbage Collector is the only thing that keeps the Void at bay.
-      
+
       Others believe that the Void is the true nature of reality, and that the Heap is just a temporary illusion.
-      
+
       Regardless of what you believe, one thing is certain: you need a good ScrollTextView to read all about it!
-      
+
       LOREM IPSUM:
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-      
-      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-      
-      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-      
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+
       Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-      
+
       END OF CREDITS.
       TEXT
 

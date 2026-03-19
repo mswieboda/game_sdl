@@ -11,7 +11,16 @@ module GameEx
 
     def init
       GSDL::Events.esc_exits = false
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(StartMenu.new)
+    end
+
+    def check_scenes
+      s = scene
+      if s.name == :start_menu && s.as(StartMenu).start_game?
+        switch(MainScene.new)
+      elsif s.name == :main_scene && s.exit?
+        switch(StartMenu.new)
+      end
     end
 
     def load_default_font
@@ -20,28 +29,6 @@ module GameEx
 
     def load_textures
       [{"tiles", "gfx/tiles.png"}]
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartMenu.new
-    end
-
-    def check_scenes
-      case current_scene = scene
-      when StartMenu
-        if current_scene.start_game?
-          switch(MainScene.new)
-        elsif current_scene.exit?
-          @exit = true
-        end
-      when MainScene
-        if current_scene.exit?
-          switch(StartMenu.new)
-        end
-      end
     end
   end
 

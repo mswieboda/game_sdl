@@ -9,7 +9,7 @@ module GameEx
     def init
       # NOTE: setting this to `false` to test transition_out
       GSDL::Events.esc_exits = false
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(StartScene.new)
     end
 
     def load_default_font
@@ -26,22 +26,6 @@ module GameEx
 
     def load_audio
       [{"race_car", "sfx/race_car.wav"}]
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = StartScene.new
-    end
-
-    def check_scenes
-      if current_scene = scene
-        # if transition_out made scene exit, exit the scene manager / game
-        if current_scene.exit?
-          @exit = true
-        end
-      end
     end
   end
 

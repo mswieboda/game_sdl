@@ -43,12 +43,12 @@ module TileMapCustomEx
   class Game < GSDL::Game
     def initialize
       super(title: "Custom Tile Objects Example", width: WIDTH, height: HEIGHT)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(MainScene.new)
+        end
 
     def load_textures
       [{"tiles", "gfx/tiles.png"}]
@@ -56,13 +56,6 @@ module TileMapCustomEx
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = MainScene.new
     end
   end
 
@@ -87,7 +80,7 @@ module TileMapCustomEx
 
       # Create some objects manually (usually these come from TMX/JSON)
       objects = [] of GSDL::TileObject
-      
+
       # A chest object
       objects << GSDL::TileObjectFactory.create(
         id: 1, name: "Gold Chest", type: "chest",
@@ -127,7 +120,7 @@ module TileMapCustomEx
         # Check for objects in a slightly larger area around player
         interact_rect = GSDL::FRect.new(@player_rect.x - 10, @player_rect.y - 10, @player_rect.w + 20, @player_rect.h + 20)
         nearby_objects = @tile_map.get_objects_in(interact_rect)
-        
+
         nearby_objects.each do |obj|
           if obj.is_a?(Chest)
             @interaction_text.text = obj.interact
@@ -145,10 +138,10 @@ module TileMapCustomEx
 
     def draw(draw : GSDL::Draw)
       @tile_map.draw(draw)
-      
+
       # Draw player
       draw.rect_fill(@player_rect, GSDL::Color.new(0, 255, 0, 100))
-      
+
       # Visualize collision boxes of objects
       @tile_map.objects.each do |obj|
         # Check if player center is inside object collision box

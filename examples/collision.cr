@@ -7,12 +7,12 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Collision Ex", width: 800, height: 640)
-    end
+        end
 
     def init
       GSDL::Events.esc_exits = true
-      @scene_manager = SceneManager.new
-    end
+      GSDL::Game.push(StartScene.new)
+        end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
@@ -20,14 +20,6 @@ module GameEx
 
     def load_textures
       [{"ship", "gfx/ship.png"}]
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-
-      @scene = StartScene.new
     end
   end
 

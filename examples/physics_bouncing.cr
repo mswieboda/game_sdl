@@ -28,7 +28,7 @@ module GameEx
       self.friction = 0.1_f32
       self.use_gravity = true
       self.velocity_x = 200_f32
-    end
+        end
 
     def draw_x : GSDL::Num; x; end
     def draw_y : GSDL::Num; y; end
@@ -238,18 +238,11 @@ module GameEx
     def init
       GSDL::Events.esc_exits = true
       GSDL::Physics.gravity = {0, 500}
-      @scene_manager = SceneManager.new
+      GSDL::Game.push(PhysicsScene.new)
     end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
-    end
-  end
-
-  class SceneManager < GSDL::SceneManager
-    def initialize
-      super
-      @scene = PhysicsScene.new
     end
   end
 
@@ -297,7 +290,7 @@ module GameEx
       @box.physics_update(dt, @walls + (objs - [@box.as(GSDL::Collidable)]))
       @oval.update(dt)
       @oval.physics_update(dt, @walls + (objs - [@oval.as(GSDL::Collidable)]))
-      
+
       if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
         # Apply random impulses
         [@ball, @triangle, @box, @oval].each do |obj|
