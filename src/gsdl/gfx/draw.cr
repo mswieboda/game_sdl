@@ -367,6 +367,7 @@ module GSDL
           look_ahead = cursor
           current_tex_tint : Color? = nil
           current_tex_alpha : UInt8? = nil
+          first_in_batch = true
 
           while look_ahead < @draw_commands.size
             next_cmd = @draw_commands[look_ahead]
@@ -377,16 +378,18 @@ module GSDL
               new_tint = tex_cmd.tint
               new_alpha = new_tint.try(&.a) || 255_u8
 
-              if new_tint != current_tex_tint
+              if first_in_batch || new_tint != current_tex_tint
                 current_tex_tint = new_tint
                 tex_cmd.texture.tint = new_tint.try(&.to_sdl) || LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
               end
 
               # If alpha blend needed, set it once per texture if it changes
-              if new_alpha != current_tex_alpha
+              if first_in_batch || new_alpha != current_tex_alpha
                 current_tex_alpha = new_alpha
                 @r.blend_mode = new_alpha < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
               end
+
+              first_in_batch = false
 
               _render_texture_rotated(
                 texture: tex_cmd.texture,
@@ -420,6 +423,7 @@ module GSDL
 
           @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
           if texture = command.texture
+            texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
             @r.render_geometry(texture: texture, vertices: command.vertices, indices: command.indices)
           else
             @r.render_geometry(vertices: command.vertices, indices: command.indices)
