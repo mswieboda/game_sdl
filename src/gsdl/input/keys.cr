@@ -120,6 +120,11 @@ module GSDL
     end
 
     @@states = {} of Keycode => State
+    @@multi_tap_tracker = GSDL::Input::MultiTapTracker(Keycode).new
+
+    def self.multi_tap_tracker
+      @@multi_tap_tracker
+    end
 
     def self.update
       @@states.each do |key, state|
@@ -132,6 +137,7 @@ module GSDL
           # No change for Pressed
         end
       end
+      @@multi_tap_tracker.update(LibSDL3.get_ticks)
     end
 
     def self.handle_key_down(event : Event)
@@ -140,6 +146,7 @@ module GSDL
       # only set to JustPressed if it's not already down
       unless pressed?(key)
         @@states[key] = State::JustPressed
+        @@multi_tap_tracker.record_tap(key, LibSDL3.get_ticks)
       end
     end
 
@@ -169,6 +176,18 @@ module GSDL
 
     def self.just_released?(keys : Keycodes)
       keys.any? { |key| just_released?(key) }
+    end
+
+    def self.multi_tap?(key : Keycode, count : Int32) : Bool
+      @@multi_tap_tracker.multi_tap?(key, count)
+    end
+
+    def self.double_tap?(key : Keycode) : Bool
+      @@multi_tap_tracker.double_tap?(key)
+    end
+
+    def self.tap_count(key : Keycode) : Int32
+      @@multi_tap_tracker.tap_count(key)
     end
   end
 end

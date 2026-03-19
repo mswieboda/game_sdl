@@ -33,6 +33,19 @@ module GSDL
       @@actions.delete(name)
     end
 
+    @@multi_tap_time_window : UInt64 = 250_u64
+
+    def self.multi_tap_time_window=(val : UInt64)
+      @@multi_tap_time_window = val
+      Keys.multi_tap_tracker.time_window = val
+      Mouse.multi_tap_tracker.time_window = val
+      GamePad.multi_tap_tracker.time_window = val
+    end
+
+    def self.multi_tap_time_window
+      @@multi_tap_time_window
+    end
+
     @@text_input_this_frame : String = ""
 
     def self.text_input_this_frame : String

@@ -10,6 +10,11 @@ module GSDL
 
     @@states = {} of LibSDL3::GamepadButton => State
     @@gamepads = {} of LibSDL3::JoystickID => SDL3::Gamepad::GamepadWrapper
+    @@multi_tap_tracker = GSDL::Input::MultiTapTracker(LibSDL3::GamepadButton).new
+
+    def self.multi_tap_tracker
+      @@multi_tap_tracker
+    end
 
     def self.update
       # Update button states
@@ -23,6 +28,7 @@ module GSDL
           # No change for Pressed
         end
       end
+      @@multi_tap_tracker.update(LibSDL3.get_ticks)
 
       # Update SDL gamepads
       LibSDL3.update_gamepads
@@ -48,6 +54,7 @@ module GSDL
       # Update button state
       unless pressed?(button, gamepad_id)
         @@states[button] = State::JustPressed
+        @@multi_tap_tracker.record_tap(button, LibSDL3.get_ticks)
       end
     end
 
@@ -118,6 +125,18 @@ module GSDL
         end
         return 0_i16
       end
+    end
+
+    def self.multi_tap?(button : LibSDL3::GamepadButton, count : Int32) : Bool
+      @@multi_tap_tracker.multi_tap?(button, count)
+    end
+
+    def self.double_tap?(button : LibSDL3::GamepadButton) : Bool
+      @@multi_tap_tracker.double_tap?(button)
+    end
+
+    def self.tap_count(button : LibSDL3::GamepadButton) : Int32
+      @@multi_tap_tracker.tap_count(button)
     end
 
     # TODO: Add methods for rumble, LED, etc. if needed later

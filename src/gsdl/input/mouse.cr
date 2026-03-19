@@ -21,6 +21,11 @@ module GSDL
     @@wheel_x = 0_f32
     @@wheel_y = 0_f32
     @@moved = false
+    @@multi_tap_tracker = GSDL::Input::MultiTapTracker(UInt8).new
+
+    def self.multi_tap_tracker
+      @@multi_tap_tracker
+    end
 
     def self.x
       @@x
@@ -91,6 +96,8 @@ module GSDL
         end
       end
 
+      @@multi_tap_tracker.update(LibSDL3.get_ticks)
+
       @@wheel_x = 0_f32
       @@wheel_y = 0_f32
 
@@ -108,6 +115,7 @@ module GSDL
       button = event.button.button
       unless pressed?(button)
         @@states[button] = State::JustPressed
+        @@multi_tap_tracker.record_tap(button, LibSDL3.get_ticks)
         @@drag_start_x[button] = event.button.x.to_i
         @@drag_start_y[button] = event.button.y.to_i
       end
@@ -147,6 +155,18 @@ module GSDL
 
     def self.just_released?(buttons : Array(UInt8))
       buttons.any? { |button| just_released?(button) }
+    end
+
+    def self.multi_tap?(button : UInt8, count : Int32) : Bool
+      @@multi_tap_tracker.multi_tap?(button, count)
+    end
+
+    def self.double_tap?(button : UInt8) : Bool
+      @@multi_tap_tracker.double_tap?(button)
+    end
+
+    def self.tap_count(button : UInt8) : Int32
+      @@multi_tap_tracker.tap_count(button)
     end
 
     def self.show
