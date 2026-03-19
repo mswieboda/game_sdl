@@ -26,8 +26,8 @@ module TileMapEx
 
   class StartScene < GSDL::Scene
     @tile_map : GSDL::TileMap
-    @camera_x : Int32 = 0
-    @camera_y : Int32 = 0
+    camera_x : Int32 = 0
+    camera_y : Int32 = 0
 
     def initialize
       super(:start)

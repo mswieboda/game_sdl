@@ -33,19 +33,19 @@ module GSDL
     end
 
     def update(dt : Float32)
-      update_tweens(dt)
+      return unless super(dt)
     end
 
-    def draw(draw : Draw, camera : Camera? = nil, flip_horizontal : Bool = false)
+    def draw(draw : Draw)
       old_scale_x = draw.current_scale_x
       old_scale_y = draw.current_scale_y
 
-      if camera
-        draw.scale = camera.zoom
+      if draw_relative_to_camera?
+        draw.scale = Game.camera.zoom
       end
 
-      camera_x = camera.try(&.x) || 0_f32
-      camera_y = camera.try(&.y) || 0_f32
+      camera_x = draw_relative_to_camera? ? Game.camera.x : 0_f32
+      camera_y = draw_relative_to_camera? ? Game.camera.y : 0_f32
 
       dest_rect = FRect.new(
         x: draw_x - camera_x,
@@ -53,6 +53,10 @@ module GSDL
         w: draw_width,
         h: draw_height
       )
+      
+      flip_val = 0
+      flip_val |= 1 if flip_h?
+      flip_val |= 2 if flip_v?
 
       if source_rect = @source_rect
         draw.texture_rotated(
@@ -61,7 +65,7 @@ module GSDL
           dest_rect: dest_rect,
           angle: rotation,
           center: center_point_from_origin,
-          flip: flip_horizontal ? 1 : 0,
+          flip: flip_val,
           tint: tint,
           z_index: z_index
         )
@@ -71,13 +75,13 @@ module GSDL
           dest_rect: dest_rect,
           angle: rotation,
           center: center_point_from_origin,
-          flip: flip_horizontal ? 1 : 0,
+          flip: flip_val,
           tint: tint,
           z_index: z_index
         )
       end
 
-      if camera
+      if draw_relative_to_camera?
         draw.scale = {old_scale_x, old_scale_y}
       end
     end

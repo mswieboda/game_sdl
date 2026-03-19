@@ -14,32 +14,28 @@ module GSDL
     def initialize(@name, @objects = [] of TileObject, @visible = true, @opacity = 1.0_f32, @offset_x = 0, @offset_y = 0, @parallax_x = 1.0_f32, @parallax_y = 1.0_f32, @z_index = 0)
     end
 
-    def on_screen?(camera : Camera) : Bool
+    def on_screen? : Bool
       screen_w = GSDL::Game.width.to_f32
       screen_h = GSDL::Game.height.to_f32
       
       @objects.any? do |obj|
-        obj_x = obj.x.to_f32 + @offset_x - (camera.x * @parallax_x)
-        obj_y = (obj.y - obj.height).to_f32 + @offset_y - (camera.y * @parallax_y)
+        obj_x = obj.x.to_f32 + @offset_x - (Game.camera.x * @parallax_x)
+        obj_y = (obj.y - obj.height).to_f32 + @offset_y - (Game.camera.y * @parallax_y)
         !(obj_x + obj.width < 0 || obj_x > screen_w || obj_y + obj.height < 0 || obj_y > screen_h)
       end
     end
 
-    def update(dt : Float32, camera : Camera)
-      return if !@update_off_screen && !on_screen?(camera)
-      update(dt)
-    end
-
     def update(dt : Float32)
+      return if !@update_off_screen && !on_screen?
       @objects.each(&.update(dt))
     end
 
-    def draw(draw : Draw, tilesets : Hash(String, Tileset), tile_width : Int32, tile_height : Int32, camera : Camera? = nil, z_index : Int32 = 0)
+    def draw(draw : Draw, tilesets : Hash(String, Tileset), tile_width : Int32, tile_height : Int32, z_index : Int32 = 0)
       return unless @visible
       return if @opacity <= 0.0_f32
 
-      camera_x = camera.try(&.x.to_f32) || 0_f32
-      camera_y = camera.try(&.y.to_f32) || 0_f32
+      camera_x = Game.camera.x.to_f32
+      camera_y = Game.camera.y.to_f32
 
       tint = Color.new(255, 255, 255, (@opacity * 255).to_u8)
 

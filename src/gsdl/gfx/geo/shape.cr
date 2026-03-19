@@ -88,6 +88,7 @@ module GSDL
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     getter? changed : Bool = true
     property z_index : Int32 = 0
+    property? draw_relative_to_camera : Bool = true
 
     getter tweens : Array(Tween) = [] of Tween
 
@@ -179,11 +180,13 @@ module GSDL
     end
 
     def draw_x : Num
-      x - (draw_width * origin_x)
+      dx = x - (draw_width * origin_x)
+      draw_relative_to_camera? ? dx - Game.camera.x : dx
     end
 
     def draw_y : Num
-      y - (draw_height * origin_y)
+      dy = y - (draw_height * origin_y)
+      draw_relative_to_camera? ? dy - Game.camera.y : dy
     end
 
     def in?(px : Num, py : Num) : Bool

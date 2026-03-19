@@ -13,12 +13,12 @@ module GSDL
     def initialize(@name, @data, @visible = true, @opacity = 1.0_f32, @offset_x = 0, @offset_y = 0, @parallax_x = 1.0_f32, @parallax_y = 1.0_f32, @z_index = 0)
     end
 
-    def draw(draw : Draw, tilesets : Hash(String, Tileset), tile_width : Int32, tile_height : Int32, camera : Camera? = nil, z_index : Int32 = 0)
+    def draw(draw : Draw, tilesets : Hash(String, Tileset), tile_width : Int32, tile_height : Int32, z_index : Int32 = 0)
       return unless @visible
       return if @opacity <= 0.0_f32
 
-      camera_x = camera.try(&.x.to_f32) || 0_f32
-      camera_y = camera.try(&.y.to_f32) || 0_f32
+      camera_x = Game.camera.x.to_f32
+      camera_y = Game.camera.y.to_f32
 
       tint = Color.new(255, 255, 255, (@opacity * 255).to_u8)
 

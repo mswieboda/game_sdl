@@ -62,7 +62,6 @@ module CameraEx
 
   class StartScene < GSDL::Scene
     @boundary : GSDL::Rect
-    @camera : GSDL::Camera
     @player : Player
     @info_text : GSDL::Text
     @zoom_text : GSDL::Text
@@ -90,10 +89,8 @@ module CameraEx
       Input.set(:shake) { Keys.just_pressed?(Keys::X) }
 
       @boundary = GSDL::Rect.new(x: 0, y: 0, w: Game.width + GRID_SIZE * 4, h: Game.height + GRID_SIZE * 4)
-
-      @camera = GSDL::Camera.new(width: Game.width, height: Game.height)
-      @camera.set_boundary(@boundary)
-      @camera.type = GSDL::Camera::Type::CenterOnTargetWithBoundary
+      camera.set_boundary(@boundary)
+      camera.type = GSDL::Camera::Type::CenterOnTargetWithBoundary
 
       @player = Player.new(key: "player", width: 32, height: 64)
       @player.x = 100
@@ -121,72 +118,72 @@ module CameraEx
 
     def update(dt : Float32)
       if Input.action?(:toggle_lerp)
-        if @camera.lerp_speed == 0
-          @camera.lerp_speed = 5.0_f32
+        if camera.lerp_speed == 0
+          camera.lerp_speed = 5.0_f32
         else
-          @camera.lerp_speed = 0_f32
+          camera.lerp_speed = 0_f32
         end
       end
 
       if Input.action?(:switch_mode)
-        case @camera.type
+        case camera.type
         when GSDL::Camera::Type::CenterOnTargetWithBoundary
-          @camera.type = GSDL::Camera::Type::Manual
+          camera.type = GSDL::Camera::Type::Manual
           @info_text.text = "Mode: Manual"
           @controls_text.text = "IJKL: move camera\nSPACE: cycle mode\nL: toggle lerp\nQ/E: zoom\nX: shake"
         when GSDL::Camera::Type::Manual
-          @camera.type = GSDL::Camera::Type::CenterOnTarget
+          camera.type = GSDL::Camera::Type::CenterOnTarget
           @info_text.text = "Mode: CenterOnTarget"
           @controls_text.text = "SPACE: cycle mode\nL: toggle lerp\nQ/E: zoom\nX: shake"
         when GSDL::Camera::Type::CenterOnTarget
-          @camera.type = GSDL::Camera::Type::Fixed
+          camera.type = GSDL::Camera::Type::Fixed
           @info_text.text = "Mode: Fixed"
         when GSDL::Camera::Type::Fixed
-          @camera.type = GSDL::Camera::Type::AutoScroll
-          @camera.scroll_speed_x = 100_f32
-          @camera.scroll_speed_y = 50_f32
+          camera.type = GSDL::Camera::Type::AutoScroll
+          camera.scroll_speed_x = 100_f32
+          camera.scroll_speed_y = 50_f32
           @info_text.text = "Mode: AutoScroll (100, 50)"
         when GSDL::Camera::Type::AutoScroll
-          @camera.type = GSDL::Camera::Type::CenterOnTargetWithBoundary
-          @camera.scroll_speed_x = 0_f32
-          @camera.scroll_speed_y = 0_f32
+          camera.type = GSDL::Camera::Type::CenterOnTargetWithBoundary
+          camera.scroll_speed_x = 0_f32
+          camera.scroll_speed_y = 0_f32
           @info_text.text = "Mode: CenterOnTargetWithBoundary"
         end
       end
 
       @player.update(dt, @boundary)
 
-      if @camera.type == GSDL::Camera::Type::CenterOnTarget || @camera.type == GSDL::Camera::Type::CenterOnTargetWithBoundary
-        @camera.look_at(@player)
+      if camera.type == GSDL::Camera::Type::CenterOnTarget || camera.type == GSDL::Camera::Type::CenterOnTargetWithBoundary
+        camera.look_at(@player)
       end
 
       if Input.action?(:zoom_in)
-        @camera.zoom += 1.0_f32 * dt
+        camera.zoom += 1.0_f32 * dt
       end
       if Input.action?(:zoom_out)
-        @camera.zoom -= 1.0_f32 * dt
-        @camera.zoom = 0.1_f32 if @camera.zoom < 0.1_f32
+        camera.zoom -= 1.0_f32 * dt
+        camera.zoom = 0.1_f32 if camera.zoom < 0.1_f32
       end
 
       if Input.action?(:shake)
-        @camera.shake(0.5_f32, 20_f32)
+        camera.shake(0.5_f32, 20_f32)
       end
 
-      lerp_status = @camera.lerp_speed > 0 ? "ON (#{@camera.lerp_speed})" : "OFF"
-      @zoom_text.text = "Zoom: #{sprintf("%.2f", @camera.zoom)} (Lerp: #{lerp_status})"
+      lerp_status = camera.lerp_speed > 0 ? "ON (#{camera.lerp_speed})" : "OFF"
+      @zoom_text.text = "Zoom: #{sprintf("%.2f", camera.zoom)} (Lerp: #{lerp_status})"
 
-      @camera.update(dt)
+      camera.update(dt)
     end
 
     def draw(draw : GSDL::Draw)
       old_scale = draw.scale
-      draw.scale = @camera.zoom
+      draw.scale = camera.zoom
 
       draw_floor(draw)
 
       draw.scale = old_scale
 
-      @player.draw(draw, @camera)
+      @player.draw(draw)
       @info_text.draw(draw)
       @zoom_text.draw(draw)
       @controls_text.draw(draw)
@@ -203,8 +200,8 @@ module CameraEx
 
           draw.rect_fill(
             rect: GSDL::FRect.new(
-              x: @boundary.x + x.to_f32 - @camera.x,
-              y: @boundary.y + y.to_f32 - @camera.y,
+              x: @boundary.x + x.to_f32 - camera.x,
+              y: @boundary.y + y.to_f32 - camera.y,
               w: GRID_SIZE.to_f32,
               h: GRID_SIZE.to_f32
             ),

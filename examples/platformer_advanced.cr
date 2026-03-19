@@ -81,7 +81,7 @@ module PlatformerAdvancedEx
       super(dt)
     end
 
-    def draw(draw : GSDL::Draw, camera : GSDL::Camera? = nil)
+    def draw(draw : GSDL::Draw)
       # Visual feedback for dashing
       current_tint = dashing? ? GSDL::Color::Cyan : nil
 
@@ -95,7 +95,8 @@ module PlatformerAdvancedEx
 
       old_tint = self.tint
       self.tint = current_tint
-      super(draw, camera: camera, flip_horizontal: direction.left?)
+      self.flip_h = direction.left?
+      super(draw)
       self.tint = old_tint
     end
   end

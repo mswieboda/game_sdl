@@ -106,14 +106,14 @@ module TopDownRPGEx
       super(dt)
     end
 
-    def draw(draw : GSDL::Draw, camera : GSDL::Camera? = nil)
+    def draw(draw : GSDL::Draw)
       flip = direction.left? || direction.up_left? || direction.down_left?
-      super(draw, camera: camera, flip_horizontal: flip)
+      self.flip_h = flip
+      super(draw)
     end
   end
 
   class RPGScene < GSDL::Scene
-    @camera : GSDL::Camera
     @player : Player
     @info_text : GSDL::Text
     @mode_text : GSDL::Text
@@ -130,8 +130,6 @@ module TopDownRPGEx
 
       Input.set(:toggle_movement) { Keys.just_pressed?(Keys::One) }
       Input.set(:toggle_directional) { Keys.just_pressed?(Keys::Two) }
-
-      @camera = GSDL::Camera.new(width: Game.width, height: Game.height)
       @player = Player.new
       @player.center(width: Game.width, height: Game.height)
 
@@ -157,8 +155,8 @@ module TopDownRPGEx
       end
 
       @player.update(dt)
-      @camera.look_at(@player)
-      @camera.update(dt)
+      camera.look_at(@player)
+      camera.update(dt)
 
       text = "1: #{@player.movement_mode}"
       text += " 2: #{@player.directional_mode}" if @player.movement_mode.free_form?
@@ -167,7 +165,7 @@ module TopDownRPGEx
 
     def draw(draw : GSDL::Draw)
       draw_floor(draw)
-      @player.draw(draw, @camera)
+      @player.draw(draw)
       @info_text.draw(draw)
       @mode_text.draw(draw)
     end
@@ -182,8 +180,8 @@ module TopDownRPGEx
           color = ((x / GRID_SIZE).to_i + (y / GRID_SIZE).to_i) % 2 == 0 ? GSDL.gray(64) : GSDL.gray(80)
           draw.rect_fill(
             rect: GSDL::FRect.new(
-              x.to_f32 - @camera.x,
-              y.to_f32 - @camera.y,
+              x.to_f32 - camera.x,
+              y.to_f32 - camera.y,
               GRID_SIZE.to_f32,
               GRID_SIZE.to_f32
             ),

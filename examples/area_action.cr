@@ -1,19 +1,16 @@
 require "../src/game_sdl"
 
 module GameEx
-  WIDTH  = 800
-  HEIGHT = 600
-
   class Game < GSDL::Game
     def initialize
-      super(title: "Area Action Example", width: WIDTH, height: HEIGHT)
-      GSDL::Game.push(StartScene.new)
-        end
+      super(title: "Area Action Example", width: 800, height: 600)
+    end
 
     def init
       GSDL::Events.esc_exits = true
 
       GSDL::Input.set(:action) { GSDL::Keys.just_pressed?([GSDL::Keys::Space, GSDL::Keys::Return]) }
+      GSDL::Game.push(StartScene.new)
     end
 
     def load_default_font

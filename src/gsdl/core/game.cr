@@ -63,6 +63,10 @@ module GSDL
       instance.scene
     end
 
+    def self.camera
+      instance.scene.camera
+    end
+
     def self.push(scene : Scene, data : SwitchData? = nil)
       instance.push(scene, data)
     end

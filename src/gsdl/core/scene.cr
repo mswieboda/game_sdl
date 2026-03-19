@@ -13,6 +13,11 @@ module GSDL
     property pause_scene : Scene?
     property hud : HUD?
     
+    @camera : Camera?
+    def camera : Camera
+      @camera ||= Camera.new(width: Game.width, height: Game.height)
+    end
+    
     # Whether to draw scenes below this one
     property? transparent : Bool = false
     # Whether to update scenes below this one (e.g. for pause overlays)

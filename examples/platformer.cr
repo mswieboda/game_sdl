@@ -87,8 +87,9 @@ module PlatformerEx
       super(dt)
     end
 
-    def draw(draw : GSDL::Draw, camera : GSDL::Camera? = nil)
-      super(draw, camera: camera, flip_horizontal: direction.left?)
+    def draw(draw : GSDL::Draw)
+      self.flip_h = direction.left?
+      super(draw)
     end
   end
 
@@ -119,7 +120,6 @@ module PlatformerEx
 
     @tile_map : GSDL::TileMap
     @player : Player
-    @camera : GSDL::Camera
     @coins : Array(GSDL::AnimatedSprite)
     @coin_audio : GSDL::Audio
     @collidables : Array(GSDL::Collidable)
@@ -144,9 +144,7 @@ module PlatformerEx
       # so that we know which tiles are solid and have collisions
       # and which are just background
       @tile_map = GSDL::TileMapManager.get("map")
-
-      @camera = GSDL::Camera.new(WIDTH, HEIGHT)
-      @camera.type = GSDL::Camera::Type::CenterOnTarget
+      camera.type = GSDL::Camera::Type::CenterOnTarget
 
       # player
       @player = Player.new(key: "player", width: 32, height: 64)
@@ -225,26 +223,26 @@ module PlatformerEx
       end
 
       # camera follows player
-      @camera.look_at(@player.x, @player.y)
-      @camera.update(dt)
+      camera.look_at(@player.x, @player.y)
+      camera.update(dt)
     end
 
     def draw(draw : GSDL::Draw)
       # Draw bounds in red
-      bounds_camera = GSDL::FRect.new(x: @bounds.x - @camera.x, y: @bounds.y - @camera.y, w: @bounds.w, h: @bounds.h)
+      bounds_camera = GSDL::FRect.new(x: @bounds.x - camera.x, y: @bounds.y - camera.y, w: @bounds.w, h: @bounds.h)
       draw.rect_outline(bounds_camera, GSDL::Color::Red, z_index: 1)
 
-      @tile_map.draw(draw, @camera)
+      @tile_map.draw(draw)
 
       @collidables.each do |b|
         # could loop through Collidables and draw each kind separately
         if b.is_a?(GSDL::Sprite)
-          b.draw(draw, @camera)
+          b.draw(draw)
         end
       end
 
-      @coins.each(&.draw(draw, @camera))
-      @player.draw(draw, @camera)
+      @coins.each(&.draw(draw))
+      @player.draw(draw)
       @coin_text.draw(draw)
       @info_text.draw(draw)
 
@@ -254,8 +252,8 @@ module PlatformerEx
       player_box = @player.collision_box
       draw.rect_outline(
         rect: GSDL::FRect.new(
-          x: player_box.x - @camera.x,
-          y: player_box.y - @camera.y,
+          x: player_box.x - camera.x,
+          y: player_box.y - camera.y,
           w: player_box.w,
           h: player_box.h
         ),
@@ -268,8 +266,8 @@ module PlatformerEx
         coin_box = coin.collision_box
         draw.rect_outline(
           rect: GSDL::FRect.new(
-            x: coin_box.x - @camera.x,
-            y: coin_box.y - @camera.y,
+            x: coin_box.x - camera.x,
+            y: coin_box.y - camera.y,
             w: coin_box.w,
             h: coin_box.h
           ),

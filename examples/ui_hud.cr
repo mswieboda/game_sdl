@@ -17,7 +17,6 @@ module HUDEx
   end
 
   class StartScene < GSDL::Scene
-    @camera : GSDL::Camera
     @player_x : Float32 = 400_f32
     @player_y : Float32 = 300_f32
 
@@ -27,8 +26,6 @@ module HUDEx
       GSDL::Data.set("score", 0)
       GSDL::Data.set("health", 1.0_f32)
       GSDL::Data.set("status", "Active")
-
-      @camera = GSDL::Camera.new(800, 600)
 
       h = GSDL::HUD.new
 
@@ -87,8 +84,8 @@ module HUDEx
       @player_y -= speed * dt if GSDL::Keys.pressed?(GSDL::Keys::W)
       @player_y += speed * dt if GSDL::Keys.pressed?(GSDL::Keys::S)
 
-      @camera.look_at(@player_x, @player_y)
-      @camera.update(dt)
+      camera.look_at(@player_x, @player_y)
+      camera.update(dt)
 
       # Data binding tests
       if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
@@ -118,8 +115,8 @@ module HUDEx
 
     def draw_world(draw : GSDL::Draw)
       grid_size = 64
-      cam_x = @camera.x
-      cam_y = @camera.y
+      cam_x = camera.x
+      cam_y = camera.y
 
       (0..30).each do |i|
         x = i * grid_size

@@ -71,14 +71,6 @@ module GSDL
       end
     end
 
-    def update(dt : Float32, camera : Camera)
-      @layers.each do |layer|
-        if layer.is_a?(ObjectGroup)
-          layer.update(dt, camera)
-        end
-      end
-    end
-
     def self.from_tiled_json(json : JSON::Any) : TileMap
       tile_w = json["tilewidth"].as_i
       tile_h = json["tileheight"].as_i
@@ -574,28 +566,24 @@ module GSDL
     end
 
     # Draws a specific layer
-    def draw_layer(draw : Draw, layer_name : String, camera : Camera? = nil)
+    def draw_layer(draw : Draw, layer_name : String)
       if layer = get_layer(layer_name)
-        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index + layer.z_index)
+        layer.draw(draw, @tilesets, @tile_width, @tile_height, @z_index + layer.z_index)
       end
     end
 
     # Draws the tilemap
-    def draw(draw : Draw, camera : Camera? = nil)
+    def draw(draw : Draw)
       old_scale_x = draw.current_scale_x
       old_scale_y = draw.current_scale_y
 
-      if camera
-        draw.scale = camera.zoom
-      end
+      draw.scale = Game.camera.zoom
 
       @layers.each do |layer|
-        layer.draw(draw, @tilesets, @tile_width, @tile_height, camera, @z_index + layer.z_index)
+        layer.draw(draw, @tilesets, @tile_width, @tile_height, @z_index + layer.z_index)
       end
 
-      if camera
-        draw.scale = {old_scale_x, old_scale_y}
-      end
+      draw.scale = {old_scale_x, old_scale_y}
     end
   end
 end

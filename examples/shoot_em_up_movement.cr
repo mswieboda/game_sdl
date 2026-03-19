@@ -42,7 +42,6 @@ module ShootEmUpEx
   end
 
   class MainScene < GSDL::Scene
-    @camera : GSDL::Camera
     @player : PlayerShip
 
     def initialize
@@ -53,11 +52,9 @@ module ShootEmUpEx
       Input.set(:move_right) { Keys.pressed?([Keys::D, Keys::Right]) }
       Input.set(:move_up) { Keys.pressed?([Keys::W, Keys::Up]) }
       Input.set(:move_down) { Keys.pressed?([Keys::S, Keys::Down]) }
-
-      @camera = GSDL::Camera.new(width: Game.width, height: Game.height)
-      @camera.type = GSDL::Camera::Type::AutoScroll
+      camera.type = GSDL::Camera::Type::AutoScroll
       # Match the camera scroll speed to the ship's base auto_scroll_speed
-      @camera.scroll_speed_y = -150_f32
+      camera.scroll_speed_y = -150_f32
 
       @player = PlayerShip.new(key: "ship")
       @player.x = Game.width / 2_f32
@@ -77,23 +74,23 @@ module ShootEmUpEx
 
       # Keep player within screen bounds vertically relative to camera
       half_h = @player.height / 2_f32
-      if @player.y < @camera.y + half_h
-        @player.y = @camera.y + half_h
-      elsif @player.y > @camera.y + Game.height - half_h
-        @player.y = @camera.y + Game.height.to_f32 - half_h
+      if @player.y < camera.y + half_h
+        @player.y = camera.y + half_h
+      elsif @player.y > camera.y + Game.height - half_h
+        @player.y = camera.y + Game.height.to_f32 - half_h
       end
 
-      @camera.update(dt)
+      camera.update(dt)
     end
 
     def draw(draw : GSDL::Draw)
       draw_stars(draw)
-      @player.draw(draw, @camera)
+      @player.draw(draw)
     end
 
     def draw_stars(draw : GSDL::Draw)
       # Procedurally draw stars based on world Y coordinate so they scroll correctly
-      cam_y_int = @camera.y.to_i
+      cam_y_int = camera.y.to_i
       start_y = cam_y_int - (cam_y_int % 100)
       end_y = cam_y_int + Game.height + 100
 
@@ -106,7 +103,7 @@ module ShootEmUpEx
           world_x = x + offset_x
           world_y = y + offset_y
 
-          screen_y = world_y - @camera.y
+          screen_y = world_y - camera.y
           if screen_y >= 0 && screen_y <= Game.height
             size = ((seed % 3) + 1).to_f32
             color = (seed % 5 == 0) ? GSDL::Color::Gray : GSDL::Color::DarkGray

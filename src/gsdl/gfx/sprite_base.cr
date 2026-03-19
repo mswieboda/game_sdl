@@ -17,6 +17,10 @@ module GSDL
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
     property update_off_screen : Bool = true
 
+    property? flip_h : Bool = false
+    property? flip_v : Bool = false
+    property? draw_relative_to_camera : Bool = true
+
     getter tweens : Array(Tween) = [] of Tween
 
     @texture : Texture
@@ -39,8 +43,8 @@ module GSDL
     abstract def width : Num
     abstract def height : Num
 
-    def on_screen?(camera : Camera) : Bool
-      cam_rect = camera.viewport_rect
+    def on_screen? : Bool
+      cam_rect = Game.camera.viewport_rect
       sx = draw_x
       sy = draw_y
       sw = draw_width
@@ -49,9 +53,15 @@ module GSDL
       sx + sw >= cam_rect.x && sx <= cam_rect.x + cam_rect.w && sy + sh >= cam_rect.y && sy <= cam_rect.y + cam_rect.h
     end
 
-    def update(dt : Float32, camera : Camera)
-      return if !@update_off_screen && !on_screen?(camera)
-      update(dt)
+    # Base update logic for all sprites.
+    # Returns `true` if the sprite is on-screen and should continue updating,
+    # or `false` if the subclass should abort its update.
+    # 
+    # ALWAYS call `return unless super(dt)` at the top of your custom `update` methods.
+    def update(dt : Float32) : Bool
+      return false if !@update_off_screen && !on_screen?
+      update_tweens(dt)
+      true
     end
 
     def origin_x : Float32
@@ -118,8 +128,6 @@ module GSDL
       y - (draw_height * origin_y)
     end
 
-    abstract def update(dt : Float32)
-
-    abstract def draw(draw : Draw, camera : Camera? = nil, flip_horizontal : Bool = false)
+    abstract def draw(draw : Draw)
   end
 end

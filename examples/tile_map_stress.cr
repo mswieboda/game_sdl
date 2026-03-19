@@ -32,7 +32,6 @@ module TileMapStress
 
   class StartScene < GSDL::Scene
     @tile_map : GSDL::TileMap
-    @camera : GSDL::Camera
 
     def initialize
       super(:start)
@@ -53,17 +52,15 @@ module TileMapStress
       puts "Map generated."
 
       @tile_map.load_map_data(map_data)
-
-      @camera = GSDL::Camera.new(WIDTH, HEIGHT)
-      @camera.type = GSDL::Camera::Type::Manual
-      @camera.speed = 1000.0_f32
+      camera.type = GSDL::Camera::Type::Manual
+      camera.speed = 1000.0_f32
     end
 
     def update(dt : Float32)
-      @camera.update(dt)
+      camera.update(dt)
 
       # Test update culling
-      @tile_map.update(dt, @camera)
+      @tile_map.update(dt)
 
       # Toggle culling state on key press
       if GSDL::Keys.just_pressed?(GSDL::Keys::C)
@@ -72,7 +69,7 @@ module TileMapStress
     end
 
     def draw(draw : GSDL::Draw)
-      @tile_map.draw(draw, @camera)
+      @tile_map.draw(draw)
 
       # debug info
       culling_active = draw.culling_enabled
@@ -80,7 +77,7 @@ module TileMapStress
       color = culling_active ? GSDL::Color::Lime : GSDL::Color::Red
 
       text = GSDL::Text.new(
-        text: "Culling: #{status_text} (PRESS 'C' TO TOGGLE)\nCamera: #{@camera.x.to_i}, #{@camera.y.to_i}\nMap Size: 500x500",
+        text: "Culling: #{status_text} (PRESS 'C' TO TOGGLE)\nCamera: #{camera.x.to_i}, #{camera.y.to_i}\nMap Size: 500x500",
         x: 10,
         y: 10,
         color: color
