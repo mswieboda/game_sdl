@@ -14,7 +14,7 @@ module GSDL
     property lifetime : Float32 = 3.0_f32
     property elapsed : Float32 = 0.0_f32
     property z_index : Int32 = 2000
-    
+
     # Internal state for the manager
     property? dead : Bool = false
     property target_y : Num = 0
@@ -63,7 +63,7 @@ module GSDL
     def update(dt : Float32)
       update_tweens(dt)
       @elapsed += dt
-      
+
       if @elapsed >= @lifetime && !@dead
         @dead = true
       end
@@ -114,21 +114,21 @@ module GSDL
       n.x = screen_w
       n.y = y
       n.target_y = y
-      
+
       # Animate in
       n.tween({"x" => target_x.to_f32}, 0.5_f32, MathUtils::Easing::EaseOut)
-      
+
       @@notifications << n
       n
     end
 
     def self.update(dt : Float32)
       @@notifications.each(&.update(dt))
-      
+
       # Remove dead ones
       old_size = @@notifications.size
       @@notifications.reject!(&.dead?)
-      
+
       if @@notifications.size != old_size
         # Re-stack remaining notifications
         current_y = @@margin_top.to_f32

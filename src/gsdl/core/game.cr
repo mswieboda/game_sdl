@@ -149,7 +149,7 @@ module GSDL
 
     def switch_async(scene_class : T.class, data : SwitchData? = nil) forall T
       tasks = T.manifest
-      
+
       if tasks.empty?
         switch(T.new, data)
       else
@@ -185,9 +185,9 @@ module GSDL
       @title = title
       @width = width
       @height = height
-      
+
       Global.game = self
-      
+
       SDL3.init
       SDL3::TTF.init
       SDL3::Mixer.init
@@ -347,7 +347,7 @@ module GSDL
           update_transitions(dt)
           next if s.transition_in.started? || s.transition_out.started?
         end
-        
+
         if paused?
           s.pause_scene.try &.update(dt)
         else
@@ -384,7 +384,7 @@ module GSDL
       (start_index...@scenes.size).each do |i|
         s = @scenes[i]
         s.draw(Game.draw_instance) unless exit?
-        
+
         if s == scene
           s.transition_in.draw(Game.draw_instance) if s.transition_in.running?
           s.transition_out.draw(Game.draw_instance) if s.transition_out.started?

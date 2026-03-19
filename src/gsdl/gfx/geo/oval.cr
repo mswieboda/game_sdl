@@ -145,7 +145,7 @@ module GSDL
         angle = Math::PI + i * (0.5 * Math::PI / segments)
         vx = center_x + x_dir * corner_radius_x * Math.cos(angle)
         vy = center_y + y_dir * corner_radius_y * Math.sin(angle)
-        
+
         rv = rotate_point(vx, vy)
         @fill_vertices << Vertex.new(rv, color)
         points << Point.new(rv)

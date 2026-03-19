@@ -171,9 +171,9 @@ module GSDL
 
       # Handle cases involving Polygons (including Rects as Polygons)
       if collision_shape.polygon? || other.collision_shape.polygon? || (collision_shape.rect? && other.collision_shape.rect?)
-        # For Rect vs Rect, we can still use AABB for speed if needed, 
+        # For Rect vs Rect, we can still use AABB for speed if needed,
         # but SAT is more general and gives us MTV easily.
-        
+
         # If one is a circle and other is a polygon
         if (collision_shape.circle? && other.collision_shape.polygon?) || (collision_shape.polygon? && other.collision_shape.circle?)
            return circle_polygon_collision_info(self, other)
@@ -228,7 +228,7 @@ module GSDL
     private def circle_polygon_collision_info(a : Collidable, b : Collidable) : CollisionInfo
       circle = a.collision_shape.circle? ? a : b
       poly = a.collision_shape.circle? ? b : a
-      
+
       vs = poly.collision_polygon_vertices
       c_center = circle.collision_center
       radius = circle.collision_radius
@@ -292,7 +292,7 @@ module GSDL
       if (c_center - poly.collision_center).dot(smallest_axis) < 0
         smallest_axis = smallest_axis * -1.0_f32
       end
-      
+
       normal = a == circle ? smallest_axis : smallest_axis * -1.0_f32
 
       CollisionInfo.new(hit: true, normal: normal, penetration: min_overlap)
@@ -306,13 +306,13 @@ module GSDL
       # Check poly edges
       vs.each_with_index do |p1, i|
         p2 = vs[(i + 1) % vs.size]
-        
+
         # Closest point on edge to circle center
         edge = p2 - p1
         t = ((c_center.x - p1.x) * edge.x + (c_center.y - p1.y) * edge.y) / edge.length_squared
         t = Math.max(0.0_f32, Math.min(1.0_f32, t))
         closest = p1 + edge * t
-        
+
         dist_sq = (c_center.x - closest.x)**2 + (c_center.y - closest.y)**2
         return true if dist_sq < radius * radius
       end
@@ -329,7 +329,7 @@ module GSDL
         end
         j = i
       end
-      
+
       inside
     end
 
@@ -370,15 +370,15 @@ module GSDL
     def collision_normal(other : Collidable) : Point
       # If both are polygons (or rect treated as poly), we need SAT normal (MTV)
       # For now, let's keep the existing simple normal logic and add circle-poly normal
-      
+
       if collision_shape.circle? && other.collision_shape.polygon?
         # Normal from closest point on poly to circle center
         vs = other.collision_polygon_vertices
         c_center = collision_center
-        
+
         best_dist_sq = Float32::MAX
         best_closest = Point.new(0, 0)
-        
+
         vs.each_with_index do |p1, i|
           p2 = vs[(i + 1) % vs.size]
           edge = p2 - p1
@@ -391,7 +391,7 @@ module GSDL
             best_closest = closest
           end
         end
-        
+
         nx = c_center.x - best_closest.x
         ny = c_center.y - best_closest.y
         dist = Math.hypot(nx, ny)

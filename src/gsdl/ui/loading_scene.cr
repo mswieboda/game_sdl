@@ -30,9 +30,9 @@ module GSDL
     def update(dt : Float32)
       loader = Game.loader
       progress = loader.progress
-      
+
       @progress_text.text = "#{progress.percentage.to_i}%"
-      
+
       if loader.complete?
         Game.switch(T.new, @data)
       end

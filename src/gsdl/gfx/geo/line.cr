@@ -89,14 +89,14 @@ module GSDL
       # Rotation pivot is (x1, y1) which is Shape (x, y)
       # We calculate the vector to the second point, scale it, and rotate it.
       p1 = rotate_point(draw_x, draw_y)
-      
+
       # Calculate scaled vector from pivot
       dx = (x2 - x1).to_f32 * scale_x.to_f32
       dy = (y2 - y1).to_f32 * scale_y.to_f32
-      
+
       # Rotate the second point relative to draw position
       p2 = rotate_point(draw_x + dx, draw_y + dy)
-      
+
       draw.line(p1[0], p1[1], p2[0], p2[1], color: color, z_index: z_index)
     end
   end

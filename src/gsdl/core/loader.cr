@@ -57,7 +57,7 @@ module GSDL
 
     @result_queue = Deque(AssetResult).new
     @result_mutex = Mutex.new
-    
+
     # Backpressure: Maximum number of loaded results waiting for the main thread
     @max_queued_results = 20
 
@@ -177,7 +177,7 @@ module GSDL
         end
 
         break unless task
-        
+
         begin
           load_single_asset_io(task)
         rescue ex
@@ -189,7 +189,7 @@ module GSDL
 
     private def load_single_asset_io(task : AssetTask)
       path = task.path_key
-      
+
       # We must ensure the bytes are copied into a stable buffer because
       # File.read(path).to_slice returns a pointer to a temporary string that can be GC'd
       bytes = if AssetManager.initialized?

@@ -27,7 +27,7 @@ module GSDL
     property scrollbar_width : Int32 = 4
     property scrollbar_color : Color = Color::Gray
     property scrollbar_padding : Int32 = 2
-    
+
     @text : Text
 
     def initialize(
@@ -114,10 +114,10 @@ module GSDL
 
     def draw(draw : Draw)
       old_clip = draw.clip_rect
-      
+
       # Set clipping to the viewport
       draw.clip_rect = GSDL::Rect.new(draw_x.to_i, draw_y.to_i, draw_width.to_i, draw_height.to_i)
-      
+
       # Position text relative to viewport
       @text.x = draw_x + padding
       @text.y = draw_y + padding - @scroll_offset

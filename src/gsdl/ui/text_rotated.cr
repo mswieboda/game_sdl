@@ -59,7 +59,7 @@ module GSDL
 
       # TODO: do this from the Draw class eventually, instead of SDL3::Renderer
       renderer = TextBase.renderer
-      
+
       # Create a target texture
       # We use RGBA8888 for high quality and alpha support
       tex = Texture.new(width: w, height: h, access: TextureAccess::Target)
@@ -72,12 +72,12 @@ module GSDL
       # Render text to texture
       renderer.set_render_target(tex.to_sdl)
       renderer.scale = {1_f32, 1_f32} # Draw text at 1:1 to its cache
-      
+
       # Clear texture to transparent
       old_color = renderer.draw_color
       renderer.draw_color = {0_u8, 0_u8, 0_u8, 0_u8}
       renderer.clear
-      
+
       # Draw the TTF_Text at (0,0) on the texture
       @text_sdl.draw(0_f32, 0_f32)
 
@@ -93,7 +93,7 @@ module GSDL
     def draw(draw : Draw)
       return if @text.empty?
       refresh_texture
-      
+
       if tex = @texture
         dest_rect = FRect.new(
           x: draw_x.to_f32,
@@ -113,7 +113,7 @@ module GSDL
     end
 
     def _draw
-      # In TextRotated, we don't use _draw in the same way because 
+      # In TextRotated, we don't use _draw in the same way because
       # we want to leverage Draw's texture command sorting if possible,
       # but Text commands are handled differently.
       # For now, draw(draw) handles it via draw.texture_rotated.

@@ -47,5 +47,3 @@ module GSDL
     end
   end
 end
-
-

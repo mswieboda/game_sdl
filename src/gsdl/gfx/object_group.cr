@@ -17,7 +17,7 @@ module GSDL
     def on_screen? : Bool
       screen_w = GSDL::Game.width.to_f32
       screen_h = GSDL::Game.height.to_f32
-      
+
       @objects.any? do |obj|
         obj_x = obj.x.to_f32 + @offset_x - (Game.camera.x * @parallax_x)
         obj_y = (obj.y - obj.height).to_f32 + @offset_y - (Game.camera.y * @parallax_y)
@@ -41,15 +41,15 @@ module GSDL
 
       @objects.each do |obj|
         next unless obj.visible && (gid = obj.gid)
-        
+
         tile_info = TileMap.find_tileset_and_local_id(gid, tilesets)
         next unless tile_info
-        
+
         tileset = tilesets[tile_info.tileset_key]
         next unless tileset
-        
+
         source_rect = tileset.get_local_tile_source_rect(tile_info.local_tile_id)
-        
+
         # Tiled tile objects have origin at bottom-left
         dest_rect = FRect.new(
           x: obj.x.to_f32 + @offset_x - (camera_x * @parallax_x),
@@ -57,7 +57,7 @@ module GSDL
           w: obj.width,
           h: obj.height
         )
-        
+
         flip_mode = 0_i32
         flip_mode |= TileMap::Flip::Horizontal if tile_info.flipped_horizontally
         flip_mode |= TileMap::Flip::Vertical if tile_info.flipped_vertically

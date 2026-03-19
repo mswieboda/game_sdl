@@ -75,10 +75,10 @@ module GSDL
         # Fade out: 0.0 -> 1.0 alpha (hiding scene)
         progress * 255
       end
-      
+
       # Use Game global values
       w, h = {Game.width.to_f32, Game.height.to_f32}
-      
+
       c = @color
       c.a = alpha.to_u8
 
@@ -93,11 +93,11 @@ module GSDL
 
     def initialize(direction : TransitionDirection, duration = 1.0_f32, started = false, @color = Color::Black, @grid_size = 64, easing = GSDL::MathUtils::Easing::Linear)
       super(direction: direction, duration: duration, started: started, easing: easing)
-      
+
       @squares = [] of Tuple(Int32, Int32)
       cols = Game.width // @grid_size + 1
       rows = Game.height // @grid_size + 1
-      
+
       cols.times do |x|
         rows.times do |y|
           @squares << {x, y}
@@ -110,7 +110,7 @@ module GSDL
     def draw(draw : Draw)
       # In transition: squares disappear (reveal)
       # Out transition: squares appear (hide)
-      
+
       total_squares = @squares.size
       visible_count = if direction.in?
         # Disappearing: from total to 0
@@ -150,7 +150,7 @@ module GSDL
 
       @line_count.times do |i|
         current_y = i * line_height
-        
+
         rect_w = if direction.in?
           (1.0_f32 - progress) * w
         else
@@ -194,24 +194,24 @@ module GSDL
       segments.times do |i|
         angle1 = (i.to_f32 / segments) * 2.0_f32 * Math::PI
         angle2 = ((i + 1).to_f32 / segments) * 2.0_f32 * Math::PI
-        
+
         x1, y1 = {center_x + Math.cos(angle1).to_f32 * radius, center_y + Math.sin(angle1).to_f32 * radius}
         x2, y2 = {center_x + Math.cos(angle2).to_f32 * radius, center_y + Math.sin(angle2).to_f32 * radius}
-        
+
         # Far points (at the edge of a very large bounding box)
         fx1, fy1 = {center_x + Math.cos(angle1).to_f32 * max_radius * 2, center_y + Math.sin(angle1).to_f32 * max_radius * 2}
         fx2, fy2 = {center_x + Math.cos(angle2).to_f32 * max_radius * 2, center_y + Math.sin(angle2).to_f32 * max_radius * 2}
-        
+
         base_idx = vertices.size
         vertices << Vertex.new(Point.new(x1, y1), @color)
         vertices << Vertex.new(Point.new(x2, y2), @color)
         vertices << Vertex.new(Point.new(fx1, fy1), @color)
         vertices << Vertex.new(Point.new(fx2, fy2), @color)
-        
+
         indices << base_idx << base_idx + 1 << base_idx + 2
         indices << base_idx + 1 << base_idx + 3 << base_idx + 2
       end
-      
+
       draw.geometry(vertices: vertices, indices: indices, z_index: 1000)
     end
   end
@@ -226,7 +226,7 @@ module GSDL
 
     def draw(draw : Draw)
       w, h = {Game.width.to_f32, Game.height.to_f32}
-      
+
       cols = (w / @box_size).ceil.to_i
       rows = (h / @box_size).ceil.to_i
 

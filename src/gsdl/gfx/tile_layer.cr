@@ -49,7 +49,7 @@ module GSDL
       (min_y..max_y).each do |y_index|
         row_data = @data[y_index]
         row_max_x = draw.culling_enabled ? Math.min(row_data.size - 1, max_x) : row_data.size - 1
-        
+
         next if min_x > row_max_x
 
         (min_x..row_max_x).each do |x_index|
@@ -86,5 +86,3 @@ module GSDL
     end
   end
 end
-
-

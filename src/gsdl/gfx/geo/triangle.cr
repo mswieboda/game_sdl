@@ -212,12 +212,12 @@ module GSDL
 
       border_thickness.to_i.times do |i|
         current_lines = original_lines.map(&.dup) # Work on a copy of points for each iteration
-        
+
         # NOTE: Simple inset for rotated triangle is complex
         # For now we reuse the min/max logic which works best for axis-aligned
         # but will be skewed for rotated.
         # A proper fix requires line insetting (padding).
-        
+
         if rotation == 0
           min_x_point_i = _find_index_by_accessor(current_lines, :min, &.x)
           min_y_point_i = _find_index_by_accessor(current_lines, :min, &.y)

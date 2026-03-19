@@ -18,17 +18,17 @@ module GSDL
     property min_value : Float32 = 0.0_f32
     property max_value : Float32 = 1.0_f32
     property value : Float32 = 0.5_f32
-    
+
     property background_color : Color = Color::DarkGray
     property track_color : Color = Color::Gray
     property handle_color : Color = Color::White
     property handle_size : Num = 24
-    
+
     property orientation : Orientation = Orientation::Horizontal
     property z_index : Int32 = 0
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
-    
+
     property? active : Bool = false
     property on_change : OnChangeCallback?
 

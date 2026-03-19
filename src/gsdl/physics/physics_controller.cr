@@ -50,16 +50,16 @@ module GSDL
         body2 = other.as(GSDL::Body)
         m1 = self.mass
         m2 = body2.mass
-        
+
         # 1. Separation
         # Total penetration needs to be resolved. Push both away based on mass.
         # If one is much heavier, it moves less.
         total_inv_mass = (1.0_f32 / m1) + (1.0_f32 / m2)
-        
+
         # Push this body
         self.x += info.normal.x * info.penetration * ((1.0_f32 / m1) / total_inv_mass)
         self.y += info.normal.y * info.penetration * ((1.0_f32 / m1) / total_inv_mass)
-        
+
         # Push other body (opposite direction)
         body2.x -= info.normal.x * info.penetration * ((1.0_f32 / m2) / total_inv_mass)
         body2.y -= info.normal.y * info.penetration * ((1.0_f32 / m2) / total_inv_mass)
@@ -68,36 +68,36 @@ module GSDL
         v1 = Point.new(velocity_x, velocity_y)
         v2 = Point.new(body2.velocity_x, body2.velocity_y)
         relative_velocity = v1 - v2
-        
+
         # Relative velocity along normal
         v_dot_n = relative_velocity.dot(info.normal)
-        
+
         # Only resolve if objects are moving towards each other
         if v_dot_n < 0
           e = Math.min(restitution, body2.restitution)
-          
+
           # Impulse scalar
           j = -(1.0_f32 + e) * v_dot_n
           j /= total_inv_mass
-          
+
           impulse = info.normal * j
-          
+
           self.velocity_x += impulse.x / m1
           self.velocity_y += impulse.y / m1
-          
+
           body2.velocity_x -= impulse.x / m2
           body2.velocity_y -= impulse.y / m2
-          
+
           # 3. Friction (Dynamic)
           # relative tangent velocity
           v_normal_comp = info.normal * v_dot_n
           v_tan = relative_velocity - v_normal_comp
-          
+
           if v_tan.length > 0
             f = Math.min(friction, body2.friction)
             reduction = Math.min(1.0_f32, f)
             friction_impulse = v_tan * -reduction
-            
+
             # Simple friction application
             self.velocity_x += friction_impulse.x / 2.0_f32
             self.velocity_y += friction_impulse.y / 2.0_f32
@@ -113,20 +113,20 @@ module GSDL
 
         # Velocity vector
         v = Point.new(velocity_x, velocity_y)
-        
+
         # Dot product of velocity and normal (velocity component into the surface)
         v_dot_n = v.dot(info.normal)
-        
+
         # Only bounce if objects are moving towards each other
         if v_dot_n < 0
           # 1. Handle Bounce (Normal impulse)
           # Reflection vector: v_new = v - (1 + restitution) * (v . n) * n
           bounce_impulse = info.normal * (-(1.0_f32 + restitution) * v_dot_n)
-          
+
           # 2. Handle Friction (Tangent impulse)
           v_normal_component = info.normal * v_dot_n
           v_tangent = v - v_normal_component
-          
+
           friction_impulse = Point.new(0, 0)
           if friction > 0 && v_tangent.length > 0
             reduction = Math.min(1.0_f32, friction)
@@ -176,7 +176,7 @@ module GSDL
         if info.hit?
           self.x += info.normal.x * info.penetration
           self.y += info.normal.y * info.penetration
-          
+
           # cancel velocity in direction of collision
           v = Point.new(velocity_x, velocity_y)
           v_dot_n = v.dot(info.normal)

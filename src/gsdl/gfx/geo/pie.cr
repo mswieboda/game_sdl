@@ -71,7 +71,7 @@ module GSDL
           angle = start_angle + i * angle_step
           arc_x = center_x + (draw_radius_x / 2) * Math.cos(angle)
           arc_y = center_y + (draw_radius_y / 2) * Math.sin(angle)
-          
+
           rv = rotate_point(arc_x, arc_y)
           @fill_vertices << Vertex.new(rv, color)
           points << Point.new(rv)

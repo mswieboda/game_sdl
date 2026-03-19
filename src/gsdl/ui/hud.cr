@@ -17,7 +17,7 @@ module GSDL
   module HUDElement
     abstract def hud_update(dt : Float32)
     abstract def hud_draw(draw : Draw)
-    
+
     property anchor : Anchor = Anchor::TopLeft
     property offset_x : Num = 0
     property offset_y : Num = 0
@@ -72,7 +72,7 @@ module GSDL
       @elements << element
       element
     end
-    
+
     def <<(element : HUDElement)
       add(element)
     end

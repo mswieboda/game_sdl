@@ -61,7 +61,7 @@ module GSDL
         # basic bounding box check with circumscribed circle to account for arbitrary rotation
         cx = @dest_rect.x + @dest_rect.w / 2_f32
         cy = @dest_rect.y + @dest_rect.h / 2_f32
-        
+
         radius = Math.max(@dest_rect.w, @dest_rect.h) * 0.75_f32
         radius *= Math.max(scale_x.abs, scale_y.abs)
 

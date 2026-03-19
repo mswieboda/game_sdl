@@ -7,7 +7,7 @@ module GSDL
     property cursor_position : Int32 = 0
     property cursor_visible : Bool = true
     property cursor_blink_rate : Float32 = 0.5_f32
-    
+
     property background_color : Color = Color::White
     property border_color : Color = Color::Black
     property border_radius : Num = 0
@@ -56,7 +56,7 @@ module GSDL
 
     def update(dt : Float32)
       super(dt)
-      
+
       if active
         @blink_timer += dt
         if @blink_timer >= cursor_blink_rate
@@ -121,7 +121,7 @@ module GSDL
 
     def draw_background(draw : Draw)
       return if background_color.a == 0 && (border_color.a == 0 || border_width <= 0)
-      
+
       box = Box.new(
         x: x,
         y: y,
@@ -150,11 +150,11 @@ module GSDL
         before_cursor = text[0...@cursor_position]
         font = @text.font
         offset_x, _ = font.text_size(before_cursor)
-        
+
         cursor_x = @text.draw_x + (offset_x * @text.scale_x)
         cursor_y_top = @text.draw_y
         cursor_y_bottom = @text.draw_y + @text.draw_height
-        
+
         draw.color = @text.color
         draw.line(cursor_x, cursor_y_top, cursor_x, cursor_y_bottom, z_index: z_index + 1)
       end

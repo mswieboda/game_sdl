@@ -53,7 +53,7 @@ module GSDL
         w: draw_width,
         h: draw_height
       )
-      
+
       flip_val = 0
       flip_val |= 1 if flip_h?
       flip_val |= 2 if flip_v?

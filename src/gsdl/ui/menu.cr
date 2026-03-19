@@ -32,7 +32,7 @@ module GSDL
     @selected_text_color : (Int32 -> Color)?
     @text_color : (Int32 -> Color)?
     @default_text_color : Color
-    
+
     @is_selected : (Num, Num, Num, Num -> Bool)
     @is_next : (-> Bool)
     @is_previous : (-> Bool)
@@ -51,7 +51,7 @@ module GSDL
     @menu_width : Num = 0
     @menu_height : Num = 0
     @hovered_index : Int32? = nil
-    
+
     @item_rects : Array(NamedTuple(x: Num, y: Num, w: Num, h: Num)) = [] of NamedTuple(x: Num, y: Num, w: Num, h: Num)
 
     def initialize(
@@ -90,7 +90,7 @@ module GSDL
       @on_select : Symbol -> Nil = ->(s : Symbol) { }
     )
       @items_text = [] of Text
-      
+
       # Create items_text and find max dimensions
       @items.each do |(id, text)|
         text_obj = Text.new(
@@ -99,10 +99,10 @@ module GSDL
           align: @text_align
         )
         @items_text << text_obj
-        
+
         w = text_obj.width + @item_padding * 2
         h = text_obj.height + @item_padding * 2
-        
+
         @max_item_width = w if w > @max_item_width
         @max_item_height = h if h > @max_item_height
       end
@@ -139,7 +139,7 @@ module GSDL
       @items_text.each_with_index do |item, index|
         w = item_ws[index] * scale_x
         h = item_hs[index] * scale_y
-        
+
         rect = {x: current_pos_x, y: current_pos_y, w: w, h: h}
         @item_rects << rect
 
@@ -158,7 +158,7 @@ module GSDL
 
         item.y = current_pos_y + (h / 2)
         item.origin = {item.origin_x, 0.5_f32}
-        
+
         item.scale = @scale
         item.z_index = @z_index
 
@@ -219,7 +219,7 @@ module GSDL
 
     private def move_selection(dir : Int32)
       return if @items_text.empty?
-      
+
       original_index = @selected_index
       loop do
         @selected_index = (@selected_index + dir) % @items_text.size
@@ -235,7 +235,7 @@ module GSDL
     private def color_for(index : Int32) : Color
       id = @items[index][0]
       return @disabled_text_color if disabled?(id)
-      
+
       if index == @selected_index
         return @selected_text_color.try(&.call(index)) || Color::Lime
       end
@@ -256,10 +256,10 @@ module GSDL
     def draw(draw : Draw)
       # Draw background box
       if box = @background_box
-        draw_box_at(draw, box, 
-          @x - (@menu_width * scale_x * origin[0]), 
-          @y - (@menu_height * scale_y * origin[1]), 
-          @menu_width * scale_x, 
+        draw_box_at(draw, box,
+          @x - (@menu_width * scale_x * origin[0]),
+          @y - (@menu_height * scale_y * origin[1]),
+          @menu_width * scale_x,
           @menu_height * scale_y
         )
       end
@@ -303,7 +303,7 @@ module GSDL
     private def draw_icon(draw : Draw, icon : SpriteBase, rect)
       icon_w = icon.draw_width
       icon_h = icon.draw_height
-      
+
       icon_y = rect[:y] + (rect[:h] - icon_h) / 2.0_f32
       icon.z_index = @z_index
 

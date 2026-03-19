@@ -321,17 +321,17 @@ module GSDL
 
       border_thickness.to_i.times do |i|
         off = i.to_f32
-        
+
         # Calculate concentric dimensions and position
         new_width = width - (off * 2)
         new_height = height - (off * 2)
-        
+
         next if new_width <= 0 || new_height <= 0
-        
+
         # Shift the position to keep the box centered regardless of the origin
         new_x = x.to_f32 + off * (1.0_f32 - 2.0_f32 * origin_x)
         new_y = y.to_f32 + off * (1.0_f32 - 2.0_f32 * origin_y)
-        
+
         # Radius must shrink as we move inward to stay concentric
         new_radius = Math.max(0_f32, border_radius.to_f32 - off)
 

@@ -49,14 +49,14 @@ module GSDL
       sy = draw_y
       sw = draw_width
       sh = draw_height
-      
+
       sx + sw >= cam_rect.x && sx <= cam_rect.x + cam_rect.w && sy + sh >= cam_rect.y && sy <= cam_rect.y + cam_rect.h
     end
 
     # Base update logic for all sprites.
     # Returns `true` if the sprite is on-screen and should continue updating,
     # or `false` if the subclass should abort its update.
-    # 
+    #
     # ALWAYS call `return unless super(dt)` at the top of your custom `update` methods.
     def update(dt : Float32) : Bool
       return false if !@update_off_screen && !on_screen?

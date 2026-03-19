@@ -13,17 +13,17 @@ module GSDL
     property height : Num = 300
     property tab_height : Num = 40
     property active_index : Int32 = 0
-    
+
     property background_color : Color = GSDL.color(r: 30, g: 30, b: 30, a: 220)
     property tab_color : Color = Color::DarkGray
     property active_tab_color : Color = Color::Gray
     property text_color : Color = Color::White
     property border_color : Color = Color::White
-    
+
     property z_index : Int32 = 0
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
-    
+
     property on_tab_changed : TabChangedCallback?
     getter? changed : Bool = true
 
@@ -99,15 +99,15 @@ module GSDL
 
     private def calculate_layout
       return if @tabs.empty?
-      
+
       @tab_rects.clear
       tab_w = draw_width / @tabs.size
-      
+
       @tabs.each_with_index do |_, i|
         tx = draw_x + (i * tab_w)
         ty = draw_y
         @tab_rects << FRect.new(x: tx.to_f32, y: ty.to_f32, w: tab_w.to_f32, h: (tab_height * scale_y).to_f32)
-        
+
         @tab_texts[i].x = tx + (tab_w / 2)
         @tab_texts[i].y = ty + (tab_height * scale_y / 2)
         @tab_texts[i].scale = {scale_x.to_f32, scale_y.to_f32}
@@ -138,7 +138,7 @@ module GSDL
       # Content Background
       content_y = draw_y + (tab_height * scale_y)
       content_h = draw_height - (tab_height * scale_y)
-      
+
       bg = Box.new(
         width: width, height: height - tab_height,
         x: x, y: y + tab_height,
@@ -155,7 +155,7 @@ module GSDL
       # Tabs
       @tab_rects.each_with_index do |rect, i|
         is_active = (i == active_index)
-        
+
         t_box = Box.new(
           width: rect.w / scale_x,
           height: rect.h / scale_y,

@@ -34,7 +34,7 @@ module GSDL
       next_y = self.y + dy
       # Calculate what draw_y would be at next_y
       next_draw_y = next_y - (draw_height * origin_y)
-      
+
       collided = false
 
       if @velocity_y > 0 # Moving down
@@ -64,7 +64,7 @@ module GSDL
       dx = @velocity_x * dt
       next_x = self.x + dx
       next_draw_x = next_x - (draw_width * origin_x)
-      
+
       collided = false
 
       if dx > 0 # Moving right

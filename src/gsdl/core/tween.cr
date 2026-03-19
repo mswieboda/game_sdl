@@ -203,7 +203,7 @@ module GSDL
         # Handle cases where one might be a Tuple and other a Float32 (for scale)
         s_val = start.is_a?(Tuple(Float32, Float32)) ? start : {start.as(Float32), start.as(Float32)}
         f_val = finish.is_a?(Tuple(Float32, Float32)) ? finish : {finish.as(Float32), finish.as(Float32)}
-        
+
         return {
           GSDL::MathUtils.lerp(s_val[0], f_val[0], t),
           GSDL::MathUtils.lerp(s_val[1], f_val[1], t),
@@ -212,4 +212,3 @@ module GSDL
     end
   end
 end
-

@@ -25,7 +25,7 @@ module GSDL
     # Example: Data.set(["quests", "apples", "collected"], 5)
     def set(keys : Array(String), value)
       return if keys.empty?
-      
+
       if keys.size == 1
         set(keys[0], value)
         return
@@ -39,7 +39,7 @@ module GSDL
         end
         current = current[key].as_h
       end
-      
+
       current[keys.last] = JSON.parse(value.to_json)
     end
 

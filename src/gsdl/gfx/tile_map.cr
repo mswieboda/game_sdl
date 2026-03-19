@@ -135,7 +135,7 @@ module GSDL
         offset_y = layer_json["offsety"]? ? layer_json["offsety"].as_i : 0
         parallax_x = layer_json["parallaxx"]? ? (layer_json["parallaxx"].as_f? || layer_json["parallaxx"].as_i.to_f32).to_f32 : 1.0_f32
         parallax_y = layer_json["parallaxy"]? ? (layer_json["parallaxy"].as_f? || layer_json["parallaxy"].as_i.to_f32).to_f32 : 1.0_f32
-        
+
         # Determine z_index based on order in file (bottom layers first)
         # We start from 0 and increment.
         layer_z = index
@@ -448,7 +448,7 @@ module GSDL
       # Check layers from top to bottom
       @layers.reverse_each do |layer|
         next unless layer.visible
-        
+
         if layer.is_a?(TileLayer)
           return false if tile_x < 0 || tile_x >= @map_width_tiles || tile_y < 0 || tile_y >= @map_height_tiles
 
@@ -475,7 +475,7 @@ module GSDL
       # Return the first tile info found from top to bottom
       @layers.reverse_each do |layer|
         next unless layer.visible
-        
+
         if layer.is_a?(TileLayer)
           global_gid_with_flags = layer.data[y][x]
           tile_info = find_tileset_and_local_id(global_gid_with_flags)
