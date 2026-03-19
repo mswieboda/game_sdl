@@ -38,6 +38,7 @@ module GSDL
 
     # Input movement configuration
     property speed : Num = 300_f32
+    property lerp_speed : Float32 = 0_f32
     property input_up : Symbol = :camera_up
     property input_down : Symbol = :camera_down
     property input_left : Symbol = :camera_left
@@ -166,9 +167,9 @@ module GSDL
       update_tweens(dt)
       case @type
       when Type::CenterOnTarget
-        update_center_on_target
+        update_center_on_target(dt)
       when Type::CenterOnTargetWithBoundary
-        update_center_on_target
+        update_center_on_target(dt)
         apply_boundary
       when Type::Manual
         update_manual_movement(dt)
@@ -180,10 +181,20 @@ module GSDL
       end
     end
 
-    private def update_center_on_target
+    private def update_center_on_target(dt : Float32)
       if (tx = @target_x) && (ty = @target_y)
-        @x = tx - (@width / (2_f32 * @zoom))
-        @y = ty - (@height / (2_f32 * @zoom))
+        target_cam_x = tx.to_f32 - (@width / (2_f32 * @zoom))
+        target_cam_y = ty.to_f32 - (@height / (2_f32 * @zoom))
+
+        if @lerp_speed > 0
+          # Frame-rate independent lerp
+          factor = 1.0_f32 - Math.exp(-@lerp_speed * dt)
+          @x = MathUtils.lerp(@x, target_cam_x, factor)
+          @y = MathUtils.lerp(@y, target_cam_y, factor)
+        else
+          @x = target_cam_x
+          @y = target_cam_y
+        end
       end
     end
 

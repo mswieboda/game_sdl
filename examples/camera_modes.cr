@@ -73,6 +73,7 @@ module CameraEx
     @player : Player
     @info_text : GSDL::Text
     @zoom_text : GSDL::Text
+    @controls_text : GSDL::Text
 
     GRID_SIZE = 32
 
@@ -90,6 +91,7 @@ module CameraEx
       Input.set(:camera_down) { Keys.pressed?(Keys::K) }
 
       Input.set(:switch_mode) { Keys.just_pressed?(Keys::Space) }
+      Input.set(:toggle_lerp) { Keys.just_pressed?(Keys::L) }
       Input.set(:zoom_in) { Keys.pressed?(Keys::E) }
       Input.set(:zoom_out) { Keys.pressed?(Keys::Q) }
       Input.set(:shake) { Keys.just_pressed?(Keys::X) }
@@ -105,41 +107,57 @@ module CameraEx
       @player.y = 100
 
       @info_text = GSDL::Text.new(
-        text: "Mode: CenterOnTargetWithBoundary (SPACE to switch)",
+        text: "Mode: CenterOnTargetWithBoundary",
         x: 10,
         y: 10,
         color: GSDL::Color::White
       )
       @zoom_text = GSDL::Text.new(
-        text: "Zoom: 1.0 (Q/E to zoom)",
+        text: "Zoom: 1.0 (Lerp: OFF)",
         x: 10,
         y: 40,
+        color: GSDL::Color::White
+      )
+      @controls_text = GSDL::Text.new(
+        text: "SPACE: cycle mode\nL: toggle lerp\nQ/E: zoom\nX: shake",
+        x: 10,
+        y: 70,
         color: GSDL::Color::White
       )
     end
 
     def update(dt : Float32)
+      if Input.action?(:toggle_lerp)
+        if @camera.lerp_speed == 0
+          @camera.lerp_speed = 5.0_f32
+        else
+          @camera.lerp_speed = 0_f32
+        end
+      end
+
       if Input.action?(:switch_mode)
         case @camera.type
         when GSDL::Camera::Type::CenterOnTargetWithBoundary
           @camera.type = GSDL::Camera::Type::Manual
-          @info_text.text = "Mode: Manual (IJKL to move camera, SPACE to switch)"
+          @info_text.text = "Mode: Manual"
+          @controls_text.text = "IJKL: move camera\nSPACE: cycle mode\nL: toggle lerp\nQ/E: zoom\nX: shake"
         when GSDL::Camera::Type::Manual
           @camera.type = GSDL::Camera::Type::CenterOnTarget
-          @info_text.text = "Mode: CenterOnTarget (SPACE to switch)"
+          @info_text.text = "Mode: CenterOnTarget"
+          @controls_text.text = "SPACE: cycle mode\nL: toggle lerp\nQ/E: zoom\nX: shake"
         when GSDL::Camera::Type::CenterOnTarget
           @camera.type = GSDL::Camera::Type::Fixed
-          @info_text.text = "Mode: Fixed (SPACE to switch)"
+          @info_text.text = "Mode: Fixed"
         when GSDL::Camera::Type::Fixed
           @camera.type = GSDL::Camera::Type::AutoScroll
           @camera.scroll_speed_x = 100_f32
           @camera.scroll_speed_y = 50_f32
-          @info_text.text = "Mode: AutoScroll (100, 50) (SPACE to switch)"
+          @info_text.text = "Mode: AutoScroll (100, 50)"
         when GSDL::Camera::Type::AutoScroll
           @camera.type = GSDL::Camera::Type::CenterOnTargetWithBoundary
           @camera.scroll_speed_x = 0_f32
           @camera.scroll_speed_y = 0_f32
-          @info_text.text = "Mode: CenterOnTargetWithBoundary (SPACE to switch)"
+          @info_text.text = "Mode: CenterOnTargetWithBoundary"
         end
       end
 
@@ -161,7 +179,8 @@ module CameraEx
         @camera.shake(0.5_f32, 20_f32)
       end
 
-      @zoom_text.text = "Zoom: #{sprintf("%.2f", @camera.zoom)} (Q/E to zoom, X to shake)"
+      lerp_status = @camera.lerp_speed > 0 ? "ON (#{@camera.lerp_speed})" : "OFF"
+      @zoom_text.text = "Zoom: #{sprintf("%.2f", @camera.zoom)} (Lerp: #{lerp_status})"
 
       @camera.update(dt)
     end
@@ -177,6 +196,7 @@ module CameraEx
       @player.draw(draw, @camera)
       @info_text.draw(draw)
       @zoom_text.draw(draw)
+      @controls_text.draw(draw)
     end
 
     def draw_floor(draw : GSDL::Draw)
