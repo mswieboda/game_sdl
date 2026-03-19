@@ -13,6 +13,7 @@ module StressEx
 
     def init
       GSDL::Events.esc_exits = true
+      self.target_fps = 60
       GSDL::Game.push(StressScene.new)
     end
 

@@ -98,13 +98,16 @@ module GSDL
     @window : SDL3::Window?
     @draw : Draw?
     @loader : Loader?
-    @last_tick : UInt64 = 0_i64
     @exit : Bool = false
     @title : String?
     @width : Int32?
     @height : Int32?
     @paused : Bool = false
     @scenes : Array(Scene) = [] of Scene
+
+    # If nil, the frame rate is uncapped (limited only by vsync if enabled).
+    # If set to an Integer (e.g., 60), the game loop will delay to match this FPS.
+    property target_fps : Int32? = nil
 
     def window; @window.not_nil!; end
     def loader; @loader ||= Loader.new; end
@@ -310,16 +313,15 @@ module GSDL
       push(Scene.new) if @scenes.empty?
 
       @exit = false
-      @last_tick = GSDL.ticks
+      last_frame_time = Time.instant
 
       while !exit?
+        current_time = Time.instant
+        delta_time = (current_time - last_frame_time).total_seconds.to_f32
+        last_frame_time = current_time
+
         InputEvents.update
         loader.update
-
-        current_tick = GSDL.ticks
-        delta_time_ms = current_tick - @last_tick
-        @last_tick = current_tick
-        delta_time = delta_time_ms / 1000.0f32
 
         Events.handle_events
 
@@ -328,6 +330,15 @@ module GSDL
         update(delta_time)
         clear_screen
         draw
+
+        if (fps = @target_fps) && fps > 0
+          target_duration = 1.0_f32 / fps
+          elapsed = (Time.instant - current_time).total_seconds.to_f32
+          
+          if elapsed < target_duration
+            sleep((target_duration - elapsed).seconds)
+          end
+        end
       end
 
       destroy
