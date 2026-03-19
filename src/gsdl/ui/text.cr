@@ -10,9 +10,9 @@ module GSDL
 
     # NOTE: shouldn't be used outside of Draw class, but Draw needs it public
     #   to access the `@text_sdl` internally here
-    def _draw
+    def _draw(x : Float32, y : Float32)
       if scale_x == 1_f32 && scale_y == 1_f32
-        @text_sdl.draw(draw_x.to_f32, draw_y.to_f32)
+        @text_sdl.draw(x, y)
       else
         renderer = TextBase.renderer
         old_scale = renderer.scale
@@ -20,7 +20,7 @@ module GSDL
 
         # We must divide our coordinates by the scale
         # because the renderer's scale multiplies them
-        @text_sdl.draw(draw_x.to_f32 / scale_x.to_f32, draw_y.to_f32 / scale_y.to_f32)
+        @text_sdl.draw(x / scale_x.to_f32, y / scale_y.to_f32)
 
         renderer.scale = old_scale
       end

@@ -2,6 +2,7 @@ module GSDL
   module Global
     @@game : Game?
     @@draw : Draw?
+    @@current_scene : Scene?
 
     def self.game : Game
       if game = @@game
@@ -25,6 +26,14 @@ module GSDL
 
     def self.draw=(draw : Draw)
       @@draw = draw
+    end
+
+    def self.current_scene : Scene?
+      @@current_scene
+    end
+
+    def self.current_scene=(scene : Scene?)
+      @@current_scene = scene
     end
   end
 
@@ -64,7 +73,7 @@ module GSDL
     end
 
     def self.camera
-      instance.scene.camera
+      (Global.current_scene || instance.scene).camera
     end
 
     def self.push(scene : Scene, data : SwitchData? = nil)
@@ -139,7 +148,9 @@ module GSDL
 
     def push(scene : Scene, data : SwitchData? = nil)
       scene.switch_data = data if data
+      Global.current_scene = scene
       scene.init
+      Global.current_scene = nil
       @scenes << scene
     end
 
@@ -362,16 +373,24 @@ module GSDL
       end
 
       to_update.reverse_each do |s|
+        Global.current_scene = s
         if s == scene
           update_transitions(dt)
-          next if s.transition_in.started? || s.transition_out.started?
+          if s.transition_in.started? || s.transition_out.started?
+            Global.current_scene = nil
+            next
+          end
         end
 
         if paused?
-          s.pause_scene.try &.update(dt)
+          if ps = s.pause_scene
+            Global.current_scene = ps
+            ps.update(dt)
+          end
         else
           s.update(dt)
         end
+        Global.current_scene = nil
       end
 
       check_scenes
@@ -402,6 +421,8 @@ module GSDL
       # Draw from that index upward
       (start_index...@scenes.size).each do |i|
         s = @scenes[i]
+        Global.current_scene = s
+
         s.draw(Game.draw) unless exit?
 
         if s == scene
@@ -410,8 +431,12 @@ module GSDL
         end
 
         if paused?
-          s.pause_scene.try &.draw(Game.draw)
+          if ps = s.pause_scene
+            Global.current_scene = ps
+            ps.draw(Game.draw)
+          end
         end
+        Global.current_scene = nil
       end
 
       Game.draw.draw

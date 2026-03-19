@@ -75,9 +75,13 @@ module GSDL
 
     struct DrawTextCommand < DrawCommand
       property text : Text
+      property screen_x : Float32
+      property screen_y : Float32
 
       def initialize(@text : Text, clip_rect : SDL3::Rect? = nil)
         super(z_index: @text.z_index, clip_rect: clip_rect)
+        @screen_x = @text.draw_x.to_f32
+        @screen_y = @text.draw_y.to_f32
       end
 
       def y : Num?
@@ -88,12 +92,10 @@ module GSDL
         screen_w = GSDL::Game.width.to_f32
         screen_h = GSDL::Game.height.to_f32
 
-        r_x = @text.draw_x.to_f32
-        r_y = @text.draw_y.to_f32
         r_w = @text.width.to_f32 * scale_x.abs
         r_h = @text.height.to_f32 * scale_y.abs
 
-        r_x + r_w >= 0_f32 && r_x <= screen_w && r_y + r_h >= 0_f32 && r_y <= screen_h
+        @screen_x + r_w >= 0_f32 && @screen_x <= screen_w && @screen_y + r_h >= 0_f32 && @screen_y <= screen_h
       end
     end
 
@@ -414,7 +416,7 @@ module GSDL
         when DrawTextCommand
           active_color = nil
           active_blend_mode = nil
-          command.text._draw
+          command.text._draw(command.screen_x, command.screen_y)
 
         when DrawGeometryCommand
           # Reset tracking

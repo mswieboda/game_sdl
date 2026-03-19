@@ -112,7 +112,7 @@ module GSDL
       end
     end
 
-    def _draw
+    def _draw(x : Float32, y : Float32)
       # In TextRotated, we don't use _draw in the same way because
       # we want to leverage Draw's texture command sorting if possible,
       # but Text commands are handled differently.

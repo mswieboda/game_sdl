@@ -192,7 +192,7 @@ module GSDL
     end
 
     abstract def draw(draw : Draw)
-    abstract def _draw
+    abstract def _draw(x : Float32, y : Float32)
 
     def destroy
       @text_sdl.destroy
