@@ -93,8 +93,7 @@ module StressEx
       @entities.each(&.update(dt))
       camera.update(dt)
 
-      fps = dt > 0 ? (1.0 / dt).to_i : 0
-      @fps_text.text = "FPS: #{fps}"
+      @fps_text.text = "FPS: #{GSDL::Game.fps}"
       @count_text.text = "Entities: #{ENTITY_COUNT} | Cmds: #{GSDL::Game.draw.command_count}"
     end
     def draw(draw : GSDL::Draw)

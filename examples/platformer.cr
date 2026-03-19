@@ -14,9 +14,9 @@ module PlatformerEx
 
     def init
       GSDL::Events.esc_exits = true
+      self.target_fps = 60
       GSDL::Game.push(StartScene.new)
-        end
-
+    end
     def load_textures
       [
         {"player", "gfx/skeleton.png"},
@@ -125,6 +125,7 @@ module PlatformerEx
     @collidables : Array(GSDL::Collidable)
     @coin_text : GSDL::Text
     @info_text : GSDL::Text
+    @fps_text : GSDL::Text
 
     property? debug = false
 
@@ -204,6 +205,9 @@ module PlatformerEx
 
       # World bounds: slightly larger than the tile map to see them working
       @bounds = GSDL::FRect.new(-16, -16, @tile_map.width + 32, @tile_map.height + 32)
+
+      @fps_text = GSDL::Text.new(text: "FPS: 0", x: 16, y: 16, color: GSDL::Color::Lime)
+      @fps_text.draw_relative_to_camera = false
     end
 
     def update(dt : Float32)
@@ -225,6 +229,8 @@ module PlatformerEx
       # camera follows player
       camera.look_at(@player.x, @player.y)
       camera.update(dt)
+
+      @fps_text.text = "FPS: #{GSDL::Game.fps}"
     end
 
     def draw(draw : GSDL::Draw)
@@ -245,6 +251,7 @@ module PlatformerEx
       @player.draw(draw)
       @coin_text.draw(draw)
       @info_text.draw(draw)
+      @fps_text.draw(draw)
 
       return unless debug?
       # Debug: Draw collision boxes

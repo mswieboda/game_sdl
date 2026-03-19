@@ -95,6 +95,10 @@ module GSDL
       instance.paused = val
     end
 
+    def self.fps
+      instance.fps_counter.fps
+    end
+
     @window : SDL3::Window?
     @draw : Draw?
     @loader : Loader?
@@ -104,6 +108,7 @@ module GSDL
     @height : Int32?
     @paused : Bool = false
     @scenes : Array(Scene) = [] of Scene
+    @fps_counter : FPSCounter = FPSCounter.new
 
     # If nil, the frame rate is uncapped (limited only by vsync if enabled).
     # If set to an Integer (e.g., 60), the game loop will delay to match this FPS.
@@ -111,6 +116,7 @@ module GSDL
 
     def window; @window.not_nil!; end
     def loader; @loader ||= Loader.new; end
+    def fps_counter; @fps_counter; end
     def exit?; @exit; end
     def exit=(@exit : Bool); end
     def title; @title.not_nil!; end
@@ -319,6 +325,8 @@ module GSDL
         current_time = Time.instant
         delta_time = (current_time - last_frame_time).total_seconds.to_f32
         last_frame_time = current_time
+
+        @fps_counter.update(delta_time)
 
         InputEvents.update
         loader.update
