@@ -51,7 +51,7 @@ module GSDL
       Global.game.title
     end
 
-    def self.draw_instance : Draw
+    def self.draw : Draw
       Global.draw
     end
 
@@ -210,12 +210,12 @@ module GSDL
         AssetManager.load_pack
       {% end %}
 
-      TextureManager.setup(Game.draw_instance)
+      TextureManager.setup(Game.draw)
       FontManager.setup
       AudioManager.setup
       TileMapManager.setup
 
-      TextBase.draw = Game.draw_instance
+      TextBase.draw = Game.draw
 
       load_assets
 
@@ -366,8 +366,8 @@ module GSDL
     end
 
     def clear_screen
-      Game.draw_instance.color = background_color
-      Game.draw_instance.clear
+      Game.draw.color = background_color
+      Game.draw.clear
     end
 
     def draw
@@ -383,19 +383,19 @@ module GSDL
       # Draw from that index upward
       (start_index...@scenes.size).each do |i|
         s = @scenes[i]
-        s.draw(Game.draw_instance) unless exit?
+        s.draw(Game.draw) unless exit?
 
         if s == scene
-          s.transition_in.draw(Game.draw_instance) if s.transition_in.running?
-          s.transition_out.draw(Game.draw_instance) if s.transition_out.started?
+          s.transition_in.draw(Game.draw) if s.transition_in.running?
+          s.transition_out.draw(Game.draw) if s.transition_out.started?
         end
 
         if paused?
-          s.pause_scene.try &.draw(Game.draw_instance)
+          s.pause_scene.try &.draw(Game.draw)
         end
       end
 
-      Game.draw_instance.draw
+      Game.draw.draw
     end
 
     def destroy
@@ -403,7 +403,7 @@ module GSDL
       FontManager.clear_all
       AudioManager.clear_all
       TileMapManager.clear_all
-      Game.draw_instance.destroy
+      Game.draw.destroy
       window.destroy
       SDL3.quit
     end

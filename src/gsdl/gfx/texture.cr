@@ -7,7 +7,7 @@ module GSDL
 
     def self.from_surface(surface : Surface) : Texture
       texture = SDL3::Texture.from_surface(
-        renderer: Game.draw_instance.to_sdl,
+        renderer: Game.draw.to_sdl,
         surface: surface.to_sdl
       )
       Texture.new(texture: texture)
@@ -72,7 +72,7 @@ module GSDL
       access : TextureAccess = TextureAccess::Static
     )
       @internal = SDL3::Texture.create(
-        renderer: Game.draw_instance.to_sdl,
+        renderer: Game.draw.to_sdl,
         format: format,
         access: access,
         w: width.to_i,

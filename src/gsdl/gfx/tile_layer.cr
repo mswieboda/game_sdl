@@ -31,10 +31,13 @@ module GSDL
         screen_w = GSDL::Game.width.to_f32
         screen_h = GSDL::Game.height.to_f32
 
-        view_x = (camera_x * @parallax_x) - @offset_x
-        view_y = (camera_y * @parallax_y) - @offset_y
-        view_w = screen_w / draw.current_scale_x
-        view_h = screen_h / draw.current_scale_y
+        # Viewport in world space relative to this layer
+        view_x = (Game.camera.x * @parallax_x) - @offset_x
+        view_y = (Game.camera.y * @parallax_y) - @offset_y
+
+        # Adjust viewport size based on zoom
+        view_w = screen_w / Game.camera.zoom
+        view_h = screen_h / Game.camera.zoom
 
         min_x = (view_x / tile_width).floor.to_i
         max_x = ((view_x + view_w) / tile_width).ceil.to_i

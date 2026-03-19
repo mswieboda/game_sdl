@@ -12,13 +12,13 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Logical Presentation Example", width: WIDTH, height: HEIGHT)
-        end
+    end
 
     def init
       GSDL::Events.esc_exits = true
-      Game.draw_instance.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled)
+      GSDL::Game.draw.logical_presentation = {LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled}
       GSDL::Game.push(StartScene.new)
-        end
+    end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
@@ -48,7 +48,6 @@ module GameEx
       "OVERSCAN",
       "INTEGER_SCALE",
     ]
-
 
     def initialize
       super(:logical_presentation)
@@ -90,8 +89,7 @@ module GameEx
         end
       end
 
-
-      @bg_texture = Game.draw_instance.create_texture(surface)
+      @bg_texture = Game.draw.create_texture(surface)
     end
 
     def update(dt : Float32)
@@ -103,7 +101,7 @@ module GameEx
       if Keys.just_pressed?(Keys::Space)
         @current_mode_index = (@current_mode_index + 1) % @presentation_modes.size
         mode = @presentation_modes[@current_mode_index]
-        Game.draw_instance.set_logical_presentation(LOGICAL_WIDTH, LOGICAL_HEIGHT, mode)
+        GSDL::Game.draw.logical_presentation = {LOGICAL_WIDTH, LOGICAL_HEIGHT, mode}
         @mode_text.text = "Mode: #{@presentation_mode_names[@current_mode_index]}"
         puts "Switched logical presentation to: #{@presentation_mode_names[@current_mode_index]}"
       end

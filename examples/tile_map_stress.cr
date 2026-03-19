@@ -64,7 +64,7 @@ module TileMapStress
 
       # Toggle culling state on key press
       if GSDL::Keys.just_pressed?(GSDL::Keys::C)
-        GSDL::Game.draw_instance.culling_enabled = !GSDL::Game.draw_instance.culling_enabled
+        GSDL::Game.draw.culling_enabled = !GSDL::Game.draw.culling_enabled
       end
     end
 

@@ -66,11 +66,11 @@ module GSDL
       tex.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
 
       # Save current target and scale
-      old_target = renderer.get_render_target
+      old_target = renderer.render_target
       old_scale = renderer.scale
 
       # Render text to texture
-      renderer.set_render_target(tex.to_sdl)
+      renderer.render_target = tex.to_sdl
       renderer.scale = {1_f32, 1_f32} # Draw text at 1:1 to its cache
 
       # Clear texture to transparent
@@ -82,7 +82,7 @@ module GSDL
       @text_sdl.draw(0_f32, 0_f32)
 
       # Restore renderer state
-      renderer.set_render_target(old_target)
+      renderer.render_target = old_target
       renderer.scale = old_scale
       renderer.draw_color = {old_color.r, old_color.g, old_color.b, old_color.a}
 

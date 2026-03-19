@@ -15,7 +15,7 @@ module GSDL
         nil
       end
 
-      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+      def on_screen? : Bool
         true
       end
     end
@@ -57,8 +57,12 @@ module GSDL
         @dest_rect.y
       end
 
-      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
-        # basic bounding box check with circumscribed circle to account for arbitrary rotation
+      def on_screen? : Bool
+        # Get actual screen dimensions for culling
+        screen_w = GSDL::Game.width.to_f32
+        screen_h = GSDL::Game.height.to_f32
+
+        # Basic bounding box check with circumscribed circle to account for arbitrary rotation
         cx = @dest_rect.x + @dest_rect.w / 2_f32
         cy = @dest_rect.y + @dest_rect.h / 2_f32
 
@@ -80,9 +84,12 @@ module GSDL
         @text.y
       end
 
-      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
-        r_x = @text.x.to_f32
-        r_y = @text.y.to_f32
+      def on_screen? : Bool
+        screen_w = GSDL::Game.width.to_f32
+        screen_h = GSDL::Game.height.to_f32
+
+        r_x = @text.draw_x.to_f32
+        r_y = @text.draw_y.to_f32
         r_w = @text.width.to_f32 * scale_x.abs
         r_h = @text.height.to_f32 * scale_y.abs
 
@@ -118,7 +125,10 @@ module GSDL
         @rect.y
       end
 
-      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+      def on_screen? : Bool
+        screen_w = GSDL::Game.width.to_f32
+        screen_h = GSDL::Game.height.to_f32
+
         r_x = @rect.x
         r_y = @rect.y
         r_w = @rect.w * scale_x.abs
@@ -145,7 +155,9 @@ module GSDL
         super(z_index: z_index, color: color, clip_rect: clip_rect)
       end
 
-      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
+      def on_screen? : Bool
+        screen_w = GSDL::Game.width.to_f32
+        screen_h = GSDL::Game.height.to_f32
         @x >= 0_f32 && @x <= screen_w && @y >= 0_f32 && @y <= screen_h
       end
     end
@@ -179,9 +191,12 @@ module GSDL
       end
     end
 
-    # add more for text, geo etc
     @draw_commands : Array(DrawCommand)
     @text_engine : SDL3::TTF::TextEngine?
+
+    def command_count : Int32
+      @draw_commands.size
+    end
 
     property culling_enabled : Bool = true
 
@@ -198,12 +213,12 @@ module GSDL
       @r.destroy
     end
 
-    def get_logical_presentation(w : Int32, h : Int32, mode : LibSDL3::RendererLogicalPresentation)
-      @r.get_logical_presentation(w, h, mode)
+    def logical_presentation
+      @r.logical_presentation
     end
 
-    def set_logical_presentation(w : Int32, h : Int32, mode : LibSDL3::RendererLogicalPresentation) : Bool
-      @r.set_logical_presentation(w, h, mode)
+    def logical_presentation=(data : Tuple(Int32, Int32, LibSDL3::RendererLogicalPresentation))
+      @r.logical_presentation = data
     end
 
     property current_scale_x : Float32 = 1_f32
@@ -242,7 +257,7 @@ module GSDL
       c.scale_y = @current_scale_y
       c.clip_rect = @current_clip_rect
 
-      if @culling_enabled && !c.on_screen?(GSDL::Game.width.to_f32, GSDL::Game.height.to_f32)
+      if @culling_enabled && !c.on_screen?
         return
       end
 
@@ -267,15 +282,13 @@ module GSDL
     end
 
     def blend_mode=(mode : LibSDL3::BlendMode)
-      @r.set_render_draw_blend_mode(mode)
+      @r.blend_mode = mode
     end
 
     def blend_mode : LibSDL3::BlendMode
-      @r.get_render_draw_blend_mode
+      @r.blend_mode
     end
 
-    # NOTE: only intended to be used within GSDL, so end-user doesn't
-    #   have to deal with SDL3 lib directly
     def create_texture(surface : Surface) : Texture
       Texture.from_surface(surface)
     end
@@ -286,98 +299,231 @@ module GSDL
       active_scale_x = 1_f32
       active_scale_y = 1_f32
       active_clip_rect : SDL3::Rect? = nil
+      active_color : Color? = nil
+      active_blend_mode : LibSDL3::BlendMode? = nil
+
       @r.scale = {1_f32, 1_f32}
       @r.clip_rect = nil
 
-      @draw_commands.each do |command|
+      cursor = 0
+      while cursor < @draw_commands.size
+        command = @draw_commands[cursor]
+
+        # Sync Renderer Scale
         if command.scale_x != active_scale_x || command.scale_y != active_scale_y
           active_scale_x = command.scale_x
           active_scale_y = command.scale_y
           @r.scale = {active_scale_x, active_scale_y}
         end
 
+        # Sync Clip Rect
         if command.clip_rect != active_clip_rect
           active_clip_rect = command.clip_rect
           @r.clip_rect = active_clip_rect
         end
 
-        color = self.color
-        blend_mode = nil
-
+        # Handle Commands requiring explicit color/blend mode
         if command.is_a?(DrawColorCommand)
-          self.color = command.color
-
-          if command.color.a < 255
-            blend_mode = self.blend_mode
-            self.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+          if command.color != active_color
+            active_color = command.color
+            set_color(active_color.as(Color))
           end
-        end
 
-        if command.is_a?(DrawGeometryCommand)
-          if command.vertices.any? { |v| v.fcolor.a < 1_f32 }
-            blend_mode = self.blend_mode
-            self.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+          needed_blend_mode = active_color.as(Color).a < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
+          if needed_blend_mode != active_blend_mode
+            active_blend_mode = needed_blend_mode
+            @r.blend_mode = active_blend_mode
           end
         end
 
         case command
+        when DrawFRectCommand
+          # Batch consecutive rectangles with identical properties
+          rect_batch = [command.rect]
+          look_ahead = cursor + 1
+          while look_ahead < @draw_commands.size
+            if can_batch_rect?(@draw_commands[look_ahead], command, active_color, active_scale_x, active_scale_y, active_clip_rect)
+              rect_batch << @draw_commands[look_ahead].as(DrawFRectCommand).rect
+              look_ahead += 1
+            else
+              break
+            end
+          end
+
+          if rect_batch.size > 1
+            slice = Slice.new(rect_batch.to_unsafe, rect_batch.size)
+            command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
+            cursor = look_ahead - 1
+          else
+            command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
+          end
+
         when DrawTextureCommand
-          _draw_texture_rotated(
-            texture: command.texture,
-            source_rect: command.source_rect,
-            dest_rect: command.dest_rect,
-            angle: command.angle,
-            center: command.center,
-            flip: command.flip,
-            tint: command.tint,
-            destroy: command.destroy?
-          )
+          # Textures invalidate current tracking as they use specialized state
+          active_color = nil
+          active_blend_mode = nil
+
+          # Optimization: Batch texture state changes (tint/alpha) for identical textures
+          look_ahead = cursor
+          current_tex_tint : Color? = nil
+          current_tex_alpha : UInt8? = nil
+
+          while look_ahead < @draw_commands.size
+            next_cmd = @draw_commands[look_ahead]
+            if can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
+              tex_cmd = next_cmd.as(DrawTextureCommand)
+
+              # Minimal tint/alpha updates
+              new_tint = tex_cmd.tint
+              new_alpha = new_tint.try(&.a) || 255_u8
+
+              if new_tint != current_tex_tint
+                current_tex_tint = new_tint
+                tex_cmd.texture.tint = new_tint.try(&.to_sdl) || LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
+              end
+
+              # If alpha blend needed, set it once per texture if it changes
+              if new_alpha != current_tex_alpha
+                current_tex_alpha = new_alpha
+                @r.blend_mode = new_alpha < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
+              end
+
+              _render_texture_rotated(
+                texture: tex_cmd.texture,
+                source_rect: tex_cmd.source_rect,
+                dest_rect: tex_cmd.dest_rect,
+                angle: tex_cmd.angle,
+                center: tex_cmd.center,
+                flip: tex_cmd.flip
+              )
+
+              if tex_cmd.destroy?
+                tex_cmd.texture.destroy
+              end
+
+              look_ahead += 1
+            else
+              break
+            end
+          end
+          cursor = look_ahead - 1
+
         when DrawTextCommand
+          active_color = nil
+          active_blend_mode = nil
           command.text._draw
+
         when DrawGeometryCommand
+          # Reset tracking
+          active_color = nil
+          active_blend_mode = nil
+
+          @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
           if texture = command.texture
             @r.render_geometry(texture: texture, vertices: command.vertices, indices: command.indices)
           else
             @r.render_geometry(vertices: command.vertices, indices: command.indices)
           end
-        when DrawFRectCommand
-          if command.outline?
-            @r.draw_rect(command.rect)
-          else
-            @r.fill_rect(command.rect)
-          end
+
         when DrawFRectsCommand
           slice = Slice.new(command.rects.to_unsafe, command.rects.size)
-          if command.outline?
-            @r.draw_rects(slice)
-          else
-            @r.fill_rects(slice)
-          end
+          command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
+
         when DrawPointCommand
           @r.draw_point(x: command.x, y: command.y)
+
         when DrawPointsCommand
           slice = Slice.new(command.points.to_unsafe, command.points.size)
           @r.draw_points(slice)
+
         when DrawLineCommand
           @r.draw_line(x1: command.x1, y1: command.y1, x2: command.x2, y2: command.y2)
+
         when DrawLinesCommand
           slice = Slice.new(command.points.to_unsafe, command.points.size)
           @r.draw_lines(slice)
         end
 
-        if command.is_a?(DrawColorCommand)
-          self.color = color
-        end
-
-        if b_mode = blend_mode
-          self.blend_mode = b_mode
-        end
+        cursor += 1
       end
 
       @draw_commands.clear
       @r.scale = {1_f32, 1_f32}
-
       @r.present
+    end
+
+    private def can_batch_rect?(next_cmd : DrawCommand, current_cmd : DrawFRectCommand, active_color : Color?, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
+      return false unless next_cmd.is_a?(DrawFRectCommand)
+      next_cmd.color == (active_color || current_cmd.color) &&
+      next_cmd.outline? == current_cmd.outline? &&
+      next_cmd.scale_x == scale_x &&
+      next_cmd.scale_y == scale_y &&
+      next_cmd.clip_rect == clip_rect
+    end
+
+    private def can_batch_texture?(next_cmd : DrawCommand, current_cmd : DrawTextureCommand, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
+      return false unless next_cmd.is_a?(DrawTextureCommand)
+      next_cmd.texture == current_cmd.texture &&
+      next_cmd.scale_x == scale_x &&
+      next_cmd.scale_y == scale_y &&
+      next_cmd.clip_rect == clip_rect
+    end
+
+    private def _render_texture_rotated(
+      texture : SDL3::Texture,
+      source_rect : SDL3::FRect?,
+      dest_rect : SDL3::FRect,
+      angle : Float64 = 0.0,
+      center : SDL3::FPoint = SDL3::FPoint.new,
+      flip : Int32 = 0
+    )
+      if src_rect = source_rect
+        @r.render_texture_rotated(
+          texture: texture,
+          source_rect: src_rect,
+          dest_rect: dest_rect,
+          angle: angle,
+          center: center,
+          flip: flip
+        )
+      else
+        @r.render_texture_rotated(
+          texture: texture,
+          dest_rect: dest_rect,
+          angle: angle,
+          center: center,
+          flip: flip
+        )
+      end
+    end
+
+    private def _draw_texture_rotated(
+      texture : SDL3::Texture,
+      source_rect : SDL3::FRect?,
+      dest_rect : SDL3::FRect,
+      angle : Float64 = 0.0,
+      center : SDL3::FPoint = SDL3::FPoint.new,
+      flip : Int32 = 0,
+      tint : Color? = nil,
+      destroy : Bool = false
+    )
+      orig_tint = nil
+
+      if t = tint
+        _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
+        orig_tint = texture.tint
+        texture.tint = t.to_sdl
+      end
+
+      _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
+
+      if tint = orig_tint
+        texture.tint = tint
+      end
+
+      if destroy
+        texture.destroy
+      end
     end
 
     # geometry
@@ -630,72 +776,12 @@ module GSDL
       end
     end
 
-    private def _draw_texture_rotated(
-      texture : SDL3::Texture,
-      source_rect : SDL3::FRect?,
-      dest_rect : SDL3::FRect,
-      angle : Float64 = 0.0,
-      center : SDL3::FPoint = SDL3::FPoint.new,
-      flip : Int32 = 0,
-      tint : Color? = nil,
-      destroy : Bool = false
-    )
-      orig_tint = nil
-
-      # set tint
-      if t = tint
-        # draw the original texture, so we have a tint overlay, if alpha != 255
-        _draw_texture_rotated(
-          texture: texture,
-          source_rect: source_rect,
-          dest_rect: dest_rect,
-          flip: flip,
-          angle: angle,
-          center: center,
-          tint: nil,
-          destroy: false
-        )
-
-        # save the old tint
-        orig_tint = texture.tint
-        texture.tint = t.to_sdl
-      end
-
-      if src_rect = source_rect
-        @r.render_texture_rotated(
-          texture: texture,
-          source_rect: src_rect,
-          dest_rect: dest_rect,
-          angle: angle,
-          center: center,
-          flip: flip
-        )
-      else
-        @r.render_texture_rotated(
-          texture: texture,
-          dest_rect: dest_rect,
-          angle: angle,
-          center: center,
-          flip: flip
-        )
-      end
-
-      # put tint back to what it was
-      if tint = orig_tint
-        texture.tint = tint
-      end
-
-      if destroy
-        texture.destroy
-      end
-    end
-
     def target=(texture : Texture?)
-      @r.set_render_target(texture.to_sdl)
+      @r.render_target = texture
     end
 
     def target : Texture?
-      Texture.new(@r.get_render_target)
+      @r.render_target
     end
 
     def to_sdl
@@ -703,7 +789,7 @@ module GSDL
     end
 
     def vsync=(vsync : Int32)
-      @r.set_vsync(vsync)
+      @r.vsync = vsync
     end
   end
 end
