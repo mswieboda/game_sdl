@@ -116,8 +116,7 @@ module GSDL
       n.target_y = y
 
       # Animate in
-      n.tween({"x" => target_x.to_f32}, 0.5_f32, MathUtils::Easing::EaseOut)
-
+      n.tween({:x => target_x.to_f32}, 0.5_f32, MathUtils::Easing::EaseOut)
       @@notifications << n
       n
     end

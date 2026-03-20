@@ -162,9 +162,9 @@ module TweenEx
 
         obj.tween(
           to: {
-            "x" => target_x.as(GSDL::Tween::PropertyValue),
-            "y" => target_y.as(GSDL::Tween::PropertyValue),
-            "scale" => {target_scale, target_scale}.as(GSDL::Tween::PropertyValue)
+            :x => target_x.as(GSDL::Tween::PropertyValue),
+            :y => target_y.as(GSDL::Tween::PropertyValue),
+            :scale => {target_scale, target_scale}.as(GSDL::Tween::PropertyValue)
           },
           duration: 1.0_f32,
           easing: GSDL::MathUtils::Easing::EaseInOut
@@ -179,9 +179,9 @@ module TweenEx
 
         # Color property is called 'tint' for Sprites and 'color' for Shapes and Text
         color_prop = if obj.is_a?(GSDL::Sprite)
-          "tint"
+          :tint
         else
-          "color"
+          :color
         end
 
         # Rotation property - added to the sequence for all objects that support it
@@ -189,35 +189,35 @@ module TweenEx
 
         tween.add_sequence([
           {
-            "duration" => 0.8,
-            "x" => WIDTH - 150.0,
+            :duration => 0.8,
+            :x        => WIDTH - 150.0,
             color_prop => GSDL::Color::Red,
-            "rotation" => supports_rotation ? 90.0 : 0.0,
-            "easing" => "ease_in"
+            :rotation => supports_rotation ? 90.0 : 0.0,
+            :easing   => :ease_in,
           },
           {
-            "duration" => 0.5,
-            "y" => HEIGHT - 200.0,
+            :duration => 0.5,
+            :y        => HEIGHT - 200.0,
             color_prop => GSDL::Color::Green,
-            "scale" => 2.0,
-            "rotation" => supports_rotation ? 180.0 : 0.0,
-            "easing" => :ease_out
+            :scale    => 2.0,
+            :rotation => supports_rotation ? 180.0 : 0.0,
+            :easing   => :ease_out,
           },
           {
-            "duration" => 0.4,
-            "scale" => 0.5,
+            :duration => 0.4,
+            :scale    => 0.5,
             color_prop => GSDL::Color::Blue,
-            "rotation" => supports_rotation ? 270.0 : 0.0,
-            "easing" => "ease_in_out"
+            :rotation => supports_rotation ? 270.0 : 0.0,
+            :easing   => :ease_in_out,
           },
           {
-            "duration" => 1.0,
-            "x" => WIDTH / 2.0,
-            "y" => HEIGHT / 2.0,
-            "scale" => 1.0,
-            "rotation" => supports_rotation ? 360.0 : 0.0,
+            :duration => 1.0,
+            :x        => WIDTH / 2.0,
+            :y        => HEIGHT / 2.0,
+            :scale    => 1.0,
+            :rotation => supports_rotation ? 360.0 : 0.0,
             color_prop => GSDL::Color::White,
-            "easing" => :linear
+            :easing   => :linear,
           }
         ])
 

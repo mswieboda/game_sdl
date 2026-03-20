@@ -134,7 +134,7 @@ module GSDL
       @offset_x = 0_f32
       @offset_y = 0_f32
 
-      steps = [] of Hash(String, Tween::SequenceValue)
+      steps = [] of Hash(Symbol, Tween::SequenceValue)
 
       num_steps = (duration / 0.05).to_i
       num_steps = 1 if num_steps < 1
@@ -146,16 +146,16 @@ module GSDL
         dy = (Random.rand * 2.0 - 1.0) * current_intensity
 
         steps << {
-          "duration" => step_duration.as(Tween::SequenceValue),
-          "offset_x" => dx.as(Tween::SequenceValue),
-          "offset_y" => dy.as(Tween::SequenceValue)
+          :duration => step_duration.as(Tween::SequenceValue),
+          :offset_x => dx.as(Tween::SequenceValue),
+          :offset_y => dy.as(Tween::SequenceValue)
         }
       end
 
       steps << {
-        "duration" => 0.05_f32.as(Tween::SequenceValue),
-        "offset_x" => 0_f32.as(Tween::SequenceValue),
-        "offset_y" => 0_f32.as(Tween::SequenceValue)
+        :duration => 0.05_f32.as(Tween::SequenceValue),
+        :offset_x => 0_f32.as(Tween::SequenceValue),
+        :offset_y => 0_f32.as(Tween::SequenceValue)
       }
 
       t = tween

@@ -25,7 +25,8 @@ module GSDL
     # Whether to update scenes below this one (e.g. for pause overlays)
     property? update_underlying : Bool = false
 
-    getter entities = [] of Entity
+    @entities = [] of Entity
+    getter entities
 
     def initialize(
       @name : Symbol = :base,

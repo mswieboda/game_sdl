@@ -7,6 +7,11 @@ module GSDL
     include Body
     include Collidable
 
+    # Default implementation for non-Entity objects
+    def root_scene : Scene?
+      nil
+    end
+
     # Physics logic:
     # 1. Update acceleration from gravity (if enabled)
     # 2. Update velocity from acceleration
@@ -24,7 +29,7 @@ module GSDL
       return unless physics_enabled?
 
       if collidables.empty? && tile_map.nil?
-        if (scene = root_scene.as?(GSDL::SceneCollisions))
+        if (scene = self.root_scene.as?(GSDL::SceneCollisions))
           # Neighborhood rect calculation
           # We'll use a conservative buffer around the entity's current bounds
           # to capture anything it might collide with this frame.

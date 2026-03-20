@@ -48,6 +48,7 @@ module StressEx
     def initialize(x, y)
       super(key: "ship", x: x, y: y, origin: {0.5_f32, 0.5_f32})
       self.z_index = 0
+      self.rotation += 45.0_f32
     end
 
     def update(dt : Float32)
@@ -57,7 +58,7 @@ module StressEx
   end
 
   class StressScene < GSDL::Scene
-    @entities = [] of GSDL::SpriteBase
+    @entities = [] of GSDL::Entity
     @fps_text : GSDL::Text
     @count_text : GSDL::Text
 
@@ -69,7 +70,8 @@ module StressEx
       GSDL::Input.set(:camera_up) { GSDL::Keys.pressed?([GSDL::Keys::W, GSDL::Keys::Up]) }
       GSDL::Input.set(:camera_down) { GSDL::Keys.pressed?([GSDL::Keys::S, GSDL::Keys::Down]) }
 
-      ENTITY_COUNT.times do        x = Random.rand(WORLD_SIZE).to_f32
+      ENTITY_COUNT.times do
+        x = Random.rand(WORLD_SIZE).to_f32
         y = Random.rand(WORLD_SIZE).to_f32
 
         if Random.rand > 0.5
@@ -96,6 +98,7 @@ module StressEx
       @fps_text.text = "FPS: #{GSDL::Game.fps}"
       @count_text.text = "Entities: #{ENTITY_COUNT} | Cmds: #{GSDL::Game.draw.command_count}"
     end
+
     def draw(draw : GSDL::Draw)
       # Draw world bounds for reference
       draw.rect_outline(

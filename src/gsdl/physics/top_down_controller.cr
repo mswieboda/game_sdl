@@ -58,10 +58,10 @@ module GSDL
             my = dy * grid_size
           end
 
-          nx = mx < 0 ? cb.x + mx : cb.x
-          ny = my < 0 ? cb.y + my : cb.y
-          nw = mx.abs + cb.w
-          nh = my.abs + cb.h
+          nx = (mx < 0 ? cb.x + mx : cb.x).to_f32
+          ny = (my < 0 ? cb.y + my : cb.y).to_f32
+          nw = (mx.abs + cb.w).to_f32
+          nh = (my.abs + cb.h).to_f32
 
           p = 4.0_f32 # slightly larger padding for top-down
           neighborhood_rect = FRect.new(nx - p, ny - p, nw + p * 2.0_f32, nh + p * 2.0_f32)

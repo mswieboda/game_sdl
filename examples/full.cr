@@ -125,28 +125,28 @@ module GameEx
       tween = @box.tween
       tween.add_sequence([
         {
-          "duration" => 0.8,
-          "rotation" => 0.0,
-          "scale" => {2.0_f32, 2.0_f32},
-          "easing" => :ease_in_out
+          :duration => 0.8,
+          :rotation => 0.0,
+          :scale    => {2.0_f32, 2.0_f32},
+          :easing   => :ease_in_out,
         },
         {
-          "duration" => 1.5,
-          "rotation" => -180.0,
-          "scale" => {0.75_f32, 0.75_f32},
+          :duration => 1.5,
+          :rotation => -180.0,
+          :scale    => {0.75_f32, 0.75_f32},
         },
         {
-          "duration" => 0.5,
-          "rotation" => 270.0,
-          "scale" => {0.1_f32, 0.1_f32},
-          "easing" => :ease_in
+          :duration => 0.5,
+          :rotation => 270.0,
+          :scale    => {1.0_f32, 1.0_f32},
+          :easing   => :ease_out,
         },
         {
-          "duration" => 1.0,
-          "rotation" => 0.0,
-          "scale" => {1_f32, 1_f32},
-          "easing" => :ease_out
-        }
+          :duration => 1.0,
+          :rotation => 0.0,
+          :scale    => {1_f32, 1_f32},
+          :easing   => :ease_out,
+        },
       ])
       tween.start(loop: true)
 

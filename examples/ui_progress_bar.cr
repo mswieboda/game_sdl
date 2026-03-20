@@ -136,18 +136,19 @@ module UIExample
       if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
         # Test tweening
         new_health = (@health_bar.value.to_f32 > 0.5_f32 ? 0.2_f32 : 1.0_f32)
-        @health_bar.tween({"value" => new_health}, 1.0_f32, GSDL::MathUtils::Easing::EaseInOut)
+        @health_bar.tween({:value => new_health}, 1.0_f32, GSDL::MathUtils::Easing::EaseInOut)
 
         @exp_bar.value = 0.0_f32
-        @exp_bar.tween({"value" => 1.0_f32}, 2.0_f32, GSDL::MathUtils::Easing::Linear)
+        @exp_bar.tween({:value => 1.0_f32}, 2.0_f32, GSDL::MathUtils::Easing::Linear)
 
         new_thick = (@thick_border_bar.value.to_f32 > 0.5_f32 ? 0.3_f32 : 0.8_f32)
-        @thick_border_bar.tween({"value" => new_thick}, 1.5_f32, GSDL::MathUtils::Easing::EaseInOut)
+        @thick_border_bar.tween({:value => new_thick}, 0.5_f32, GSDL::MathUtils::Easing::EaseOut)
+
 
         new_vert = (@vertical_bar.value.to_f32 > 0.5_f32 ? 0.1_f32 : 0.9_f32)
-        @vertical_bar.tween({"value" => new_vert}, 0.5_f32, GSDL::MathUtils::Easing::EaseOut)
+        @vertical_bar.tween({:value => new_vert}, 0.5_f32, GSDL::MathUtils::Easing::EaseOut)
 
-        @rotated_bar.tween({"rotation" => @rotated_bar.rotation.to_f32 + 360.0_f32}, 2.0_f32, GSDL::MathUtils::Easing::EaseInOut)
+        @rotated_bar.tween({:rotation => @rotated_bar.rotation.to_f32 + 360.0_f32}, 2.0_f32, GSDL::MathUtils::Easing::EaseInOut)
       end
     end
 

@@ -66,10 +66,10 @@ module GSDL
     def initialize(@target : Tweenable)
     end
 
-    def add_sequence(sequence : Array(Hash(String, SequenceValue)))
+    def add_sequence(sequence : Array(Hash(Symbol, SequenceValue)))
       sequence.each do |step|
-        duration = step["duration"]?.as?(Float32 | Float64 | Int32).try(&.to_f32) || 0_f32
-        easing_val = step["easing"]?
+        duration = step[:duration]?.as?(Float32 | Float64 | Int32).try(&.to_f32) || 0_f32
+        easing_val = step[:easing]?
         easing = case easing_val
         when GSDL::MathUtils::Easing
           easing_val
@@ -90,7 +90,7 @@ module GSDL
 
         properties = Hash(Property, PropertyValue).new
         step.each do |key, value|
-          next if key == "duration" || key == "easing"
+          next if key == :duration || key == :easing
 
           prop = Property.from_s(key)
           next if prop.unknown?
@@ -98,7 +98,8 @@ module GSDL
           if value.is_a?(Hash)
             value.each do |sub_key, sub_val|
               if sub_val.is_a?(Number)
-                sub_prop = Property.from_s(sub_key)
+                # sub_key might be String or Symbol depending on how the Hash was created
+                sub_prop = Property.from_s(sub_key.as(String | Symbol))
                 next if sub_prop.unknown?
                 properties[sub_prop] = sub_val.to_f32
               end

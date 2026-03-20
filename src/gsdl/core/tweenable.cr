@@ -6,11 +6,11 @@ module GSDL
       t
     end
 
-    def tween(to : Hash(String, Tween::PropertyValue), duration : Float32, easing : MathUtils::Easing = MathUtils::Easing::Linear)
+    def tween(to : Hash(Symbol, Tween::PropertyValue), duration : Float32, easing : MathUtils::Easing = MathUtils::Easing::Linear)
       t = tween
-      step = Hash(String, Tween::SequenceValue).new
-      step["duration"] = duration
-      step["easing"] = easing
+      step = Hash(Symbol, Tween::SequenceValue).new
+      step[:duration] = duration
+      step[:easing] = easing
       to.each do |k, v|
         step[k] = v.as(Tween::SequenceValue)
       end
@@ -24,19 +24,19 @@ module GSDL
       tweens.reject! { |t| !t.running? }
     end
 
-    def _tween_color_prop : String
-      self.is_a?(SpriteBase) ? "tint" : "color"
+    def _tween_color_prop : Symbol
+      self.is_a?(SpriteBase) ? :tint : :color
     end
 
     def flash(flash_color : Color = Color::Red, duration : Float32 = 0.1_f32, count : Int32 = 3)
       t = tween
       prop = _tween_color_prop
-      orig_color = prop == "tint" ? (tint || Color::White) : color
+      orig_color = prop == :tint ? (tint || Color::White) : color
 
-      seq = [] of Hash(String, Tween::SequenceValue)
+      seq = [] of Hash(Symbol, Tween::SequenceValue)
       count.times do
-        seq << {"duration" => duration, prop => flash_color.as(Tween::SequenceValue)}
-        seq << {"duration" => duration, prop => orig_color.as(Tween::SequenceValue)}
+        seq << {:duration => duration, prop => flash_color.as(Tween::SequenceValue)}
+        seq << {:duration => duration, prop => orig_color.as(Tween::SequenceValue)}
       end
 
       t.add_sequence(seq)
@@ -49,8 +49,8 @@ module GSDL
       orig_scale = self.scale
 
       seq = [
-        {"duration" => duration / 2.0_f32, "scale" => {orig_scale[0].to_f32 * scale_factor, orig_scale[1].to_f32 * scale_factor}.as(Tween::SequenceValue), "easing" => "ease_out".as(Tween::SequenceValue)},
-        {"duration" => duration / 2.0_f32, "scale" => {orig_scale[0].to_f32, orig_scale[1].to_f32}.as(Tween::SequenceValue), "easing" => "ease_in".as(Tween::SequenceValue)}
+        {:duration => duration / 2.0_f32, :scale => {orig_scale[0].to_f32 * scale_factor, orig_scale[1].to_f32 * scale_factor}.as(Tween::SequenceValue), :easing => :ease_out},
+        {:duration => duration / 2.0_f32, :scale => {orig_scale[0].to_f32, orig_scale[1].to_f32}.as(Tween::SequenceValue), :easing => :ease_in}
       ]
 
       t.add_sequence(seq)
@@ -64,7 +64,7 @@ module GSDL
       target_rot = direction == :clockwise ? orig_rot + 360.0_f32 : orig_rot - 360.0_f32
 
       seq = [
-        {"duration" => duration, "rotation" => target_rot.as(Tween::SequenceValue)}
+        {:duration => duration, :rotation => target_rot.as(Tween::SequenceValue)}
       ]
 
       t.add_sequence(seq)
@@ -80,19 +80,19 @@ module GSDL
       steps = 10
       step_duration = duration / steps
 
-      seq = [] of Hash(String, Tween::SequenceValue)
+      seq = [] of Hash(Symbol, Tween::SequenceValue)
       (steps - 1).times do
         seq << {
-          "duration" => step_duration,
-          "x" => (orig_x + (rand - 0.5_f32) * intensity * 2).as(Tween::SequenceValue),
-          "y" => (orig_y + (rand - 0.5_f32) * intensity * 2).as(Tween::SequenceValue)
+          :duration => step_duration,
+          :x => (orig_x + (rand - 0.5_f32) * intensity * 2).as(Tween::SequenceValue),
+          :y => (orig_y + (rand - 0.5_f32) * intensity * 2).as(Tween::SequenceValue)
         }
       end
 
       seq << {
-        "duration" => step_duration,
-        "x" => orig_x.as(Tween::SequenceValue),
-        "y" => orig_y.as(Tween::SequenceValue)
+        :duration => step_duration,
+        :x => orig_x.as(Tween::SequenceValue),
+        :y => orig_y.as(Tween::SequenceValue)
       }
 
       t.add_sequence(seq)

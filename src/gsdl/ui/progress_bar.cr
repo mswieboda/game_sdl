@@ -24,6 +24,7 @@ module GSDL
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
     property rotation : Num = 0
+    property? draw_relative_to_camera : Bool = true
 
     getter tweens : Array(Tween) = [] of Tween
 
