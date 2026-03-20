@@ -42,6 +42,7 @@ module GSDL
   end
 
   abstract class Game
+    include Loadable
     DefaultBackgroundColor = Color::Black
 
     def self.instance : Game
@@ -90,6 +91,10 @@ module GSDL
 
     def self.switch(scene : Scene, data : SwitchData? = nil)
       instance.switch(scene, data)
+    end
+
+    def self.switch_async(scene_class : T.class, data : SwitchData? = nil) forall T
+      instance.switch_async(scene_class, data)
     end
 
     def self.loader
@@ -149,6 +154,10 @@ module GSDL
     def push(scene : Scene, data : SwitchData? = nil)
       scene.switch_data = data if data
       Global.current_scene = scene
+
+      # Per-scene asset loading
+      scene.load_assets
+
       scene.init
       Global.current_scene = nil
       @scenes << scene
@@ -168,10 +177,12 @@ module GSDL
     end
 
     def switch_async(scene_class : T.class, data : SwitchData? = nil) forall T
-      tasks = T.manifest
+      # We instantiate the scene to get its manifest from Loadable
+      target_scene = T.new
+      tasks = target_scene.manifest
 
       if tasks.empty?
-        switch(T.new, data)
+        switch(target_scene, data)
       else
         loader.add_tasks(tasks)
         loader.start_async
@@ -242,68 +253,6 @@ module GSDL
       {% if flag?(:release) %}
         AssetManager.close_pack
       {% end %}
-    end
-
-    private def load_assets
-      # fonts
-      default_font_path_key = load_default_font
-
-      unless default_font_path_key.empty?
-        FontManager.load_default(path: default_font_path_key)
-      end
-
-      font_data_data = load_fonts
-      font_data_data.each do |key, path_key, size|
-        FontManager.load(key: key, path_key: path_key, size: size)
-      end
-
-      # textures
-      texture_load_data = load_textures
-      texture_load_data.each do |key, path_key|
-        TextureManager.load(key: key, path_key: path_key)
-      end
-
-      # audio
-      audio_load_data = load_audio
-      audio_load_data.each do |key, path_key|
-        AudioManager.load(key: key, path_key: path_key)
-      end
-
-      # tile maps
-      tile_map_load_data = load_tile_maps
-      tile_map_load_data.each do |key, path_key|
-        TileMapManager.load(key: key, path_key: path_key)
-      end
-
-      # dialogs
-      dialog_load_data = load_dialogs
-      dialog_load_data.each do |path_key|
-        DialogManager.load(path_key: path_key)
-      end
-    end
-
-    def load_default_font : String
-      ""
-    end
-
-    def load_fonts : Array(Tuple(String, String, Float32))
-      [] of Tuple(String, String, Float32)
-    end
-
-    def load_textures : Array(Tuple(String, String))
-      [] of Tuple(String, String)
-    end
-
-    def load_audio : Array(Tuple(String, String))
-      [] of Tuple(String, String)
-    end
-
-    def load_tile_maps : Array(Tuple(String, String))
-      [] of Tuple(String, String)
-    end
-
-    def load_dialogs : Array(String)
-      [] of String
     end
 
     def vsync

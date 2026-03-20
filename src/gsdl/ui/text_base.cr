@@ -18,43 +18,6 @@ module GSDL
     # however, maybe TextBase / Text are custom enough so it's okay?
     @text_sdl : SDL3::TTF::Text
 
-    def direction : SDL3::TTF::Direction
-      @text_sdl.direction
-    end
-
-    def direction=(val : SDL3::TTF::Direction)
-      @text_sdl.direction = val
-    end
-
-    def font : Font
-      Font.new(@text_sdl.font)
-    end
-
-    def width : Int32
-      @text_sdl.width
-    end
-
-    def wrap_whitespace_visible? : Bool
-      @text_sdl.wrap_whitespace_visible?
-    end
-
-    def wrap_whitespace_visible=(val : Bool)
-      @text_sdl.wrap_whitespace_visible = val
-    end
-
-    def wrap_width : Int32
-      @text_sdl.wrap_width
-    end
-
-    def size : Tuple(Int32, Int32)
-      @text_sdl.size
-    end
-
-    def font=(val : Font)
-      @text_sdl.font = val
-      on_content_changed
-    end
-
     def wrap_width=(val : Int32)
       @text_sdl.wrap_width = val
       on_content_changed
@@ -111,6 +74,43 @@ module GSDL
     def text=(text : String)
       @text = text
       @text_sdl.text = text
+      on_content_changed
+    end
+
+    def direction : SDL3::TTF::Direction
+      @text_sdl.direction
+    end
+
+    def direction=(val : SDL3::TTF::Direction)
+      @text_sdl.direction = val
+    end
+
+    def font : Font
+      Font.new(@text_sdl.font)
+    end
+
+    def width : Int32
+      @text_sdl.width
+    end
+
+    def wrap_whitespace_visible? : Bool
+      @text_sdl.wrap_whitespace_visible?
+    end
+
+    def wrap_whitespace_visible=(val : Bool)
+      @text_sdl.wrap_whitespace_visible = val
+    end
+
+    def wrap_width : Int32
+      @text_sdl.wrap_width
+    end
+
+    def size : Tuple(Int32, Int32)
+      @text_sdl.size
+    end
+
+    def font=(val : Font)
+      @text_sdl.font = val
       on_content_changed
     end
 
