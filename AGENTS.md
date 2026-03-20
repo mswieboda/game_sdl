@@ -27,6 +27,10 @@
 - **Regression Checks:** If your task affects a specific subsystem (e.g., `GSDL::Audio`), identify and run the relevant example (e.g., `examples/audio.cr`).
 - **Error Resolution:** The `Makefile` includes `--error-trace`. Focus on the first few lines of a compile error to identify the root cause.
 - **Validation Mandate:** Frequent compilation checks are mandatory. A task is not complete until behavioral correctness is verified through a successful build and run.
+- **Version Bump Suggestion:** After completing a significant task or Trello card, you must recommend the appropriate semantic version bump. Check `shard.yml` or `git tags` to determine the current version first.
+  - **Minor (`0.Y.0`):** Recommended if there are any **breaking changes** (deleted classes, changed method signatures, or major architectural shifts).
+  - **Patch (`0.x.Y`):** Recommended if the changes are **purely additive** (new features, new classes) or backward-compatible bug fixes.
+  - **Remind User:** Remind the user they can use `./bump (major|minor|patch)` to perform the bump manually. Do not execute the script yourself.
 
 ## Do Not Do
 - **Library Files:** NEVER edit files in `./lib/`. Summarize proposed changes for the user to apply to the source repositories (e.g., `sdl3`).
