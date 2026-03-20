@@ -429,27 +429,49 @@ module GSDL
                 new_tint = tex_cmd.tint
                 new_alpha = new_tint.try(&.a) || 255_u8
 
-                if first_in_batch || new_tint != current_tex_tint
-                  current_tex_tint = new_tint
-                  tex_cmd.texture.tint = new_tint.try(&.to_sdl) || LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
-                end
+                # If there's a tint, we need to draw twice:
+                # 1. Base texture (no tint)
+                # 2. Tinted overlay
+                if t = new_tint
+                  # Draw Base
+                  tex_cmd.texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
+                  @r.blend_mode = LibSDL3::SDL_BLENDMODE_NONE
 
-                # If alpha blend needed, set it once per texture if it changes
-                if first_in_batch || new_alpha != current_tex_alpha
-                  current_tex_alpha = new_alpha
+                  _render_texture_rotated(
+                    texture: tex_cmd.texture,
+                    source_rect: tex_cmd.source_rect,
+                    dest_rect: tex_cmd.dest_rect,
+                    angle: tex_cmd.angle,
+                    center: tex_cmd.center,
+                    flip: tex_cmd.flip
+                  )
+
+                  # Draw Tinted Overlay
+                  tex_cmd.texture.tint = t.to_sdl
                   @r.blend_mode = new_alpha < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
+
+                  _render_texture_rotated(
+                    texture: tex_cmd.texture,
+                    source_rect: tex_cmd.source_rect,
+                    dest_rect: tex_cmd.dest_rect,
+                    angle: tex_cmd.angle,
+                    center: tex_cmd.center,
+                    flip: tex_cmd.flip
+                  )
+                else
+                  # No tint, draw once
+                  tex_cmd.texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
+                  @r.blend_mode = LibSDL3::SDL_BLENDMODE_NONE
+
+                  _render_texture_rotated(
+                    texture: tex_cmd.texture,
+                    source_rect: tex_cmd.source_rect,
+                    dest_rect: tex_cmd.dest_rect,
+                    angle: tex_cmd.angle,
+                    center: tex_cmd.center,
+                    flip: tex_cmd.flip
+                  )
                 end
-
-                first_in_batch = false
-
-                _render_texture_rotated(
-                  texture: tex_cmd.texture,
-                  source_rect: tex_cmd.source_rect,
-                  dest_rect: tex_cmd.dest_rect,
-                  angle: tex_cmd.angle,
-                  center: tex_cmd.center,
-                  flip: tex_cmd.flip
-                )
 
                 if tex_cmd.destroy?
                   tex_cmd.texture.destroy
@@ -518,9 +540,10 @@ module GSDL
       next_cmd.clip_rect == clip_rect
     end
 
-    private def can_batch_texture?(next_cmd : DrawCommand, current_cmd : DrawTextureCommand, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
-      return false unless next_cmd.is_a?(DrawTextureCommand)
+    private def can_batch_texture?(next_cmd : Command, current_cmd : Command, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
+      return false unless next_cmd.is_a?(DrawTextureCommand) && current_cmd.is_a?(DrawTextureCommand)
       next_cmd.texture == current_cmd.texture &&
+      next_cmd.tint == current_cmd.tint &&
       next_cmd.scale_x == scale_x &&
       next_cmd.scale_y == scale_y &&
       next_cmd.clip_rect == clip_rect
