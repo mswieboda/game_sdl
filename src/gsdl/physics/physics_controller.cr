@@ -14,7 +14,13 @@ module GSDL
     # 4. Move axis by axis and check for collisions
     # 5. Resolve collisions with bounce (restitution)
 
-    def physics_update(dt : Float32, collidables : Array(GSDL::Collidable) = [] of GSDL::Collidable, tile_map : TileMap? = nil)
+    def physics_update(dt : Float32, collidables : Array(GSDL::Collidable) = [] of Collidable, tile_map : TileMap? = nil)
+      Performance.instance.measure("collision") do
+        _physics_update(dt, collidables, tile_map)
+      end
+    end
+
+    private def _physics_update(dt : Float32, collidables : Array(GSDL::Collidable) = [] of Collidable, tile_map : TileMap? = nil)
       return unless physics_enabled?
 
       if collidables.empty? && tile_map.nil?
@@ -23,6 +29,7 @@ module GSDL
           tile_map = scene.collision_space.tile_map
         end
       end
+
 
       # 1. Update acceleration from gravity (if enabled)
       if use_gravity
@@ -180,6 +187,7 @@ module GSDL
     def physics_resolve_overlap(collidables : Array(GSDL::Collidable), tile_map : GSDL::TileMap?)
       # Check for overlap and push out without adding velocity
       collidables.each do |other|
+        next if other == self
         next unless other.solid?
         info = self.collision_info(other)
         if info.hit?
@@ -199,7 +207,7 @@ module GSDL
 
     private def collides_with_anything?(collidables : Array(GSDL::Collidable), tile_map : GSDL::TileMap?) : GSDL::Collidable?
       collidables.each do |c|
-        return c if c.solid? && collides?(c)
+        return c if c != self && c.solid? && collides?(c)
       end
 
       if tm = tile_map

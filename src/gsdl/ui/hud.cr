@@ -107,6 +107,7 @@ module GSDL
         align: align,
         z_index: z_index
       )
+      self.draw_relative_to_camera = false
     end
 
     def x : Num; screen_x; end
@@ -179,6 +180,7 @@ module GSDL
         rotation: rotation,
         z_index: z_index
       )
+      self.draw_relative_to_camera = false
     end
 
     def x : Num; screen_x; end
@@ -202,6 +204,69 @@ module GSDL
           self.value = i.to_f32
         end
       end
+    end
+  end
+
+  class HUDPerformance < HUDText
+    @update_timer : Float32 = 0_f32
+
+    def initialize(
+      font = Font.default,
+      @anchor = Anchor::TopLeft,
+      @offset_x = 20,
+      @offset_y = 20,
+      color = Color::White,
+      scale = 0.5_f32,
+      align = Font::Align::Left
+    )
+      super(
+        font: font,
+        anchor: anchor,
+        offset_x: offset_x,
+        offset_y: offset_y,
+        color: color,
+        scale: scale,
+        align: align
+      )
+    end
+
+    def hud_update(dt : Float32)
+      update(dt)
+
+      @update_timer += dt
+      return if @update_timer < 0.1_f32
+      @update_timer = 0_f32
+
+      metrics = ["FPS: #{GSDL::Game.fps}"]
+      {
+        "update" => "Update",
+        "draw" => "Draw",
+        "collision" => "Collision",
+        "query" => "Queries"
+      }.each do |key, label|
+        val = GSDL::Data.get("perf_#{key}")
+        if v = val.as_f?
+          if key == "query"
+            metrics << "#{label}: #{v.to_i}"
+          else
+            metrics << "#{label}: #{v.round(3)}ms"
+          end
+        elsif v_i = val.as_i?
+          if key == "query"
+            metrics << "#{label}: #{v_i}"
+          else
+            metrics << "#{label}: #{v_i.to_f.round(3)}ms"
+          end
+        else
+          # Initialize or show zero if not yet tracked
+          if key == "query"
+            metrics << "#{label}: 0"
+          else
+            metrics << "#{label}: 0.000ms"
+          end
+        end
+      end
+      self.text = metrics.join("\n")
     end
   end
 end

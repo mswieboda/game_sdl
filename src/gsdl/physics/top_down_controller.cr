@@ -33,6 +33,12 @@ module GSDL
     end
 
     def top_down_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
+      Performance.instance.measure("collision") do
+        _top_down_update(dt, collidables, tile_map)
+      end
+    end
+
+    private def _top_down_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
       if collidables.empty? && tile_map.nil?
         if (scene = root_scene.as?(GSDL::SceneCollisions))
           collidables = scene.collision_space.collidables

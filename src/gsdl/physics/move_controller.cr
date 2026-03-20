@@ -36,6 +36,12 @@ module GSDL
     end
 
     def move_and_collide?(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
+      Performance.instance.measure("collision") do
+        _move_and_collide?(dt, collidables, tile_map)
+      end
+    end
+
+    private def _move_and_collide?(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
       if collidables.empty? && tile_map.nil?
         if (scene = root_scene.as?(GSDL::SceneCollisions))
           collidables = scene.collision_space.collidables
@@ -69,7 +75,8 @@ module GSDL
     end
 
     private def collides_with_anything?(collidables : Array(Collidable), tile_map : TileMap?) : Bool
-      return true if collidables.any? { |c| c.solid? && collides?(c) }
+      # Filter for solid objects and avoid self-collision
+      return true if collidables.any? { |c| c.solid? && c != self && collides?(c) }
 
       if tm = tile_map
         return true if tm.solid_up?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)

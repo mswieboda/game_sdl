@@ -126,6 +126,9 @@ module GSDL
     # If set to an Integer (e.g., 60), the game loop will delay to match this FPS.
     property target_fps : Int32? = nil
 
+    # Enable or disable performance monitoring and metric collection.
+    property performance_monitoring_enabled : Bool = false
+
     def window; @window.not_nil!; end
     def loader; @loader ||= Loader.new; end
     def fps_counter; @fps_counter; end
@@ -306,9 +309,17 @@ module GSDL
 
         break if Events.exit? || exit?
 
-        update(delta_time)
+        Performance.instance.measure("update") do
+          update(delta_time)
+        end
+
         clear_screen
-        draw
+
+        Performance.instance.measure("draw") do
+          draw
+        end
+
+        Performance.instance.end_frame
 
         if (fps = @target_fps) && fps > 0
           target_duration = 1.0_f32 / fps

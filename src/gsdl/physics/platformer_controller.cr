@@ -38,6 +38,12 @@ module GSDL
     property crouch_speed_multiplier : Float32 = 0.5_f32
 
     def platformer_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil, world_bounds : FRect? = nil)
+      Performance.instance.measure("collision") do
+        _platformer_update(dt, collidables, tile_map, world_bounds)
+      end
+    end
+
+    private def _platformer_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil, world_bounds : FRect? = nil)
       if collidables.empty? && tile_map.nil? && world_bounds.nil?
         if (scene = root_scene.as?(GSDL::SceneCollisions))
           collidables = scene.collision_space.collidables
@@ -163,7 +169,7 @@ module GSDL
       # Check Collidables
       previous_x = self.x
       self.x += check_dx
-      collided = collidables.any? { |c| self != c && c.solid? && collides?(c) }
+      collided = collidables.any? { |c| c != self && c.solid? && collides?(c) }
       self.x = previous_x
 
       collided
@@ -218,7 +224,7 @@ module GSDL
       unless collided
         previous_y = self.y
         self.y = next_y
-        if collidables.any? { |c| self != c && c.solid? && collides?(c) }
+        if collidables.any? { |c| c != self && c.solid? && collides?(c) }
           self.y = previous_y
           @velocity_y = 0_f32
           @grounded = true if dy > 0
@@ -280,7 +286,7 @@ module GSDL
       unless collided
         previous_x = self.x
         self.x = next_x
-        if collidables.any? { |c| self != c && c.solid? && collides?(c) }
+        if collidables.any? { |c| c != self && c.solid? && collides?(c) }
           self.x = previous_x
           @velocity_x = 0_f32
           collided = true
