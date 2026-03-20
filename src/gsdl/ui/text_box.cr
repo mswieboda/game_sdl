@@ -10,7 +10,7 @@ module GSDL
     getter padding : Int32
     getter tweens : Array(Tween) = [] of Tween
 
-    @text : Text
+    @text : TextBase
     @x : Num = 0_f32
     @y : Num = 0_f32
     @origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
@@ -26,7 +26,7 @@ module GSDL
 
     def initialize(
       font = Font.default,
-      text : String = "",
+      text : String | TextBase = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
       width : Int32? = nil,
@@ -38,16 +38,24 @@ module GSDL
       color = Color::Black,
       @z_index : Int32 = 900
     )
-      @text = Text.new(
-        font: font,
-        text: text,
-        origin: origin,
-        scale: scale,
-        color: color,
-        align: align,
-        wrap_width: width ? width - padding * 2 : 0,
-        z_index: z_index
-      )
+      if text.is_a?(String)
+        @text = Text.new(
+          font: font,
+          text: text,
+          origin: origin,
+          scale: scale,
+          color: color,
+          align: align,
+          wrap_width: width ? width - padding * 2 : 0,
+          z_index: z_index
+        )
+      else
+        @text = text
+        # Override properties to match the box if they were provided (or rely on the custom text's own layout)
+        @text.wrap_width = width - padding * 2 if width
+        @text.z_index = z_index
+      end
+      
       @text.wrap_whitespace_visible = true
 
       @x = x

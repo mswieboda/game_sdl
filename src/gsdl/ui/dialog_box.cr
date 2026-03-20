@@ -6,7 +6,8 @@ module GSDL
     getter style : DialogStyle
 
     # UI Elements
-    @main_box : MessageTyped
+    @main_box : Message
+    @main_text : TextBase
     @choices_boxes : Array(Message) = [] of Message
     @valid_choices : Array(DialogChoice) = [] of DialogChoice
     @show_choices : Bool = false
@@ -26,8 +27,15 @@ module GSDL
       @on_action = on_action
       @on_condition = on_condition
 
-      @main_box = MessageTyped.new(
+      @main_text = TextTyped.new(
         text: "",
+        color: @style.color,
+        type: TextTyped::Type::Word,
+        on_complete: -> { @show_choices = true }
+      )
+
+      @main_box = Message.new(
+        text: @main_text,
         x: @style.x,
         y: @style.y,
         origin: @style.origin,
@@ -36,8 +44,6 @@ module GSDL
         color: @style.color,
         bg_color: @style.bg_color,
         border_radius: @style.border_radius,
-        type: TextTyped::Type::Word,
-        on_complete: -> { @show_choices = true },
         z_index: z_index
       )
     end
@@ -91,7 +97,12 @@ module GSDL
       @current_node = node
       @selected_choice = 0
       @show_choices = false
-      @main_box.typed_text.full_text = node.text
+      if main_t = @main_text.as?(TextTyped)
+        main_t.full_text = node.text
+      elsif main_t = @main_text.as?(RichTextTyped)
+        main_t.text = node.text
+        main_t.restart
+      end
 
       # Build choice boxes
       @choices_boxes.clear
@@ -156,7 +167,9 @@ module GSDL
 
       # Allow skipping typing text
       if !@show_choices && Input.action?(:menu_select)
-        @main_box.complete
+        if (t = @main_text).responds_to?(:complete)
+          t.complete
+        end
         @show_choices = true
         return # Consume input
       end

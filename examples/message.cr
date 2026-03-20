@@ -38,8 +38,8 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @messages : Array(GSDL::Message | GSDL::MessageRotated)
-    @buttons : Array(GSDL::Button | GSDL::ButtonRotated)
+    @messages : Array(GSDL::Message)
+    @buttons : Array(GSDL::Button)
 
     def initialize
       super(:start)
@@ -48,8 +48,8 @@ module GameEx
       font.size = 12
       color = GSDL::Color::Red
 
-      @messages = [] of GSDL::Message | GSDL::MessageRotated
-      @buttons = [] of GSDL::Button | GSDL::ButtonRotated
+      @messages = [] of GSDL::Message
+      @buttons = [] of GSDL::Button
 
       @messages << GSDL::Message.new(
         font: font,
@@ -70,15 +70,18 @@ module GameEx
         border_radius: 32
       )
 
-      @messages << GSDL::MessageTyped.new(
+      typed_text = GSDL::TextTyped.new(
         font: font,
         text: "typing out some\nwords slowly!",
-        x: 64,
-        y: 400,
         color: GSDL::Color::Blue,
-        border_radius: 32,
         types_per_second: 5_u8,
         type: GSDL::TextTyped::Type::Word
+      )
+      @messages << GSDL::Message.new(
+        text: typed_text,
+        x: 64,
+        y: 400,
+        border_radius: 32
       )
 
       margin = 16
@@ -113,26 +116,33 @@ module GameEx
         border_radius: 16
       )
 
-      @messages << GSDL::MessageRotated.new(
+      rotated_text = GSDL::TextRotated.new(
         font: font,
         text: "Rotated\nmessage\nwow!",
+        color: GSDL::Color::Green,
+        rotation: 15.0_f32
+      )
+      @messages << GSDL::Message.new(
+        text: rotated_text,
         x: 400.to_f32,
         y: 400.to_f32,
         origin: {0.5_f32, 0.5_f32},
-        color: GSDL::Color::Green,
-        border_radius: 16,
-        rotation: 15.0_f32
+        border_radius: 16
       )
 
-      @buttons << GSDL::ButtonRotated.new(
-        on_click: -> on_click(String),
+      rotated_btn_text = GSDL::TextRotated.new(
+        font: font,
         text: "Rotated OK!",
+        color: GSDL::Color::Cyan,
+        rotation: -25.0_f32
+      )
+      @buttons << GSDL::Button.new(
+        on_click: -> on_click(String),
+        text: rotated_btn_text,
         x: 600.to_f32,
         y: 450.to_f32,
         origin: {0.5_f32, 0.5_f32},
-        color: GSDL::Color::Cyan,
-        border_radius: 16,
-        rotation: -25.0_f32
+        border_radius: 16
       )
     end
 

@@ -3,6 +3,7 @@ require "../src/game_sdl"
 alias Game = GSDL::Game
 
 class MainScene < GSDL::Scene
+  @message : GSDL::Message?
   @rich_text : GSDL::RichTextTyped?
 
   def init
@@ -14,19 +15,25 @@ class MainScene < GSDL::Scene
 
     @rich_text = GSDL::RichTextTyped.new(
       text: text,
-      x: Game.width // 2,
-      y: Game.height // 2 + 50,
-      origin: {0.5_f32, 0.5_f32},
       color: GSDL::Color::White,
       wrap_width: 600,
       align: GSDL::Font::Align::Center,
       types_per_second: 5,
       type: GSDL::RichTextTyped::Type::Word
     )
+
+    @message = GSDL::Message.new(
+      text: @rich_text.not_nil!,
+      x: Game.width // 2,
+      y: Game.height // 2 + 50,
+      origin: {0.5_f32, 0.5_f32},
+      bg_color: GSDL::Color::DarkGray,
+      border_radius: 16
+    )
   end
 
   def update(dt : Float32)
-    @rich_text.try &.update(dt)
+    @message.try &.update(dt)
 
     if GSDL::Keys.pressed?(GSDL::Keys::Space)
       @rich_text.try &.restart
@@ -34,7 +41,7 @@ class MainScene < GSDL::Scene
   end
 
   def draw(draw : GSDL::Draw)
-    @rich_text.try &.draw(draw)
+    @message.try &.draw(draw)
 
     instr = GSDL::Text.new(
       text: "GSDL RichTextTyped Demo",
