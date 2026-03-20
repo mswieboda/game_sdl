@@ -8,8 +8,9 @@ module GameEx
 
     def init
       GSDL::Events.esc_exits = true
+      self.performance_monitoring_enabled = true
       GSDL::Game.push(ParticleScene.new)
-        end
+    end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
