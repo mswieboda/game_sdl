@@ -6,6 +6,14 @@ module GSDL
       Polygon
     end
 
+    # Shared buffers to avoid allocations during collision checks
+    # These are safe as long as we only process one collision at a time per fiber
+    @@vertices_buffer_a = [] of Point
+    @@vertices_buffer_b = [] of Point
+
+    def self.vertices_buffer_a; @@vertices_buffer_a; end
+    def self.vertices_buffer_b; @@vertices_buffer_b; end
+
     # requires
     abstract def draw_x : Num
     abstract def draw_y : Num
@@ -21,14 +29,20 @@ module GSDL
 
     # For polygons, return the absolute coordinates of the vertices
     def collision_polygon_vertices : Points
+      buffer = [] of Point
+      collision_polygon_vertices(buffer)
+      buffer
+    end
+
+    # Populates the provided buffer with vertices to avoid allocations
+    def collision_polygon_vertices(buffer : Array(Point))
+      buffer.clear
       # Default for Rect:
       box = collision_box
-      [
-        Point.new(box.x, box.y),
-        Point.new(box.right, box.y),
-        Point.new(box.right, box.bottom),
-        Point.new(box.left, box.bottom)
-      ]
+      buffer << Point.new(box.x, box.y)
+      buffer << Point.new(box.right, box.y)
+      buffer << Point.new(box.right, box.bottom)
+      buffer << Point.new(box.left, box.bottom)
     end
 
     # For circles, this would be the radius
@@ -38,7 +52,8 @@ module GSDL
 
     def collision_center : Point
       if collision_shape.polygon?
-        vs = collision_polygon_vertices
+        vs = Collidable.vertices_buffer_a
+        collision_polygon_vertices(vs)
         return Point.new(0, 0) if vs.empty?
         sum_x = vs.sum(&.x)
         sum_y = vs.sum(&.y)
@@ -109,8 +124,10 @@ module GSDL
       end
 
       # Polygon (or Rect) vs Polygon (or Rect)
-      poly_a = a.collision_polygon_vertices
-      poly_b = b.collision_polygon_vertices
+      poly_a = Collidable.vertices_buffer_a
+      poly_b = Collidable.vertices_buffer_b
+      a.collision_polygon_vertices(poly_a)
+      b.collision_polygon_vertices(poly_b)
 
       # Check axes of poly_a
       return false unless sat_check_axes(poly_a, poly_b)
@@ -189,8 +206,10 @@ module GSDL
     end
 
     private def polygon_collision_info(a : Collidable, b : Collidable) : CollisionInfo
-      poly_a = a.collision_polygon_vertices
-      poly_b = b.collision_polygon_vertices
+      poly_a = Collidable.vertices_buffer_a
+      poly_b = Collidable.vertices_buffer_b
+      a.collision_polygon_vertices(poly_a)
+      b.collision_polygon_vertices(poly_b)
 
       min_overlap = Float32::MAX
       smallest_axis = Point.new(0, 0)
@@ -231,7 +250,8 @@ module GSDL
       circle = a.collision_shape.circle? ? a : b
       poly = a.collision_shape.circle? ? b : a
 
-      vs = poly.collision_polygon_vertices
+      vs = Collidable.vertices_buffer_a
+      poly.collision_polygon_vertices(vs)
       c_center = circle.collision_center
       radius = circle.collision_radius
 
@@ -301,7 +321,8 @@ module GSDL
     end
 
     private def circle_collides_with_polygon?(circle : Collidable, poly : Collidable) : Bool
-      vs = poly.collision_polygon_vertices
+      vs = Collidable.vertices_buffer_a
+      poly.collision_polygon_vertices(vs)
       c_center = circle.collision_center
       radius = circle.collision_radius
 
@@ -375,7 +396,8 @@ module GSDL
 
       if collision_shape.circle? && other.collision_shape.polygon?
         # Normal from closest point on poly to circle center
-        vs = other.collision_polygon_vertices
+        vs = Collidable.vertices_buffer_a
+        other.collision_polygon_vertices(vs)
         c_center = collision_center
 
         best_dist_sq = Float32::MAX
