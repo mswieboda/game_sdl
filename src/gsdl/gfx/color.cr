@@ -37,6 +37,80 @@ module GSDL
       )
     end
 
+    def self.from_name(name : String) : Color
+      case name.downcase
+      when "transparent" then Transparent
+      when "black" then Black
+      when "white" then White
+      when "gray", "grey" then Gray
+      when "lightgray", "lightgrey" then LightGray
+      when "darkgray", "darkgrey" then DarkGray
+      when "dimgray", "dimgrey" then DimGray
+      when "darkergray", "darkergrey" then DarkerGray
+      when "silver" then Silver
+      when "snow" then Snow
+      when "whitesmoke" then WhiteSmoke
+      when "gunsmoke" then GunSmoke
+      when "ivory" then Ivory
+      when "red" then Red
+      when "darkred" then DarkRed
+      when "maroon" then Maroon
+      when "firebrick" then FireBrick
+      when "crimson" then Crimson
+      when "tomato" then Tomato
+      when "salmon" then Salmon
+      when "orange" then Orange
+      when "orangered" then OrangeRed
+      when "darkorange" then DarkOrange
+      when "coral" then Coral
+      when "yellow" then Yellow
+      when "gold" then Gold
+      when "goldenrod" then GoldenRod
+      when "khaki" then Khaki
+      when "darkkhaki" then DarkKhaki
+      when "yellowgreen" then YellowGreen
+      when "olive" then Olive
+      when "green" then Green
+      when "lime" then Lime
+      when "limegreen" then LimeGreen
+      when "darkgreen" then DarkGreen
+      when "forestgreen" then ForestGreen
+      when "springgreen" then SpringGreen
+      when "seagreen" then SeaGreen
+      when "greenyellow" then GreenYellow
+      when "blue" then Blue
+      when "lightblue" then LightBlue
+      when "darkblue" then DarkBlue
+      when "navy" then Navy
+      when "royalblue" then RoyalBlue
+      when "cyan", "aqua" then Cyan
+      when "darkcyan" then DarkCyan
+      when "teal" then Teal
+      when "turquoise" then Turquoise
+      when "darkturquoise" then DarkTurquoise
+      when "purple" then Purple
+      when "magenta", "fuschia" then Magenta
+      when "darkmagenta" then DarkMagenta
+      when "indigo" then Indigo
+      when "violet" then Violet
+      when "darkviolet" then DarkViolet
+      when "lavender" then Lavender
+      when "deeppink" then DeepPink
+      when "hotpink" then HotPink
+      when "pink" then Pink
+      when "brown" then Brown
+      when "saddlebrown" then SaddleBrown
+      when "darkebony" then DarkEbony
+      when "sienna" then Sienna
+      when "chocolate" then Chocolate
+      when "peru" then Peru
+      when "sandywood" then SandyWood
+      when "tan" then Tan
+      when "moccasin" then Moccasin
+      else White
+      end
+    end
+
     @internal : SDL3::Color
 
     def r : UInt8

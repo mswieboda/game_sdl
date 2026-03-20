@@ -194,7 +194,7 @@ module GSDL
     end
 
     @draw_commands : Array(DrawCommand)
-    @text_engine : SDL3::TTF::TextEngine?
+    @text_engine : TextEngine?
 
     def command_count : Int32
       @draw_commands.size
@@ -202,8 +202,8 @@ module GSDL
 
     property culling_enabled : Bool = true
 
-    def text_engine : SDL3::TTF::TextEngine
-      @text_engine ||= @r.create_text_engine
+    def text_engine : TextEngine
+      @text_engine ||= TextEngine.new(@r.create_text_engine)
     end
 
     def clear : Bool
@@ -783,11 +783,22 @@ module GSDL
     end
 
     def target=(texture : Texture?)
-      @r.render_target = texture
+      @r.render_target = texture.try(&.to_sdl)
     end
 
     def target : Texture?
-      @r.render_target
+      if internal = @r.render_target
+        Texture.new(internal)
+      else
+        nil
+      end
+    end
+
+    def with_target(texture : Texture?)
+      old_target = self.target
+      self.target = texture
+      yield
+      self.target = old_target
     end
 
     def to_sdl

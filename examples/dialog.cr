@@ -4,7 +4,7 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Dialog Example", width: 800, height: 600)
-        end
+    end
 
     def init
       GSDL::Events.esc_exits = true

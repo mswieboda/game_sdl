@@ -18,6 +18,11 @@ module GSDL
     # however, maybe TextBase / Text are custom enough so it's okay?
     @text_sdl : SDL3::TTF::Text
 
+    def initialize(@text_sdl : SDL3::TTF::Text, @text : String = "")
+      @x = 0
+      @y = 0
+    end
+
     def wrap_width=(val : Int32)
       @text_sdl.wrap_width = val
       on_content_changed
@@ -42,7 +47,7 @@ module GSDL
       end
 
       # Use the shared text_engine from the Draw instance
-      @text_sdl = TextBase.draw.text_engine.create_text(font.to_sdl, @text)
+      @text_sdl = TextBase.draw.text_engine.create_text(font, @text).to_sdl
 
       @text_sdl.color = color.to_sdl
       @text_sdl.direction = direction

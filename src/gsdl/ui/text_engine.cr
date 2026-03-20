@@ -25,7 +25,7 @@ module GSDL
     end
 
     def create_text(font : Font, text : String) : Text
-      Text.new(@internal.create_text(font: font.to_sdl, text: text))
+      Text.new(@internal.create_text(font: font.to_sdl, text: text), text)
     end
 
     def to_sdl : SDL3::TTF::TextEngine
