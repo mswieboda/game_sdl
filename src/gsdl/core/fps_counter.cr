@@ -1,6 +1,7 @@
 module GSDL
   class FPSCounter
     getter fps : Int32 = 0
+    getter frame_count : UInt64 = 0
     @frame_times = [] of Float32
     @sample_size : Int32
 
@@ -8,6 +9,7 @@ module GSDL
     end
 
     def update(dt : Float32)
+      @frame_count += 1
       @frame_times << dt
       if @frame_times.size > @sample_size
         @frame_times.shift
