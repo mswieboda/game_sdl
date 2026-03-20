@@ -55,7 +55,7 @@ module GSDL
         @text.wrap_width = width - padding * 2 if width
         @text.z_index = z_index
       end
-      
+
       @text.wrap_whitespace_visible = true
 
       @x = x

@@ -86,7 +86,7 @@ module GSDL
           # Find number of characters to next word
           current_plain = plain_text
           remaining = current_plain[visible_characters..-1]
-          
+
           # Match optional whitespace followed by non-whitespace
           if match = remaining.match(/(\s*\S+)/)
             self.visible_characters += match[0].size

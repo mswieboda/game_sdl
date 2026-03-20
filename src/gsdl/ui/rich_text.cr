@@ -168,7 +168,7 @@ module GSDL
             current_line = [] of WordInfo
             cursor_x = 0
             cursor_y += line_h
-            
+
             # If the word itself is wider than wrap_width, it will just overflow
             # unless we implement character-level wrapping, which we'll skip for now.
           end
@@ -191,7 +191,7 @@ module GSDL
 
       lines.each do |line|
         next if line.empty?
-        
+
         # Calculate trailing whitespace width to ignore it for alignment
         line_w = line.last[:x] + line.last[:w]
         trailing_ws = 0
