@@ -48,8 +48,6 @@ module GSDL
       end
     end
 
-    generate_from_name
-
     @internal : SDL3::Color
 
     def r : UInt8
@@ -277,5 +275,7 @@ module GSDL
     SandyWood   = GSDL.color(r: 244, g: 164, b: 96)
     Tan         = GSDL.color(r: 210, g: 180, b: 140)
     Moccasin    = GSDL.color(r: 255, g: 228, b: 181)
+
+    generate_from_name
   end
 end
