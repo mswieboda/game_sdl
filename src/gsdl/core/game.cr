@@ -1,19 +1,21 @@
 module GSDL
-  module Global
-    @@game : Game?
+  # Internal state for the engine.
+  # Consumers should use Game.* API instead of interacting with this directly.
+  module Internal
+    @@instance : Game?
     @@draw : Draw?
-    @@current_scene : Scene?
+    @@execution_stack = [] of Scene
 
-    def self.game : Game
-      if game = @@game
+    def self.instance : Game
+      if game = @@instance
         game
       else
         raise "Failed to get global Game instance. Make sure Game.new has been called."
       end
     end
 
-    def self.game=(game : Game)
-      @@game = game
+    def self.instance=(game : Game)
+      @@instance = game
     end
 
     def self.draw : Draw
@@ -28,12 +30,8 @@ module GSDL
       @@draw = draw
     end
 
-    def self.current_scene : Scene?
-      @@current_scene
-    end
-
-    def self.current_scene=(scene : Scene?)
-      @@current_scene = scene
+    def self.execution_stack
+      @@execution_stack
     end
   end
 
@@ -46,23 +44,23 @@ module GSDL
     DefaultBackgroundColor = Color::Black
 
     def self.instance : Game
-      Global.game
+      Internal.instance
     end
 
     def self.width : Int32
-      Global.game.width
+      instance.width
     end
 
     def self.height : Int32
-      Global.game.height
+      instance.height
     end
 
     def self.title : String
-      Global.game.title
+      instance.title
     end
 
     def self.draw : Draw
-      Global.draw
+      Internal.draw
     end
 
     def self.quit!
@@ -74,7 +72,7 @@ module GSDL
     end
 
     def self.camera
-      (Global.current_scene || instance.scene).camera
+      (instance.current_context || instance.scene).camera
     end
 
     def self.push(scene : Scene, data : SwitchData? = nil)
@@ -151,15 +149,28 @@ module GSDL
       @scenes.last
     end
 
+    protected def current_context : Scene?
+      Internal.execution_stack.last?
+    end
+
+    private def with_scene_context(scene : Scene, &block)
+      Internal.execution_stack << scene
+      begin
+        yield
+      ensure
+        Internal.execution_stack.pop
+      end
+    end
+
     def push(scene : Scene, data : SwitchData? = nil)
       scene.switch_data = data if data
-      Global.current_scene = scene
 
-      # Per-scene asset loading
-      scene.load_assets
+      with_scene_context(scene) do
+        # Per-scene asset loading
+        scene.load_assets
+        scene.init
+      end
 
-      scene.init
-      Global.current_scene = nil
       @scenes << scene
     end
 
@@ -217,7 +228,7 @@ module GSDL
       @width = width
       @height = height
 
-      Global.game = self
+      Internal.instance = self
 
       SDL3.init
       SDL3::TTF.init
@@ -231,7 +242,7 @@ module GSDL
       )
 
       @draw = Draw.new(@window.not_nil!)
-      Global.draw = @draw.not_nil!
+      Internal.draw = @draw.not_nil!
 
       TextBase.draw = @draw.not_nil!
     end
@@ -322,24 +333,24 @@ module GSDL
       end
 
       to_update.reverse_each do |s|
-        Global.current_scene = s
-        if s == scene
-          update_transitions(dt)
-          if s.transition_in.started? || s.transition_out.started?
-            Global.current_scene = nil
-            next
+        with_scene_context(s) do
+          if s == scene
+            update_transitions(dt)
+            if s.transition_in.started? || s.transition_out.started?
+              next
+            end
           end
-        end
 
-        if paused?
-          if ps = s.pause_scene
-            Global.current_scene = ps
-            ps.update(dt)
+          if paused?
+            if ps = s.pause_scene
+              with_scene_context(ps) do
+                ps.update(dt)
+              end
+            end
+          else
+            s.update(dt)
           end
-        else
-          s.update(dt)
         end
-        Global.current_scene = nil
       end
 
       check_scenes
@@ -370,22 +381,22 @@ module GSDL
       # Draw from that index upward
       (start_index...@scenes.size).each do |i|
         s = @scenes[i]
-        Global.current_scene = s
+        with_scene_context(s) do
+          s.draw(Game.draw) unless exit?
 
-        s.draw(Game.draw) unless exit?
+          if s == scene
+            s.transition_in.draw(Game.draw) if s.transition_in.running?
+            s.transition_out.draw(Game.draw) if s.transition_out.started?
+          end
 
-        if s == scene
-          s.transition_in.draw(Game.draw) if s.transition_in.running?
-          s.transition_out.draw(Game.draw) if s.transition_out.started?
-        end
-
-        if paused?
-          if ps = s.pause_scene
-            Global.current_scene = ps
-            ps.draw(Game.draw)
+          if paused?
+            if ps = s.pause_scene
+              with_scene_context(ps) do
+                ps.draw(Game.draw)
+              end
+            end
           end
         end
-        Global.current_scene = nil
       end
 
       Game.draw.draw
