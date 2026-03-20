@@ -7,6 +7,7 @@ module BenchmarkEx
   class Game < GSDL::Game
     def initialize
       super(title: "Collision Benchmark", width: 800, height: 600)
+      self.target_fps = 60
     end
 
     def init
@@ -53,7 +54,6 @@ module BenchmarkEx
       )
       self.dx = (Random.rand * 2 - 1).to_f32
       self.dy = (Random.rand * 2 - 1).to_f32
-      self.solid = false # Don't block the player or each other
     end
 
     def move_speed : GSDL::Num; 300; end
@@ -92,7 +92,7 @@ module BenchmarkEx
         x: x,
         y: y,
         origin: {0.5_f32, 0.5_f32},
-        scale: {1.0_f32, 1.0_f32},
+        scale: {0.5_f32, 0.5_f32},
         source_rect: GSDL::FRect.new(0, 0, SHIP_SIZE, SHIP_SIZE)
       )
       self.tint = GSDL::Color::Magenta # High contrast

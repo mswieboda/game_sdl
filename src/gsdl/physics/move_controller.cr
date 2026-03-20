@@ -44,7 +44,23 @@ module GSDL
     private def _move_and_collide?(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
       if collidables.empty? && tile_map.nil?
         if (scene = root_scene.as?(GSDL::SceneCollisions))
-          collidables = scene.collision_space.collidables
+          # Neighborhood rect calculation
+          # Query area should be the entity's current bounds + movement delta + small padding
+          cb = collision_box
+          speed = move_speed * dt
+          mx = dx * speed
+          my = dy * speed
+
+          nx = (mx < 0 ? cb.x + mx : cb.x).to_f32
+          ny = (my < 0 ? cb.y + my : cb.y).to_f32
+          nw = (mx.abs + cb.w).to_f32
+          nh = (my.abs + cb.h).to_f32
+
+          # padding
+          p = 2.0_f32
+          neighborhood_rect = FRect.new(nx - p, ny - p, nw + p * 2.0_f32, nh + p * 2.0_f32)
+
+          collidables = scene.collision_space.query(neighborhood_rect)
           tile_map = scene.collision_space.tile_map
         end
       end

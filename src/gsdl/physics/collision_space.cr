@@ -13,5 +13,10 @@ module GSDL
     def remove(collidable : GSDL::Collidable)
       @collidables.delete(collidable)
     end
+
+    def query(rect : GSDL::FRect) : Array(GSDL::Collidable)
+      Performance.instance.increment("query")
+      @collidables.select { |c| c.collision_box.overlaps?(rect) }
+    end
   end
 end

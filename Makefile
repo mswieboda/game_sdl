@@ -67,14 +67,14 @@ build_examples_full:
 			if [ $$started -eq 0 ]; then continue; fi; \
 		fi; \
 		printf "Building $$name... "; \
-		$(CRYSTAL_COMPILER) build $$f -o /dev/null --link-flags "$(LINKFLAGS)" --no-debug > /dev/null 2>&1 && echo "OK" || (echo "FAILED"; $(MAKE) build EXAMPLE=$$name; exit 1); \
+		$(CRYSTAL_COMPILER) build $$f -o /dev/null --link-flags "$(LINKFLAGS)" --no-debug -p > /dev/null 2>&1 && echo "OK" || (echo "FAILED"; $(MAKE) build EXAMPLE=$$name; exit 1); \
 	done; \
 	echo "All examples compiled successfully!"
 
 build:
 	@echo "Building example: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" --no-debug --error-trace
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" --no-debug -p
 
 run: build
 	@echo "Running example: $(EXAMPLE)"
@@ -83,11 +83,11 @@ run: build
 run-release:
 	@echo "Building and running example: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --release --link-flags "$(LINKFLAGS)" --no-debug
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --release --link-flags "$(LINKFLAGS)" --no-debug -p
 	./$(BUILD_DIR)/$(EXAMPLE)
 
 debug:
 	@echo "Building and running example in debug mode: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE)_debug --link-flags "$(LINKFLAGS)" --error-trace
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE)_debug --link-flags "$(LINKFLAGS)" --error-trace -p
 	./$(BUILD_DIR)/$(EXAMPLE)_debug

@@ -46,7 +46,15 @@ module GSDL
     private def _platformer_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil, world_bounds : FRect? = nil)
       if collidables.empty? && tile_map.nil? && world_bounds.nil?
         if (scene = root_scene.as?(GSDL::SceneCollisions))
-          collidables = scene.collision_space.collidables
+          # Neighborhood rect calculation
+          # We'll use a conservative buffer around the entity's current bounds
+          # to capture anything it might collide with this frame (jumping, dashing, etc).
+          cb = collision_box
+          # A fixed buffer of 128 is generally safe for most speeds at 60fps
+          p = 128.0_f32
+          neighborhood_rect = FRect.new(cb.x - p, cb.y - p, cb.w + p * 2.0_f32, cb.h + p * 2.0_f32)
+
+          collidables = scene.collision_space.query(neighborhood_rect)
           tile_map = scene.collision_space.tile_map
           world_bounds = scene.collision_space.space_bounds
         end

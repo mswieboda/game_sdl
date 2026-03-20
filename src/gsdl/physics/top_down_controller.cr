@@ -41,7 +41,32 @@ module GSDL
     private def _top_down_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
       if collidables.empty? && tile_map.nil?
         if (scene = root_scene.as?(GSDL::SceneCollisions))
-          collidables = scene.collision_space.collidables
+          # Neighborhood rect calculation
+          cb = collision_box
+          # For TopDown, we might move by speed * dt or grid_size
+          # To be safe, we'll use a large enough box.
+          # If grid locked, it's grid_size. If free form, it's speed * dt.
+          # We'll calculate it based on the current dx/dy if available,
+          # or just use a reasonable buffer around the entity.
+          speed = move_speed * dt
+          mx = dx * speed
+          my = dy * speed
+
+          # If grid locked, we might move up to grid_size
+          if @movement_mode == MovementMode::GridLocked
+            mx = dx * grid_size
+            my = dy * grid_size
+          end
+
+          nx = mx < 0 ? cb.x + mx : cb.x
+          ny = my < 0 ? cb.y + my : cb.y
+          nw = mx.abs + cb.w
+          nh = my.abs + cb.h
+
+          p = 4.0_f32 # slightly larger padding for top-down
+          neighborhood_rect = FRect.new(nx - p, ny - p, nw + p * 2.0_f32, nh + p * 2.0_f32)
+
+          collidables = scene.collision_space.query(neighborhood_rect)
           tile_map = scene.collision_space.tile_map
         end
       end
