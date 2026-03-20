@@ -3,14 +3,52 @@ module GSDL
     alias PropertyValue = Float32 | Color | Tuple(Float32, Float32)
     alias SequenceValue = PropertyValue | String | Symbol | Float64 | Int32 | Hash(Symbol, Float32) | Hash(String, Float32) | GSDL::MathUtils::Easing
 
+    enum Property
+      X
+      Y
+      OffsetX
+      OffsetY
+      ZIndex
+      Rotation
+      Scale
+      ScaleX
+      ScaleY
+      ScrollSpeedX
+      ScrollSpeedY
+      Tint
+      Color
+      Value
+      Unknown
+
+      def self.from_s(name : String | Symbol) : Property
+        case name.to_s.underscore
+        when "x"              then X
+        when "y"              then Y
+        when "offset_x"       then OffsetX
+        when "offset_y"       then OffsetY
+        when "z_index"        then ZIndex
+        when "rotation"       then Rotation
+        when "scale"          then Scale
+        when "scale_x"        then ScaleX
+        when "scale_y"        then ScaleY
+        when "scroll_speed_x" then ScrollSpeedX
+        when "scroll_speed_y" then ScrollSpeedY
+        when "tint"           then Tint
+        when "color"          then Color
+        when "value"          then Value
+        else                       Unknown
+        end
+      end
+    end
+
     struct Keyframe
       property duration : Float32
-      property properties : Hash(String, PropertyValue)
+      property properties : Hash(Property, PropertyValue)
       property easing : GSDL::MathUtils::Easing
 
       def initialize(
         @duration : Float32,
-        @properties : Hash(String, PropertyValue),
+        @properties : Hash(Property, PropertyValue),
         @easing : GSDL::MathUtils::Easing = GSDL::MathUtils::Easing::Linear
       )
       end
@@ -19,7 +57,7 @@ module GSDL
     @keyframes = [] of Keyframe
     @current_keyframe_index = 0
     @elapsed_time = 0_f32
-    @start_properties = Hash(String, PropertyValue).new
+    @start_properties = Hash(Property, PropertyValue).new
     @running = false
     @loop = false
 
@@ -50,20 +88,25 @@ module GSDL
           GSDL::MathUtils::Easing::Linear
         end
 
-        properties = Hash(String, PropertyValue).new
+        properties = Hash(Property, PropertyValue).new
         step.each do |key, value|
           next if key == "duration" || key == "easing"
+
+          prop = Property.from_s(key)
+          next if prop.unknown?
 
           if value.is_a?(Hash)
             value.each do |sub_key, sub_val|
               if sub_val.is_a?(Number)
-                properties[sub_key.to_s] = sub_val.to_f32
+                sub_prop = Property.from_s(sub_key)
+                next if sub_prop.unknown?
+                properties[sub_prop] = sub_val.to_f32
               end
             end
           elsif value.is_a?(Number)
-            properties[key.to_s] = value.to_f32
+            properties[prop] = value.to_f32
           elsif value.is_a?(Color) || value.is_a?(Tuple)
-            properties[key.to_s] = value.as(PropertyValue)
+            properties[prop] = value.as(PropertyValue)
           end
         end
 
@@ -98,60 +141,62 @@ module GSDL
       end
     end
 
-    private def get_property(prop : String) : PropertyValue
+    private def get_property(prop : Property) : PropertyValue
       case prop
-      when "x"        then @target.x.to_f32
-      when "y"        then @target.y.to_f32
-      when "offset_x" then @target.offset_x.to_f32
-      when "offset_y" then @target.offset_y.to_f32
-      when "z_index"  then @target.z_index.to_f32
-      when "rotation" then @target.rotation.to_f32
-      when "scale"    then @target.scale.try { |s| {s[0].to_f32, s[1].to_f32} } || {1_f32, 1_f32}
-      when "scale_x"  then @target.scale_x.to_f32
-      when "scale_y"  then @target.scale_y.to_f32
-      when "scroll_speed_x" then @target.scroll_speed_x.to_f32
-      when "scroll_speed_y" then @target.scroll_speed_y.to_f32
-      when "tint"     then @target.tint || Color::White
-      when "color"    then @target.color
-      when "value"    then @target.value.to_f32
-      else                 0_f32
+      when Property::X              then @target.x.to_f32
+      when Property::Y              then @target.y.to_f32
+      when Property::OffsetX        then @target.offset_x.to_f32
+      when Property::OffsetY        then @target.offset_y.to_f32
+      when Property::ZIndex         then @target.z_index.to_f32
+      when Property::Rotation       then @target.rotation.to_f32
+      when Property::Scale          then @target.scale.try { |s| {s[0].to_f32, s[1].to_f32} } || {1_f32, 1_f32}
+      when Property::ScaleX         then @target.scale_x.to_f32
+      when Property::ScaleY         then @target.scale_y.to_f32
+      when Property::ScrollSpeedX   then @target.scroll_speed_x.to_f32
+      when Property::ScrollSpeedY   then @target.scroll_speed_y.to_f32
+      when Property::Tint           then @target.tint || Color::White
+      when Property::Color          then @target.color
+      when Property::Value          then @target.value.to_f32
+      else                               0_f32
       end
     end
 
-    private def set_property(prop : String, value : PropertyValue)
+    private def set_property(prop : Property, value : PropertyValue)
       case prop
-      when "x"
+      when Property::X
         @target.x = value.as(Float32)
-      when "y"
+      when Property::Y
         @target.y = value.as(Float32)
-      when "offset_x"
+      when Property::OffsetX
         @target.offset_x = value.as(Float32)
-      when "offset_y"
+      when Property::OffsetY
         @target.offset_y = value.as(Float32)
-      when "z_index"
+      when Property::ZIndex
         @target.z_index = value.as(Float32).to_i
-      when "rotation"
+      when Property::Rotation
         @target.rotation = value.as(Float32)
-      when "scale"
+      when Property::Scale
         if val = value.as?(Tuple(Float32, Float32))
           @target.scale = {val[0], val[1]}
         elsif val = value.as?(Float32)
           @target.scale = {val, val}
         end
-      when "scale_x"
+      when Property::ScaleX
         @target.scale_x = value.as(Float32)
-      when "scale_y"
+      when Property::ScaleY
         @target.scale_y = value.as(Float32)
-      when "scroll_speed_x"
+      when Property::ScrollSpeedX
         @target.scroll_speed_x = value.as(Float32)
-      when "scroll_speed_y"
+      when Property::ScrollSpeedY
         @target.scroll_speed_y = value.as(Float32)
-      when "tint"
+      when Property::Tint
         @target.tint = value.as(Color)
-      when "color"
+      when Property::Color
         @target.color = value.as(Color)
-      when "value"
+      when Property::Value
         @target.value = value.as(Float32)
+      else
+        # nothing
       end
     end
 
