@@ -4,11 +4,11 @@ module GSDL
 
     abstract struct DrawCommand
       property z_index : Int32
-      property scale_x : Float32 = 1.0_f32
-      property scale_y : Float32 = 1.0_f32
-      property clip_rect : SDL3::Rect? = nil
+      property scale_x : Float32
+      property scale_y : Float32
+      property clip_rect : SDL3::Rect?
 
-      def initialize(@z_index : Int32, @clip_rect : SDL3::Rect? = nil)
+      def initialize(@z_index : Int32, @scale_x : Float32, @scale_y : Float32, @clip_rect : SDL3::Rect? = nil)
       end
 
       def y : Num?
@@ -23,8 +23,8 @@ module GSDL
     abstract struct DrawColorCommand < DrawCommand
       property color : Color
 
-      def initialize(z_index : Int32, @color : Color, clip_rect : SDL3::Rect? = nil)
-        super(z_index: z_index, clip_rect: clip_rect)
+      def initialize(z_index : Int32, @color : Color, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+        super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
     end
 
@@ -43,6 +43,8 @@ module GSDL
         @texture : SDL3::Texture,
         @source_rect : SDL3::FRect?,
         @dest_rect : SDL3::FRect,
+        scale_x : Float32,
+        scale_y : Float32,
         @angle : Float64 = 0.0,
         @center : SDL3::FPoint = SDL3::FPoint.new,
         @flip : Int32 = 0,
@@ -50,7 +52,7 @@ module GSDL
         @destroy : Bool = false,
         clip_rect : SDL3::Rect? = nil
       )
-        super(z_index: z_index, clip_rect: clip_rect)
+        super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
 
       def y : Num?
@@ -78,8 +80,8 @@ module GSDL
       property screen_x : Float32
       property screen_y : Float32
 
-      def initialize(@text : Text, clip_rect : SDL3::Rect? = nil)
-        super(z_index: @text.z_index, clip_rect: clip_rect)
+      def initialize(@text : Text, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+        super(z_index: @text.z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
         @screen_x = @text.draw_x.to_f32
         @screen_y = @text.draw_y.to_f32
       end
@@ -108,10 +110,12 @@ module GSDL
         z_index : Int32,
         @vertices : Array(SDL3::Vertex),
         @indices : Array(Int32),
+        scale_x : Float32,
+        scale_y : Float32,
         @texture : SDL3::Texture? = nil,
         clip_rect : SDL3::Rect? = nil
       )
-        super(z_index: z_index, clip_rect: clip_rect)
+        super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
     end
 
@@ -119,8 +123,8 @@ module GSDL
       property rect : SDL3::FRect
       property? outline : Bool
 
-      def initialize(z_index : Int32, color : Color, @rect : SDL3::FRect, @outline : Bool, clip_rect : SDL3::Rect? = nil)
-        super(z_index: z_index, color: color, clip_rect: clip_rect)
+      def initialize(z_index : Int32, color : Color, @rect : SDL3::FRect, @outline : Bool, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+        super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
 
       def y : Num?
@@ -144,8 +148,8 @@ module GSDL
       property rects : Array(SDL3::FRect)
       property? outline : Bool
 
-      def initialize(z_index : Int32, color : Color, @rects : Array(SDL3::FRect), @outline : Bool, clip_rect : SDL3::Rect? = nil)
-        super(z_index: z_index, color: color, clip_rect: clip_rect)
+      def initialize(z_index : Int32, color : Color, @rects : Array(SDL3::FRect), @outline : Bool, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+        super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
     end
 
@@ -153,8 +157,8 @@ module GSDL
       property x : Float32
       property y : Float32
 
-      def initialize(z_index : Int32, color : Color, @x : Float32, @y : Float32, clip_rect : SDL3::Rect? = nil)
-        super(z_index: z_index, color: color, clip_rect: clip_rect)
+      def initialize(z_index : Int32, color : Color, @x : Float32, @y : Float32, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+        super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
 
       def on_screen? : Bool
@@ -167,8 +171,8 @@ module GSDL
     abstract struct DrawPointsCommandBase < DrawColorCommand
       property points : Array(SDL3::FPoint)
 
-      def initialize(z_index : Int32, color : Color, @points : Array(SDL3::FPoint), clip_rect : SDL3::Rect? = nil)
-        super(z_index: z_index, color: color, clip_rect: clip_rect)
+      def initialize(z_index : Int32, color : Color, @points : Array(SDL3::FPoint), scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+        super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
     end
 
@@ -184,8 +188,8 @@ module GSDL
       property x2 : Float32
       property y2 : Float32
 
-      def initialize(z_index : Int32, color : Color, @x1, @y1, @x2, @y2, clip_rect : SDL3::Rect? = nil)
-        super(z_index: z_index, color: color, clip_rect: clip_rect)
+      def initialize(z_index : Int32, color : Color, @x1, @y1, @x2, @y2, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+        super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
 
       def y : Num?
@@ -193,7 +197,34 @@ module GSDL
       end
     end
 
-    @layers : Hash(Int32, Array(DrawCommand))
+    alias Command = DrawTextureCommand | DrawTextCommand | DrawFRectCommand | DrawPointCommand | DrawLineCommand | DrawGeometryCommand | DrawFRectsCommand | DrawPointsCommand | DrawLinesCommand
+
+    class Layer
+      getter commands = [] of Command
+      property? dirty = false
+
+      def push(cmd : Command)
+        @commands << cmd
+        @dirty = true
+      end
+
+      def clear
+        @commands.clear
+        @dirty = false
+      end
+
+      def sort!
+        return unless @dirty
+        @commands.sort! do |a, b|
+          ay = a.y.try(&.to_f32) || 0.0_f32
+          by = b.y.try(&.to_f32) || 0.0_f32
+          ay <=> by
+        end
+        @dirty = false
+      end
+    end
+
+    @layers : Hash(Int32, Layer)
     @sorted_z_indices : Array(Int32)
     @text_engine : TextEngine?
     @current_command_count : Int32 = 0
@@ -258,11 +289,8 @@ module GSDL
       @current_clip_rect
     end
 
-    private def push_cmd(cmd)
+    private def push_cmd(cmd : Command)
       c = cmd
-      c.scale_x = @current_scale_x
-      c.scale_y = @current_scale_y
-      c.clip_rect = @current_clip_rect
 
       if @culling_enabled && !c.on_screen?
         return
@@ -271,15 +299,15 @@ module GSDL
       layer = @layers[c.z_index] ||= begin
         @sorted_z_indices << c.z_index
         @sorted_z_indices.sort!
-        [] of DrawCommand
+        Layer.new
       end
-      layer << c
+      layer.push(c)
       @current_command_count += 1
     end
 
     def initialize(window : SDL3::Window)
       @r = SDL3::Renderer.new(window)
-      @layers = Hash(Int32, Array(DrawCommand)).new
+      @layers = Hash(Int32, Layer).new
       @sorted_z_indices = [] of Int32
     end
 
@@ -321,15 +349,11 @@ module GSDL
       @r.clip_rect = nil
 
       @sorted_z_indices.each do |z|
-        commands = @layers[z]
-        next if commands.empty?
+        layer = @layers[z]
+        next if layer.commands.empty?
 
-        # Non-allocating sort within the layer by Y coordinate
-        commands.sort! do |a, b|
-          ay = a.y.try(&.to_f32) || 0.0_f32
-          by = b.y.try(&.to_f32) || 0.0_f32
-          ay <=> by
-        end
+        layer.sort!
+        commands = layer.commands
 
         cursor = 0
         while cursor < commands.size
@@ -368,8 +392,9 @@ module GSDL
             rect_batch = [command.rect]
             look_ahead = cursor + 1
             while look_ahead < commands.size
-              if can_batch_rect?(commands[look_ahead], command, active_color, active_scale_x, active_scale_y, active_clip_rect)
-                rect_batch << commands[look_ahead].as(DrawFRectCommand).rect
+              next_cmd = commands[look_ahead]
+              if next_cmd.is_a?(DrawFRectCommand) && can_batch_rect?(next_cmd, command, active_color, active_scale_x, active_scale_y, active_clip_rect)
+                rect_batch << next_cmd.rect
                 look_ahead += 1
               else
                 break
@@ -397,8 +422,8 @@ module GSDL
 
             while look_ahead < commands.size
               next_cmd = commands[look_ahead]
-              if can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
-                tex_cmd = next_cmd.as(DrawTextureCommand)
+              if next_cmd.is_a?(DrawTextureCommand) && can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
+                tex_cmd = next_cmd
 
                 # Minimal tint/alpha updates
                 new_tint = tex_cmd.tint
@@ -477,7 +502,7 @@ module GSDL
           cursor += 1
         end
 
-        commands.clear
+        layer.clear
       end
 
       @r.scale = {1_f32, 1_f32}
@@ -565,7 +590,10 @@ module GSDL
         z_index: z_index,
         vertices: vertices.map(&.to_sdl),
         indices: indices,
-        texture: texture.try(&.to_sdl)
+        texture: texture.try(&.to_sdl),
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -576,7 +604,10 @@ module GSDL
         z_index: z_index,
         color: color,
         x: x.to_f32,
-        y: y.to_f32
+        y: y.to_f32,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -588,7 +619,10 @@ module GSDL
       push_cmd(DrawPointsCommand.new(
         points: points.map(&.to_sdl),
         color: color,
-        z_index: z_index
+        z_index: z_index,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -614,7 +648,10 @@ module GSDL
         x1: x1.to_f32,
         y1: y1.to_f32,
         x2: x2.to_f32,
-        y2: y2.to_f32
+        y2: y2.to_f32,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -633,7 +670,10 @@ module GSDL
       push_cmd(DrawLinesCommand.new(
         points: points.map(&.to_sdl),
         color: color,
-        z_index: z_index
+        z_index: z_index,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -662,7 +702,10 @@ module GSDL
         rect: rect.to_sdl,
         color: color,
         outline: false,
-        z_index: z_index
+        z_index: z_index,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -679,7 +722,10 @@ module GSDL
         rects: rects.map(&.to_sdl),
         color: color,
         z_index: z_index,
-        outline: false
+        outline: false,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -697,7 +743,10 @@ module GSDL
         rect: rect.to_sdl,
         color: color,
         z_index: z_index,
-        outline: true
+        outline: true,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -714,7 +763,10 @@ module GSDL
         rects: rects.map(&.to_sdl),
         color: color,
         z_index: z_index,
-        outline: true
+        outline: true,
+        scale_x: @current_scale_x,
+        scale_y: @current_scale_y,
+        clip_rect: @current_clip_rect
       ))
     end
 
@@ -730,7 +782,7 @@ module GSDL
     # text
 
     def text(text : Text)
-      push_cmd(DrawTextCommand.new(text))
+      push_cmd(DrawTextCommand.new(text, @current_scale_x, @current_scale_y, @current_clip_rect))
     end
 
     # textures
@@ -799,11 +851,14 @@ module GSDL
           texture: texture.to_sdl,
           source_rect: source_rect.try(&.to_sdl),
           dest_rect: actual_dest_rect.to_sdl,
+          scale_x: @current_scale_x,
+          scale_y: @current_scale_y,
           angle: angle.to_f64,
           center: center.to_sdl,
           flip: flip,
           tint: tint,
-          destroy: destroy
+          destroy: destroy,
+          clip_rect: @current_clip_rect
         ))
       end
     end
