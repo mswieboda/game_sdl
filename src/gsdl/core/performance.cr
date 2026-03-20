@@ -2,6 +2,8 @@ module GSDL
   class Performance
     @samples = {} of String => Array(Float64)
     @current_frame_accum = {} of String => Float64
+    @session_totals = {} of String => Float64
+    @total_frames : UInt64 = 0
     @sample_limit : Int32
 
     # A rolling average of samples for each named measurement
@@ -39,7 +41,10 @@ module GSDL
     def end_frame
       return if !Game.instance.performance_monitoring_enabled
 
+      @total_frames += 1
       @current_frame_accum.each do |name, elapsed|
+        @session_totals[name] ||= 0.0
+        @session_totals[name] += elapsed
         add_sample(name, elapsed)
       end
       @current_frame_accum.clear
@@ -50,6 +55,26 @@ module GSDL
       return if !Game.instance.performance_monitoring_enabled
       @current_frame_accum[name] ||= 0.0
       @current_frame_accum[name] += amount
+    end
+
+    # Print a summary of the performance for the entire session.
+    def report
+      return if @total_frames == 0
+      
+      puts "\n" + "="*40
+      puts " GSDL PERFORMANCE SESSION REPORT "
+      puts "="*40
+      puts "Total Frames: #{@total_frames}"
+      
+      @session_totals.each do |name, total|
+        avg = total / @total_frames
+        if name == "query"
+          puts "#{name.capitalize}: Total=#{total.to_i}, Avg/Frame=#{avg.round(2)}"
+        else
+          puts "#{name.capitalize}: Total=#{total.round(2)}ms, Avg/Frame=#{avg.round(4)}ms"
+        end
+      end
+      puts "="*40 + "\n"
     end
 
     private def add_sample(name : String, elapsed : Float64)

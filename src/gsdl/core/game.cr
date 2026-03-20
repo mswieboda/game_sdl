@@ -414,6 +414,7 @@ module GSDL
     end
 
     def destroy
+      Performance.instance.report if performance_monitoring_enabled
       TextureManager.clear_all
       FontManager.clear_all
       AudioManager.clear_all
