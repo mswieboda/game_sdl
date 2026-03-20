@@ -8,6 +8,7 @@ module GSDL
     @width : Int32 = 0
     @height : Int32 = 0
     @wrap_width : Int32 = 0
+    @visible_characters : Int32 = -1
 
     def initialize(
       font = Font.default,
@@ -19,6 +20,7 @@ module GSDL
       color : Color = Color::White,
       align : Font::Align = Font::Align::Left,
       wrap_width : Int32 = 0,
+      @visible_characters : Int32 = -1,
       @z_index : Int32 = 0
     )
       super(
@@ -35,6 +37,20 @@ module GSDL
       )
       @wrap_width = wrap_width
       self.text = text
+    end
+
+    def visible_characters=(val : Int32)
+      @visible_characters = val
+      bake_texture
+    end
+
+    def visible_characters : Int32
+      @visible_characters
+    end
+
+    # Returns the total number of characters (excluding tags)
+    def total_characters : Int32
+      @segments.sum(&.text.size)
     end
 
     def text=(text : String)
@@ -225,9 +241,24 @@ module GSDL
         draw.color = Color.new(0, 0, 0, 0)
         draw.to_sdl.clear
 
+        remaining_chars = @visible_characters
+        show_all = @visible_characters < 0
+
         layout_info.each do |info|
+          break if !show_all && remaining_chars <= 0
+
+          text_to_draw = info[:text]
+          if !show_all && text_to_draw.size > remaining_chars
+            text_to_draw = text_to_draw[0...remaining_chars]
+            remaining_chars = 0
+          elsif !show_all
+            remaining_chars -= text_to_draw.size
+          end
+
+          next if text_to_draw.empty?
+
           font.style = info[:style]
-          temp_text = font.create_text(draw.text_engine, info[:text])
+          temp_text = font.create_text(draw.text_engine, text_to_draw)
           temp_text.color = info[:color]
           temp_text._draw(info[:x].to_f32, info[:y].to_f32)
           temp_text.destroy
