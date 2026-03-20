@@ -16,7 +16,7 @@ module TweenEx
     def init
       GSDL::Events.esc_exits = true
       GSDL::Game.push(TweenScene.new)
-        end
+    end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
