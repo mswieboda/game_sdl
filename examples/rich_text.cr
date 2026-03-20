@@ -15,10 +15,11 @@ class MainScene < GSDL::Scene
     @rich_text = GSDL::RichText.new(
       text: text,
       x: Game.width // 2,
-      y: Game.height // 2,
+      y: Game.height // 2 + 50,
       origin: {0.5_f32, 0.5_f32},
       color: GSDL::Color::White,
-      wrap_width: 600
+      wrap_width: 600,
+      align: GSDL::Font::Align::Center
     )
   end
 

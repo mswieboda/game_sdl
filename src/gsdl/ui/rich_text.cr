@@ -1,6 +1,7 @@
 module GSDL
   class RichText < TextBase
     record RichTextSegment, text : String, color : Color, style : Font::Style
+    alias WordInfo = NamedTuple(text: String, color: Color, style: Font::Style, x: Int32, y: Int32, w: Int32, h: Int32)
 
     @baked_texture : Texture?
     @segments = Array(RichTextSegment).new
@@ -16,6 +17,7 @@ module GSDL
       origin : Tuple(Float32, Float32) = {0_f32, 0_f32},
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
       color : Color = Color::White,
+      align : Font::Align = Font::Align::Left,
       wrap_width : Int32 = 0,
       @z_index : Int32 = 0
     )
@@ -27,6 +29,7 @@ module GSDL
         origin: origin,
         scale: scale,
         color: color,
+        align: align,
         wrap_width: wrap_width,
         z_index: z_index
       )
@@ -116,8 +119,10 @@ module GSDL
       @baked_texture.try &.destroy
       return if @segments.empty?
 
-      # 1. Calculate Layout & Word Wrapping
-      layout_info = Array(NamedTuple(text: String, color: Color, style: Font::Style, x: Int32, y: Int32, w: Int32, h: Int32)).new
+      # 1. First Pass: Calculate Layout & Group by Lines
+      # Each word has {text, color, style, x, y, w, h}
+      lines = [] of Array(WordInfo)
+      current_line = [] of WordInfo
 
       cursor_x = 0
       cursor_y = 0
@@ -125,12 +130,14 @@ module GSDL
       line_h = font.line_skip > 0 ? font.line_skip : font.height
 
       @segments.each do |seg|
-        # Split by spaces and newlines, but keep them
+        # Split by spaces and newlines, but keep them to preserve spacing
         words = seg.text.split(/([ \n\t]+)/)
         words.each do |word|
           next if word.empty?
 
           if word == "\n"
+            lines << current_line
+            current_line = [] of WordInfo
             cursor_x = 0
             cursor_y += line_h
             next
@@ -141,26 +148,76 @@ module GSDL
 
           # Wrap if necessary
           if @wrap_width > 0 && cursor_x + w > @wrap_width && !word.strip.empty?
+            lines << current_line
+            current_line = [] of WordInfo
             cursor_x = 0
             cursor_y += line_h
+            
+            # If the word itself is wider than wrap_width, it will just overflow
+            # unless we implement character-level wrapping, which we'll skip for now.
           end
 
-          layout_info << {text: word, color: seg.color, style: seg.style, x: cursor_x, y: cursor_y, w: w, h: h}
+          current_line << {text: word, color: seg.color, style: seg.style, x: cursor_x, y: cursor_y, w: w, h: h}
           cursor_x += w
           max_w = Math.max(max_w, cursor_x)
         end
       end
+      lines << current_line unless current_line.empty?
 
       @width = @wrap_width > 0 ? @wrap_width : max_w
       @height = cursor_y + line_h
 
       return if @width <= 0 || @height <= 0
 
+      # 2. Second Pass: Apply Alignment Offsets
+      target_align = font.align
+      layout_info = [] of WordInfo
+
+      lines.each do |line|
+        next if line.empty?
+        
+        # Calculate trailing whitespace width to ignore it for alignment
+        line_w = line.last[:x] + line.last[:w]
+        trailing_ws = 0
+        line.reverse_each do |w_info|
+          if w_info[:text].strip.empty?
+            trailing_ws += w_info[:w]
+          else
+            break
+          end
+        end
+        visual_line_w = line_w - trailing_ws
+
+        offset_x = 0
+        if target_align == Font::Align::Center
+          offset_x = (@width - visual_line_w) // 2
+        elsif target_align == Font::Align::Right
+          offset_x = @width - visual_line_w
+        end
+
+        # Don't allow negative offset (pushing off left edge)
+        offset_x = Math.max(0, offset_x)
+
+        line.each do |w_info|
+          # Create a new tuple with the adjusted X
+          layout_info << {
+            text: w_info[:text],
+            color: w_info[:color],
+            style: w_info[:style],
+            x: w_info[:x] + offset_x,
+            y: w_info[:y],
+            w: w_info[:w],
+            h: w_info[:h]
+          }
+        end
+      end
+
+      # 3. Create and Bake
       @baked_texture = Texture.new(@width, @height, access: TextureAccess::Target)
       @baked_texture.not_nil!.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
 
       draw = Game.draw
-      # Ensure internal segments are left-aligned
+      # Ensure internal segments are left-aligned so our manual offsets are exact
       old_align = font.align
       font.align = Font::Align::Left
 
