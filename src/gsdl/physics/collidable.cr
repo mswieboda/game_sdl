@@ -13,6 +13,8 @@ module GSDL
     # collision bounding box of the collidable object as an FRect
     abstract def collision_bounding_box : FRect
 
+    property? solid : Bool = true
+
     def collision_shape : Shape
       Shape::Rect
     end

@@ -1,5 +1,6 @@
 require "./body"
 require "./collidable"
+require "./scene_collisions"
 
 module GSDL
   module PhysicsController
@@ -15,6 +16,13 @@ module GSDL
 
     def physics_update(dt : Float32, collidables : Array(GSDL::Collidable) = [] of GSDL::Collidable, tile_map : TileMap? = nil)
       return unless physics_enabled?
+
+      if collidables.empty? && tile_map.nil?
+        if (scene = root_scene.as?(GSDL::SceneCollisions))
+          collidables = scene.collision_space.collidables
+          tile_map = scene.collision_space.tile_map
+        end
+      end
 
       # 1. Update acceleration from gravity (if enabled)
       if use_gravity
@@ -172,6 +180,7 @@ module GSDL
     def physics_resolve_overlap(collidables : Array(GSDL::Collidable), tile_map : GSDL::TileMap?)
       # Check for overlap and push out without adding velocity
       collidables.each do |other|
+        next unless other.solid?
         info = self.collision_info(other)
         if info.hit?
           self.x += info.normal.x * info.penetration
@@ -190,7 +199,7 @@ module GSDL
 
     private def collides_with_anything?(collidables : Array(GSDL::Collidable), tile_map : GSDL::TileMap?) : GSDL::Collidable?
       collidables.each do |c|
-        return c if collides?(c)
+        return c if c.solid? && collides?(c)
       end
 
       if tm = tile_map

@@ -1,3 +1,7 @@
+require "./move_controller"
+require "./directionable"
+require "./scene_collisions"
+
 module GSDL
   module TopDownController
     enum DirectionalMode
@@ -29,6 +33,13 @@ module GSDL
     end
 
     def top_down_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
+      if collidables.empty? && tile_map.nil?
+        if (scene = root_scene.as?(GSDL::SceneCollisions))
+          collidables = scene.collision_space.collidables
+          tile_map = scene.collision_space.tile_map
+        end
+      end
+
       case @movement_mode
       when MovementMode::FreeForm
         update_free_form(dt, collidables, tile_map)

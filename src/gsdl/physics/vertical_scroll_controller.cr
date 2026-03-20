@@ -1,3 +1,6 @@
+require "./move_controller"
+require "./scene_collisions"
+
 module GSDL
   module VerticalScrollController
     include MoveController
@@ -12,6 +15,13 @@ module GSDL
     end
 
     def vertical_scroll_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
+      if collidables.empty? && tile_map.nil?
+        if (scene = root_scene.as?(GSDL::SceneCollisions))
+          collidables = scene.collision_space.collidables
+          tile_map = scene.collision_space.tile_map
+        end
+      end
+
       move_input # sets dx and dy based on input
 
       # Calculate actual movement amounts for this frame

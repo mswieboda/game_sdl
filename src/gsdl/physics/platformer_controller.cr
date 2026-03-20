@@ -1,5 +1,6 @@
 require "./tile_map_collidable"
 require "./directionable"
+require "./scene_collisions"
 
 module GSDL
   module PlatformerController
@@ -37,6 +38,14 @@ module GSDL
     property crouch_speed_multiplier : Float32 = 0.5_f32
 
     def platformer_update(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil, world_bounds : FRect? = nil)
+      if collidables.empty? && tile_map.nil? && world_bounds.nil?
+        if (scene = root_scene.as?(GSDL::SceneCollisions))
+          collidables = scene.collision_space.collidables
+          tile_map = scene.collision_space.tile_map
+          world_bounds = scene.collision_space.space_bounds
+        end
+      end
+
       update_timers(dt)
 
       # 0. Handle Dashing
@@ -154,7 +163,7 @@ module GSDL
       # Check Collidables
       previous_x = self.x
       self.x += check_dx
-      collided = collidables.any? { |c| self != c && collides?(c) }
+      collided = collidables.any? { |c| self != c && c.solid? && collides?(c) }
       self.x = previous_x
 
       collided
@@ -209,7 +218,7 @@ module GSDL
       unless collided
         previous_y = self.y
         self.y = next_y
-        if collidables.any? { |c| self != c && collides?(c) }
+        if collidables.any? { |c| self != c && c.solid? && collides?(c) }
           self.y = previous_y
           @velocity_y = 0_f32
           @grounded = true if dy > 0
@@ -271,7 +280,7 @@ module GSDL
       unless collided
         previous_x = self.x
         self.x = next_x
-        if collidables.any? { |c| self != c && collides?(c) }
+        if collidables.any? { |c| self != c && c.solid? && collides?(c) }
           self.x = previous_x
           @velocity_x = 0_f32
           collided = true

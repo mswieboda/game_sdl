@@ -10,13 +10,14 @@ module PlatformerEx
   class Game < GSDL::Game
     def initialize
       super(title: "Platformer Example", width: WIDTH, height: HEIGHT)
-        end
+    end
 
     def init
       GSDL::Events.esc_exits = true
       self.target_fps = 60
       GSDL::Game.push(StartScene.new)
     end
+
     def load_textures
       [
         {"player", "gfx/skeleton.png"},
@@ -67,8 +68,10 @@ module PlatformerEx
       GSDL::FRect.new(x: 8_f32, y: 16_f32, w: 16_f32, h: 48_f32)
     end
 
-    def update(dt : Float32, tile_map : GSDL::TileMap, collidables : Array(GSDL::Collidable), world_bounds : GSDL::FRect)
-      platformer_update(dt, tile_map: tile_map, collidables: collidables, world_bounds: world_bounds)
+    def update(dt : Float32)
+      # No need to pass tile_map, collidables, or world_bounds!
+      # They are automatically fetched from StartScene's CollisionSpace.
+      platformer_update(dt)
 
       # animation from movement changes
       dx = 0
@@ -98,6 +101,7 @@ module PlatformerEx
       super(key: "coin", width: 32, height: 32, x: x, y: y)
 
       @z_index = 1
+      self.solid = false
       add("idle", [0, 1, 2, 3, 4, 3, 2, 1], 8, loops: true)
       play("idle")
     end
@@ -116,13 +120,14 @@ module PlatformerEx
   end
 
   class StartScene < GSDL::Scene
+    include GSDL::SceneCollisions # Opt-in to automated collision management
+
     TILE_SIZE = 32
 
     @tile_map : GSDL::TileMap
     @player : Player
     @coins : Array(GSDL::AnimatedSprite)
     @coin_audio : GSDL::Audio
-    @collidables : Array(GSDL::Collidable)
     @coin_text : GSDL::Text
     @info_text : GSDL::Text
     @fps_text : GSDL::Text
@@ -132,35 +137,34 @@ module PlatformerEx
     def initialize
       super(:start)
 
-      # set up input actions, per scene, or even in your scene manager, for the whole game
+      # set up input actions
       Input.set(:jump) { GSDL::Keys.just_pressed?([GSDL::Keys::W, GSDL::Keys::Up, GSDL::Keys::Space]) }
       Input.set(:left) { GSDL::Keys.pressed?([GSDL::Keys::A, GSDL::Keys::Left]) }
       Input.set(:right) { GSDL::Keys.pressed?([GSDL::Keys::D, GSDL::Keys::Right]) }
       Input.set(:debug) { GSDL::Keys.just_pressed?(GSDL::Keys::Tab) }
 
-      # Load the map from a Tiled JSON file
-      # NOTE: after exporting a Tiled file to JSON, you'll need to add a
-      # "solid_tiles" array to the "tilesets" info, like:
-      # "solid_tiles": [1, 2, 3, 8, 10, 11, 12, 17]
-      # so that we know which tiles are solid and have collisions
-      # and which are just background
       @tile_map = GSDL::TileMapManager.get("map")
       camera.type = GSDL::Camera::Type::CenterOnTarget
 
+      # Register the tile map with the collision space
+      collision_space.tile_map = @tile_map
+
+      # World bounds: slightly larger than the tile map
+      collision_space.space_bounds = GSDL::FRect.new(-16, -16, @tile_map.width + 32, @tile_map.height + 32)
+
       # player
       @player = Player.new(key: "player", width: 32, height: 64)
-      # Set map z_index to -1 so layers are at -1, 0, 1.
-      # Player at 1 will be above Ground and Objects, but below Foreground (1).
       @tile_map.z_index = -1
       @player.z_index = 1
 
-      # Spawn player at Tiled object location if available
+      # Spawn player
       if spawn = @tile_map.get_objects_by_type("PlayerStart").first?
         @player.x = spawn.x
         @player.y = spawn.y
       else
         @player.center(width: WIDTH, height: HEIGHT - 300)
       end
+      add_child(@player) # Auto-registered as a Collidable
 
       @coin_audio = GSDL::AudioManager.get("coin_audio")
       @coins = [] of GSDL::AnimatedSprite
@@ -168,12 +172,10 @@ module PlatformerEx
       spots = [{64, 64}, {320, 320}, {640, 512}, {640, 256}, {256, 256}]
 
       5.times.to_a do |i|
-        x, y = spot = spots[i]
-        coin = GSDL::AnimatedSprite.new(key: "coin", width: 32, height: 32, x: x, y: y)
-        coin.z_index = 1
-        coin.add("idle", [0, 1, 2, 3, 4, 3, 2, 1], 8, loops: true)
-        coin.play("idle")
+        x, y = spots[i]
+        coin = Coin.new(x, y)
         @coins << coin
+        add_child(coin) # Auto-registered as a Collidable
       end
 
       GSDL::Data.set("coins_collected", 0)
@@ -186,9 +188,9 @@ module PlatformerEx
         color: GSDL::Color::Gold
       )
 
-      # Add a floating sprite block, instead of tiles
-      @collidables = [] of GSDL::Collidable
-      @collidables << CustomPlatform.new(x: 160, y: 384, w: 160, h: 16)
+      # Add a floating sprite block
+      # add_child automatically registers it with collision_space because CustomPlatform (Sprite) is Collidable
+      add_child(CustomPlatform.new(x: 160, y: 384, w: 160, h: 16))
 
       small_font = GSDL::Font.default.copy
       small_font.size = 12
@@ -203,9 +205,6 @@ module PlatformerEx
         color: GSDL::Color::Lime
       )
 
-      # World bounds: slightly larger than the tile map to see them working
-      @bounds = GSDL::FRect.new(-16, -16, @tile_map.width + 32, @tile_map.height + 32)
-
       @fps_text = GSDL::Text.new(text: "FPS: 0", x: 16, y: 16, color: GSDL::Color::Lime)
       @fps_text.draw_relative_to_camera = false
     end
@@ -213,14 +212,13 @@ module PlatformerEx
     def update(dt : Float32)
       @debug = !@debug if Input.action?(:debug)
 
-      @coins.each(&.update(dt))
-
-      @player.update(dt, @tile_map, @collidables, @bounds)
+      super(dt) # Updates hud and all children (player, coins, platforms)
 
       @coins.each do |coin|
         if @player.collides?(coin)
           @coin_audio.play
           @coins.delete(coin)
+          remove_child(coin) # Auto-unregistered from collision_space
           GSDL::Data.increment("coins_collected")
           @coin_text.text = "Coins: #{GSDL::Data.get("coins_collected")}"
         end
@@ -235,27 +233,20 @@ module PlatformerEx
 
     def draw(draw : GSDL::Draw)
       # Draw bounds in red
-      bounds_camera = GSDL::FRect.new(x: @bounds.x - camera.x, y: @bounds.y - camera.y, w: @bounds.w, h: @bounds.h)
-      draw.rect_outline(bounds_camera, GSDL::Color::Red, z_index: 1)
+      if bounds = collision_space.space_bounds
+        bounds_camera = GSDL::FRect.new(x: bounds.x - camera.x, y: bounds.y - camera.y, w: bounds.w, h: bounds.h)
+        draw.rect_outline(bounds_camera, GSDL::Color::Red, z_index: 1)
+      end
 
       @tile_map.draw(draw)
 
-      @collidables.each do |b|
-        # could loop through Collidables and draw each kind separately
-        if b.is_a?(GSDL::Sprite)
-          b.draw(draw)
-        end
-      end
-
-      @coins.each(&.draw(draw))
-      @player.draw(draw)
+      super(draw) # Draws all children (player, coins, platforms)
       @coin_text.draw(draw)
       @info_text.draw(draw)
       @fps_text.draw(draw)
 
       return unless debug?
       # Debug: Draw collision boxes
-      # Player collision box
       player_box = @player.collision_box
       draw.rect_outline(
         rect: GSDL::FRect.new(

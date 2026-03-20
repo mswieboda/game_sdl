@@ -1,3 +1,6 @@
+require "./collidable"
+require "./scene_collisions"
+
 module GSDL
   module MoveController
     # requires
@@ -32,7 +35,14 @@ module GSDL
       self.y += self.dy * speed
     end
 
-    def move_and_collide?(dt : Float32, collidables : Array(Collidable), tile_map : TileMap? = nil)
+    def move_and_collide?(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
+      if collidables.empty? && tile_map.nil?
+        if (scene = root_scene.as?(GSDL::SceneCollisions))
+          collidables = scene.collision_space.collidables
+          tile_map = scene.collision_space.tile_map
+        end
+      end
+
       speed = move_speed * dt
 
       # Move X
@@ -54,12 +64,12 @@ module GSDL
       false
     end
 
-    def move_and_collide(dt : Float32, collidables : Array(Collidable), tile_map : TileMap?)
+    def move_and_collide(dt : Float32, collidables : Array(Collidable) = [] of Collidable, tile_map : TileMap? = nil)
       move_and_collide?(dt, collidables, tile_map)
     end
 
     private def collides_with_anything?(collidables : Array(Collidable), tile_map : TileMap?) : Bool
-      return true if collidables.any? { |c| collides?(c) }
+      return true if collidables.any? { |c| c.solid? && collides?(c) }
 
       if tm = tile_map
         return true if tm.solid_up?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)

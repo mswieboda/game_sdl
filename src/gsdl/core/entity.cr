@@ -31,6 +31,15 @@ module GSDL
       end
     end
 
+    def root_scene : Scene?
+      curr = parent
+      while curr
+        return curr if curr.is_a?(Scene)
+        curr = curr.as?(Entity).try(&.parent)
+      end
+      nil
+    end
+
     def add_child(entity : Entity)
       entity.parent = self
       @children << entity
