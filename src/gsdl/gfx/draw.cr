@@ -193,11 +193,12 @@ module GSDL
       end
     end
 
-    @draw_commands : Array(DrawCommand)
+    @layers : Hash(Int32, Array(DrawCommand))
+    @sorted_z_indices : Array(Int32)
     @text_engine : TextEngine?
 
     def command_count : Int32
-      @draw_commands.size
+      @layers.values.sum(&.size)
     end
 
     property culling_enabled : Bool = true
@@ -263,12 +264,18 @@ module GSDL
         return
       end
 
-      @draw_commands << c
+      layer = @layers[c.z_index] ||= begin
+        @sorted_z_indices << c.z_index
+        @sorted_z_indices.sort!
+        [] of DrawCommand
+      end
+      layer << c
     end
 
     def initialize(window : SDL3::Window)
       @r = SDL3::Renderer.new(window)
-      @draw_commands = [] of DrawCommand
+      @layers = Hash(Int32, Array(DrawCommand)).new
+      @sorted_z_indices = [] of Int32
     end
 
     private def set_color(color : Color)
@@ -296,8 +303,6 @@ module GSDL
     end
 
     def draw
-      @draw_commands.sort_by! { |c| {c.z_index, c.y.try(&.to_f32) || 0.0_f32} }
-
       active_scale_x = 1_f32
       active_scale_y = 1_f32
       active_clip_rect : SDL3::Rect? = nil
@@ -307,153 +312,166 @@ module GSDL
       @r.scale = {1_f32, 1_f32}
       @r.clip_rect = nil
 
-      cursor = 0
-      while cursor < @draw_commands.size
-        command = @draw_commands[cursor]
+      @sorted_z_indices.each do |z|
+        commands = @layers[z]
+        next if commands.empty?
 
-        # Sync Renderer Scale
-        if command.scale_x != active_scale_x || command.scale_y != active_scale_y
-          active_scale_x = command.scale_x
-          active_scale_y = command.scale_y
-          @r.scale = {active_scale_x, active_scale_y}
+        # Non-allocating sort within the layer by Y coordinate
+        commands.sort! do |a, b|
+          ay = a.y.try(&.to_f32) || 0.0_f32
+          by = b.y.try(&.to_f32) || 0.0_f32
+          ay <=> by
         end
 
-        # Sync Clip Rect
-        if command.clip_rect != active_clip_rect
-          active_clip_rect = command.clip_rect
-          @r.clip_rect = active_clip_rect
-        end
+        cursor = 0
+        while cursor < commands.size
+          command = commands[cursor]
 
-        # Handle Commands requiring explicit color/blend mode
-        if command.is_a?(DrawColorCommand)
-          if command.color != active_color
-            active_color = command.color
-            set_color(active_color.as(Color))
+          # Sync Renderer Scale
+          if command.scale_x != active_scale_x || command.scale_y != active_scale_y
+            active_scale_x = command.scale_x
+            active_scale_y = command.scale_y
+            @r.scale = {active_scale_x, active_scale_y}
           end
 
-          needed_blend_mode = active_color.as(Color).a < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
-          if needed_blend_mode != active_blend_mode
-            active_blend_mode = needed_blend_mode
-            @r.blend_mode = active_blend_mode
+          # Sync Clip Rect
+          if command.clip_rect != active_clip_rect
+            active_clip_rect = command.clip_rect
+            @r.clip_rect = active_clip_rect
           end
-        end
 
-        case command
-        when DrawFRectCommand
-          # Batch consecutive rectangles with identical properties
-          rect_batch = [command.rect]
-          look_ahead = cursor + 1
-          while look_ahead < @draw_commands.size
-            if can_batch_rect?(@draw_commands[look_ahead], command, active_color, active_scale_x, active_scale_y, active_clip_rect)
-              rect_batch << @draw_commands[look_ahead].as(DrawFRectCommand).rect
-              look_ahead += 1
-            else
-              break
+          # Handle Commands requiring explicit color/blend mode
+          if command.is_a?(DrawColorCommand)
+            if command.color != active_color
+              active_color = command.color
+              set_color(active_color.as(Color))
+            end
+
+            needed_blend_mode = active_color.as(Color).a < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
+            if needed_blend_mode != active_blend_mode
+              active_blend_mode = needed_blend_mode
+              @r.blend_mode = active_blend_mode
             end
           end
 
-          if rect_batch.size > 1
-            slice = Slice.new(rect_batch.to_unsafe, rect_batch.size)
-            command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
+          case command
+          when DrawFRectCommand
+            # Batch consecutive rectangles with identical properties
+            rect_batch = [command.rect]
+            look_ahead = cursor + 1
+            while look_ahead < commands.size
+              if can_batch_rect?(commands[look_ahead], command, active_color, active_scale_x, active_scale_y, active_clip_rect)
+                rect_batch << commands[look_ahead].as(DrawFRectCommand).rect
+                look_ahead += 1
+              else
+                break
+              end
+            end
+
+            if rect_batch.size > 1
+              slice = Slice.new(rect_batch.to_unsafe, rect_batch.size)
+              command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
+              cursor = look_ahead - 1
+            else
+              command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
+            end
+
+          when DrawTextureCommand
+            # Textures invalidate current tracking as they use specialized state
+            active_color = nil
+            active_blend_mode = nil
+
+            # Optimization: Batch texture state changes (tint/alpha) for identical textures
+            look_ahead = cursor
+            current_tex_tint : Color? = nil
+            current_tex_alpha : UInt8? = nil
+            first_in_batch = true
+
+            while look_ahead < commands.size
+              next_cmd = commands[look_ahead]
+              if can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
+                tex_cmd = next_cmd.as(DrawTextureCommand)
+
+                # Minimal tint/alpha updates
+                new_tint = tex_cmd.tint
+                new_alpha = new_tint.try(&.a) || 255_u8
+
+                if first_in_batch || new_tint != current_tex_tint
+                  current_tex_tint = new_tint
+                  tex_cmd.texture.tint = new_tint.try(&.to_sdl) || LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
+                end
+
+                # If alpha blend needed, set it once per texture if it changes
+                if first_in_batch || new_alpha != current_tex_alpha
+                  current_tex_alpha = new_alpha
+                  @r.blend_mode = new_alpha < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
+                end
+
+                first_in_batch = false
+
+                _render_texture_rotated(
+                  texture: tex_cmd.texture,
+                  source_rect: tex_cmd.source_rect,
+                  dest_rect: tex_cmd.dest_rect,
+                  angle: tex_cmd.angle,
+                  center: tex_cmd.center,
+                  flip: tex_cmd.flip
+                )
+
+                if tex_cmd.destroy?
+                  tex_cmd.texture.destroy
+                end
+
+                look_ahead += 1
+              else
+                break
+              end
+            end
             cursor = look_ahead - 1
-          else
-            command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
-          end
 
-        when DrawTextureCommand
-          # Textures invalidate current tracking as they use specialized state
-          active_color = nil
-          active_blend_mode = nil
+          when DrawTextCommand
+            active_color = nil
+            active_blend_mode = nil
+            command.text._draw(command.screen_x, command.screen_y)
 
-          # Optimization: Batch texture state changes (tint/alpha) for identical textures
-          look_ahead = cursor
-          current_tex_tint : Color? = nil
-          current_tex_alpha : UInt8? = nil
-          first_in_batch = true
+          when DrawGeometryCommand
+            # Reset tracking
+            active_color = nil
+            active_blend_mode = nil
 
-          while look_ahead < @draw_commands.size
-            next_cmd = @draw_commands[look_ahead]
-            if can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
-              tex_cmd = next_cmd.as(DrawTextureCommand)
-
-              # Minimal tint/alpha updates
-              new_tint = tex_cmd.tint
-              new_alpha = new_tint.try(&.a) || 255_u8
-
-              if first_in_batch || new_tint != current_tex_tint
-                current_tex_tint = new_tint
-                tex_cmd.texture.tint = new_tint.try(&.to_sdl) || LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
-              end
-
-              # If alpha blend needed, set it once per texture if it changes
-              if first_in_batch || new_alpha != current_tex_alpha
-                current_tex_alpha = new_alpha
-                @r.blend_mode = new_alpha < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
-              end
-
-              first_in_batch = false
-
-              _render_texture_rotated(
-                texture: tex_cmd.texture,
-                source_rect: tex_cmd.source_rect,
-                dest_rect: tex_cmd.dest_rect,
-                angle: tex_cmd.angle,
-                center: tex_cmd.center,
-                flip: tex_cmd.flip
-              )
-
-              if tex_cmd.destroy?
-                tex_cmd.texture.destroy
-              end
-
-              look_ahead += 1
+            @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+            if texture = command.texture
+              texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
+              @r.render_geometry(texture: texture, vertices: command.vertices, indices: command.indices)
             else
-              break
+              @r.render_geometry(vertices: command.vertices, indices: command.indices)
             end
+
+          when DrawFRectsCommand
+            slice = Slice.new(command.rects.to_unsafe, command.rects.size)
+            command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
+
+          when DrawPointCommand
+            @r.draw_point(x: command.x, y: command.y)
+
+          when DrawPointsCommand
+            slice = Slice.new(command.points.to_unsafe, command.points.size)
+            @r.draw_points(slice)
+
+          when DrawLineCommand
+            @r.draw_line(x1: command.x1, y1: command.y1, x2: command.x2, y2: command.y2)
+
+          when DrawLinesCommand
+            slice = Slice.new(command.points.to_unsafe, command.points.size)
+            @r.draw_lines(slice)
           end
-          cursor = look_ahead - 1
 
-        when DrawTextCommand
-          active_color = nil
-          active_blend_mode = nil
-          command.text._draw(command.screen_x, command.screen_y)
-
-        when DrawGeometryCommand
-          # Reset tracking
-          active_color = nil
-          active_blend_mode = nil
-
-          @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-          if texture = command.texture
-            texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
-            @r.render_geometry(texture: texture, vertices: command.vertices, indices: command.indices)
-          else
-            @r.render_geometry(vertices: command.vertices, indices: command.indices)
-          end
-
-        when DrawFRectsCommand
-          slice = Slice.new(command.rects.to_unsafe, command.rects.size)
-          command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
-
-        when DrawPointCommand
-          @r.draw_point(x: command.x, y: command.y)
-
-        when DrawPointsCommand
-          slice = Slice.new(command.points.to_unsafe, command.points.size)
-          @r.draw_points(slice)
-
-        when DrawLineCommand
-          @r.draw_line(x1: command.x1, y1: command.y1, x2: command.x2, y2: command.y2)
-
-        when DrawLinesCommand
-          slice = Slice.new(command.points.to_unsafe, command.points.size)
-          @r.draw_lines(slice)
+          cursor += 1
         end
 
-        cursor += 1
+        commands.clear
       end
 
-      @draw_commands.clear
       @r.scale = {1_f32, 1_f32}
       @r.present
     end
