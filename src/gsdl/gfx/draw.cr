@@ -196,9 +196,13 @@ module GSDL
     @layers : Hash(Int32, Array(DrawCommand))
     @sorted_z_indices : Array(Int32)
     @text_engine : TextEngine?
+    @current_command_count : Int32 = 0
+    @last_command_count : Int32 = 0
 
     def command_count : Int32
-      @layers.values.sum(&.size)
+      # During update, we want to know what happened last frame.
+      # During draw (after scene.draw), we might want to know the current total.
+      @current_command_count > 0 ? @current_command_count : @last_command_count
     end
 
     property culling_enabled : Bool = true
@@ -270,6 +274,7 @@ module GSDL
         [] of DrawCommand
       end
       layer << c
+      @current_command_count += 1
     end
 
     def initialize(window : SDL3::Window)
@@ -303,6 +308,9 @@ module GSDL
     end
 
     def draw
+      @last_command_count = @current_command_count
+      @current_command_count = 0
+
       active_scale_x = 1_f32
       active_scale_y = 1_f32
       active_clip_rect : SDL3::Rect? = nil
