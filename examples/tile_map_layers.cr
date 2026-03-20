@@ -75,5 +75,3 @@ module MultiLayerMapEx
 
   Game.new.run
 end
-
-

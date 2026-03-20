@@ -129,4 +129,3 @@ module GameEx
 
   Game.new.run
 end
-

@@ -353,7 +353,7 @@ module GSDL
         if (fps = @target_fps) && fps > 0
           target_duration = 1.0_f32 / fps
           elapsed = (Time.instant - current_time).total_seconds.to_f32
-          
+
           if elapsed < target_duration
             sleep((target_duration - elapsed).seconds)
           end
