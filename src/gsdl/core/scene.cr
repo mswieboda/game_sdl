@@ -25,6 +25,8 @@ module GSDL
     # Whether to update scenes below this one (e.g. for pause overlays)
     property? update_underlying : Bool = false
 
+    getter entities = [] of Entity
+
     def initialize(
       @name : Symbol = :base,
       transition_in : Transition? = nil,
@@ -34,6 +36,18 @@ module GSDL
       @transition_in = transition_in || EmptyTransition.new
       @transition_out = transition_out || EmptyTransition.new
       @exit = false
+    end
+
+    def add_child(entity : Entity)
+      entity.parent = self
+      @entities << entity
+      entity
+    end
+
+    def remove_child(entity : Entity)
+      @entities.delete(entity)
+      entity.parent = nil
+      entity
     end
 
     def self.loading_scene_class(target_scene_class : T.class, data : SwitchData? = nil) : LoadingSceneBase forall T
@@ -53,9 +67,11 @@ module GSDL
 
     def update(dt : Float32)
       @hud.try &.update(dt)
+      @entities.each &.update(dt)
     end
 
     def draw(draw : Draw)
+      @entities.each &.draw(draw)
       @hud.try &.draw(draw)
     end
   end

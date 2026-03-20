@@ -1,27 +1,19 @@
 require "./centerable"
 
 module GSDL
-  abstract class SpriteBase
+  abstract class SpriteBase < Entity
     include Centerable
     include Collidable
     include Area
     include Directionable
-    include Tweenable
 
-    property x : Num
-    property y : Num
-    property z_index : Int32 = 0
     property rotation : Num = 0
     property tint : Color? = nil
-    property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
-    property scale : Tuple(Num, Num) = {1_f32, 1_f32}
     property update_off_screen : Bool = true
 
     property? flip_h : Bool = false
     property? flip_v : Bool = false
     property? draw_relative_to_camera : Bool = true
-
-    getter tweens : Array(Tween) = [] of Tween
 
     @texture : Texture
 
@@ -31,13 +23,17 @@ module GSDL
 
     def initialize(
       @key : String,
-      @x : Num = 0,
-      @y : Num = 0,
-      @origin = {0_f32, 0_f32},
-      @scale = {1_f32, 1_f32},
+      x : Num = 0,
+      y : Num = 0,
+      origin = {0_f32, 0_f32},
+      scale = {1_f32, 1_f32},
       @tint : Color? = nil
     )
       @texture = TextureManager.get(@key)
+      @x = x
+      @y = y
+      @origin = origin
+      @scale = scale
     end
 
     abstract def width : Num
@@ -59,41 +55,9 @@ module GSDL
     #
     # ALWAYS call `return unless super(dt)` at the top of your custom `update` methods.
     def update(dt : Float32) : Bool
+      return false unless super(dt)
       return false if !@update_off_screen && !on_screen?
-      update_tweens(dt)
       true
-    end
-
-    def origin_x : Float32
-      origin[0]
-    end
-
-    def origin_y : Float32
-      origin[1]
-    end
-
-    def scale_x : Num
-      scale[0]
-    end
-
-    def scale_y : Num
-      scale[1]
-    end
-
-    def scale_x=(val : Num)
-      @scale = {val, scale_y}
-    end
-
-    def scale_y=(val : Num)
-      @scale = {scale_x, val}
-    end
-
-    def scale=(val : Tuple(Num, Num))
-      @scale = val
-    end
-
-    def scale=(val : Num)
-      @scale = {val, val}
     end
 
     # override this method in parent class for custom area box
@@ -121,11 +85,11 @@ module GSDL
     end
 
     def draw_x : Num
-      x - (draw_width * origin_x)
+      scene_x - (draw_width * origin_x)
     end
 
     def draw_y : Num
-      y - (draw_height * origin_y)
+      scene_y - (draw_height * origin_y)
     end
 
     abstract def draw(draw : Draw)

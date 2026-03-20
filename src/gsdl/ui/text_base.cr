@@ -1,16 +1,9 @@
 module GSDL
-  abstract class TextBase
+  abstract class TextBase < Entity
     include Centerable
-    include Tweenable
 
     property text : String
-    property x : Num
-    property y : Num
-    property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
-    property z_index : Int32 = 0
-    property scale : Tuple(Num, Num) = {1_f32, 1_f32}
     property? draw_relative_to_camera : Bool = true
-    getter tweens : Array(Tween) = [] of Tween
 
     @@draw : Draw?
 
@@ -31,10 +24,10 @@ module GSDL
     def initialize(
       font = Font.default,
       @text = "",
-      @x = 0,
-      @y = 0,
-      @origin = {0_f32, 0_f32},
-      @scale = {1_f32, 1_f32},
+      x = 0,
+      y = 0,
+      origin = {0_f32, 0_f32},
+      scale = {1_f32, 1_f32},
       color = Color::White,
       align = Font::Align::Left,
       direction = Font::Direction::LTR,
@@ -57,6 +50,11 @@ module GSDL
       if ww = wrap_width
         @text_sdl.wrap_width = ww
       end
+
+      @x = x
+      @y = y
+      @origin = origin
+      @scale = scale
     end
 
     def self.draw=(draw : Draw)
@@ -142,14 +140,6 @@ module GSDL
       text_size_wrapped[1] - (had_newlines ? font.size.to_i : 0)
     end
 
-    def origin_x : Float32
-      origin[0]
-    end
-
-    def origin_y : Float32
-      origin[1]
-    end
-
     def draw_width : Num
       width * scale_x
     end
@@ -159,37 +149,17 @@ module GSDL
     end
 
     def draw_x : Num
-      dx = x - (draw_width * origin_x)
+      dx = scene_x - (draw_width * origin_x)
       draw_relative_to_camera? ? dx - Game.camera.x : dx
     end
 
     def draw_y : Num
-      dy = y - (draw_height * origin_y)
+      dy = scene_y - (draw_height * origin_y)
       draw_relative_to_camera? ? dy - Game.camera.y : dy
     end
 
-    def scale_x : Num
-      scale[0]
-    end
-
-    def scale_y : Num
-      scale[1]
-    end
-
-    def scale_x=(val : Num)
-      self.scale = {val, scale_y}
-    end
-
-    def scale_y=(val : Num)
-      self.scale = {scale_x, val}
-    end
-
-    def scale=(val : Num)
-      self.scale = {val, val}
-    end
-
     def update(dt : Float32)
-      update_tweens(dt)
+      super(dt)
     end
 
     # Hook for subclasses to respond to text/color/font changes

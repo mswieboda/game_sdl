@@ -2,6 +2,8 @@ require "sdl3"
 
 require "./gsdl/asset_manager"
 require "./gsdl/core/loadable"
+require "./gsdl/core/tweenable"
+require "./gsdl/core/entity"
 require "./gsdl/core/*"
 require "./gsdl/audio/*"
 require "./gsdl/physics/physics"
