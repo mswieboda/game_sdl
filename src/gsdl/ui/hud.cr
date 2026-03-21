@@ -58,8 +58,11 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      old_scale = draw.scale
+      draw.scale = 1.0_f32
       @elements.each(&.hud_draw(draw))
       draw_custom(draw)
+      draw.scale = old_scale
     end
 
     def update_custom(dt : Float32)

@@ -67,8 +67,8 @@ module GSDL
         screen_h = GSDL::Game.height.to_f32
 
         # Basic bounding box check with circumscribed circle to account for arbitrary rotation
-        cx = @dest_rect.x + @dest_rect.w / 2_f32
-        cy = @dest_rect.y + @dest_rect.h / 2_f32
+        cx = (@dest_rect.x + @dest_rect.w / 2_f32) * scale_x.abs
+        cy = (@dest_rect.y + @dest_rect.h / 2_f32) * scale_y.abs
 
         radius = Math.max(@dest_rect.w, @dest_rect.h) * 0.75_f32
         radius *= Math.max(scale_x.abs, scale_y.abs)
@@ -96,10 +96,12 @@ module GSDL
         screen_w = GSDL::Game.width.to_f32
         screen_h = GSDL::Game.height.to_f32
 
+        sx = @screen_x * scale_x.abs
+        sy = @screen_y * scale_y.abs
         r_w = @text.width.to_f32 * scale_x.abs
         r_h = @text.height.to_f32 * scale_y.abs
 
-        @screen_x + r_w >= 0_f32 && @screen_x <= screen_w && @screen_y + r_h >= 0_f32 && @screen_y <= screen_h
+        sx + r_w >= 0_f32 && sx <= screen_w && sy + r_h >= 0_f32 && sy <= screen_h
       end
     end
 
@@ -137,8 +139,8 @@ module GSDL
         screen_w = GSDL::Game.width.to_f32
         screen_h = GSDL::Game.height.to_f32
 
-        r_x = @rect.x
-        r_y = @rect.y
+        r_x = @rect.x * scale_x.abs
+        r_y = @rect.y * scale_y.abs
         r_w = @rect.w * scale_x.abs
         r_h = @rect.h * scale_y.abs
 
@@ -166,7 +168,9 @@ module GSDL
       def on_screen? : Bool
         screen_w = GSDL::Game.width.to_f32
         screen_h = GSDL::Game.height.to_f32
-        @x >= 0_f32 && @x <= screen_w && @y >= 0_f32 && @y <= screen_h
+        px = @x * scale_x.abs
+        py = @y * scale_y.abs
+        px >= 0_f32 && px <= screen_w && py >= 0_f32 && py <= screen_h
       end
     end
 

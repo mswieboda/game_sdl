@@ -63,9 +63,9 @@ module CameraEx
   class StartScene < GSDL::Scene
     @boundary : GSDL::Rect
     @player : Player
-    @info_text : GSDL::Text
-    @zoom_text : GSDL::Text
-    @controls_text : GSDL::Text
+    @info_text : GSDL::HUDText
+    @zoom_text : GSDL::HUDText
+    @controls_text : GSDL::HUDText
 
     GRID_SIZE = 32
 
@@ -96,27 +96,40 @@ module CameraEx
       @player.x = 100
       @player.y = 100
 
-      @info_text = GSDL::Text.new(
+      h = GSDL::HUD.new
+
+      @info_text = GSDL::HUDText.new(
         text: "Mode: CenterOnTargetWithBoundary",
-        x: 10,
-        y: 10,
+        anchor: GSDL::Anchor::TopLeft,
+        offset_x: 10,
+        offset_y: 10,
         color: GSDL::Color::White
       )
-      @zoom_text = GSDL::Text.new(
+      @zoom_text = GSDL::HUDText.new(
         text: "Zoom: 1.0 (Lerp: OFF)",
-        x: 10,
-        y: 40,
+        anchor: GSDL::Anchor::TopLeft,
+        offset_x: 10,
+        offset_y: 40,
         color: GSDL::Color::White
       )
-      @controls_text = GSDL::Text.new(
+      @controls_text = GSDL::HUDText.new(
         text: "SPACE: cycle mode\nL: toggle lerp\nQ/E: zoom\nX: shake",
-        x: 10,
-        y: 70,
+        anchor: GSDL::Anchor::TopLeft,
+        offset_x: 10,
+        offset_y: 70,
         color: GSDL::Color::White
       )
+
+      h << @info_text
+      h << @zoom_text
+      h << @controls_text
+
+      self.hud = h
     end
 
     def update(dt : Float32)
+      super(dt)
+
       if Input.action?(:toggle_lerp)
         if camera.lerp_speed == 0
           camera.lerp_speed = 5.0_f32
@@ -181,12 +194,11 @@ module CameraEx
 
       draw_floor(draw)
 
+      @player.draw(draw)
+
       draw.scale = old_scale
 
-      @player.draw(draw)
-      @info_text.draw(draw)
-      @zoom_text.draw(draw)
-      @controls_text.draw(draw)
+      super(draw)
     end
 
     def draw_floor(draw : GSDL::Draw)

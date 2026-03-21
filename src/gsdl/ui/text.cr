@@ -41,7 +41,18 @@ module GSDL
     def draw(draw : Draw)
       return if @text.empty?
 
+      old_scale_x = draw.current_scale_x
+      old_scale_y = draw.current_scale_y
+
+      if draw_relative_to_camera?
+        draw.scale = Game.camera.zoom
+      else
+        draw.scale = 1.0_f32
+      end
+
       draw.text(self)
+
+      draw.scale = {old_scale_x, old_scale_y}
     end
 
     # NOTE: shouldn't be used outside of Draw class, but Draw needs it public

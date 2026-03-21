@@ -9,7 +9,7 @@ module HUDEx
     def init
       GSDL::Events.esc_exits = true
       GSDL::Game.push(StartScene.new)
-        end
+    end
 
     def load_default_font
       "fonts/PressStart2P.ttf"

@@ -38,6 +38,8 @@ module GSDL
 
       if draw_relative_to_camera?
         draw.scale = Game.camera.zoom
+      else
+        draw.scale = 1.0_f32
       end
 
       camera_x = draw_relative_to_camera? ? Game.camera.x : 0_f32
@@ -79,9 +81,7 @@ module GSDL
         sort_y: ground_y.to_f32
       )
 
-      if draw_relative_to_camera?
-        draw.scale = {old_scale_x, old_scale_y}
-      end
+      draw.scale = {old_scale_x, old_scale_y}
     end
   end
 end
