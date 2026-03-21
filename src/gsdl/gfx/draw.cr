@@ -37,6 +37,7 @@ module GSDL
       property flip : Int32
       property tint : Color?
       property? destroy
+      property sort_y : Float32?
 
       def initialize(
         z_index : Int32,
@@ -50,13 +51,14 @@ module GSDL
         @flip : Int32 = 0,
         @tint : Color? = nil,
         @destroy : Bool = false,
-        clip_rect : SDL3::Rect? = nil
+        clip_rect : SDL3::Rect? = nil,
+        @sort_y : Float32? = nil
       )
         super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
 
       def y : Num?
-        @dest_rect.y
+        @sort_y || @dest_rect.y
       end
 
       def on_screen? : Bool
@@ -820,7 +822,8 @@ module GSDL
       z_index : Int32 = 0,
       tint : Color = Color::White,
       destroy : Bool = false,
-      draw_immediately : Bool = false
+      draw_immediately : Bool = false,
+      sort_y : Float32? = nil
     )
       texture_rotated(
         texture: texture,
@@ -832,7 +835,8 @@ module GSDL
         z_index: z_index,
         tint: tint,
         destroy: destroy,
-        draw_immediately: draw_immediately
+        draw_immediately: draw_immediately,
+        sort_y: sort_y
       )
     end
 
@@ -848,7 +852,8 @@ module GSDL
       tint : Color? = nil,
       z_index : Int32 = 0,
       destroy : Bool = false,
-      draw_immediately : Bool = false
+      draw_immediately : Bool = false,
+      sort_y : Float32? = nil
     )
       actual_dest_rect = dest_rect || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)
 
@@ -881,7 +886,8 @@ module GSDL
           flip: flip,
           tint: tint,
           destroy: destroy,
-          clip_rect: @current_clip_rect
+          clip_rect: @current_clip_rect,
+          sort_y: sort_y
         ))
       end
     end

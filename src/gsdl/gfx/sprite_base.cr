@@ -15,6 +15,8 @@ module GSDL
     property? flip_v : Bool = false
     property? draw_relative_to_camera : Bool = true
 
+    property render_offset_y : Float32 = 0_f32
+
     @texture : Texture
 
     def size : Tuple(Float32, Float32)
@@ -89,7 +91,13 @@ module GSDL
     end
 
     def draw_y : Num
-      scene_y - (draw_height * origin_y)
+      scene_y - (draw_height * origin_y) + render_offset_y
+    end
+
+    # The ground position (bottom) of the sprite, ignoring any height/oblique offsets.
+    # Used for depth sorting in 3/4 perspective.
+    def ground_y : Num
+      draw_y - render_offset_y + draw_height
     end
 
     abstract def draw(draw : Draw)

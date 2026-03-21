@@ -67,7 +67,8 @@ module GSDL
           center: center_point_from_origin,
           flip: flip_val,
           tint: tint,
-          z_index: z_index
+          z_index: z_index,
+          sort_y: ground_y.to_f32
         )
       else
         draw.texture_rotated(
@@ -77,7 +78,8 @@ module GSDL
           center: center_point_from_origin,
           flip: flip_val,
           tint: tint,
-          z_index: z_index
+          z_index: z_index,
+          sort_y: ground_y.to_f32
         )
       end
 
