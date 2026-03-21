@@ -60,12 +60,12 @@ module GSDL
     # Print a summary of the performance for the entire session.
     def report
       return if @total_frames == 0
-      
+
       puts "\n" + "="*40
       puts " GSDL PERFORMANCE SESSION REPORT "
       puts "="*40
       puts "Total Frames: #{@total_frames}"
-      
+
       @session_totals.each do |name, total|
         avg = total / @total_frames
         if name == "query"

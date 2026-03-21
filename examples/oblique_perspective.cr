@@ -47,7 +47,7 @@ module ObliquePerspectiveEx
 
     property move_speed : GSDL::Num = 160_f32
     def grid_size : GSDL::Num; 32; end
-    
+
     # Jump state
     @jumping = false
     @jump_time = 0_f32
@@ -122,7 +122,7 @@ module ObliquePerspectiveEx
 
     def draw(draw : GSDL::Draw)
       self.flip_h = direction.left? || direction.up_left? || direction.down_left?
-      
+
       # Draw shadow at ground position (ignoring render_offset_y by using ground_y)
       shadow_w = 20_f32
       shadow_h = 8_f32
