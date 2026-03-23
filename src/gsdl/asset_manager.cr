@@ -168,6 +168,11 @@ module GSDL
     # and then creates an SDL3::IOStream from raw byte data.
     # This loads the entire asset into memory before passing it to SDL3.
     # Suitable for smaller to medium-sized assets.
+    def self.open_io_stream(path_key : String) : SDL3::IOStream
+      data = load_raw_data(path_key)
+      io_stream_from_data(data)
+    end
+
     def self.with_io_stream(path_key : String, close_io = false)
       data = load_raw_data(path_key)
       io_stream = io_stream_from_data(data)

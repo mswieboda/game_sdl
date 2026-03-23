@@ -21,7 +21,7 @@ clean:
 packer:
 	@echo "Building packer tool..."
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/packer.cr -o gsdl-packer --release --no-debug
+	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/packer.cr -o gsdl-packer --release --no-debug -p
 
 examples:
 	@echo "Building and running all examples..."
