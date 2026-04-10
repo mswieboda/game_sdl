@@ -422,26 +422,24 @@ module GSDL
 
             # Optimization: Batch texture state changes (tint/alpha) for identical textures
             look_ahead = cursor
-            current_tex_tint : Color? = nil
-            current_tex_alpha : UInt8? = nil
-            first_in_batch = true
+            
+            t = command.tint
+            is_white_tint = t.nil? || (t.r == 255 && t.g == 255 && t.b == 255)
 
-            while look_ahead < commands.size
-              next_cmd = commands[look_ahead]
-              if next_cmd.is_a?(DrawTextureCommand) && can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
-                tex_cmd = next_cmd
+            # ALWAYS use BLEND mode for textures to respect transparency
+            LibSDL3.set_texture_blend_mode(command.texture.to_unsafe, LibSDL3::SDL_BLENDMODE_BLEND)
+            LibSDL3.set_render_draw_blend_mode(@r.to_unsafe, LibSDL3::SDL_BLENDMODE_BLEND)
 
-                # Minimal tint/alpha updates
-                new_tint = tex_cmd.tint
-                new_alpha = new_tint.try(&.a) || 255_u8
+            if is_white_tint
+              # One pass: White modulation (standard draw)
+              alpha = t.try(&.a) || 255_u8
+              LibSDL3.set_texture_color_mod(command.texture.to_unsafe, 255_u8, 255_u8, 255_u8)
+              LibSDL3.set_texture_alpha_mod(command.texture.to_unsafe, alpha)
 
-                # If there's a tint, we need to draw twice:
-                # 1. Base texture (no tint)
-                # 2. Tinted overlay
-                if t = new_tint
-                  # Draw Base
-                  tex_cmd.texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
-                  @r.blend_mode = LibSDL3::SDL_BLENDMODE_NONE
+              while look_ahead < commands.size
+                next_cmd = commands[look_ahead]
+                if next_cmd.is_a?(DrawTextureCommand) && can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
+                  tex_cmd = next_cmd
 
                   _render_texture_rotated(
                     texture: tex_cmd.texture,
@@ -452,22 +450,27 @@ module GSDL
                     flip: tex_cmd.flip
                   )
 
-                  # Draw Tinted Overlay
-                  tex_cmd.texture.tint = t.to_sdl
-                  @r.blend_mode = new_alpha < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
+                  if tex_cmd.destroy?
+                    tex_cmd.texture.destroy
+                  end
 
-                  _render_texture_rotated(
-                    texture: tex_cmd.texture,
-                    source_rect: tex_cmd.source_rect,
-                    dest_rect: tex_cmd.dest_rect,
-                    angle: tex_cmd.angle,
-                    center: tex_cmd.center,
-                    flip: tex_cmd.flip
-                  )
+                  look_ahead += 1
                 else
-                  # No tint, draw once
-                  tex_cmd.texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
-                  @r.blend_mode = LibSDL3::SDL_BLENDMODE_NONE
+                  break
+                end
+              end
+            else
+              # Two passes: Base + Tinted Overlay (for the color overlay effect)
+              
+              # Pass 1: Base (Full color, opaque)
+              LibSDL3.set_texture_color_mod(command.texture.to_unsafe, 255_u8, 255_u8, 255_u8)
+              LibSDL3.set_texture_alpha_mod(command.texture.to_unsafe, 255_u8)
+              
+              temp_look_ahead = cursor
+              while temp_look_ahead < commands.size
+                next_cmd = commands[temp_look_ahead]
+                if next_cmd.is_a?(DrawTextureCommand) && can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
+                  tex_cmd = next_cmd
 
                   _render_texture_rotated(
                     texture: tex_cmd.texture,
@@ -477,15 +480,40 @@ module GSDL
                     center: tex_cmd.center,
                     flip: tex_cmd.flip
                   )
-                end
 
-                if tex_cmd.destroy?
-                  tex_cmd.texture.destroy
+                  temp_look_ahead += 1
+                else
+                  break
                 end
+              end
 
-                look_ahead += 1
-              else
-                break
+              # Pass 2: Tinted Overlay
+              tint = t.not_nil!
+              LibSDL3.set_texture_color_mod(command.texture.to_unsafe, tint.r, tint.g, tint.b)
+              LibSDL3.set_texture_alpha_mod(command.texture.to_unsafe, tint.a)
+
+              while look_ahead < commands.size
+                next_cmd = commands[look_ahead]
+                if next_cmd.is_a?(DrawTextureCommand) && can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
+                  tex_cmd = next_cmd
+
+                  _render_texture_rotated(
+                    texture: tex_cmd.texture,
+                    source_rect: tex_cmd.source_rect,
+                    dest_rect: tex_cmd.dest_rect,
+                    angle: tex_cmd.angle,
+                    center: tex_cmd.center,
+                    flip: tex_cmd.flip
+                  )
+
+                  if tex_cmd.destroy?
+                    tex_cmd.texture.destroy
+                  end
+
+                  look_ahead += 1
+                else
+                  break
+                end
               end
             end
             cursor = look_ahead - 1
@@ -546,10 +574,17 @@ module GSDL
       next_cmd.clip_rect == clip_rect
     end
 
+    private def same_tint?(c1 : Color?, c2 : Color?) : Bool
+      return true if c1.nil? && c2.nil?
+      return false if c1.nil? || c2.nil?
+      # Compare individual components to avoid issues with struct padding or marshaling in release mode
+      c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a
+    end
+
     private def can_batch_texture?(next_cmd : Command, current_cmd : Command, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
       return false unless next_cmd.is_a?(DrawTextureCommand) && current_cmd.is_a?(DrawTextureCommand)
       next_cmd.texture == current_cmd.texture &&
-      next_cmd.tint == current_cmd.tint &&
+      same_tint?(next_cmd.tint, current_cmd.tint) &&
       next_cmd.scale_x == scale_x &&
       next_cmd.scale_y == scale_y &&
       next_cmd.clip_rect == clip_rect
@@ -593,19 +628,26 @@ module GSDL
       tint : Color? = nil,
       destroy : Bool = false
     )
-      orig_tint = nil
+      orig_tint = texture.tint
+      orig_blend_mode = texture.blend_mode
+      orig_renderer_blend_mode = @r.blend_mode
+
+      LibSDL3.set_texture_blend_mode(texture.to_unsafe, LibSDL3::SDL_BLENDMODE_BLEND)
+      LibSDL3.set_render_draw_blend_mode(@r.to_unsafe, LibSDL3::SDL_BLENDMODE_BLEND)
 
       if t = tint
-        _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
-        orig_tint = texture.tint
-        texture.tint = t.to_sdl
+        LibSDL3.set_texture_color_mod(texture.to_unsafe, t.r, t.g, t.b)
+        LibSDL3.set_texture_alpha_mod(texture.to_unsafe, t.a)
+      else
+        LibSDL3.set_texture_color_mod(texture.to_unsafe, 255_u8, 255_u8, 255_u8)
+        LibSDL3.set_texture_alpha_mod(texture.to_unsafe, 255_u8)
       end
 
       _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
 
-      if tint = orig_tint
-        texture.tint = tint
-      end
+      texture.tint = orig_tint
+      texture.blend_mode = orig_blend_mode
+      @r.blend_mode = orig_renderer_blend_mode
 
       if destroy
         texture.destroy
