@@ -21,6 +21,10 @@ module GSDL
     # Holds the parsed manifest: path_key => PackEntry
     @@manifest = Hash(String, PackEntry).new
 
+    # Cache raw data to ensure it stays alive for the lifetime of the application
+    # (or until close_pack is called if we decide to clear it there)
+    @@data_cache = Hash(String, Bytes).new
+
     # The File object for the opened assets.pack. Kept open for direct access.
     @@packfile_io : File? = nil
     @@mutex = Mutex.new
@@ -122,7 +126,7 @@ module GSDL
     def self.close_pack
       @@packfile_io.try &.close
       @@packfile_io = nil
-      @@manifest.clear
+      # @@manifest.clear # Keep manifest for cache lookup if we decide to clear later
 
       {% if !flag?(:release) %}
         puts "GSDL::AssetManager: Packfile closed."
@@ -135,6 +139,11 @@ module GSDL
     # Returns a Bytes object.
     def self.load_raw_data(path_key : String) : Bytes
       @@mutex.synchronize do
+        # Return cached data if available
+        if data = @@data_cache[path_key]?
+          return data
+        end
+
         unless initialized?
           raise "GSDL::AssetManager: Packfile not loaded. Call AssetManager.load_pack first."
         end
@@ -149,6 +158,10 @@ module GSDL
 
         data = Bytes.new(entry.size)
         file.read_fully(data)
+
+        # Cache it to ensure lifetime
+        @@data_cache[path_key] = data
+
         data
       end
     end

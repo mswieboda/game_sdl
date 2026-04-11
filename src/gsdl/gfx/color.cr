@@ -168,6 +168,14 @@ module GSDL
       FColor.new(@internal.to_fcolor)
     end
 
+    def opaque?
+      a == 255
+    end
+
+    def white?
+      r == 255 && g == 255 && b == 255
+    end
+
     # Returns the wrapped `SDL3::Color`
     def to_sdl
       @internal
