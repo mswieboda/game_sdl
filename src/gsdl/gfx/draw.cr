@@ -2,7 +2,8 @@ module GSDL
   class Draw
     @r : SDL3::Renderer
 
-    abstract struct DrawCommand
+    # Switch to classes for heap allocation and better release-mode stability
+    abstract class DrawCommand
       property z_index : Int32
       property scale_x : Float32
       property scale_y : Float32
@@ -20,7 +21,7 @@ module GSDL
       end
     end
 
-    abstract struct DrawColorCommand < DrawCommand
+    abstract class DrawColorCommand < DrawCommand
       property color : Color
 
       def initialize(z_index : Int32, @color : Color, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
@@ -28,14 +29,18 @@ module GSDL
       end
     end
 
-    struct DrawTextureCommand < DrawCommand
+    class DrawTextureCommand < DrawCommand
       property texture : SDL3::Texture
       property source_rect : SDL3::FRect?
       property dest_rect : SDL3::FRect
       property angle : Float64
       property center : SDL3::FPoint
       property flip : Int32
-      property tint : Color?
+      property tint_r : UInt8 = 255_u8
+      property tint_g : UInt8 = 255_u8
+      property tint_b : UInt8 = 255_u8
+      property tint_a : UInt8 = 255_u8
+      property? has_tint : Bool = false
       property? destroy
       property sort_y : Float32?
 
@@ -49,16 +54,26 @@ module GSDL
         @angle : Float64 = 0.0,
         @center : SDL3::FPoint = SDL3::FPoint.new,
         @flip : Int32 = 0,
-        @tint : Color? = nil,
+        tint : Color? = nil,
         @destroy : Bool = false,
         clip_rect : SDL3::Rect? = nil,
         @sort_y : Float32? = nil
       )
         super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
+        if t = tint
+          @tint_r, @tint_g, @tint_b, @tint_a = t.r, t.g, t.b, t.a
+          @has_tint = true
+        end
       end
 
       def y : Num?
         @sort_y || @dest_rect.y
+      end
+
+      def tint : Color
+        nil unless has_tint?
+
+        Color.new(r: tint_r, g: tint_g, b: tint_b, a: tint_a)
       end
 
       def on_screen? : Bool
@@ -77,7 +92,7 @@ module GSDL
       end
     end
 
-    struct DrawTextCommand < DrawCommand
+    class DrawTextCommand < DrawCommand
       property text : Text
       property screen_x : Float32
       property screen_y : Float32
@@ -105,7 +120,7 @@ module GSDL
       end
     end
 
-    struct DrawGeometryCommand < DrawCommand
+    class DrawGeometryCommand < DrawCommand
       property vertices : Array(SDL3::Vertex)
       property indices : Array(Int32)
       property texture : SDL3::Texture? = nil
@@ -123,7 +138,7 @@ module GSDL
       end
     end
 
-    struct DrawFRectCommand < DrawColorCommand
+    class DrawFRectCommand < DrawColorCommand
       property rect : SDL3::FRect
       property? outline : Bool
 
@@ -148,7 +163,7 @@ module GSDL
       end
     end
 
-    struct DrawFRectsCommand < DrawColorCommand
+    class DrawFRectsCommand < DrawColorCommand
       property rects : Array(SDL3::FRect)
       property? outline : Bool
 
@@ -157,7 +172,7 @@ module GSDL
       end
     end
 
-    struct DrawPointCommand < DrawColorCommand
+    class DrawPointCommand < DrawColorCommand
       property x : Float32
       property y : Float32
 
@@ -174,7 +189,7 @@ module GSDL
       end
     end
 
-    abstract struct DrawPointsCommandBase < DrawColorCommand
+    abstract class DrawPointsCommandBase < DrawColorCommand
       property points : Array(SDL3::FPoint)
 
       def initialize(z_index : Int32, color : Color, @points : Array(SDL3::FPoint), scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
@@ -182,13 +197,13 @@ module GSDL
       end
     end
 
-    struct DrawPointsCommand < DrawPointsCommandBase
+    class DrawPointsCommand < DrawPointsCommandBase
     end
 
-    struct DrawLinesCommand < DrawPointsCommandBase
+    class DrawLinesCommand < DrawPointsCommandBase
     end
 
-    struct DrawLineCommand < DrawColorCommand
+    class DrawLineCommand < DrawColorCommand
       property x1 : Float32
       property y1 : Float32
       property x2 : Float32
@@ -237,8 +252,6 @@ module GSDL
     @last_command_count : Int32 = 0
 
     def command_count : Int32
-      # During update, we want to know what happened last frame.
-      # During draw (after scene.draw), we might want to know the current total.
       @current_command_count > 0 ? @current_command_count : @last_command_count
     end
 
@@ -298,6 +311,7 @@ module GSDL
     private def push_cmd(cmd : Command)
       c = cmd
 
+      # Still cull if enabled, but use local variables to be safe
       if @culling_enabled && !c.on_screen?
         return
       end
@@ -353,6 +367,7 @@ module GSDL
 
       @r.scale = {1_f32, 1_f32}
       @r.clip_rect = nil
+      @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
 
       @sorted_z_indices.each do |z|
         layer = @layers[z]
@@ -385,7 +400,8 @@ module GSDL
               set_color(active_color.as(Color))
             end
 
-            needed_blend_mode = active_color.as(Color).a < 255 ? LibSDL3::SDL_BLENDMODE_BLEND : LibSDL3::SDL_BLENDMODE_NONE
+            # DEFENSIVE: Always force BLEND mode for everything for now
+            needed_blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
             if needed_blend_mode != active_blend_mode
               active_blend_mode = needed_blend_mode
               @r.blend_mode = active_blend_mode
@@ -394,89 +410,27 @@ module GSDL
 
           case command
           when DrawFRectCommand
-            # Batch consecutive rectangles with identical properties
-            rect_batch = [command.rect]
-            look_ahead = cursor + 1
-            while look_ahead < commands.size
-              next_cmd = commands[look_ahead]
-              if next_cmd.is_a?(DrawFRectCommand) && can_batch_rect?(next_cmd, command, active_color, active_scale_x, active_scale_y, active_clip_rect)
-                rect_batch << next_cmd.rect
-                look_ahead += 1
-              else
-                break
-              end
-            end
-
-            if rect_batch.size > 1
-              slice = Slice.new(rect_batch.to_unsafe, rect_batch.size)
-              command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
-              cursor = look_ahead - 1
-            else
-              command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
-            end
+            command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
 
           when DrawTextureCommand
-            # Textures invalidate current tracking as they use specialized state
+            # Reset tracking to ensure every texture draw sets its own state
             active_color = nil
             active_blend_mode = nil
 
-            # Ensure texture and renderer are in BLEND mode to respect alpha channel
-            command.texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+            # FORCE BLEND mode for both renderer and texture for EVERY DRAW
             @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+            command.texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
 
-            # Apply modulation for the current command
-            if t = command.tint
-              if t.r != 255 || t.g != 255 || t.b != 255
-                command.texture.color_mod = t.to_sdl
-              else
-                command.texture.color_mod = Color::White.to_sdl
-              end
-              command.texture.alpha_mod = t.a
-            else
-              command.texture.color_mod = Color::White.to_sdl
-              command.texture.alpha_mod = 255_u8
-            end
-
-            # Render the first texture immediately
-            _render_texture_rotated(
+            _draw_texture_rotated(
               texture: command.texture,
               source_rect: command.source_rect,
               dest_rect: command.dest_rect,
               angle: command.angle,
               center: command.center,
-              flip: command.flip
+              flip: command.flip,
+              tint: command.tint,
+              destroy: command.destroy?
             )
-
-            if command.destroy?
-              command.texture.destroy
-            end
-
-            # Optimization: Batch subsequent identical textures
-            look_ahead = cursor + 1
-            while look_ahead < commands.size
-              next_cmd = commands[look_ahead]
-              if next_cmd.is_a?(DrawTextureCommand) && can_batch_texture?(next_cmd, command, active_scale_x, active_scale_y, active_clip_rect)
-                tex_cmd = next_cmd
-
-                _render_texture_rotated(
-                  texture: tex_cmd.texture,
-                  source_rect: tex_cmd.source_rect,
-                  dest_rect: tex_cmd.dest_rect,
-                  angle: tex_cmd.angle,
-                  center: tex_cmd.center,
-                  flip: tex_cmd.flip
-                )
-
-                if tex_cmd.destroy?
-                  tex_cmd.texture.destroy
-                end
-
-                look_ahead += 1
-              else
-                break
-              end
-            end
-            cursor = look_ahead - 1
 
           when DrawTextCommand
             active_color = nil
@@ -484,13 +438,13 @@ module GSDL
             command.text._draw(command.screen_x, command.screen_y)
 
           when DrawGeometryCommand
-            # Reset tracking
             active_color = nil
             active_blend_mode = nil
 
             @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
             if texture = command.texture
-              texture.tint = LibSDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
+              texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+              texture.tint = SDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
               @r.render_geometry(texture: texture, vertices: command.vertices, indices: command.indices)
             else
               @r.render_geometry(vertices: command.vertices, indices: command.indices)
@@ -526,37 +480,11 @@ module GSDL
     end
 
     private def can_batch_rect?(next_cmd : DrawCommand, current_cmd : DrawFRectCommand, active_color : Color?, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
-      return false unless next_cmd.is_a?(DrawFRectCommand)
-      next_cmd.color == (active_color || current_cmd.color) &&
-      next_cmd.outline? == current_cmd.outline? &&
-      next_cmd.scale_x == scale_x &&
-      next_cmd.scale_y == scale_y &&
-      next_cmd.clip_rect == clip_rect
-    end
-
-    private def same_tint?(c1 : Color?, c2 : Color?) : Bool
-      return true if c1.nil? && c2.nil?
-      return false if c1.nil? || c2.nil?
-      # Compare individual components to avoid issues with struct padding or marshaling in release mode
-      c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a
+      false
     end
 
     private def can_batch_texture?(next_cmd : Command, current_cmd : Command, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
-      return false unless next_cmd.is_a?(DrawTextureCommand) && current_cmd.is_a?(DrawTextureCommand)
-      
-      # Only batch if both are standard (no tint / full alpha)
-      t1 = next_cmd.tint
-      t2 = current_cmd.tint
-      is_std1 = t1.nil? || (t1.r == 255 && t1.g == 255 && t1.b == 255 && t1.a == 255)
-      is_std2 = t2.nil? || (t2.r == 255 && t2.g == 255 && t2.b == 255 && t2.a == 255)
-      
-      return false unless is_std1 && is_std2
-
-      # Use pointer comparison for textures in release mode
-      next_cmd.texture.to_unsafe == current_cmd.texture.to_unsafe &&
-      next_cmd.scale_x == scale_x &&
-      next_cmd.scale_y == scale_y &&
-      next_cmd.clip_rect == clip_rect
+      false
     end
 
     private def _render_texture_rotated(
@@ -567,6 +495,9 @@ module GSDL
       center : SDL3::FPoint = SDL3::FPoint.new,
       flip : Int32 = 0
     )
+      @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+      texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+
       if src_rect = source_rect
         @r.render_texture_rotated(
           texture: texture,
@@ -601,18 +532,28 @@ module GSDL
       orig_blend_mode = texture.blend_mode
       orig_renderer_blend_mode = @r.blend_mode
 
-      LibSDL3.set_texture_blend_mode(texture.to_unsafe, LibSDL3::SDL_BLENDMODE_BLEND)
-      LibSDL3.set_render_draw_blend_mode(@r.to_unsafe, LibSDL3::SDL_BLENDMODE_BLEND)
+      # TODO: maybe this should only happen for tints? but keep as-is for now
+      texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+      @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
 
-      if t = tint
-        LibSDL3.set_texture_color_mod(texture.to_unsafe, t.r, t.g, t.b)
-        LibSDL3.set_texture_alpha_mod(texture.to_unsafe, t.a)
+      if (t = tint) && !t.white?
+        # Pass 1: Base texture (Full original alpha)
+        texture.tint = Color::White.to_sdl
+        _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
+
+        # Pass 2: Tint overlay (Target color and alpha)
+        texture.tint = SDL3::Color.new(r: t.r, g: t.g, b: t.b, a: t.a)
+        _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
       else
-        LibSDL3.set_texture_color_mod(texture.to_unsafe, 255_u8, 255_u8, 255_u8)
-        LibSDL3.set_texture_alpha_mod(texture.to_unsafe, 255_u8)
-      end
+        # Single pass: No tint or Alpha-only tint
+        if tint_val = tint
+          texture.tint = SDL3::Color.new(r: 255, g: 255, b: 255, a: tint_val.a)
+        else
+          texture.tint = Color::White.to_sdl
+        end
 
-      _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
+        _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
+      end
 
       texture.tint = orig_tint
       texture.blend_mode = orig_blend_mode
@@ -666,14 +607,10 @@ module GSDL
       ))
     end
 
-    # draws a single `Pixel`
     def pixel(pixel : Pixel)
       point(x: pixel.x.to_f32, y: pixel.y.to_f32, color: pixel.color, z_index: pixel.z_index)
     end
 
-    # draws multiple `Pixel` via SDL3 points,
-    # takes the first pixel's `Pixel#color` and `Pixel#z_index`,
-    # and internally calls `LibSDL3.render_points`
     def pixels(pixels : Pixels)
       pixel = pixels.first
       points(points: pixels.map(&.to_point), color: pixel.color, z_index: pixel.z_index)
