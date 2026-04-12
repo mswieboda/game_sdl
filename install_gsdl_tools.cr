@@ -1,3 +1,5 @@
+# TODO: this is deprecated / broken, see example Makefile for template_game_sdl for "make install_gsdl_packer"
+
 # This script helps users install the GSDL packer tool into their
 # project's local `bin` directory after `shards install`.
 #
@@ -11,14 +13,19 @@ puts "GSDL: Installing packer tool to local ./bin/ directory..."
 # Determine the current directory of this script (lib/game_sdl)
 script_dir = __DIR__
 
-make packer
+puts `cd #{script_dir}`
+puts `make packer`
 
 # Path to the pre-compiled gsdl-packer within the installed shard
+packer_source_path = ""
+
 {% if flag?(:windows) %}
   packer_source_path = File.join(script_dir, "bin/gsdl-packer.exe")
 {% else %}
   packer_source_path = File.join(script_dir, "bin/gsdl-packer")
 {% end %}
+
+puts ">>> packer_source_path: #{packer_source_path}"
 
 # The target `bin` directory in the consumer's project root
 # We go up two levels from script_dir (lib/game_sdl -> lib -> project_root)
