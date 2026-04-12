@@ -138,6 +138,9 @@ module GSDL
     # Reads raw byte data for a given path_key from the loaded packfile.
     # Returns a Bytes object.
     def self.load_raw_data(path_key : String) : Bytes
+      # Normalize path key to use forward slashes (POSIX format)
+      path_key = path_key.gsub('\\', '/')
+
       @@mutex.synchronize do
         # Return cached data if available
         if data = @@data_cache[path_key]?

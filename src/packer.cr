@@ -41,7 +41,7 @@ module GSDL
       end
 
       entries = all_files.map do |full_path|
-        relative_path = Path[full_path].relative_to(assets_root).to_s
+        relative_path = Path[full_path].relative_to(assets_root).to_posix.to_s
         Entry.new(relative_path, full_path)
       end
 
