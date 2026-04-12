@@ -64,13 +64,12 @@ shards install
 
 This step is optional, but required when you run `make release` or with any `--release` flagged crystal compile. In the release mode, GameSDL expects a `.pack` file of the packed assets (using in `build/assets.pack`)
 
+for running the examples, use the Makefile
 ```
-crystal lib/game_sdl/install_gsdl_tools.cr
+make packer
 ```
 
-installs tools to your `./bin` directory, such as `./bin/gsdl-packer`
-
-which packages all assets into an `assets/assets.pack` binary file
+installs the `gsdl-packer` to your `./bin` directory which packages all assets into an `assets/assets.pack` binary file
 
 see usage via:
 
@@ -78,18 +77,23 @@ see usage via:
 ./bin/gsdl-packer --help
 ```
 
-you can simply this by adding this to your `Makefile`:
+can run via `make pack`
+
+for consumers, add this by adding this to **your** `Makefile`:
 
 ```
 $(PACKER_BIN):
-  @echo "Installing GameSDL tools..."
-  $(CRYSTAL_COMPILER) lib/game_sdl/install_gsdl_tools.cr
-
-install_gsdl_tools: $(PACKER_BIN)
+  @echo "Building packer tool..."
+  $(MKDIR_CMD) $(BIN_DIR)
+  $(CRYSTAL_COMPILER) build lib/game_sdl/src/packer.cr -o $(BIN_DIR)/gsdl-packer --release --no-debug -p
 
 packer: $(PACKER_BIN)
+
+$(PACKER_FILE): $(PACKER_BIN)
   @echo "Packing assets via GameSDL packer..."
   ./$(PACKER_BIN)
+
+pack: $(PACKER_FILE)
 ```
 
 or use the https://github.com/mswieboda/template_game_sdl template repo to start from that has it included

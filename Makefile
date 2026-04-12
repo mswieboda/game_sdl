@@ -7,9 +7,11 @@ SDL3_MIXER_LIB_DIR := /usr/local/lib
 LINKFLAGS := -L$(SDL3_MIXER_LIB_DIR) -Wl,-rpath,$(SDL3_MIXER_LIB_DIR)
 RM_CMD := rm -rf
 MKDIR_CMD := mkdir -p
+PACKER_FILE := build/assets.pack
+PACKER_BIN := bin/gsdl-packer
 
 # Phony targets don't represent files
-.PHONY: default clean examples examples_full build_examples_full build run packer run-release
+.PHONY: default clean examples examples_full build_examples_full build run packer pack run-release
 
 # The default target, executed when you just run `make`
 default:
@@ -19,10 +21,18 @@ clean:
 	$(RM_CMD) $(BUILD_DIR)
 	$(RM_CMD) $(LIB_DIR)
 
-packer:
+$(PACKER_BIN):
 	@echo "Building packer tool..."
 	$(MKDIR_CMD) $(BIN_DIR)
 	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/packer.cr -o $(BIN_DIR)/gsdl-packer --release --no-debug -p
+
+packer: $(PACKER_BIN)
+
+$(PACKER_FILE): $(PACKER_BIN)
+	@echo "Packing assets via GameSDL packer..."
+	./$(PACKER_BIN)
+
+pack: $(PACKER_FILE)
 
 examples:
 	@echo "Building and running all examples..."
