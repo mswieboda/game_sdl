@@ -1,6 +1,7 @@
 CRYSTAL_COMPILER := crystal
 SOURCE_DIR := src
 BUILD_DIR := build
+BIN_DIR := bin
 LIB_DIR := lib
 SDL3_MIXER_LIB_DIR := /usr/local/lib
 LINKFLAGS := -L$(SDL3_MIXER_LIB_DIR) -Wl,-rpath,$(SDL3_MIXER_LIB_DIR)
@@ -20,8 +21,8 @@ clean:
 
 packer:
 	@echo "Building packer tool..."
-	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/packer.cr -o gsdl-packer --release --no-debug -p
+	$(MKDIR_CMD) $(BIN_DIR)
+	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/packer.cr -o $(BIN_DIR)/gsdl-packer --release --no-debug -p
 
 examples:
 	@echo "Building and running all examples..."

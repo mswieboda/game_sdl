@@ -11,8 +11,14 @@ puts "GSDL: Installing packer tool to local ./bin/ directory..."
 # Determine the current directory of this script (lib/game_sdl)
 script_dir = __DIR__
 
+make packer
+
 # Path to the pre-compiled gsdl-packer within the installed shard
-packer_source_path = File.join(script_dir, "gsdl-packer")
+{% if flag?(:windows) %}
+  packer_source_path = File.join(script_dir, "bin/gsdl-packer.exe")
+{% else %}
+  packer_source_path = File.join(script_dir, "bin/gsdl-packer")
+{% end %}
 
 # The target `bin` directory in the consumer's project root
 # We go up two levels from script_dir (lib/game_sdl -> lib -> project_root)
