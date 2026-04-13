@@ -99,7 +99,7 @@ module GSDL
     private def build_binary
       puts "Building binary for #{@example}..."
       binary_path = File.join(@build_dir, @example)
-      
+
       # Determine link flags
       sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
       link_flags = "-L#{sdl3_mixer_lib_dir} -Wl,-rpath,#{sdl3_mixer_lib_dir}"
@@ -206,32 +206,32 @@ module GSDL
       output.each_line do |line|
         line = line.strip
         next if line.empty? || line.starts_with?(binary_path)
-        
+
         # Extract path (e.g., /opt/homebrew/opt/sdl3/lib/libSDL3.0.dylib)
         lib_path = line.split(' ')[0]
-        
+
         # Skip system libraries
         next if lib_path.starts_with?("/usr/lib") || lib_path.starts_with?("/System")
-        
+
         # If it's already an @rpath or @executable_path, we might still need to bundle it
         # but let's focus on absolute paths first
         if lib_path.starts_with?("/")
           lib_name = File.basename(lib_path)
           dest_path = File.join(frameworks_dir, lib_name)
-          
+
           puts "  Copying #{lib_name}..."
           FileUtils.cp(lib_path, dest_path)
           File.chmod(dest_path, 0o755)
 
           # Update the binary to point to @rpath instead of absolute path
           system("install_name_tool -change #{lib_path} @rpath/#{lib_name} #{binary_path}")
-          
+
           # Also check if the library itself has absolute dependencies (rare for SDL3 but possible)
           # We'd need to recursive if so, but for now let's keep it simple.
         elsif lib_path.starts_with?("@rpath/")
           # It's already an @rpath, but is the library in the bundle?
           lib_name = lib_path.gsub("@rpath/", "")
-          
+
           # Try to find where it is on the system to copy it
           # Common places: /usr/local/lib, /opt/homebrew/lib
           search_paths = ["/usr/local/lib", "/opt/homebrew/lib", "/usr/local/opt/sdl3/lib", "/opt/homebrew/opt/sdl3/lib"]
@@ -261,7 +261,7 @@ module GSDL
       # Assuming we are on Windows or have the .exe
       bin_src = File.join(@build_dir, @example)
       bin_src += ".exe" if @target == "win" && !bin_src.ends_with?(".exe")
-      
+
       if File.exists?(bin_src)
         FileUtils.cp(bin_src, File.join(package_dir, "#{@app_name}.exe"))
       else
@@ -277,7 +277,20 @@ module GSDL
       puts "Note: SDL3.dll and other dependencies should be manually added to #{package_dir} if not already there."
 
       # Zip it
-      system("cd #{@output_dir} && zip -r #{release_name}.zip #{release_name}")
+      puts "Creating zip archive..."
+      if system("zip --version > NUL 2>&1")
+        system("cd #{@output_dir} && zip -r #{release_name}.zip #{release_name}")
+      else
+        puts "  'zip' command not found, falling back to PowerShell Compress-Archive..."
+        # We need to use absolute paths for PowerShell to be safe
+        abs_output_dir = File.expand_path(@output_dir)
+        source_path = File.join(abs_output_dir, release_name)
+        dest_zip = File.join(abs_output_dir, "#{release_name}.zip")
+
+        # PowerShell command: Compress-Archive -Path 'source' -DestinationPath 'dest' -Force
+        ps_cmd = "powershell -Command \"Compress-Archive -Path '#{source_path}' -DestinationPath '#{dest_zip}' -Force\""
+        system(ps_cmd) || puts "  Warning: Failed to create zip via PowerShell. Please zip #{source_path} manually."
+      end
     end
 
     private def package_linux
