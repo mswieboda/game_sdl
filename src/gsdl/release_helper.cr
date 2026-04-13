@@ -279,8 +279,27 @@ module GSDL
       # Copy all DLLs from build directory
       puts "Bundling DLLs..."
       # Normalize build_dir path to use forward slashes for Dir.glob
-      glob_pattern = File.join(@build_dir.gsub('\\', '/'), "*.dll")
-      Dir.glob(glob_pattern).each do |dll_path|
+      normalized_build_dir = @build_dir.gsub('\\', '/')
+      glob_pattern = File.join(normalized_build_dir, "*.dll")
+      puts "  Searching for DLLs in: #{glob_pattern}"
+
+      found_dlls = Dir.glob(glob_pattern)
+      puts "  Glob found #{found_dlls.size} DLLs."
+
+      # Fallback if glob fails to find anything
+      if found_dlls.empty?
+        puts "  Glob failed or empty, trying manual directory scan..."
+        if Dir.exists?(normalized_build_dir)
+          Dir.children(normalized_build_dir).each do |filename|
+            if filename.downcase.ends_with?(".dll")
+              found_dlls << File.join(normalized_build_dir, filename)
+            end
+          end
+        end
+        puts "  Manual scan found #{found_dlls.size} DLLs."
+      end
+
+      found_dlls.each do |dll_path|
         dll_name = File.basename(dll_path)
         puts "  Copying #{dll_name}..."
         FileUtils.cp(dll_path, File.join(package_dir, dll_name))
