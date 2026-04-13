@@ -306,14 +306,11 @@ module GSDL
       # Normalize build_dir path to use forward slashes for Dir.glob
       normalized_build_dir = @build_dir.gsub('\\', '/')
       glob_pattern = File.join(normalized_build_dir, "*.dll")
-      puts "  Searching for DLLs in: #{glob_pattern}"
 
       found_dlls = Dir.glob(glob_pattern)
-      puts "  Glob found #{found_dlls.size} DLLs."
 
       # Fallback if glob fails to find anything
       if found_dlls.empty?
-        puts "  Glob failed or empty, trying manual directory scan..."
         if Dir.exists?(normalized_build_dir)
           Dir.children(normalized_build_dir).each do |filename|
             if filename.downcase.ends_with?(".dll")
@@ -321,7 +318,6 @@ module GSDL
             end
           end
         end
-        puts "  Manual scan found #{found_dlls.size} DLLs."
       end
 
       found_dlls.each do |dll_path|
@@ -329,7 +325,6 @@ module GSDL
         puts "  Copying #{dll_name}..."
         FileUtils.cp(dll_path, File.join(package_dir, dll_name))
       end
-
       # Zip it
       puts "Creating zip archive..."
       has_zip = false
@@ -373,16 +368,10 @@ module GSDL
       # Copy assets.pack
       FileUtils.cp(@assets_pack, File.join(package_dir, "assets.pack"))
 
-      # Verify rpath
-      puts "Verifying binary rpath..."
-      rpath_info = `readelf -d #{binary_dest} | grep -E "R(UN)?PATH"`
-      puts "  rpath info: #{rpath_info.strip}"
-
       # Find and copy libraries (SDL3 etc.)
       puts "Bundling dynamic libraries for Linux..."
       # Use ldd to find dependencies
       output = `ldd #{binary_dest}`
-      puts "  ldd output:\n#{output}"
       output.each_line do |line|
         line = line.strip
         # Format: libSDL3.so.0 => /usr/local/lib/libSDL3.so.0 (0x0000...)
@@ -390,8 +379,6 @@ module GSDL
           parts = line.split("=>")
           lib_name = parts[0].strip
           lib_data = parts[1].split("(")[0].strip
-
-          puts "  Found library: #{lib_name} at path: '#{lib_data}'"
 
           # Only bundle libraries we are interested in (SDL3 etc)
           if lib_name.downcase.includes?("sdl3")
