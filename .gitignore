@@ -8,6 +8,11 @@
 # macOS specific ignores
 .DS_Store
 
+# windows specific ignores (crystal version manager)
+/.vfox/
+*.vfox*
+
+
 # Libraries don't need dependency lock
 # Dependencies will be locked in applications that use them
 /shard.lock
