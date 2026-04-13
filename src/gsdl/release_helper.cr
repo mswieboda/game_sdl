@@ -118,10 +118,20 @@ module GSDL
     end
     private def pack_assets
       puts "Packing assets..."
-      # Use the gsdl-packer tool if it exists, otherwise build it
       packer_bin = "bin/gsdl-packer"
-      unless File.exists?(packer_bin)
-        puts "Building gsdl-packer..."
+
+      # Check if packer exists and is working (handles Exec format error)
+      needs_build = !File.exists?(packer_bin)
+      if !needs_build
+        # Try to run it; if it fails, it might be the wrong architecture
+        unless system("./#{packer_bin} --help > /dev/null 2>&1")
+          puts "  Existing packer tool is incompatible or missing. Rebuilding..."
+          needs_build = true
+        end
+      end
+
+      if needs_build
+        puts "  Building gsdl-packer..."
         packer_src = if File.exists?("src/packer.cr")
           "src/packer.cr"
         elsif File.exists?("lib/game_sdl/src/packer.cr")
