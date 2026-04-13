@@ -61,21 +61,24 @@ module StressEx
     @entities = [] of GSDL::Entity
     @fps_text : GSDL::Text
     @count_text : GSDL::Text
-    @timer : Float32 = 0.0_f32
+    @timer : GSDL::Timer
 
     def initialize
       super(:stress)
+      @timer = GSDL::Timer.new(3.seconds)
+      @timer.start
 
       GSDL::Input.set(:camera_left) { GSDL::Keys.pressed?([GSDL::Keys::A, GSDL::Keys::Left]) }
       GSDL::Input.set(:camera_right) { GSDL::Keys.pressed?([GSDL::Keys::D, GSDL::Keys::Right]) }
       GSDL::Input.set(:camera_up) { GSDL::Keys.pressed?([GSDL::Keys::W, GSDL::Keys::Up]) }
       GSDL::Input.set(:camera_down) { GSDL::Keys.pressed?([GSDL::Keys::S, GSDL::Keys::Down]) }
 
+      rng = Random.new(42)
       ENTITY_COUNT.times do
-        x = Random.rand(WORLD_SIZE).to_f32
-        y = Random.rand(WORLD_SIZE).to_f32
+        x = rng.rand(WORLD_SIZE).to_f32
+        y = rng.rand(WORLD_SIZE).to_f32
 
-        if Random.rand > 0.5
+        if rng.rand > 0.5
           @entities << Skeleton.new(x, y)
         else
           @entities << Ship.new(x, y)
@@ -93,6 +96,16 @@ module StressEx
     end
 
     def update(dt : Float32)
+      if @timer.done?
+        GSDL::Game.quit!
+        return
+      end
+
+      # Automatic camera movement (Circular pattern)
+      t = @timer.percent
+      camera.x = (Math.sin(t * Math::PI * 2) * (WORLD_SIZE - WIDTH) / 2 + (WORLD_SIZE - WIDTH) / 2).to_f32
+      camera.y = (Math.cos(t * Math::PI * 2) * (WORLD_SIZE - HEIGHT) / 2 + (WORLD_SIZE - HEIGHT) / 2).to_f32
+
       @entities.each(&.update(dt))
       camera.update(dt)
 

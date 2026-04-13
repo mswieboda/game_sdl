@@ -32,9 +32,12 @@ module TileMapStress
 
   class StartScene < GSDL::Scene
     @tile_map : GSDL::TileMap
+    @timer : GSDL::Timer
 
     def initialize
       super(:start)
+      @timer = GSDL::Timer.new(3.seconds)
+      @timer.start
 
       texture = GSDL::TextureManager.get("tiles")
       tileset = GSDL::Tileset.new(texture, TILE_SIZE, TILE_SIZE, first_gid: 1)
@@ -57,7 +60,25 @@ module TileMapStress
     end
 
     def update(dt : Float32)
+      if @timer.done?
+        GSDL::Game.quit!
+        return
+      end
+
+      # Automatic camera movement (Diagonal across the map)
+      # Map is 500x500 * 32x32 = 16000x16000
+      map_px_w = 500 * TILE_SIZE
+      map_px_h = 500 * TILE_SIZE
+      t = @timer.percent
+      camera.x = (t * (map_px_w - WIDTH)).to_f32
+      camera.y = (t * (map_px_h - HEIGHT)).to_f32
+
       camera.update(dt)
+
+      # Toggle culling at 1.5s
+      if @timer.elapsed >= 1.5.seconds && GSDL::Game.draw.culling_enabled
+        GSDL::Game.draw.culling_enabled = false
+      end
 
       # Test update culling
       @tile_map.update(dt)
