@@ -40,8 +40,6 @@ else
   echo "❌ Error: Tar file was not created!"
 fi
 
-echo -e "\n--- Dependency Check (Local) ---"
-if [ -f "$RELEASE_DIR/full" ]; then
-  echo "Checking binary dependencies (ldd):"
-  ldd "$RELEASE_DIR/full" | grep -i "sdl3"
-fi
+echo -e "\n--- System Library Locations ---"
+echo "Searching for SDL3 in system library cache:"
+ldconfig -p | grep -i "sdl3" | awk '{print $NF}' | sort -u
