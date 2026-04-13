@@ -61,6 +61,7 @@ module StressEx
     @entities = [] of GSDL::Entity
     @fps_text : GSDL::Text
     @count_text : GSDL::Text
+    @timer : Float32 = 0.0_f32
 
     def initialize
       super(:stress)
