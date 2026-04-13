@@ -102,7 +102,12 @@ module GSDL
 
       # Determine link flags
       link_flags = ""
-      if @target != "win"
+      if @target == "win"
+        # On Windows, we use the WINDOWS subsystem to suppress the console window
+        # For MSVC linker (common with crystal on windows)
+        link_flags = "--link-flags \"/SUBSYSTEM:WINDOWS\""
+      else
+        # On macOS/Linux, we use rpath to find libraries
         sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
         link_flags = "--link-flags \"-L#{sdl3_mixer_lib_dir} -Wl,-rpath,#{sdl3_mixer_lib_dir}\""
       end
