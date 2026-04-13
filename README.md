@@ -183,6 +183,13 @@ release-package-linux:
 	@$(MAKE) release-package TARGET=linux
 ```
 
+### Dynamic Libraries
+
+The release helper bundles the game binary, the `assets.pack`, and necessary dynamic libraries:
+- **macOS:** Bundles `.dylib` files into `Contents/Frameworks/` and updates the binary's `@rpath`.
+- **Windows:** Bundles all `.dll` files from the build directory into the same folder as the `.exe`.
+- **Linux:** Currently requires system-wide libraries or manual bundling in the `.tar.gz`.
+
 Unfortunately the `delegate` methods docs
  will not expand to full method signatures, so you'll need to infer wrapped classes like GSDL::Point that wraps SDL3::FPoint to see those method signatures. Eventually I plan to either document each delegate so the parameters and return types are clear, or fully wrap the methods themselves so it is even more clear.
 

@@ -190,6 +190,10 @@ module GSDL
 
       # Bundle libraries for macOS portability
       bundle_libraries_mac(macos_dir, contents_dir)
+
+      # Create ZIP for macOS
+      puts "Creating macOS ZIP archive..."
+      system("cd #{@output_dir} && zip -r #{@app_name}-mac-v#{@version}.zip #{@app_name}.app")
     end
 
     private def bundle_libraries_mac(macos_dir, contents_dir)
@@ -274,7 +278,9 @@ module GSDL
 
       # Copy all DLLs from build directory
       puts "Bundling DLLs..."
-      Dir.glob(File.join(@build_dir, "*.dll")).each do |dll_path|
+      # Normalize build_dir path to use forward slashes for Dir.glob
+      glob_pattern = "#{@build_dir.gsub('\\', '/')/*.dll}"
+      Dir.glob(glob_pattern).each do |dll_path|
         dll_name = File.basename(dll_path)
         puts "  Copying #{dll_name}..."
         FileUtils.cp(dll_path, File.join(package_dir, dll_name))
@@ -298,16 +304,17 @@ module GSDL
         system("cd #{@output_dir} && zip -r #{release_name}.zip #{release_name}")
       else
         puts "  'zip' command not found, falling back to PowerShell Compress-Archive..."
-        # We need to use absolute paths for PowerShell to be safe
+        # Change into the output directory to avoid nested folders
         abs_output_dir = File.expand_path(@output_dir)
-        source_path = File.join(abs_output_dir, release_name)
-        dest_zip = File.join(abs_output_dir, "#{release_name}.zip")
+        dest_zip = "#{release_name}.zip"
 
         # PowerShell command: Compress-Archive -Path 'source' -DestinationPath 'dest' -Force
-        ps_cmd = "powershell -Command \"Compress-Archive -Path '#{source_path}' -DestinationPath '#{dest_zip}' -Force\""
-        system(ps_cmd) || puts "  Warning: Failed to create zip via PowerShell. Please zip #{source_path} manually."
+        # We run this from WITHIN the output directory
+        ps_cmd = "powershell -Command \"Set-Location '#{abs_output_dir}'; Compress-Archive -Path '#{release_name}' -DestinationPath '#{dest_zip}' -Force\""
+        system(ps_cmd) || puts "  Warning: Failed to create zip via PowerShell. Please zip #{File.join(@output_dir, release_name)} manually."
       end
     end
+
     private def package_linux
       puts "Packaging for Linux..."
       release_name = "#{@app_name}-linux-v#{@version}"
