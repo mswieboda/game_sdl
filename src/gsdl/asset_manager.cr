@@ -67,7 +67,17 @@ module GSDL
           Dir.current
         end
 
-        File.join(exec_dir, "assets.pack")
+        path = File.join(exec_dir, "assets.pack")
+
+        # On macOS, check if we are in an .app bundle and look in Resources
+        {% if flag?(:darwin) %}
+          if !File.exists?(path) && exec_dir.ends_with?("/Contents/MacOS")
+            resources_path = File.join(File.dirname(exec_dir), "Resources", "assets.pack")
+            path = resources_path if File.exists?(resources_path)
+          end
+        {% end %}
+
+        path
       else
         # Use the provided path
         path

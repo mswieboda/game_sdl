@@ -98,6 +98,36 @@ pack: $(PACKER_FILE)
 
 or use the https://github.com/mswieboda/template_game_sdl template repo to start from that has it included
 
+## Release Packaging
+
+To create a distribution-ready package for your game (on macOS, Windows, or Linux), you can use the built-in release helper.
+
+This will build your game in release mode, bundle all assets into an `assets.pack`, and package everything into a platform-specific format (e.g., a `.app` bundle on macOS or a `.zip` file on Windows).
+
+**Commands:**
+
+- `make release-package EXAMPLE=your_game_name` (detects platform automatically)
+- `make release-package-mac EXAMPLE=your_game_name`
+- `make release-package-win EXAMPLE=your_game_name`
+- `make release-package-linux EXAMPLE=your_game_name`
+
+**Customization:**
+
+You can customize the release by passing variables to `make` or by running the `release_helper.cr` script directly with arguments:
+
+```bash
+make release-package-mac EXAMPLE=my_game SRC=src/my_game.cr APP_NAME="My Awesome Game" VERSION=1.0.0 BUNDLE_ID=com.mygame.app
+```
+
+- `EXAMPLE`: The name of the resulting binary (default: `full`).
+- `SRC`: Path to the source file (default: `examples/<EXAMPLE>.cr`).
+- `TARGET`: Target platform (`mac`, `win`, `linux`).
+- `APP_NAME`: The name of your application (used for the bundle and binary name).
+- `VERSION`: The version string (defaults to `shard.yml` version).
+- `ICON`: Path to the icon file (e.g., `.icns` for macOS).
+- `BUNDLE_ID`: macOS Bundle ID (e.g., `com.mygame.app`).
+- `OUTPUT`: The directory to save the release package (default: `build/release`).
+
 ## Usage
 
 ```crystal
@@ -118,7 +148,43 @@ or in your game:
 crystal docs lib/sdl3/src/sdl3.cr lib/game_sdl/src/game_sdl.cr src/your_game_entry_point.cr
 ```
 
-Unfortunately the `delegate` methods docs will not expand to full method signatures, so you'll need to infer wrapped classes like GSDL::Point that wraps SDL3::FPoint to see those method signatures. Eventually I plan to either document each delegate so the parameters and return types are clear, or fully wrap the methods themselves so it is even more clear.
+### Consumer App Release Package Makefile Instructions
+
+If you are using `game_sdl` as a dependency in your own game (e.g., `your_sdl_game`), you can add these targets to your `Makefile` to use the built-in release helper:
+
+```makefile
+# Change 'your_sdl_game' to your actual binary name
+GAME_NAME := your_sdl_game
+# Change 'src/main.cr' to your game's entry point
+GAME_SRC := src/main.cr
+
+.PHONY: release-package release-package-mac release-package-win release-package-linux
+
+release-package:
+	@echo "Creating release package for $(GAME_NAME) (target: $(TARGET))..."
+	mkdir -p build
+	crystal run lib/game_sdl/src/gsdl/release_helper.cr -- \
+		--example=$(if $(EXAMPLE),$(EXAMPLE),$(GAME_NAME)) \
+		--src=$(if $(SRC),$(SRC),$(GAME_SRC)) \
+		--target=$(TARGET) \
+		$(if $(APP_NAME),--name="$(APP_NAME)") \
+		$(if $(VERSION),--version=$(VERSION)) \
+		$(if $(ICON),--icon=$(ICON)) \
+		$(if $(BUNDLE_ID),--bundle-id=$(BUNDLE_ID)) \
+		$(if $(OUTPUT),--output=$(OUTPUT))
+
+release-package-mac:
+	@$(MAKE) release-package TARGET=mac
+
+release-package-win:
+	@$(MAKE) release-package TARGET=win
+
+release-package-linux:
+	@$(MAKE) release-package TARGET=linux
+```
+
+Unfortunately the `delegate` methods docs
+ will not expand to full method signatures, so you'll need to infer wrapped classes like GSDL::Point that wraps SDL3::FPoint to see those method signatures. Eventually I plan to either document each delegate so the parameters and return types are clear, or fully wrap the methods themselves so it is even more clear.
 
 
 ## Contributing

@@ -16,6 +16,28 @@ PACKER_BIN := bin/gsdl-packer
 # The default target, executed when you just run `make`
 default:
 
+release-package:
+	@echo "Creating release package for example: $(EXAMPLE) target: $(TARGET)"
+	$(MKDIR_CMD) $(BUILD_DIR)
+	crystal run src/gsdl/release_helper.cr -- \
+		--example=$(EXAMPLE) \
+		--target=$(TARGET) \
+		$(if $(SRC),--src=$(SRC)) \
+		$(if $(APP_NAME),--name="$(APP_NAME)") \
+		$(if $(VERSION),--version=$(VERSION)) \
+		$(if $(ICON),--icon=$(ICON)) \
+		$(if $(BUNDLE_ID),--bundle-id=$(BUNDLE_ID)) \
+		$(if $(OUTPUT),--output=$(OUTPUT))
+
+release-package-mac:
+	@$(MAKE) release-package TARGET=mac
+
+release-package-win:
+	@$(MAKE) release-package TARGET=win
+
+release-package-linux:
+	@$(MAKE) release-package TARGET=linux
+
 clean:
 	@echo "Executing clean..."
 	$(RM_CMD) $(BUILD_DIR)
