@@ -110,15 +110,15 @@ module StressEx
     end
 
     def update(dt : Float32)
-      # if @timer.done?
-      #   # GSDL::Game.quit!
-      #   return
-      # end
+      if @timer.done?
+        GSDL::Game.quit!
+        return
+      end
 
       # Automatic camera movement (Circular pattern)
       t = @timer.percent
-      # camera.x = (Math.sin(t * Math::PI * 2) * (WORLD_SIZE - WIDTH) / 2 + (WORLD_SIZE - WIDTH) / 2).to_f32
-      # camera.y = (Math.cos(t * Math::PI * 2) * (WORLD_SIZE - HEIGHT) / 2 + (WORLD_SIZE - HEIGHT) / 2).to_f32
+      camera.x = (Math.sin(t * Math::PI * 2) * (WORLD_SIZE - WIDTH) / 2 + (WORLD_SIZE - WIDTH) / 2).to_f32
+      camera.y = (Math.cos(t * Math::PI * 2) * (WORLD_SIZE - HEIGHT) / 2 + (WORLD_SIZE - HEIGHT) / 2).to_f32
 
       @entities.each(&.update(dt))
       camera.update(dt)

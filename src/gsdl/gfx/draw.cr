@@ -254,8 +254,6 @@ module GSDL
     # Batching buffers
     @vertex_buffer = [] of SDL3::Vertex
     @index_buffer = [] of Int32
-    @tint_vertex_buffer = [] of SDL3::Vertex
-    @tint_index_buffer = [] of Int32
     @active_batch_texture : SDL3::Texture? = nil
     @active_batch_scale_x : Float32 = 0.0_f32
     @active_batch_scale_y : Float32 = 0.0_f32
@@ -374,21 +372,14 @@ module GSDL
       @r.clip_rect = @active_batch_clip_rect
       @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
       texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+      texture.tint = SDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
 
-      # Pass 1: Base
       if !@vertex_buffer.empty?
         @r.render_geometry(texture: texture, vertices: @vertex_buffer, indices: @index_buffer)
       end
 
-      # Pass 2: Tint
-      if !@tint_vertex_buffer.empty?
-        @r.render_geometry(texture: texture, vertices: @tint_vertex_buffer, indices: @tint_index_buffer)
-      end
-
       @vertex_buffer.clear
       @index_buffer.clear
-      @tint_vertex_buffer.clear
-      @tint_index_buffer.clear
       @active_batch_texture = nil
     end
 
@@ -455,16 +446,12 @@ module GSDL
         v1, v2 = v2, v1
       end
 
-      # Colors
       white = LibSDL3::FColor.new(r: 1_f32, g: 1_f32, b: 1_f32, a: 1_f32)
       
       # Determine passes
       if command.has_tint? && (command.tint_r != 255 || command.tint_g != 255 || command.tint_b != 255)
         # Two pass batching
         # Pass 1: Base (White)
-        # Pass 2: Tint (Color)
-        
-        # Base buffer
         base_idx = @vertex_buffer.size
         @vertex_buffer << SDL3::Vertex.new(v0x, v0y, white, LibSDL3::FPoint.new(x: u1, y: v1))
         @vertex_buffer << SDL3::Vertex.new(v1x, v1y, white, LibSDL3::FPoint.new(x: u2, y: v1))
@@ -472,19 +459,19 @@ module GSDL
         @vertex_buffer << SDL3::Vertex.new(v3x, v3y, white, LibSDL3::FPoint.new(x: u1, y: v2))
         @index_buffer.concat([base_idx, base_idx + 1, base_idx + 2, base_idx, base_idx + 2, base_idx + 3])
 
-        # Tint buffer
+        # Pass 2: Tint (Color)
         tint_color = LibSDL3::FColor.new(
           r: command.tint_r / 255_f32,
           g: command.tint_g / 255_f32,
           b: command.tint_b / 255_f32,
           a: command.tint_a / 255_f32
         )
-        tint_idx = @tint_vertex_buffer.size
-        @tint_vertex_buffer << SDL3::Vertex.new(v0x, v0y, tint_color, LibSDL3::FPoint.new(x: u1, y: v1))
-        @tint_vertex_buffer << SDL3::Vertex.new(v1x, v1y, tint_color, LibSDL3::FPoint.new(x: u2, y: v1))
-        @tint_vertex_buffer << SDL3::Vertex.new(v2x, v2y, tint_color, LibSDL3::FPoint.new(x: u2, y: v2))
-        @tint_vertex_buffer << SDL3::Vertex.new(v3x, v3y, tint_color, LibSDL3::FPoint.new(x: u1, y: v2))
-        @tint_index_buffer.concat([tint_idx, tint_idx + 1, tint_idx + 2, tint_idx, tint_idx + 2, tint_idx + 3])
+        tint_idx = @vertex_buffer.size
+        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, tint_color, LibSDL3::FPoint.new(x: u1, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, tint_color, LibSDL3::FPoint.new(x: u2, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, tint_color, LibSDL3::FPoint.new(x: u2, y: v2))
+        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, tint_color, LibSDL3::FPoint.new(x: u1, y: v2))
+        @index_buffer.concat([tint_idx, tint_idx + 1, tint_idx + 2, tint_idx, tint_idx + 2, tint_idx + 3])
       else
         # Single pass (maybe with alpha)
         alpha = command.has_tint? ? command.tint_a / 255_f32 : 1_f32
@@ -503,6 +490,11 @@ module GSDL
       @last_command_count = @current_command_count
       # puts "Command Count: #{@last_command_count}" # Uncomment to see in logs
       @current_command_count = 0
+
+      @active_batch_texture = nil
+      @active_batch_scale_x = 0.0_f32
+      @active_batch_scale_y = 0.0_f32
+      @active_batch_clip_rect = nil
 
       active_scale_x = 1_f32
       active_scale_y = 1_f32
