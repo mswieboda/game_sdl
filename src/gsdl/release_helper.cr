@@ -198,6 +198,10 @@ module GSDL
 
       # Create ZIP for macOS
       puts "Creating macOS ZIP archive..."
+      # Use ./* inside the .app bundle is not right for macOS, usually we want the .app folder itself
+      # but the user asked for "no root folder" for the zip.
+      # Actually for macOS .app, you definitely WANT the .app folder.
+      # But for Windows it makes sense to just have the files.
       system("cd #{@output_dir} && zip -r #{@app_name}-mac-v#{@version}.zip #{@app_name}.app")
     end
 
@@ -325,7 +329,7 @@ module GSDL
       end
 
       if has_zip
-        system("cd #{@output_dir} && zip -r #{release_name}.zip #{release_name}")
+        system("cd #{@output_dir} && zip -rj #{release_name}.zip #{release_name}/*")
       else
         puts "  'zip' command not found, falling back to PowerShell Compress-Archive..."
         # Change into the output directory to avoid nested folders
@@ -333,8 +337,8 @@ module GSDL
         dest_zip = "#{release_name}.zip"
 
         # PowerShell command: Compress-Archive -Path 'source' -DestinationPath 'dest' -Force
-        # We run this from WITHIN the output directory
-        ps_cmd = "powershell -Command \"Set-Location '#{abs_output_dir}'; Compress-Archive -Path '#{release_name}' -DestinationPath '#{dest_zip}' -Force\""
+        # We run this from WITHIN the output directory and use /* to zip contents only
+        ps_cmd = "powershell -Command \"Set-Location '#{abs_output_dir}'; Compress-Archive -Path '#{release_name}/*' -DestinationPath '#{dest_zip}' -Force\""
         system(ps_cmd) || puts "  Warning: Failed to create zip via PowerShell. Please zip #{File.join(@output_dir, release_name)} manually."
       end
     end
