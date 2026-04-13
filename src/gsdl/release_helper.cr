@@ -108,8 +108,9 @@ module GSDL
         link_flags = "--link-flags \"/SUBSYSTEM:WINDOWS\""
       elsif @target == "linux"
         # On Linux, we use $ORIGIN to look for libraries in the same directory as the binary
+        # We escape the $ so it's not interpreted by the shell during the build command
         sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
-        link_flags = "--link-flags \"-L#{sdl3_mixer_lib_dir} -Wl,-rpath,'$ORIGIN'\""
+        link_flags = "--link-flags \"-L#{sdl3_mixer_lib_dir} -Wl,-rpath,'\\$ORIGIN'\""
       else
         # On macOS, we use rpath to find libraries
         sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
@@ -371,6 +372,11 @@ module GSDL
 
       # Copy assets.pack
       FileUtils.cp(@assets_pack, File.join(package_dir, "assets.pack"))
+
+      # Verify rpath
+      puts "Verifying binary rpath..."
+      rpath_info = `readelf -d #{binary_dest} | grep -E "R(UN)?PATH"`
+      puts "  rpath info: #{rpath_info.strip}"
 
       # Find and copy libraries (SDL3 etc.)
       puts "Bundling dynamic libraries for Linux..."
