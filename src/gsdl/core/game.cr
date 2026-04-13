@@ -127,7 +127,8 @@ module GSDL
     property target_fps : Int32? = nil
 
     # Enable or disable performance monitoring and metric collection.
-    property performance_monitoring_enabled : Bool = false
+    property performance_monitoring_enabled : Bool = true
+
 
     def window; @window.not_nil!; end
     def loader; @loader ||= Loader.new; end

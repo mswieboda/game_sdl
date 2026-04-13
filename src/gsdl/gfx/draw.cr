@@ -251,6 +251,16 @@ module GSDL
     @current_command_count : Int32 = 0
     @last_command_count : Int32 = 0
 
+    # Batching buffers
+    @vertex_buffer = [] of SDL3::Vertex
+    @index_buffer = [] of Int32
+    @tint_vertex_buffer = [] of SDL3::Vertex
+    @tint_index_buffer = [] of Int32
+    @active_batch_texture : SDL3::Texture? = nil
+    @active_batch_scale_x : Float32 = 0.0_f32
+    @active_batch_scale_y : Float32 = 0.0_f32
+    @active_batch_clip_rect : SDL3::Rect? = nil
+
     def command_count : Int32
       @current_command_count > 0 ? @current_command_count : @last_command_count
     end
@@ -355,8 +365,143 @@ module GSDL
       Texture.from_surface(surface)
     end
 
+    private def flush_batch
+      texture = @active_batch_texture
+      return unless texture
+
+      # Sync renderer state (Scale, Clip)
+      @r.scale = {@active_batch_scale_x, @active_batch_scale_y}
+      @r.clip_rect = @active_batch_clip_rect
+      @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+      texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+
+      # Pass 1: Base
+      if !@vertex_buffer.empty?
+        @r.render_geometry(texture: texture, vertices: @vertex_buffer, indices: @index_buffer)
+      end
+
+      # Pass 2: Tint
+      if !@tint_vertex_buffer.empty?
+        @r.render_geometry(texture: texture, vertices: @tint_vertex_buffer, indices: @tint_index_buffer)
+      end
+
+      @vertex_buffer.clear
+      @index_buffer.clear
+      @tint_vertex_buffer.clear
+      @tint_index_buffer.clear
+      @active_batch_texture = nil
+    end
+
+    private def add_texture_to_batch(command : DrawTextureCommand)
+      texture = command.texture
+      tw, th = 0_f32, 0_f32
+      LibSDL3.get_texture_size(texture, pointerof(tw), pointerof(th))
+
+      # Corner vectors relative to center of rotation
+      w, h = command.dest_rect.w, command.dest_rect.h
+      cx, cy = command.center.x, command.center.y
+      abs_cx, abs_cy = command.dest_rect.x + cx, command.dest_rect.y + cy
+
+      # Relative coords
+      p0x, p0y = -cx, -cy
+      p1x, p1y = w - cx, -cy
+      p2x, p2y = w - cx, h - cy
+      p3x, p3y = -cx, h - cy
+
+      # Rotation
+      if command.angle != 0
+        rad = command.angle * (Math::PI / 180.0)
+        cos_a = Math.cos(rad).to_f32
+        sin_a = Math.sin(rad).to_f32
+
+        x0, y0 = p0x, p0y
+        p0x = x0 * cos_a - y0 * sin_a
+        p0y = x0 * sin_a + y0 * cos_a
+
+        x1, y1 = p1x, p1y
+        p1x = x1 * cos_a - y1 * sin_a
+        p1y = x1 * sin_a + y1 * cos_a
+
+        x2, y2 = p2x, p2y
+        p2x = x2 * cos_a - y2 * sin_a
+        p2y = x2 * sin_a + y2 * cos_a
+
+        x3, y3 = p3x, p3y
+        p3x = x3 * cos_a - y3 * sin_a
+        p3y = x3 * sin_a + y3 * cos_a
+      end
+
+      # Absolute positions
+      v0x, v0y = abs_cx + p0x, abs_cy + p0y
+      v1x, v1y = abs_cx + p1x, abs_cy + p1y
+      v2x, v2y = abs_cx + p2x, abs_cy + p2y
+      v3x, v3y = abs_cx + p3x, abs_cy + p3y
+
+      # UVs
+      u1, v1 = 0_f32, 0_f32
+      u2, v2 = 1_f32, 1_f32
+      if src = command.source_rect
+        u1 = src.x / tw
+        v1 = src.y / th
+        u2 = (src.x + src.w) / tw
+        v2 = (src.y + src.h) / th
+      end
+
+      # Flip
+      if (command.flip & 1) != 0 # HORIZONTAL
+        u1, u2 = u2, u1
+      end
+      if (command.flip & 2) != 0 # VERTICAL
+        v1, v2 = v2, v1
+      end
+
+      # Colors
+      white = LibSDL3::FColor.new(r: 1_f32, g: 1_f32, b: 1_f32, a: 1_f32)
+      
+      # Determine passes
+      if command.has_tint? && (command.tint_r != 255 || command.tint_g != 255 || command.tint_b != 255)
+        # Two pass batching
+        # Pass 1: Base (White)
+        # Pass 2: Tint (Color)
+        
+        # Base buffer
+        base_idx = @vertex_buffer.size
+        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, white, LibSDL3::FPoint.new(x: u1, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, white, LibSDL3::FPoint.new(x: u2, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, white, LibSDL3::FPoint.new(x: u2, y: v2))
+        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, white, LibSDL3::FPoint.new(x: u1, y: v2))
+        @index_buffer.concat([base_idx, base_idx + 1, base_idx + 2, base_idx, base_idx + 2, base_idx + 3])
+
+        # Tint buffer
+        tint_color = LibSDL3::FColor.new(
+          r: command.tint_r / 255_f32,
+          g: command.tint_g / 255_f32,
+          b: command.tint_b / 255_f32,
+          a: command.tint_a / 255_f32
+        )
+        tint_idx = @tint_vertex_buffer.size
+        @tint_vertex_buffer << SDL3::Vertex.new(v0x, v0y, tint_color, LibSDL3::FPoint.new(x: u1, y: v1))
+        @tint_vertex_buffer << SDL3::Vertex.new(v1x, v1y, tint_color, LibSDL3::FPoint.new(x: u2, y: v1))
+        @tint_vertex_buffer << SDL3::Vertex.new(v2x, v2y, tint_color, LibSDL3::FPoint.new(x: u2, y: v2))
+        @tint_vertex_buffer << SDL3::Vertex.new(v3x, v3y, tint_color, LibSDL3::FPoint.new(x: u1, y: v2))
+        @tint_index_buffer.concat([tint_idx, tint_idx + 1, tint_idx + 2, tint_idx, tint_idx + 2, tint_idx + 3])
+      else
+        # Single pass (maybe with alpha)
+        alpha = command.has_tint? ? command.tint_a / 255_f32 : 1_f32
+        final_color = LibSDL3::FColor.new(r: 1_f32, g: 1_f32, b: 1_f32, a: alpha)
+        
+        base_idx = @vertex_buffer.size
+        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, final_color, LibSDL3::FPoint.new(x: u1, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, final_color, LibSDL3::FPoint.new(x: u2, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, final_color, LibSDL3::FPoint.new(x: u2, y: v2))
+        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, final_color, LibSDL3::FPoint.new(x: u1, y: v2))
+        @index_buffer.concat([base_idx, base_idx + 1, base_idx + 2, base_idx, base_idx + 2, base_idx + 3])
+      end
+    end
+
     def draw
       @last_command_count = @current_command_count
+      # puts "Command Count: #{@last_command_count}" # Uncomment to see in logs
       @current_command_count = 0
 
       active_scale_x = 1_f32
@@ -379,6 +524,39 @@ module GSDL
         cursor = 0
         while cursor < commands.size
           command = commands[cursor]
+
+          # Batching Check
+          if command.is_a?(DrawTextureCommand)
+            cmd = command.as(DrawTextureCommand)
+            
+            # Check if this command can continue the current batch
+            can_batch = @active_batch_texture && 
+                        @active_batch_texture.not_nil!.to_unsafe == cmd.texture.to_unsafe &&
+                        @active_batch_scale_x == cmd.scale_x &&
+                        @active_batch_scale_y == cmd.scale_y &&
+                        @active_batch_clip_rect == cmd.clip_rect
+
+            if can_batch
+              add_texture_to_batch(cmd)
+              cursor += 1
+              next
+            else
+              # Flush previous batch if it exists
+              flush_batch if @active_batch_texture
+              
+              # Start new batch
+              @active_batch_texture = cmd.texture
+              @active_batch_scale_x = cmd.scale_x
+              @active_batch_scale_y = cmd.scale_y
+              @active_batch_clip_rect = cmd.clip_rect
+              add_texture_to_batch(cmd)
+              cursor += 1
+              next
+            end
+          end
+
+          # Not a texture command, flush any active batch before proceeding
+          flush_batch if @active_batch_texture
 
           # Sync Renderer Scale
           if command.scale_x != active_scale_x || command.scale_y != active_scale_y
@@ -413,11 +591,10 @@ module GSDL
             command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
 
           when DrawTextureCommand
-            # Reset tracking to ensure every texture draw sets its own state
+            # This case should theoretically be unreachable due to batching logic above,
+            # but we keep it for safety/completeness.
             active_color = nil
             active_blend_mode = nil
-
-            # FORCE BLEND mode for both renderer and texture for EVERY DRAW
             @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
             command.texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
 
@@ -472,6 +649,8 @@ module GSDL
           cursor += 1
         end
 
+        # Flush any remaining batch for this layer
+        flush_batch if @active_batch_texture
         layer.clear
       end
 

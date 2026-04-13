@@ -78,11 +78,25 @@ module StressEx
         x = rng.rand(WORLD_SIZE).to_f32
         y = rng.rand(WORLD_SIZE).to_f32
 
-        if rng.rand > 0.5
-          @entities << Skeleton.new(x, y)
+        entity = if rng.rand > 0.5
+          Skeleton.new(x, y)
         else
-          @entities << Ship.new(x, y)
+          Ship.new(x, y)
         end
+
+        # 25% of entities get a tint
+        if rng.rand < 0.25
+          case rng.rand(3)
+          when 0 # Red 50% alpha
+            entity.tint = GSDL::Color.new(255, 0, 0, 128)
+          when 1 # Green 75% alpha
+            entity.tint = GSDL::Color.new(0, 255, 0, 191)
+          when 2 # Blue 25% alpha
+            entity.tint = GSDL::Color.new(0, 0, 255, 64)
+          end
+        end
+
+        @entities << entity
       end
 
       camera.speed = 1000 # High speed for flying around
@@ -96,15 +110,15 @@ module StressEx
     end
 
     def update(dt : Float32)
-      if @timer.done?
-        GSDL::Game.quit!
-        return
-      end
+      # if @timer.done?
+      #   # GSDL::Game.quit!
+      #   return
+      # end
 
       # Automatic camera movement (Circular pattern)
       t = @timer.percent
-      camera.x = (Math.sin(t * Math::PI * 2) * (WORLD_SIZE - WIDTH) / 2 + (WORLD_SIZE - WIDTH) / 2).to_f32
-      camera.y = (Math.cos(t * Math::PI * 2) * (WORLD_SIZE - HEIGHT) / 2 + (WORLD_SIZE - HEIGHT) / 2).to_f32
+      # camera.x = (Math.sin(t * Math::PI * 2) * (WORLD_SIZE - WIDTH) / 2 + (WORLD_SIZE - WIDTH) / 2).to_f32
+      # camera.y = (Math.cos(t * Math::PI * 2) * (WORLD_SIZE - HEIGHT) / 2 + (WORLD_SIZE - HEIGHT) / 2).to_f32
 
       @entities.each(&.update(dt))
       camera.update(dt)
