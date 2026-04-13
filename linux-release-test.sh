@@ -1,6 +1,14 @@
 #!/bin/bash
 
 # GSDL Linux Release Test Script
+
+# 0. Restore system libraries for building
+echo "Restoring system libraries for build..."
+if [ -d ~/sdl3_test_backup ] && [ "$(ls -A ~/sdl3_test_backup)" ]; then
+  sudo mv ~/sdl3_test_backup/libSDL3* /usr/local/lib/
+  sudo ldconfig
+fi
+
 # 1. Clean and Build
 rm -rf build/release
 make release-package-linux EXAMPLE=full
@@ -15,7 +23,7 @@ if [ -z "$RELEASE_DIR" ]; then
   exit 1
 fi
 
-ls -F "$RELEASE_DIR"
+ls -lah "$RELEASE_DIR"
 
 # 3. Verify Critical Files
 echo -e "\n--- File Verification ---"
@@ -23,23 +31,30 @@ FILES=("full" "assets.pack" "libSDL3.so.0" "libSDL3_mixer.so.0" "libSDL3_image.s
 
 for FILE in "${FILES[@]}"; do
   if [ -f "$RELEASE_DIR/$FILE" ]; then
-    echo "✅ Success: $FILE found."
+    SIZE=$(ls -lh "$RELEASE_DIR/$FILE" | awk '{print $5}')
+    echo "✅ Success: $FILE found (Size: $SIZE)."
   else
     echo "❌ Error: $FILE is missing!"
   fi
 done
 
-# 4. Verify the Tar archive
-echo -e "\n--- Tar Archive Check ---"
-TAR_FILE=$(ls build/release/full-linux-v*.tar.gz 2>/dev/null)
-if [ -f "$TAR_FILE" ]; then
-  echo "✅ Success: $TAR_FILE created."
-  echo "Listing TAR contents:"
-  tar -ztf "$TAR_FILE" | grep -E "full$|assets.pack|libSDL3.*so"
-else
-  echo "❌ Error: Tar file was not created!"
+# 4. Hide system libraries for portability test
+echo -e "\n--- Hiding system libraries for portability test ---"
+mkdir -p ~/sdl3_test_backup
+sudo mv /usr/local/lib/libSDL3* ~/sdl3_test_backup/
+sudo ldconfig
+
+# 5. Verify local dependency resolution
+echo -e "\n--- Dependency Check (Local) ---"
+if [ -f "$RELEASE_DIR/full" ]; then
+  echo "Checking binary dependencies (ldd):"
+  ldd "$RELEASE_DIR/full" | grep -i "sdl3"
 fi
 
-echo -e "\n--- System Library Locations ---"
-echo "Searching for SDL3 in system library cache:"
-ldconfig -p | grep -i "sdl3" | awk '{print $NF}' | sort -u
+echo -e "\n--- Test Instructions ---"
+echo "System libraries are now HIDDEN."
+echo "To test the release, run:"
+echo "cd $RELEASE_DIR && ./full"
+echo ""
+echo "To restore your system when done:"
+echo "sudo mv ~/sdl3_test_backup/libSDL3* /usr/local/lib/ && sudo ldconfig"

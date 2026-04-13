@@ -397,7 +397,8 @@ module GSDL
           if lib_name.downcase.includes?("sdl3")
             if !lib_data.empty? && File.exists?(lib_data)
               puts "  Copying #{lib_name}..."
-              FileUtils.cp(lib_data, File.join(package_dir, lib_name))
+              # Use cp -L to follow symlinks and copy the actual file content
+              system("cp -L #{lib_data} #{File.join(package_dir, lib_name)}")
             else
               puts "  Warning: Could not find library source for #{lib_name} (path: '#{lib_data}')"
             end
