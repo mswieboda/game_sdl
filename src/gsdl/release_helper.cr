@@ -106,8 +106,12 @@ module GSDL
         # On Windows, we use the WINDOWS subsystem to suppress the console window
         # For MSVC linker (common with crystal on windows)
         link_flags = "--link-flags \"/SUBSYSTEM:WINDOWS\""
+      elsif @target == "linux"
+        # On Linux, we use $ORIGIN to look for libraries in the same directory as the binary
+        sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
+        link_flags = "--link-flags \"-L#{sdl3_mixer_lib_dir} -Wl,-rpath,'$ORIGIN'\""
       else
-        # On macOS/Linux, we use rpath to find libraries
+        # On macOS, we use rpath to find libraries
         sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
         link_flags = "--link-flags \"-L#{sdl3_mixer_lib_dir} -Wl,-rpath,#{sdl3_mixer_lib_dir}\""
       end
@@ -116,6 +120,7 @@ module GSDL
       puts "Running: #{cmd}"
       system(cmd) || raise "Failed to build binary"
     end
+
     private def pack_assets
       puts "Packing assets..."
       packer_bin = "bin/gsdl-packer"
@@ -360,12 +365,40 @@ module GSDL
       FileUtils.mkdir_p(package_dir)
 
       # Copy binary
-      FileUtils.cp(File.join(@build_dir, @example), File.join(package_dir, @app_name))
+      binary_dest = File.join(package_dir, @app_name)
+      FileUtils.cp(File.join(@build_dir, @example), binary_dest)
+      File.chmod(binary_dest, 0o755)
 
       # Copy assets.pack
       FileUtils.cp(@assets_pack, File.join(package_dir, "assets.pack"))
 
+      # Find and copy libraries (SDL3 etc.)
+      puts "Bundling dynamic libraries for Linux..."
+      # Use ldd to find dependencies
+      output = `ldd #{binary_dest}`
+      output.each_line do |line|
+        line = line.strip
+        # Format: libSDL3.so.0 => /usr/local/lib/libSDL3.so.0 (0x0000...)
+        if line.includes?("=>") && line.includes?("/")
+          parts = line.split("=>")
+          lib_name = parts[0].strip
+          lib_path = parts[1].split("(")[0].strip
+          
+          # Only bundle libraries we are interested in (SDL3 etc)
+          # We avoid bundling core system libs like libc, libm, etc.
+          if lib_name.downcase.includes?("sdl3")
+            puts "  Copying #{lib_name}..."
+            if File.exists?(lib_path)
+              FileUtils.cp(lib_path, File.join(package_dir, lib_name))
+            else
+              puts "  Warning: Could not find library at #{lib_path}"
+            end
+          end
+        end
+      end
+
       # Tar it
+      puts "Creating tar.gz archive..."
       system("cd #{@output_dir} && tar -czf #{release_name}.tar.gz #{release_name}")
     end
   end
