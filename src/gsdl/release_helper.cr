@@ -279,7 +279,7 @@ module GSDL
       # Copy all DLLs from build directory
       puts "Bundling DLLs..."
       # Normalize build_dir path to use forward slashes for Dir.glob
-      glob_pattern = "#{@build_dir.gsub('\\', '/')/*.dll}"
+      glob_pattern = File.join(@build_dir.gsub('\\', '/'), "*.dll")
       Dir.glob(glob_pattern).each do |dll_path|
         dll_name = File.basename(dll_path)
         puts "  Copying #{dll_name}..."
