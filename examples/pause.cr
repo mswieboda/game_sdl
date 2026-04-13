@@ -31,9 +31,10 @@ module PauseEx
         y: GSDL::Game.height / 2_f32 - 100,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Gold,
-        scale: {3_f32, 3_f32},
+        scale: {2_f32, 2_f32},
         z_index: @z_index
       )
+      @title.draw_relative_to_camera = false
 
       items = [{:resume, "Resume"}, {:settings, "Settings"}, {:credits, "Credits"}, {:quit, "Quit"}]
       @menu = GSDL::Menu.new(
@@ -57,16 +58,19 @@ module PauseEx
         separation: 16,
         default_text_color: GSDL::Color::Orange,
         selected_text_color: ->(index : Int32) { GSDL::Color::White },
-        z_index: @z_index
+        z_index: @z_index,
+        draw_relative_to_camera: false
       )
       @background = GSDL::Box.new(
-        x: 0,
-        y: 0,
-        width: Game.width,
-        height: Game.height,
-        color: GSDL::Color.new(0, 0, 0, 192),
+        x: GSDL::Game.width / 2_f32,
+        y: GSDL::Game.height / 2_f32,
+        width: Game.width / 1.5_f32,
+        height: Game.height / 1.5_f32,
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color.new(64, 64, 64, 192),
         z_index: @z_index
       )
+      @background.draw_relative_to_camera = false
     end
 
     def update(dt : Float32)
