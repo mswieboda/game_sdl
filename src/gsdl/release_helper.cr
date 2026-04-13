@@ -261,8 +261,7 @@ module GSDL
 
       # Copy binary (on Windows it would have .exe)
       # Assuming we are on Windows or have the .exe
-      bin_src = File.join(@build_dir, @example)
-      bin_src += ".exe" if @target == "win" && !bin_src.ends_with?(".exe")
+      bin_src = File.join(@build_dir, "#{@example}.exe")
 
       if File.exists?(bin_src)
         FileUtils.cp(bin_src, File.join(package_dir, "#{@app_name}.exe"))
@@ -273,14 +272,29 @@ module GSDL
       # Copy assets.pack
       FileUtils.cp(@assets_pack, File.join(package_dir, "assets.pack"))
 
-      # TODO: Copy DLLs
-      # This is tricky because it depends on where SDL3 is installed
-      # For now, just note that they should be there
-      puts "Note: SDL3.dll and other dependencies should be manually added to #{package_dir} if not already there."
+      # Copy all DLLs from build directory
+      puts "Bundling DLLs..."
+      Dir.glob(File.join(@build_dir, "*.dll")).each do |dll_path|
+        dll_name = File.basename(dll_path)
+        puts "  Copying #{dll_name}..."
+        FileUtils.cp(dll_path, File.join(package_dir, dll_name))
+      end
 
       # Zip it
       puts "Creating zip archive..."
-      if system("zip --version > NUL 2>&1")
+      has_zip = false
+      begin
+        # Use a simpler check that won't throw if missing on Windows
+        {% if flag?(:win32) %}
+          has_zip = system("where zip > NUL 2>&1")
+        {% else %}
+          has_zip = system("command -v zip > /dev/null 2>&1")
+        {% end %}
+      rescue
+        has_zip = false
+      end
+
+      if has_zip
         system("cd #{@output_dir} && zip -r #{release_name}.zip #{release_name}")
       else
         puts "  'zip' command not found, falling back to PowerShell Compress-Archive..."
@@ -294,7 +308,6 @@ module GSDL
         system(ps_cmd) || puts "  Warning: Failed to create zip via PowerShell. Please zip #{source_path} manually."
       end
     end
-
     private def package_linux
       puts "Packaging for Linux..."
       release_name = "#{@app_name}-linux-v#{@version}"
