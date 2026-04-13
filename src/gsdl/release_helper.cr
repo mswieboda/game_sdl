@@ -7,7 +7,7 @@ require "yaml"
 
 module GSDL
   class ReleaseHelper
-    @example : String = "full"
+    @game : String = "game"
     @src : String = ""
     @target : String = ""
     @app_name : String = ""
@@ -21,8 +21,8 @@ module GSDL
     def initialize
       @target = detect_platform
       parse_options
-      @src = "examples/#{@example}.cr" if @src.empty?
-      @app_name = @example if @app_name.empty?
+      @src = "src/main.cr" if @src.empty?
+      @app_name = @game if @app_name.empty?
       @version = fetch_version if @version.empty?
       @bundle_id = "com.gsdl.#{@app_name.downcase.gsub(' ', '-')}" if @bundle_id.empty?
     end
@@ -40,10 +40,10 @@ module GSDL
     def parse_options
       OptionParser.parse do |parser|
         parser.banner = "Usage: crystal src/gsdl/release_helper.cr -- [arguments]"
-        parser.on("-e NAME", "--example=NAME", "Example to package (default: 'full')") { |name| @example = name }
-        parser.on("-s PATH", "--src=PATH", "Source file path (default: examples/<example>.cr)") { |path| @src = path }
+        parser.on("-e GAME", "--game=NAME", "Game to package (default: 'game')") { |game| @game = game }
+        parser.on("-s PATH", "--src=PATH", "Source file path (default: src/<game>.cr)") { |path| @src = path }
         parser.on("-t TARGET", "--target=TARGET", "Target platform (mac, win, linux)") { |t| @target = t }
-        parser.on("-n NAME", "--name=NAME", "App name (default: example name)") { |n| @app_name = n }
+        parser.on("-n NAME", "--name=NAME", "App name (default: game name)") { |n| @app_name = n }
         parser.on("-v VER", "--version=VER", "App version (default: from shard.yml)") { |v| @version = v }
         parser.on("-i PATH", "--icon=PATH", "Icon file path") { |path| @icon_path = path }
         parser.on("-b ID", "--bundle-id=ID", "macOS Bundle ID (e.g., com.mygame.app)") { |id| @bundle_id = id }
@@ -66,13 +66,13 @@ module GSDL
 
     def run
       puts "--- GSDL Release Helper ---"
-      puts "Example:  #{@example}"
-      puts "Source:   #{@src}"
-      puts "Target:   #{@target}"
-      puts "App Name: #{@app_name}"
-      puts "Version:  #{@version}"
+      puts "Game:      #{@game}"
+      puts "Source:    #{@src}"
+      puts "Target:    #{@target}"
+      puts "App Name:  #{@app_name}"
+      puts "Version:   #{@version}"
       puts "Bundle ID: #{@bundle_id}" if @target == "mac"
-      puts "Output:   #{@output_dir}"
+      puts "Output:    #{@output_dir}"
       puts "---------------------------"
 
       # 1. Build the binary
@@ -97,8 +97,8 @@ module GSDL
     end
 
     private def build_binary
-      puts "Building binary for #{@example}..."
-      binary_path = File.join(@build_dir, @example)
+      puts "Building binary for #{@game}..."
+      binary_path = File.join(@build_dir, @game)
 
       # Determine link flags
       link_flags = ""
@@ -162,7 +162,7 @@ module GSDL
       FileUtils.mkdir_p(resources_dir)
 
       # Copy binary
-      FileUtils.cp(File.join(@build_dir, @example), File.join(macos_dir, @app_name))
+      FileUtils.cp(File.join(@build_dir, @game), File.join(macos_dir, @game))
 
       # Copy assets.pack
       FileUtils.cp(@assets_pack, File.join(resources_dir, "assets.pack"))
@@ -174,7 +174,7 @@ module GSDL
       <plist version="1.0">
       <dict>
           <key>CFBundleExecutable</key>
-          <string>#{@app_name}</string>
+          <string>#{@game}</string>
           <key>CFBundleGetInfoString</key>
           <string>#{@app_name} #{@version}</string>
           <key>CFBundleIconFile</key>
@@ -184,7 +184,7 @@ module GSDL
           <key>CFBundleInfoDictionaryVersion</key>
           <string>6.0</string>
           <key>CFBundleName</key>
-          <string>#{@app_name}</string>
+          <string>#{@game}</string>
           <key>CFBundlePackageType</key>
           <string>APPL</string>
           <key>CFBundleShortVersionString</key>
@@ -218,7 +218,8 @@ module GSDL
       # but the user asked for "no root folder" for the zip.
       # Actually for macOS .app, you definitely WANT the .app folder.
       # But for Windows it makes sense to just have the files.
-      system("cd #{@output_dir} && zip -r #{@app_name}-mac-v#{@version}.zip #{@app_name}.app")
+      zip_file_name = "#{@app_name.gsub(' ', '-')}-mac-v#{@version}"
+      system("cd #{@output_dir} && zip -r #{zip_file_name}.zip \"#{@app_name}.app\"")
     end
 
     private def bundle_libraries_mac(macos_dir, contents_dir)
@@ -226,7 +227,9 @@ module GSDL
       frameworks_dir = File.join(contents_dir, "Frameworks")
       FileUtils.mkdir_p(frameworks_dir)
 
-      binary_path = File.join(macos_dir, @app_name)
+      binary_path = "\"#{File.join(macos_dir, @game)}\""
+
+      puts ">>> binary_path: #{binary_path}"
 
       # 1. Add @executable_path/../Frameworks to rpath
       system("install_name_tool -add_rpath @executable_path/../Frameworks #{binary_path}")
@@ -290,7 +293,7 @@ module GSDL
 
       # Copy binary (on Windows it would have .exe)
       # Assuming we are on Windows or have the .exe
-      bin_src = File.join(@build_dir, "#{@example}.exe")
+      bin_src = File.join(@build_dir, "#{@game}.exe")
 
       if File.exists?(bin_src)
         FileUtils.cp(bin_src, File.join(package_dir, "#{@app_name}.exe"))
@@ -362,7 +365,7 @@ module GSDL
 
       # Copy binary
       binary_dest = File.join(package_dir, @app_name)
-      FileUtils.cp(File.join(@build_dir, @example), binary_dest)
+      FileUtils.cp(File.join(@build_dir, @game), binary_dest)
       File.chmod(binary_dest, 0o755)
 
       # Copy assets.pack
