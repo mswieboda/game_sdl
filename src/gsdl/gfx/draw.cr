@@ -447,7 +447,7 @@ module GSDL
       end
 
       white = LibSDL3::FColor.new(r: 1_f32, g: 1_f32, b: 1_f32, a: 1_f32)
-      
+
       # Determine passes
       if command.has_tint? && (command.tint_r != 255 || command.tint_g != 255 || command.tint_b != 255)
         # Two pass batching
@@ -476,7 +476,7 @@ module GSDL
         # Single pass (maybe with alpha)
         alpha = command.has_tint? ? command.tint_a / 255_f32 : 1_f32
         final_color = LibSDL3::FColor.new(r: 1_f32, g: 1_f32, b: 1_f32, a: alpha)
-        
+
         base_idx = @vertex_buffer.size
         @vertex_buffer << SDL3::Vertex.new(v0x, v0y, final_color, LibSDL3::FPoint.new(x: u1, y: v1))
         @vertex_buffer << SDL3::Vertex.new(v1x, v1y, final_color, LibSDL3::FPoint.new(x: u2, y: v1))
@@ -520,9 +520,9 @@ module GSDL
           # Batching Check
           if command.is_a?(DrawTextureCommand)
             cmd = command.as(DrawTextureCommand)
-            
+
             # Check if this command can continue the current batch
-            can_batch = @active_batch_texture && 
+            can_batch = @active_batch_texture &&
                         @active_batch_texture.not_nil!.to_unsafe == cmd.texture.to_unsafe &&
                         @active_batch_scale_x == cmd.scale_x &&
                         @active_batch_scale_y == cmd.scale_y &&
@@ -535,7 +535,7 @@ module GSDL
             else
               # Flush previous batch if it exists
               flush_batch if @active_batch_texture
-              
+
               # Start new batch
               @active_batch_texture = cmd.texture
               @active_batch_scale_x = cmd.scale_x
