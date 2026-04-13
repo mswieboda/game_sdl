@@ -101,14 +101,16 @@ module GSDL
       binary_path = File.join(@build_dir, @example)
 
       # Determine link flags
-      sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
-      link_flags = "-L#{sdl3_mixer_lib_dir} -Wl,-rpath,#{sdl3_mixer_lib_dir}"
+      link_flags = ""
+      if @target != "win"
+        sdl3_mixer_lib_dir = "/usr/local/lib" # Default from Makefile
+        link_flags = "--link-flags \"-L#{sdl3_mixer_lib_dir} -Wl,-rpath,#{sdl3_mixer_lib_dir}\""
+      end
 
-      cmd = "crystal build #{@src} -o #{binary_path} --release --no-debug --link-flags \"#{link_flags}\" -p"
+      cmd = "crystal build #{@src} -o #{binary_path} --release --no-debug #{link_flags} -p"
       puts "Running: #{cmd}"
       system(cmd) || raise "Failed to build binary"
     end
-
     private def pack_assets
       puts "Packing assets..."
       # Use the gsdl-packer tool if it exists, otherwise build it
