@@ -521,6 +521,12 @@ module GSDL
           if command.is_a?(DrawTextureCommand)
             cmd = command.as(DrawTextureCommand)
 
+            # Ensure the main loop's tracking variables match the texture's scale
+            # so that subsequent non-texture commands (like Text) know the current renderer state.
+            active_scale_x = cmd.scale_x
+            active_scale_y = cmd.scale_y
+            active_clip_rect = cmd.clip_rect
+
             # Check if this command can continue the current batch
             can_batch = @active_batch_texture &&
                         @active_batch_texture.not_nil!.to_unsafe == cmd.texture.to_unsafe &&
