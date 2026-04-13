@@ -76,10 +76,10 @@ module TileMapStress
       status_text = culling_active ? "ENABLED" : "DISABLED"
       color = culling_active ? GSDL::Color::Lime : GSDL::Color::Red
 
-      text = GSDL::Text.new(
+      text = GSDL::HUDText.new(
         text: "Culling: #{status_text} (PRESS 'C' TO TOGGLE)\nCamera: #{camera.x.to_i}, #{camera.y.to_i}\nMap Size: 500x500",
-        x: 10,
-        y: 10,
+        offset_x: 10,
+        offset_y: 10,
         color: color
       )
       text.z_index = 100

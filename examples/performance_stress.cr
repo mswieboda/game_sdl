@@ -84,10 +84,10 @@ module StressEx
       camera.speed = 1000 # High speed for flying around
       camera.type = GSDL::Camera::Type::Manual
 
-      @fps_text = GSDL::Text.new(text: "FPS: 0", x: 10, y: 10, color: GSDL::Color::Lime)
+      @fps_text = GSDL::HUDText.new(text: "FPS: 0", offset_x: 10, offset_y: 10, color: GSDL::Color::Lime)
       @fps_text.draw_relative_to_camera = false
 
-      @count_text = GSDL::Text.new(text: "Entities: #{ENTITY_COUNT}", x: 10, y: 40, color: GSDL::Color::White)
+      @count_text = GSDL::HUDText.new(text: "Entities: #{ENTITY_COUNT}", offset_x: 10, offset_y: 40, color: GSDL::Color::White)
       @count_text.draw_relative_to_camera = false
     end
 

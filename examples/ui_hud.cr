@@ -4,7 +4,7 @@ module HUDEx
   class Game < GSDL::Game
     def initialize
       super(title: "HUD Example", width: 800, height: 600)
-        end
+    end
 
     def init
       GSDL::Events.esc_exits = true
