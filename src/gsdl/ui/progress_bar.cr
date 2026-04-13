@@ -53,11 +53,13 @@ module GSDL
     end
 
     def draw_x : Num
-      x - (draw_width * origin_x)
+      dx = x - (draw_width * origin_x)
+      draw_relative_to_camera? ? dx - Game.camera.x : dx
     end
 
     def draw_y : Num
-      y - (draw_height * origin_y)
+      dy = y - (draw_height * origin_y)
+      draw_relative_to_camera? ? dy - Game.camera.y : dy
     end
 
     def origin_x : Float32
@@ -102,6 +104,7 @@ module GSDL
         z_index: z_index,
         border_radius: border_radius
       )
+      bg.draw_relative_to_camera = self.draw_relative_to_camera?
       bg.draw(draw)
 
       # Foreground
@@ -132,6 +135,7 @@ module GSDL
           z_index: z_index + 1,
           border_radius: border_radius
         )
+        fg.draw_relative_to_camera = self.draw_relative_to_camera?
         fg.draw(draw)
       end
 
@@ -152,6 +156,7 @@ module GSDL
           border_color: border_color,
           border_radius: border_radius
         )
+        border.draw_relative_to_camera = self.draw_relative_to_camera?
         border.draw(draw)
       end
     end

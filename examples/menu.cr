@@ -53,7 +53,6 @@ module GameEx
         align: Font::Align::Center
       )
 
-
       # this helper outputs (since the strings are same as the symbols):
       # [
       #   {:start, "start"},

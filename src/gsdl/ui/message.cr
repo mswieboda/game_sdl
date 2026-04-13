@@ -20,6 +20,7 @@ module GSDL
       @bg_color : Color = Color::White,
       @border_radius : Num = 0,
       z_index : Int32 = 900,
+      draw_relative_to_camera : Bool = false
     )
       super(
         font: font,
@@ -32,7 +33,9 @@ module GSDL
         align: align,
         x: x,
         y: y,
-        color: color
+        color: color,
+        z_index: z_index,
+        draw_relative_to_camera: draw_relative_to_camera
       )
     end
 
@@ -48,6 +51,7 @@ module GSDL
         border_radius: border_radius,
         z_index: z_index
       )
+      box.draw_relative_to_camera = self.draw_relative_to_camera?
       box.draw(draw)
     end
   end

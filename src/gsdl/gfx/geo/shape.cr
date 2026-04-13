@@ -218,6 +218,15 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      old_scale_x = draw.current_scale_x
+      old_scale_y = draw.current_scale_y
+
+      if draw_relative_to_camera?
+        draw.scale = Game.camera.zoom
+      else
+        draw.scale = 1.0_f32
+      end
+
       draw_fill(draw) if draw_mode.fill? || draw_mode.border?
 
       if draw_mode.border?
@@ -225,6 +234,8 @@ module GSDL
       elsif draw_mode.outline?
         draw_outline(draw)
       end
+
+      draw.scale = {old_scale_x, old_scale_y}
     end
 
     private def draw_fill(draw : Draw)

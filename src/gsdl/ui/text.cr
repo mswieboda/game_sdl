@@ -62,14 +62,14 @@ module GSDL
         @text_sdl.draw(x, y)
       else
         renderer = TextBase.renderer
-        old_scale = renderer.scale
-        renderer.scale = {scale_x.to_f32, scale_y.to_f32}
+        old_scale_x, old_scale_y = renderer.scale
+        renderer.scale = {scale_x.to_f32 * old_scale_x, scale_y.to_f32 * old_scale_y}
 
         # We must divide our coordinates by the scale
         # because the renderer's scale multiplies them
         @text_sdl.draw(x / scale_x.to_f32, y / scale_y.to_f32)
 
-        renderer.scale = old_scale
+        renderer.scale = {old_scale_x, old_scale_y}
       end
     end
   end

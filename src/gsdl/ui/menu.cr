@@ -27,6 +27,7 @@ module GSDL
     property mouse_hover : Bool = false
     property hover_text_color : Color
     property z_index : Int32 = 0
+    property? draw_relative_to_camera : Bool = false
 
     @on_select : Symbol -> Nil
     @selected_text_color : (Int32 -> Color)?
@@ -87,6 +88,7 @@ module GSDL
       @hover_text_color = Color::White,
       @hover_box = nil,
       @z_index : Int32 = 0,
+      @draw_relative_to_camera : Bool = false,
       @on_select : Symbol -> Nil = ->(s : Symbol) { }
     )
       @items_text = [] of Text
@@ -161,6 +163,7 @@ module GSDL
 
         item.scale = @scale
         item.z_index = @z_index
+        item.draw_relative_to_camera = self.draw_relative_to_camera?
 
         if @vertical
           current_pos_y += h + @separation * scale_y
@@ -293,6 +296,7 @@ module GSDL
       box.x = x
       box.y = y
       box.z_index = @z_index
+      box.draw_relative_to_camera = self.draw_relative_to_camera?
       if box.is_a?(Box)
         box.width = w
         box.height = h
@@ -306,6 +310,7 @@ module GSDL
 
       icon_y = rect[:y] + (rect[:h] - icon_h) / 2.0_f32
       icon.z_index = @z_index
+      icon.draw_relative_to_camera = self.draw_relative_to_camera?
 
       if @selected_icon_placement == IconPlacement::Left || @selected_icon_placement == IconPlacement::Both
         icon.x = rect[:x] - icon_w - 5_f32

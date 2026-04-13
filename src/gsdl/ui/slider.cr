@@ -28,6 +28,7 @@ module GSDL
     property z_index : Int32 = 0
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
+    property? draw_relative_to_camera : Bool = false
 
     property? active : Bool = false
     property on_change : OnChangeCallback?
@@ -42,7 +43,8 @@ module GSDL
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
       @on_change = nil,
-      @z_index = 0
+      @z_index = 0,
+      @draw_relative_to_camera = false
     )
     end
 
@@ -55,11 +57,13 @@ module GSDL
     end
 
     def draw_x : Num
-      x - (draw_width * origin_x)
+      dx = x - (draw_width * origin_x)
+      draw_relative_to_camera? ? dx - Game.camera.x : dx
     end
 
     def draw_y : Num
-      y - (draw_height * origin_y)
+      dy = y - (draw_height * origin_y)
+      draw_relative_to_camera? ? dy - Game.camera.y : dy
     end
 
     def origin_x : Float32
@@ -148,19 +152,34 @@ module GSDL
         z_index: z_index,
         border_radius: ([width, height].min / 2).to_f32
       )
+      bg.draw_relative_to_camera = self.draw_relative_to_camera?
       bg.draw(draw)
 
       # Handle
-      hr = handle_rect
+      # Box.new(x, y) expects world coordinates if it's draw_relative_to_camera?
+      # We calculate the center of the handle in world space.
+      tl_x = x - (width * origin_x)
+      tl_y = y - (height * origin_y)
+
+      case orientation
+      when Orientation::Horizontal
+        hx_abs = tl_x + (width * normalized_value)
+        hy_abs = tl_y + (height / 2.0_f32)
+      else # Orientation::Vertical
+        hx_abs = tl_x + (width / 2.0_f32)
+        hy_abs = tl_y + (height * (1.0_f32 - normalized_value))
+      end
+
       handle = Box.new(
         width: handle_size, height: handle_size,
-        x: hr.x + hr.w / 2, y: hr.y + hr.h / 2,
+        x: hx_abs.not_nil!, y: hy_abs.not_nil!,
         color: handle_color,
         origin: {0.5_f32, 0.5_f32},
         scale: scale,
         z_index: z_index + 1,
-        border_radius: (handle_size / 2).to_f32
+        border_radius: (handle_size / 2.0_f32).to_f32
       )
+      handle.draw_relative_to_camera = self.draw_relative_to_camera?
       handle.draw(draw)
     end
   end

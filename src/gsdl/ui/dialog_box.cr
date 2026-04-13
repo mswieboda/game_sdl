@@ -4,6 +4,7 @@ module GSDL
     getter is_active : Bool = false
     getter selected_choice : Int32 = 0
     getter style : DialogStyle
+    property? draw_relative_to_camera : Bool = false
 
     # UI Elements
     @main_box : Message
@@ -23,7 +24,9 @@ module GSDL
       on_action : Proc(String, Void)? = nil,
       on_condition : Proc(String, Bool)? = nil,
       z_index : Int32 = 900,
+      draw_relative_to_camera : Bool = false
     )
+      @draw_relative_to_camera = draw_relative_to_camera
       @on_action = on_action
       @on_condition = on_condition
 
@@ -44,8 +47,11 @@ module GSDL
         color: @style.color,
         bg_color: @style.bg_color,
         border_radius: @style.border_radius,
-        z_index: z_index
+        z_index: z_index,
+        draw_relative_to_camera: draw_relative_to_camera
       )
+
+      @main_text.draw_relative_to_camera = draw_relative_to_camera
     end
 
     def z_index=(z_index : Int32)
@@ -131,7 +137,8 @@ module GSDL
             height: @style.choice_height,
             color: @style.choice_color,
             bg_color: @style.choice_bg_color,
-            border_radius: @style.choice_border_radius
+            border_radius: @style.choice_border_radius,
+            draw_relative_to_camera: self.draw_relative_to_camera?
           )
           box.z_index = @main_box.z_index
           @choices_boxes << box

@@ -21,6 +21,7 @@ module GSDL
     @height_fixed : Bool = false
 
     @z_index : Int32 = 900
+    property? draw_relative_to_camera : Bool = false
 
     delegate z_index, to: @text
 
@@ -36,7 +37,8 @@ module GSDL
       x : Num = 0_f32,
       y : Num = 0_f32,
       color = Color::Black,
-      @z_index : Int32 = 900
+      @z_index : Int32 = 900,
+      @draw_relative_to_camera : Bool = false
     )
       if text.is_a?(String)
         @text = Text.new(
@@ -88,6 +90,7 @@ module GSDL
       @text.origin = @origin
       @text.scale = @scale
       @text.z_index = @z_index
+      @text.draw_relative_to_camera = self.draw_relative_to_camera?
     end
 
     def x=(x : Num)
@@ -154,8 +157,15 @@ module GSDL
     def draw_width : Num; width * scale_x; end
     def draw_height : Num; height * scale_y; end
 
-    def draw_x : Num; x - (draw_width * origin_x); end
-    def draw_y : Num; y - (draw_height * origin_y); end
+    def draw_x : Num
+      dx = x - (draw_width * origin_x)
+      draw_relative_to_camera? ? dx - Game.camera.x : dx
+    end
+
+    def draw_y : Num
+      dy = y - (draw_height * origin_y)
+      draw_relative_to_camera? ? dy - Game.camera.y : dy
+    end
 
     private def on_content_changed
       unless @width_fixed
@@ -169,7 +179,17 @@ module GSDL
 
     def update(dt : Float32)
       update_tweens(dt)
+
+      # Track text dimensions to detect changes (like in TextTyped)
+      old_w = @text.width
+      old_h = @text.height
+
       @text.update(dt)
+
+      # If text changed size, we need to update our box dimensions and text position
+      if @text.width != old_w || @text.height != old_h
+        on_content_changed
+      end
     end
 
     def draw_background(draw : Draw)
