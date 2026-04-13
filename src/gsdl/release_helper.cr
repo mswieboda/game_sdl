@@ -296,7 +296,7 @@ module GSDL
       bin_src = File.join(@build_dir, "#{@game}.exe")
 
       if File.exists?(bin_src)
-        FileUtils.cp(bin_src, File.join(package_dir, "\"#{@app_name}\".exe"))
+        FileUtils.cp(bin_src, File.join(package_dir, "#{@app_name}.exe"))
       else
         puts "Warning: Binary #{bin_src} not found. Skipping binary copy."
       end
