@@ -287,7 +287,7 @@ module GSDL
 
     private def package_win
       puts "Packaging for Windows..."
-      release_name = "#{@app_name}-win-v#{@version}"
+      release_name = "#{@app_name.gsub(' ', '-')}-win-v#{@version}"
       package_dir = File.join(@output_dir, release_name)
       FileUtils.mkdir_p(package_dir)
 
@@ -296,7 +296,7 @@ module GSDL
       bin_src = File.join(@build_dir, "#{@game}.exe")
 
       if File.exists?(bin_src)
-        FileUtils.cp(bin_src, File.join(package_dir, "#{@app_name}.exe"))
+        FileUtils.cp(bin_src, File.join(package_dir, "\"#{@app_name}\".exe"))
       else
         puts "Warning: Binary #{bin_src} not found. Skipping binary copy."
       end
@@ -328,6 +328,7 @@ module GSDL
         puts "  Copying #{dll_name}..."
         FileUtils.cp(dll_path, File.join(package_dir, dll_name))
       end
+
       # Zip it
       puts "Creating zip archive..."
       has_zip = false
@@ -359,12 +360,12 @@ module GSDL
 
     private def package_linux
       puts "Packaging for Linux..."
-      release_name = "#{@app_name}-linux-v#{@version}"
+      release_name = "#{@app_name.gsub(' ', '-')}-linux-v#{@version}"
       package_dir = File.join(@output_dir, release_name)
       FileUtils.mkdir_p(package_dir)
 
       # Copy binary
-      binary_dest = File.join(package_dir, @app_name)
+      binary_dest = File.join(package_dir, @app_name.gsub(' ', '-'))
       FileUtils.cp(File.join(@build_dir, @game), binary_dest)
       File.chmod(binary_dest, 0o755)
 
