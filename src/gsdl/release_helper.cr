@@ -229,8 +229,6 @@ module GSDL
 
       binary_path = "\"#{File.join(macos_dir, @game)}\""
 
-      puts ">>> binary_path: #{binary_path}"
-
       # 1. Add @executable_path/../Frameworks to rpath
       system("install_name_tool -add_rpath @executable_path/../Frameworks #{binary_path}")
 

@@ -104,23 +104,25 @@ To create a distribution-ready package for your game (on macOS, Windows, or Linu
 
 This will build your game in release mode, bundle all assets into an `assets.pack`, and package everything into a platform-specific format (e.g., a `.app` bundle on macOS or a `.zip` file on Windows).
 
+for consumers, add this by adding `release-package` (and aliases) to **your** `Makefile`: (you'll need to add the `release-package` command and the `release-package-[platform]` alias, or see `template_game_sdl`)
+
 **Commands:**
 
-- `make release-package EXAMPLE=your_game_name` (detects platform automatically)
-- `make release-package-mac EXAMPLE=your_game_name`
-- `make release-package-win EXAMPLE=your_game_name`
-- `make release-package-linux EXAMPLE=your_game_name`
+- `make release-package GAME=your_game_name` (detects platform automatically)
+- `make release-package-mac GAME=your_game_name`
+- `make release-package-win GAME=your_game_name`
+- `make release-package-linux GAME=your_game_name`
 
 **Customization:**
 
 You can customize the release by passing variables to `make` or by running the `release_helper.cr` script directly with arguments:
 
 ```bash
-make release-package-mac EXAMPLE=my_game SRC=src/my_game.cr APP_NAME="My Awesome Game" VERSION=1.0.0 BUNDLE_ID=com.mygame.app
+make release-package-mac GAME=my_game SRC=src/my_game.cr APP_NAME="My Awesome Game" VERSION=1.0.0 BUNDLE_ID=com.mygame.app
 ```
 
-- `EXAMPLE`: The name of the resulting binary (default: `full`).
-- `SRC`: Path to the source file (default: `examples/<EXAMPLE>.cr`).
+- `GAME`: The name of the resulting binary (default: `game`).
+- `SRC`: Path to the source file (default: `src/main.cr`).
 - `TARGET`: Target platform (`mac`, `win`, `linux`).
 - `APP_NAME`: The name of your application (used for the bundle and binary name).
 - `VERSION`: The version string (defaults to `shard.yml` version).

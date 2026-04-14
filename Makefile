@@ -9,6 +9,7 @@ RM_CMD := rm -rf
 MKDIR_CMD := mkdir -p
 PACKER_FILE := build/assets.pack
 PACKER_BIN := bin/gsdl-packer
+SRC := examples/$(EXAMPLE).cr
 
 # Phony targets don't represent files
 .PHONY: default clean examples examples_full build_examples_full build run packer pack run-release
@@ -20,9 +21,9 @@ release-package:
 	@echo "Creating release package for example: $(EXAMPLE) target: $(TARGET)"
 	$(MKDIR_CMD) $(BUILD_DIR)
 	crystal run src/gsdl/release_helper.cr -- \
-		--example=$(EXAMPLE) \
+		--game=$(EXAMPLE) \
 		--target=$(TARGET) \
-		$(if $(SRC),--src=$(SRC)) \
+		$(if $(SRC),--src="$(SRC)") \
 		$(if $(APP_NAME),--name="$(APP_NAME)") \
 		$(if $(VERSION),--version=$(VERSION)) \
 		$(if $(ICON),--icon=$(ICON)) \
