@@ -6,7 +6,7 @@ module GSDL
   end
 
   def self.gray(v : Int, a : Int = 255) : Color
-    Color.new(r: v, g: v, b: v, a: a)
+    Color.gray(v: v, a: a)
   end
 
   def self.grey(v : Int, a : Int = 255) : Color
@@ -35,6 +35,14 @@ module GSDL
         blue: rng.next_u8,
         alpha: a.to_u8
       )
+    end
+
+    def self.gray(v : Int, a : Int = 255) : Color
+      Color.new(r: v, g: v, b: v, a: a)
+    end
+
+    def self.grey(v : Int, a : Int = 255) : Color
+      gray(v: v, a: a)
     end
 
     macro generate_from_name
