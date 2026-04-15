@@ -227,7 +227,12 @@ module GSDL
       end
     end
 
-    def initialize(title = "", width = 1920, height = 1080)
+    def initialize(
+      title = "",
+      width = 1920,
+      height = 1080,
+      window_flags : Array(SDL3::Window::Flags) = [SDL3::Window::Flags::None]
+    )
       @title = title
       @width = width
       @height = height
@@ -242,7 +247,7 @@ module GSDL
         title,
         width,
         height,
-        flags: 32_u64
+        flags: window_flags
       )
 
       @draw = Draw.new(@window.not_nil!)
