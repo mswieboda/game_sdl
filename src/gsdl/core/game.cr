@@ -291,6 +291,8 @@ module GSDL
       SDL3::TTF.init
       SDL3::Mixer.init
 
+      LibSDL3.set_hint(LibSDL3::HINT_BORDERLESS_WINDOW_MAXIMIZED_FULLSCREEN, "1")
+
       flags = (window_flags ? window_flags.dup : [SDL3::Window::Flags::None])
       flags << SDL3::Window::Flags::Resizable if resizable || (maximized && !resizable)
       flags << SDL3::Window::Flags::Fullscreen if fullscreen
