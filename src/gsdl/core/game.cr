@@ -287,11 +287,14 @@ module GSDL
 
       Internal.instance = self
 
+      # Disable macOS Spaces for fullscreen to avoid the "window switching" animation.
+      # This MUST be set before SDL3.init to ensure the video driver respects it.
+      # This makes 'fullscreen: true' behave like 'Desktop Fullscreen' (on top of everything) on both Win/Mac.
+      LibSDL3.set_hint(LibSDL3::HINT_VIDEO_MAC_FULLSCREEN_SPACES, "0")
+
       SDL3.init
       SDL3::TTF.init
       SDL3::Mixer.init
-
-      LibSDL3.set_hint(LibSDL3::HINT_BORDERLESS_WINDOW_MAXIMIZED_FULLSCREEN, "1")
 
       flags = (window_flags ? window_flags.dup : [SDL3::Window::Flags::None])
       flags << SDL3::Window::Flags::Resizable if resizable || (maximized && !resizable)
