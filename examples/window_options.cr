@@ -1,7 +1,7 @@
 require "../src/game_sdl"
 
-# This example demonstrates the new boolean window configuration parameters 
-# in GSDL::Game.initialize. It cycles through different window states 
+# This example demonstrates the new boolean window configuration parameters
+# in GSDL::Game.initialize. It cycles through different window states
 # by restarting the game instance with new flags.
 
 module WindowOptionsEx
@@ -19,7 +19,7 @@ module WindowOptionsEx
 
     def draw(draw : GSDL::Draw)
       draw.color = GSDL::Color::White
-      
+
       title_font = GSDL::Font.default.copy
       title_font.size = 24
       draw.text(GSDL::Text.new(text: "Window Options Demo", x: 40, y: 40, font: title_font))
@@ -27,7 +27,7 @@ module WindowOptionsEx
       info_font = GSDL::Font.default.copy
       info_font.size = 16
       draw.text(GSDL::Text.new(text: "Current Test: #{@current_test}", x: 40, y: 100, color: GSDL::Color::Cyan, font: info_font))
-      
+
       draw.text(GSDL::Text.new(text: "Press SPACE to cycle to the next mode", x: 40, y: 160))
       draw.text(GSDL::Text.new(text: "Press ESC to exit completely", x: 40, y: 190))
 
@@ -83,10 +83,10 @@ test_index = 0
 while test_index < tests.size
   game = tests[test_index].call
   game.run
-  
+
   # If the user pressed ESC, GSDL::Events.exit? will be true
   break if GSDL::Events.exit?
-  
+
   test_index += 1
   puts "Moving to test #{test_index + 1}..."
 end
