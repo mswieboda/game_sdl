@@ -383,7 +383,7 @@ module GSDL
           lib_data = parts[1].split("(")[0].strip
 
           # Only bundle libraries we are interested in (SDL3 etc)
-          if lib_name.downcase.includes?("sdl3") || lib_name.downcase.includes?("freetype")
+          if lib_name.downcase.includes?("sdl3")
             if !lib_data.empty? && File.exists?(lib_data)
               puts "  Copying #{lib_name}..."
               # Use cp -L to follow symlinks and copy the actual file content
