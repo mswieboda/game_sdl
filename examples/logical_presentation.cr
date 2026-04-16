@@ -10,14 +10,18 @@ module GameEx
   LOGICAL_HEIGHT = 240
 
   class Game < GSDL::Game
+    @current_mode_index = 0
+
     def initialize
-      super(title: "Logical Presentation Example", width: WIDTH, height: HEIGHT)
+      super(title: "Logical Presentation Example", width: WIDTH, height: HEIGHT, logical_width: LOGICAL_WIDTH, logical_height: LOGICAL_HEIGHT)
     end
 
     def init
       GSDL::Events.esc_exits = true
-      GSDL::Game.draw.logical_presentation = {LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL3::LogicalPresentation::Disabled}
-      GSDL::Game.push(StartScene.new)
+      # GSDL::Game.draw.logical_presentation is automatically set in Game#_init to Letterbox
+      # when logical_width/height are passed to super()
+      @current_mode_index = 2 # LETTERBOX
+      GSDL::Game.push(StartScene.new(@current_mode_index))
     end
 
     def load_default_font
@@ -49,7 +53,7 @@ module GameEx
       "INTEGER_SCALE",
     ]
 
-    def initialize
+    def initialize(@current_mode_index = 0)
       super(:logical_presentation)
 
       color = GSDL::Color.new(r: 255, g: 255, b: 255, a: 255)
@@ -58,28 +62,28 @@ module GameEx
       @instruction_text.x = 10
       @instruction_text.y = 10
 
-      @mode_text = GSDL::Text.new(text: "Mode: DISABLED", color: color)
+      @mode_text = GSDL::Text.new(text: "Mode: #{@presentation_mode_names[@current_mode_index]}", color: color)
       @mode_text.x = 10
       @mode_text.y = 40
 
-      @logical_size_text = GSDL::Text.new(text: "Logical Size: #{LOGICAL_WIDTH}x#{LOGICAL_HEIGHT}", color: color)
+      @logical_size_text = GSDL::Text.new(text: "Logical Size: #{GSDL::Game.width}x#{GSDL::Game.height}", color: color)
       @logical_size_text.x = 10
       @logical_size_text.y = 70
 
-      @window_size_text = GSDL::Text.new(text: "Window Size: #{WIDTH}x#{HEIGHT}", color: color)
+      @window_size_text = GSDL::Text.new(text: "Window Size: #{GSDL::Game.instance.window.size[0]}x#{GSDL::Game.instance.window.size[1]}", color: color)
       @window_size_text.x = 10
       @window_size_text.y = 100
 
       # Create a checkerboard background surface (fills logical area)
-      surface = GSDL::Surface.new(LOGICAL_WIDTH, LOGICAL_HEIGHT)
+      surface = GSDL::Surface.new(GSDL::Game.width, GSDL::Game.height)
 
       # Draw checkerboard pattern
       tile_size = 20
       color1 = GSDL.color(50, 50, 50, 255) # Dark gray
       color2 = GSDL.color(150, 150, 150, 255) # Light gray
 
-      (0...LOGICAL_HEIGHT).step(tile_size) do |y|
-        (0...LOGICAL_WIDTH).step(tile_size) do |x|
+      (0...GSDL::Game.height).step(tile_size) do |y|
+        (0...GSDL::Game.width).step(tile_size) do |x|
           rect = GSDL::Rect.new(x: x, y: y, w: tile_size, h: tile_size)
           if ((x / tile_size) + (y / tile_size)) % 2 == 0
             surface.draw_rect_fill(rect, color1)
@@ -101,7 +105,7 @@ module GameEx
       if Keys.just_pressed?(Keys::Space)
         @current_mode_index = (@current_mode_index + 1) % @presentation_modes.size
         mode = @presentation_modes[@current_mode_index]
-        GSDL::Game.draw.logical_presentation = {LOGICAL_WIDTH, LOGICAL_HEIGHT, mode}
+        GSDL::Game.draw.logical_presentation = {GSDL::Game.width, GSDL::Game.height, mode}
         @mode_text.text = "Mode: #{@presentation_mode_names[@current_mode_index]}"
         puts "Switched logical presentation to: #{@presentation_mode_names[@current_mode_index]}"
       end
@@ -113,7 +117,7 @@ module GameEx
       draw.clear
 
       # Render background, which will be scaled by the logical presentation
-      bg_dest_rect = GSDL::FRect.new(w: LOGICAL_WIDTH, h: LOGICAL_HEIGHT)
+      bg_dest_rect = GSDL::FRect.new(w: GSDL::Game.width, h: GSDL::Game.height)
       draw.texture(texture: @bg_texture, dest_rect: bg_dest_rect, draw_immediately: true)
 
       # Render text

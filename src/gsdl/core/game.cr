@@ -55,6 +55,14 @@ module GSDL
       instance.height
     end
 
+    def self.center_x : Int32
+      instance.center_x
+    end
+
+    def self.center_y : Int32
+      instance.center_y
+    end
+
     def self.title : String
       instance.title
     end
@@ -118,6 +126,8 @@ module GSDL
     @title : String?
     @width : Int32?
     @height : Int32?
+    @logical_width : Int32 = 0
+    @logical_height : Int32 = 0
     @paused : Bool = false
     @scenes : Array(Scene) = [] of Scene
     @fps_counter : FPSCounter = FPSCounter.new
@@ -129,6 +139,10 @@ module GSDL
     # Enable or disable performance monitoring and metric collection.
     property performance_monitoring_enabled : Bool = false
 
+    # Logical resolution properties
+    property logical_width
+    property logical_height
+
 
     def window; @window.not_nil!; end
     def loader; @loader ||= Loader.new; end
@@ -136,8 +150,30 @@ module GSDL
     def exit?; @exit; end
     def exit=(@exit : Bool); end
     def title; @title.not_nil!; end
-    def width; @width.not_nil!; end
-    def height; @height.not_nil!; end
+
+    def width : Int32
+      if @logical_width > 0
+        @logical_width
+      elsif wnd = @window
+        wnd.size[0]
+      else
+        @width || 0
+      end
+    end
+
+    def height : Int32
+      if @logical_height > 0
+        @logical_height
+      elsif wnd = @window
+        wnd.size[1]
+      else
+        @height || 0
+      end
+    end
+
+    def center_x; width / 2; end
+    def center_y; height / 2; end
+
     def paused?; @paused; end
     def paused=(@paused : Bool); end
 
@@ -231,11 +267,15 @@ module GSDL
       title = "",
       width = 1920,
       height = 1080,
+      logical_width = 0,
+      logical_height = 0,
       window_flags : Array(SDL3::Window::Flags) = [SDL3::Window::Flags::None]
     )
       @title = title
       @width = width
       @height = height
+      @logical_width = logical_width
+      @logical_height = logical_height
 
       Internal.instance = self
 
@@ -267,6 +307,10 @@ module GSDL
       TileMapManager.setup
 
       TextBase.draw = Game.draw
+
+      if @logical_width > 0 && @logical_height > 0
+        Game.draw.logical_presentation = {@logical_width, @logical_height, SDL3::LogicalPresentation::Letterbox}
+      end
 
       load_assets
 
