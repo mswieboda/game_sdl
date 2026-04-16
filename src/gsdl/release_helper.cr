@@ -234,6 +234,9 @@ module GSDL
       # Bundle libraries for macOS portability
       bundle_libraries_mac(macos_dir, contents_dir)
 
+      # Sign the app bundle (ad-hoc signing is required for ARM64 after install_name_tool)
+      sign_app_mac(app_dir)
+
       # Create ZIP for macOS
       puts "Creating macOS ZIP archive..."
       # Use ./* inside the .app bundle is not right for macOS, usually we want the .app folder itself
@@ -342,6 +345,33 @@ module GSDL
       return lib_path if lib_path.starts_with?("/")
 
       nil
+    end
+
+    private def sign_app_mac(app_dir)
+      puts "Re-signing application for macOS ARM64 compatibility..."
+      frameworks_dir = File.join(app_dir, "Contents", "Frameworks")
+      macos_dir = File.join(app_dir, "Contents", "MacOS")
+
+      # 1. Sign all frameworks first (depth-first is best)
+      if Dir.exists?(frameworks_dir)
+        Dir.children(frameworks_dir).each do |lib_name|
+          lib_path = File.join(frameworks_dir, lib_name)
+          if lib_name.ends_with?(".dylib")
+            # puts "  Signing #{lib_name}..."
+            system("codesign -f -s - \"#{lib_path}\" > /dev/null 2>&1")
+          end
+        end
+      end
+
+      # 2. Sign the main binary last
+      Dir.children(macos_dir).each do |bin_name|
+        bin_path = File.join(macos_dir, bin_name)
+        # puts "  Signing #{bin_name}..."
+        system("codesign -f -s - \"#{bin_path}\" > /dev/null 2>&1")
+      end
+
+      # 3. Sign the whole bundle
+      system("codesign -f -s - \"#{app_dir}\" > /dev/null 2>&1")
     end
 
     private def package_win
