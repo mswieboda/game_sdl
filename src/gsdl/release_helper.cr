@@ -16,6 +16,7 @@ module GSDL
     @bundle_id : String = ""
     @output_dir : String = "build/release"
     @build_dir : String = "build"
+    @assets_pack : String = "build/assets.pack"
     @target : String = ""
     @arch : String = ""
     @app_name : String = ""
@@ -139,7 +140,7 @@ module GSDL
 
       cmd = "crystal build #{@src} -o #{binary_path} --release --no-debug #{link_flags} -p"
       puts "Running: #{cmd}"
-      system(env, cmd) || raise "Failed to build binary"
+      Process.run(cmd, shell: true, env: env).success? || raise "Failed to build binary"
     end
 
     private def pack_assets
