@@ -16,10 +16,13 @@ module GSDL
     @bundle_id : String = ""
     @output_dir : String = "build/release"
     @build_dir : String = "build"
-    @assets_pack : String = "build/assets.pack"
+    @target : String = ""
+    @arch : String = ""
+    @app_name : String = ""
 
     def initialize
       @target = detect_platform
+      @arch = detect_arch
       parse_options
       @src = "src/main.cr" if @src.empty?
       @app_name = @game if @app_name.empty?
@@ -34,6 +37,16 @@ module GSDL
         "win"
       {% else %}
         "linux"
+      {% end %}
+    end
+
+    def detect_arch
+      {% if flag?(:aarch64) || flag?(:arm) %}
+        "arm64"
+      {% elsif flag?(:x86_64) %}
+        "x86_64"
+      {% else %}
+        "unknown"
       {% end %}
     end
 
@@ -69,6 +82,7 @@ module GSDL
       puts "Game:      #{@game}"
       puts "Source:    #{@src}"
       puts "Target:    #{@target}"
+      puts "Arch:      #{@arch}"
       puts "App Name:  #{@app_name}"
       puts "Version:   #{@version}"
       puts "Bundle ID: #{@bundle_id}" if @target == "mac"
@@ -117,9 +131,15 @@ module GSDL
         link_flags = "--link-flags \"-L#{sdl3_mixer_lib_dir} -Wl,-rpath,#{sdl3_mixer_lib_dir}\""
       end
 
+      # Set deployment target to ensure compatibility with older macOS versions
+      env = {} of String => String
+      if @target == "mac"
+        env["MACOSX_DEPLOYMENT_TARGET"] = "10.15"
+      end
+
       cmd = "crystal build #{@src} -o #{binary_path} --release --no-debug #{link_flags} -p"
       puts "Running: #{cmd}"
-      system(cmd) || raise "Failed to build binary"
+      system(env, cmd) || raise "Failed to build binary"
     end
 
     private def pack_assets
@@ -218,7 +238,7 @@ module GSDL
       # but the user asked for "no root folder" for the zip.
       # Actually for macOS .app, you definitely WANT the .app folder.
       # But for Windows it makes sense to just have the files.
-      zip_file_name = "#{@app_name.gsub(' ', '-')}-mac-v#{@version}"
+      zip_file_name = "#{@app_name.gsub(' ', '-')}-mac-#{@arch}-v#{@version}"
       system("cd #{@output_dir} && zip -r #{zip_file_name}.zip \"#{@app_name}.app\"")
     end
 
@@ -285,7 +305,7 @@ module GSDL
 
     private def package_win
       puts "Packaging for Windows..."
-      release_name = "#{@app_name.gsub(' ', '-')}-win-v#{@version}"
+      release_name = "#{@app_name.gsub(' ', '-')}-win-#{@arch}-v#{@version}"
       package_dir = File.join(@output_dir, release_name)
       FileUtils.mkdir_p(package_dir)
 
@@ -358,7 +378,7 @@ module GSDL
 
     private def package_linux
       puts "Packaging for Linux..."
-      release_name = "#{@app_name.gsub(' ', '-')}-linux-v#{@version}"
+      release_name = "#{@app_name.gsub(' ', '-')}-linux-#{@arch}-v#{@version}"
       package_dir = File.join(@output_dir, release_name)
       FileUtils.mkdir_p(package_dir)
 
