@@ -1,6 +1,7 @@
 require "option_parser"
 require "file_utils"
 require "yaml"
+require "set"
 
 # GSDL Release Helper
 # Automates the creation of distribution-ready packages for macOS, Windows, and Linux.
@@ -248,17 +249,28 @@ module GSDL
       frameworks_dir = File.join(contents_dir, "Frameworks")
       FileUtils.mkdir_p(frameworks_dir)
 
-      binary_path = "\"#{File.join(macos_dir, @game)}\""
+      binary_path = File.join(macos_dir, @game)
 
-      # 1. Add @executable_path/../Frameworks to rpath
-      system("install_name_tool -add_rpath @executable_path/../Frameworks #{binary_path}")
+      # 1. Add @executable_path/../Frameworks to rpath for the binary
+      # We use 2>/dev/null because it might already exist
+      system("install_name_tool -add_rpath @executable_path/../Frameworks \"#{binary_path}\" 2>/dev/null")
 
-      # 2. Find and copy libraries
-      # We look for common SDL3 library paths from otool output
-      output = `otool -L #{binary_path}`
-      output.each_line do |line|
+      processed = Set(String).new
+      bundle_recursive(binary_path, frameworks_dir, processed)
+    end
+
+    private def bundle_recursive(target_path, frameworks_dir, processed)
+      # Get dependencies using otool
+      output = `otool -L \"#{target_path}\"`.strip
+      return if output.empty?
+
+      lines = output.each_line.to_a
+      # Skip the first line which is the file name itself (usually ending in :)
+      lines.shift if lines.size > 0 && lines[0].strip.ends_with?(":")
+
+      lines.each do |line|
         line = line.strip
-        next if line.empty? || line.starts_with?(binary_path)
+        next if line.empty?
 
         # Extract path (e.g., /opt/homebrew/opt/sdl3/lib/libSDL3.0.dylib)
         lib_path = line.split(' ')[0]
@@ -266,42 +278,70 @@ module GSDL
         # Skip system libraries
         next if lib_path.starts_with?("/usr/lib") || lib_path.starts_with?("/System")
 
-        # If it's already an @rpath or @executable_path, we might still need to bundle it
-        # but let's focus on absolute paths first
-        if lib_path.starts_with?("/")
-          lib_name = File.basename(lib_path)
-          dest_path = File.join(frameworks_dir, lib_name)
+        lib_name = File.basename(lib_path)
 
-          puts "  Copying #{lib_name}..."
-          FileUtils.cp(lib_path, dest_path)
-          File.chmod(dest_path, 0o755)
+        # If it's the ID of the library itself, update it to use @rpath
+        # otool -L often lists the library's own ID as the first entry
+        if target_path.includes?("Frameworks") && (target_path.ends_with?(lib_name) || lib_path == target_path)
+          system("install_name_tool -id \"@rpath/#{lib_name}\" \"#{target_path}\"")
+          next
+        end
 
-          # Update the binary to point to @rpath instead of absolute path
-          system("install_name_tool -change #{lib_path} @rpath/#{lib_name} #{binary_path}")
+        # Find the source library path if it's not absolute or already @rpath
+        source_path = find_lib_source(lib_path)
+        next unless source_path
 
-          # Also check if the library itself has absolute dependencies (rare for SDL3 but possible)
-          # We'd need to recursive if so, but for now let's keep it simple.
-        elsif lib_path.starts_with?("@rpath/")
-          # It's already an @rpath, but is the library in the bundle?
-          lib_name = lib_path.gsub("@rpath/", "")
+        dest_path = File.join(frameworks_dir, lib_name)
 
-          # Try to find where it is on the system to copy it
-          # Common places: /usr/local/lib, /opt/homebrew/lib
-          search_paths = ["/usr/local/lib", "/opt/homebrew/lib", "/usr/local/opt/sdl3/lib", "/opt/homebrew/opt/sdl3/lib"]
-          found = false
-          search_paths.each do |sp|
-            full_sp = File.join(sp, lib_name)
-            if File.exists?(full_sp)
-              puts "  Copying #{lib_name} (found in #{sp})..."
-              FileUtils.cp(full_sp, File.join(frameworks_dir, lib_name))
-              File.chmod(File.join(frameworks_dir, lib_name), 0o755)
-              found = true
-              break
-            end
+        if !processed.includes?(lib_name)
+          if File.exists?(source_path)
+            puts "  Bundling #{lib_name}..."
+            # Use cp -L to resolve symlinks
+            system("cp -L \"#{source_path}\" \"#{dest_path}\"")
+            File.chmod(dest_path, 0o755)
+            processed.add(lib_name)
+
+            # Recurse to fix dependencies of the newly bundled library
+            bundle_recursive(dest_path, frameworks_dir, processed)
+          else
+            puts "  Warning: Could not find source for #{lib_name} (path: #{source_path})"
           end
-          puts "  Warning: Could not find source for #{lib_name} to bundle." unless found
+        end
+
+        # Update the reference in the target to use @rpath
+        if File.exists?(dest_path)
+          system("install_name_tool -change \"#{lib_path}\" \"@rpath/#{lib_name}\" \"#{target_path}\"")
         end
       end
+    end
+
+    private def find_lib_source(lib_path)
+      return lib_path if lib_path.starts_with?("/") && File.exists?(lib_path)
+
+      # If it's @rpath or just a name, try to find it in common locations
+      lib_name = File.basename(lib_path)
+      search_paths = [
+        "/usr/local/lib",
+        "/opt/homebrew/lib",
+        "/usr/local/opt/sdl3/lib",
+        "/opt/homebrew/opt/sdl3/lib",
+        "/usr/local/opt/sdl3_image/lib",
+        "/opt/homebrew/opt/sdl3_image/lib",
+        "/usr/local/opt/sdl3_ttf/lib",
+        "/opt/homebrew/opt/sdl3_ttf/lib",
+        "/usr/local/opt/sdl3_mixer/lib",
+        "/opt/homebrew/opt/sdl3_mixer/lib"
+      ]
+
+      search_paths.each do |sp|
+        full_path = File.join(sp, lib_name)
+        return full_path if File.exists?(full_path)
+      end
+
+      # Fallback to absolute path even if File.exists? failed earlier (might be a symlink)
+      return lib_path if lib_path.starts_with?("/")
+
+      nil
     end
 
     private def package_win
