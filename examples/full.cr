@@ -3,16 +3,7 @@ require "../src/game_sdl"
 module GameEx
   class FullGame < GSDL::Game
     def initialize
-      window_flags = [
-        SDL3::Window::Flags::None,
-        # SDL3::Window::Flags::Hidden,
-        SDL3::Window::Flags::Borderless,
-        SDL3::Window::Flags::Resizable,
-        SDL3::Window::Flags::Maximized,
-        # SDL3::Window::Flags::FillDocument,
-      ]
-
-      super(title: "Full GSDL Example", width: 800, height: 600, window_flags: window_flags)
+      super(title: "Full GSDL Example", width: 800, height: 600)
     end
 
     def init

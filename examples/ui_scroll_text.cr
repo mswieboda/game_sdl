@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module ScrollTextEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Scrollable Text View Example", width: 800, height: 600)
+      super(title: "Scrollable Text View Example")
         end
 
     def init

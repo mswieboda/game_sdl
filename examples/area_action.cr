@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module GameEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Area Action Example", width: 800, height: 600)
+      super(title: "Area Action Example")
     end
 
     def init

@@ -6,7 +6,7 @@ module GameEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Collision Ex", width: 800, height: 640)
+      super(title: "Collision Ex")
         end
 
     def init

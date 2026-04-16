@@ -6,7 +6,7 @@ module GameEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Text Input Example", width: WIDTH, height: HEIGHT)
+      super(title: "Text Input Example")
         end
 
     def init

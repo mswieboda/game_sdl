@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module UIExample
   class Game < GSDL::Game
     def initialize
-      super(title: "UI Progress Bar Example", width: 800, height: 600)
+      super(title: "UI Progress Bar Example")
         end
 
     def init

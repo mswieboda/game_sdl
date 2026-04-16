@@ -23,7 +23,6 @@ module GSDL
     # Sets up the singleton instance of AudioManager.
     # This should be called once at the start of the application.
     def self.setup
-      raise "AudioManager already set up!" if @@instance
       @@instance = new
     end
 

@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module MouseDragExample
   class Game < GSDL::Game
     def initialize
-      super(title: "Mouse Dragging Example", width: 800, height: 600)
+      super(title: "Mouse Dragging Example")
         end
 
     def init

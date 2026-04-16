@@ -6,7 +6,7 @@ module PlatformerAdvancedEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Platformer Advanced Example", width: 800, height: 640)
+      super(title: "Platformer Advanced Example")
         end
 
     def init

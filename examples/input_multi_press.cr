@@ -6,7 +6,7 @@ module MultiPressEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Multi-Press Ex", width: WIDTH, height: HEIGHT)
+      super(title: "Multi-Press Ex")
         end
 
     def init

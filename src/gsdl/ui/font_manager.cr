@@ -18,7 +18,6 @@ module GSDL
     # This should be called once at the start of the application,
     # after `SDL3::TTF.init` has been called.
     def self.setup
-      raise "FontManager already set up!" if @@instance
       @@instance = new
     end
 

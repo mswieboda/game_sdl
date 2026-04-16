@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module GameEx
   class GameEx < GSDL::Game
     def initialize
-      super(title: "Tint Baseline Test", width: 640, height: 480)
+      super(title: "Tint Baseline Test")
     end
 
     def init

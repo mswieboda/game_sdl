@@ -6,7 +6,7 @@ module CameraEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Camera Modes Example", width: 800, height: 640)
+      super(title: "Camera Modes Example")
         end
 
     def init

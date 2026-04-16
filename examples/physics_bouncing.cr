@@ -232,7 +232,7 @@ module GameEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Physics Bouncing Ex", width: WIDTH, height: HEIGHT)
+      super(title: "Physics Bouncing Ex")
     end
 
     def init

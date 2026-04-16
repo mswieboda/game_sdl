@@ -139,6 +139,11 @@ module GSDL
       @@multi_tap_tracker.tap_count(button)
     end
 
-    # TODO: Add methods for rumble, LED, etc. if needed later
+    def self.clear
+      @@states.clear
+      @@gamepads.each_value(&.destroy)
+      @@gamepads.clear
+      @@multi_tap_tracker.clear
+    end
   end
 end

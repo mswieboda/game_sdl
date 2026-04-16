@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module SliderExample
   class Game < GSDL::Game
     def initialize
-      super(title: "UI Slider Example", width: 800, height: 600)
+      super(title: "UI Slider Example")
         end
 
     def init

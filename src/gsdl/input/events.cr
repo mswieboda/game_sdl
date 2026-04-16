@@ -29,6 +29,10 @@ module GSDL
       @@exit
     end
 
+    def self.clear
+      @@exit = false
+    end
+
     def self.handle_events
       event = uninitialized Event
       while SDL3.poll_event(pointerof(event))

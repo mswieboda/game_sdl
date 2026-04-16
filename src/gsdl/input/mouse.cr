@@ -192,5 +192,19 @@ module GSDL
     def self.set_cursor(cursor : Cursor)
       self.cursor = cursor
     end
+
+    def self.clear
+      @@states.clear
+      @@drag_start_x.clear
+      @@drag_start_y.clear
+      @@multi_tap_tracker.clear
+      @@x = 0
+      @@y = 0
+      @@prev_x = 0
+      @@prev_y = 0
+      @@wheel_x = 0_f32
+      @@wheel_y = 0_f32
+      @@moved = false
+    end
   end
 end

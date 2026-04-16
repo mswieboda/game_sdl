@@ -6,7 +6,7 @@ module SceneStackEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Scene Stack Example", width: WIDTH, height: HEIGHT)
+      super(title: "Scene Stack Example")
     end
 
     def init

@@ -13,8 +13,6 @@ module GSDL
     # Sets up the singleton instance of TextureManager with the given Draw.
     # This should be called once at the start of the application.
     def self.setup(draw : Draw)
-      raise "TextureManager already set up!" if @@instance
-
       @@instance = new(draw)
     end
 

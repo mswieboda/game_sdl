@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module GameEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Particle System Ex", width: 800, height: 600)
+      super(title: "Particle System Ex")
         end
 
     def init

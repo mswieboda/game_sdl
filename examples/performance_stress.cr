@@ -8,7 +8,7 @@ module StressEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Performance Stress Test", width: WIDTH, height: HEIGHT)
+      super(title: "Performance Stress Test")
     end
 
     def init

@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module AsyncSceneLoadingEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Async Scene Loading Example", width: 800, height: 600)
+      super(title: "Async Scene Loading Example")
     end
 
     def init

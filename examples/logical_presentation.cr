@@ -4,16 +4,11 @@ module GameEx
   alias Keys = GSDL::Keys
   alias Text = GSDL::Text
 
-  WIDTH = 800
-  HEIGHT = 800
-  LOGICAL_WIDTH = 320
-  LOGICAL_HEIGHT = 240
-
   class Game < GSDL::Game
     @current_mode_index = 0
 
     def initialize
-      super(title: "Logical Presentation Example", width: WIDTH, height: HEIGHT, logical_width: LOGICAL_WIDTH, logical_height: LOGICAL_HEIGHT)
+      super(title: "Logical Presentation Example", width: 800, height: 800, logical_width: 320, logical_height: 240)
     end
 
     def init

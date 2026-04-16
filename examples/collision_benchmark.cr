@@ -6,7 +6,7 @@ module BenchmarkEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Collision Benchmark", width: 800, height: 600)
+      super(title: "Collision Benchmark")
       self.target_fps = 60
     end
 

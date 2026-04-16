@@ -6,7 +6,7 @@ module MultiLayerMapEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Tile Map Example", width: WIDTH, height: HEIGHT)
+      super(title: "Tile Map Example")
         end
 
     def init

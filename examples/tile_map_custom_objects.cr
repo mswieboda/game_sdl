@@ -42,7 +42,7 @@ module TileMapCustomEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Custom Tile Objects Example", width: WIDTH, height: HEIGHT)
+      super(title: "Custom Tile Objects Example")
         end
 
     def init

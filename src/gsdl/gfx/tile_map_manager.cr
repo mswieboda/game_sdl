@@ -14,7 +14,6 @@ module GSDL
     # Sets up the singleton instance of TileMapManager.
     # This should be called once at the start of the application,
     def self.setup
-      raise "TileMapManager already set up!" if @@instance
       @@instance = new
     end
 

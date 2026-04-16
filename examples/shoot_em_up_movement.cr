@@ -6,7 +6,7 @@ module ShootEmUpEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Shoot 'em up Movement Example", width: 800, height: 600)
+      super(title: "Shoot 'em up Movement Example")
         end
 
     def init

@@ -6,7 +6,7 @@ module ObliquePerspectiveEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "3/4 Oblique Perspective & Depth Sorting Example", width: 800, height: 600)
+      super(title: "3/4 Oblique Perspective & Depth Sorting Example")
     end
 
     def init

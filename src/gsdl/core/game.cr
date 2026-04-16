@@ -265,11 +265,19 @@ module GSDL
 
     def initialize(
       title = "",
-      width = 1920,
-      height = 1080,
+      width = 800,
+      height = 600,
       logical_width = 0,
       logical_height = 0,
-      window_flags : Array(SDL3::Window::Flags) = [SDL3::Window::Flags::None]
+      resizable = false,
+      fullscreen = false,
+      maximized = false,
+      minimized = false,
+      borderless = false,
+      always_on_top = false,
+      high_pixel_density = false,
+      renderer_type : Symbol? = nil,
+      window_flags : Array(SDL3::Window::Flags)? = nil
     )
       @title = title
       @width = width
@@ -283,12 +291,31 @@ module GSDL
       SDL3::TTF.init
       SDL3::Mixer.init
 
+      flags = (window_flags ? window_flags.dup : [SDL3::Window::Flags::None])
+      flags << SDL3::Window::Flags::Resizable if resizable || (maximized && !resizable)
+      flags << SDL3::Window::Flags::Fullscreen if fullscreen
+      flags << SDL3::Window::Flags::Maximized if maximized
+      flags << SDL3::Window::Flags::Minimized if minimized
+      flags << SDL3::Window::Flags::Borderless if borderless
+      flags << SDL3::Window::Flags::AlwaysOnTop if always_on_top
+      flags << SDL3::Window::Flags::HighPixelDensity if high_pixel_density
+
+      case renderer_type
+      when :open_gl then flags << SDL3::Window::Flags::OpenGL
+      when :metal   then flags << SDL3::Window::Flags::Metal
+      when :vulkan  then flags << SDL3::Window::Flags::Vulkan
+      end
+
       @window = SDL3::Window.new(
         title,
         width,
         height,
-        flags: window_flags
+        flags: flags
       )
+
+      if maximized && !resizable
+        @window.not_nil!.resizable = false
+      end
 
       @draw = Draw.new(@window.not_nil!)
       Internal.draw = @draw.not_nil!
@@ -342,6 +369,7 @@ module GSDL
       # If the user didn't push a scene in `init`, add a default one
       push(Scene.new) if @scenes.empty?
 
+      Events.clear
       @exit = false
       last_frame_time = Time.instant
 
@@ -469,6 +497,12 @@ module GSDL
       FontManager.clear_all
       AudioManager.clear_all
       TileMapManager.clear_all
+
+      Input.clear
+      Keys.clear
+      Mouse.clear
+      GamePad.clear
+
       Game.draw.destroy
       window.destroy
       SDL3.quit

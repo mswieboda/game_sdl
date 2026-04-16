@@ -9,7 +9,7 @@ module GameEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Mouse Visibility Ex", width: WIDTH, height: HEIGHT)
+      super(title: "Mouse Visibility Ex")
         end
 
     def init

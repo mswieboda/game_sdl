@@ -41,6 +41,11 @@ module GSDL
       def double_tap?(key : T) : Bool
         multi_tap?(key, 2)
       end
+
+      def clear
+        @tap_counts.clear
+        @last_tap_times.clear
+      end
     end
   end
 end

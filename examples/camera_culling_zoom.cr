@@ -6,7 +6,7 @@ require "../src/game_sdl"
 
 class CameraCullingZoomGame < GSDL::Game
   def initialize
-    super(title: "Camera Culling Zoom Example", width: 800, height: 600)
+    super(title: "Camera Culling Zoom Example")
   end
 
   def init

@@ -7,7 +7,7 @@ module TileMapEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "TileMap Data Example", width: WIDTH, height: HEIGHT)
+      super(title: "TileMap Data Example")
         end
 
     def init

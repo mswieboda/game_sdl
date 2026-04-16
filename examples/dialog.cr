@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module GameEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Dialog Example", width: 800, height: 600)
+      super(title: "Dialog Example")
     end
 
     def init

@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module GameEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Font Management Example", width: 800, height: 640)
+      super(title: "Font Management Example")
         end
 
     def init

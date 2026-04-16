@@ -189,5 +189,10 @@ module GSDL
     def self.tap_count(key : Keycode) : Int32
       @@multi_tap_tracker.tap_count(key)
     end
+
+    def self.clear
+      @@states.clear
+      @@multi_tap_tracker.clear
+    end
   end
 end

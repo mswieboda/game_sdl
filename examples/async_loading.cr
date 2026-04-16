@@ -5,7 +5,7 @@ module AsyncLoadingEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Async Loading Stress Test", width: 800, height: 600)
+      super(title: "Async Loading Stress Test")
     end
 
     def init

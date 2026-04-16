@@ -7,7 +7,7 @@ module TileMapStress
 
   class Game < GSDL::Game
     def initialize
-      super(title: "TileMap Stress Test", width: WIDTH, height: HEIGHT)
+      super(title: "TileMap Stress Test")
         end
 
     def init

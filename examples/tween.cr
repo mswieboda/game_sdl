@@ -10,7 +10,7 @@ module TweenEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Tweening Example", width: WIDTH, height: HEIGHT)
+      super(title: "Tweening Example")
         end
 
     def init

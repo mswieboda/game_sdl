@@ -9,7 +9,7 @@ module PlatformerEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Platformer Example", width: WIDTH, height: HEIGHT)
+      super(title: "Platformer Example")
     end
 
     def init

@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module TabsExample
   class Game < GSDL::Game
     def initialize
-      super(title: "UI Tab Container Example", width: 800, height: 600)
+      super(title: "UI Tab Container Example")
         end
 
     def init

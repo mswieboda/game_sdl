@@ -9,7 +9,7 @@ module GameEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Menu Ex", width: 800, height: 600)
+      super(title: "Menu Ex")
         end
 
     def init

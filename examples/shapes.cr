@@ -7,7 +7,7 @@ module GameEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Shapes Example", width: WIDTH, height: HEIGHT)
+      super(title: "Shapes Example")
     end
 
     def init

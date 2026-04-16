@@ -6,7 +6,7 @@ module TopDownRPGEx
 
   class Game < GSDL::Game
     def initialize
-      super(title: "Top Down RPG Controller Example", width: 800, height: 640)
+      super(title: "Top Down RPG Controller Example")
         end
 
     def init

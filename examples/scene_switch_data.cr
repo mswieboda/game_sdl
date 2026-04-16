@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module SceneDataEx
   class Game < GSDL::Game
     def initialize
-      super(title: "Scene Switch Data Example", width: 800, height: 600)
+      super(title: "Scene Switch Data Example")
     end
 
     def init

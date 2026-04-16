@@ -3,7 +3,7 @@ require "../src/game_sdl"
 module NotificationsExample
   class Game < GSDL::Game
     def initialize
-      super(title: "UI Notifications Example", width: 800, height: 600)
+      super(title: "UI Notifications Example")
         end
 
     def init
