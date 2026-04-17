@@ -107,17 +107,37 @@ module GSDL
     end
 
     def self.handle_mouse_motion(event : Event)
-      @@x = event.motion.x.to_i
-      @@y = event.motion.y.to_i
+      mx, my = 0_f32, 0_f32
+
+      LibSDL3.render_coordinates_from_window(
+        GSDL::Game.draw.to_sdl.to_unsafe,
+        event.motion.x,
+        event.motion.y,
+        pointerof(mx),
+        pointerof(my)
+      )
+
+      @@x = mx.to_i
+      @@y = my.to_i
     end
 
     def self.handle_mouse_button_down(event : Event)
       button = event.button.button
+      mx, my = 0_f32, 0_f32
+
+      LibSDL3.render_coordinates_from_window(
+        GSDL::Game.draw.to_sdl.to_unsafe,
+        event.button.x,
+        event.button.y,
+        pointerof(mx),
+        pointerof(my)
+      )
+
       unless pressed?(button)
         @@states[button] = State::JustPressed
         @@multi_tap_tracker.record_tap(button, LibSDL3.get_ticks)
-        @@drag_start_x[button] = event.button.x.to_i
-        @@drag_start_y[button] = event.button.y.to_i
+        @@drag_start_x[button] = mx.to_i
+        @@drag_start_y[button] = my.to_i
       end
     end
 
