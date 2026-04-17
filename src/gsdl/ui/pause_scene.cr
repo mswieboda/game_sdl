@@ -13,7 +13,7 @@ module GSDL
         x: Game.width / 2_f32,
         y: Game.height / 2_f32 - 100,
         origin: {0.5_f32, 0.5_f32},
-        color: Color::White,
+        color: ColorScheme.get(:ui_text),
         scale: {2_f32, 2_f32},
         z_index: @z_index
       )

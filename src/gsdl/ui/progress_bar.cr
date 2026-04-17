@@ -14,9 +14,9 @@ module GSDL
     property width : Num = 100
     property height : Num = 20
     property value : Num = 0.0_f32
-    property background_color : Color = Color::DarkGray
-    property foreground_color : Color = Color::Green
-    property border_color : Color = Color::White
+    property background_color : Color = ColorScheme.get(:alt)
+    property foreground_color : Color = ColorScheme.get(:success)
+    property border_color : Color = ColorScheme.get(:border)
     property border_width : Num = 1
     property border_radius : Num = 0
     property z_index : Int32 = 0
@@ -31,9 +31,9 @@ module GSDL
     def initialize(
       @x = 0, @y = 0, @width = 100, @height = 20,
       @value = 0.0_f32,
-      @background_color = Color::DarkGray,
-      @foreground_color = Color::Green,
-      @border_color = Color::White,
+      @background_color = ColorScheme.get(:alt),
+      @foreground_color = ColorScheme.get(:success),
+      @border_color = ColorScheme.get(:border),
       @border_width = 1,
       @border_radius = 0,
       @orientation = Orientation::Horizontal,

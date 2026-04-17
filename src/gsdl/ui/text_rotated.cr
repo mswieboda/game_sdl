@@ -12,7 +12,7 @@ module GSDL
       y = 0,
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
-      color = Color::White,
+      color = ColorScheme.get(:ui_text),
       align = Font::Align::Left,
       direction = Font::Direction::LTR,
       wrap_width : Int32? = nil,

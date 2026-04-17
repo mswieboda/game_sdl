@@ -16,8 +16,8 @@ module GSDL
       align = Font::Align::Center,
       x : Num = 0_f32,
       y : Num = 0_f32,
-      color = Color::Black,
-      @bg_color : Color = Color::White,
+      color = ColorScheme.get(:ui_text),
+      @bg_color : Color = ColorScheme.get(:ui_bg),
       @border_radius : Num = 0,
       z_index : Int32 = 900,
       draw_relative_to_camera : Bool = false

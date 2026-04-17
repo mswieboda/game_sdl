@@ -15,10 +15,10 @@ module GSDL
     property active_index : Int32 = 0
 
     property background_color : Color = GSDL.color(r: 30, g: 30, b: 30, a: 220)
-    property tab_color : Color = Color::DarkGray
-    property active_tab_color : Color = Color::Gray
-    property text_color : Color = Color::White
-    property border_color : Color = Color::White
+    property tab_color : Color = ColorScheme.get(:alt)
+    property active_tab_color : Color = ColorScheme.get(:main)
+    property text_color : Color = ColorScheme.get(:ui_text)
+    property border_color : Color = ColorScheme.get(:border)
 
     property z_index : Int32 = 0
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}

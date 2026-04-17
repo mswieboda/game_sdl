@@ -9,7 +9,7 @@ module GSDL
       y : Num = 0,
       origin : Tuple(Float32, Float32) = {0_f32, 0_f32},
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
-      color = Color::White,
+      color = ColorScheme.get(:ui_text),
       align = Font::Align::Left,
       direction = Font::Direction::LTR,
       wrap_width : Int32? = nil,

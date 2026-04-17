@@ -1,9 +1,9 @@
 module GSDL
   class LoadingScene(T) < LoadingSceneBase
     property background_texture : Texture?
-    property text_color : Color = Color::White
-    property progress_bar_color : Color = Color::Green
-    property background_color : Color = Color::Black
+    property text_color : Color = ColorScheme.get(:ui_text)
+    property progress_bar_color : Color = ColorScheme.get(:success)
+    property background_color : Color = ColorScheme.get(:ui_bg)
 
     @text : Text
     @progress_text : Text
@@ -33,8 +33,8 @@ module GSDL
         height: 20,
         origin: {0.5_f32, 0.5_f32},
         foreground_color: progress_bar_color,
-        background_color: Color::DarkGray,
-        border_color: Color::White,
+        background_color: ColorScheme.get(:alt),
+        border_color: ColorScheme.get(:border),
         border_width: 2,
         border_radius: 5
       )
@@ -44,7 +44,7 @@ module GSDL
         x: Game.width / 2_f32,
         y: Game.height / 2_f32 + 40,
         origin: {0.5_f32, 0.5_f32},
-        color: Color::Cyan
+        color: ColorScheme.get(:highlight)
       )
     end
 

@@ -36,7 +36,7 @@ module GSDL
       align = Font::Align::Left,
       x : Num = 0_f32,
       y : Num = 0_f32,
-      color = Color::Black,
+      color = ColorScheme.get(:ui_text),
       @z_index : Int32 = 900,
       @draw_relative_to_camera : Bool = false
     )

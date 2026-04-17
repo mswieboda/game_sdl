@@ -17,7 +17,7 @@ module GSDL
       align = Font::Align::Center,
       x : Num = 0_f32,
       y : Num = 0_f32,
-      color = Color::Black,
+      color = ColorScheme.get(:ui_text),
       border_radius : Num = 0,
       @on_click : Callback = -> on_click(String),
     )
@@ -57,7 +57,7 @@ module GSDL
         scale: scale,
         width: width,
         height: height,
-        color: Color::White,
+        color: ColorScheme.get(:ui_bg),
         border_radius: border_radius
       )
 

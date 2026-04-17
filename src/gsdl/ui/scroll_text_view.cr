@@ -25,7 +25,7 @@ module GSDL
 
     property show_scrollbar : Bool = true
     property scrollbar_width : Int32 = 4
-    property scrollbar_color : Color = Color::Gray
+    property scrollbar_color : Color = ColorScheme.get(:alt)
     property scrollbar_padding : Int32 = 2
 
     @text : Text
@@ -38,7 +38,7 @@ module GSDL
       @x = 0,
       @y = 0,
       @origin = {0_f32, 0_f32},
-      color = Color::White,
+      color = ColorScheme.get(:ui_text),
       @padding = 8,
       @z_index = 0,
       @scale = {1_f32, 1_f32}

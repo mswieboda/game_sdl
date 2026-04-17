@@ -62,6 +62,10 @@ module GSDL
       @exit = true
     end
 
+    def exit_with_transition
+      @transition_out.start
+    end
+
     def reset
       @exit = false
     end

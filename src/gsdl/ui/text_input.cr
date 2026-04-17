@@ -8,8 +8,8 @@ module GSDL
     property cursor_visible : Bool = true
     property cursor_blink_rate : Float32 = 0.5_f32
 
-    property background_color : Color = Color::White
-    property border_color : Color = Color::Black
+    property background_color : Color = ColorScheme.get(:ui_text)
+    property border_color : Color = ColorScheme.get(:ui_bg)
     property border_radius : Num = 0
     property border_width : Num = 1
 
@@ -28,9 +28,9 @@ module GSDL
       align = Font::Align::Left,
       x : Num = 0_f32,
       y : Num = 0_f32,
-      color = Color::Black,
-      @background_color : Color = Color::White,
-      @border_color : Color = Color::Black,
+      color = ColorScheme.get(:ui_text),
+      @background_color : Color = ColorScheme.get(:ui_bg),
+      @border_color : Color = ColorScheme.get(:border),
       @border_radius : Num = 0,
       @border_width : Num = 1,
       z_index : Int32 = 900,

@@ -19,9 +19,9 @@ module GSDL
     property max_value : Float32 = 1.0_f32
     property value : Float32 = 0.5_f32
 
-    property background_color : Color = Color::DarkGray
-    property track_color : Color = Color::Gray
-    property handle_color : Color = Color::White
+    property background_color : Color = ColorScheme.get(:alt)
+    property track_color : Color = ColorScheme.get(:main)
+    property handle_color : Color = ColorScheme.get(:ui_text)
     property handle_size : Num = 24
 
     property orientation : Orientation = Orientation::Horizontal

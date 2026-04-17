@@ -21,7 +21,7 @@ module GSDL
     property item_padding : Num = 0
     property separation : Num = 0
     property items_disabled : Array(Symbol)
-    property disabled_text_color : Color = Color::Gray
+    property disabled_text_color : Color = ColorScheme.get(:alt)
     property item_width_same : Bool = true
     property item_height_same : Bool = true
     property mouse_hover : Bool = false
@@ -76,16 +76,16 @@ module GSDL
       @padding : Num = 0,
       @item_padding : Num = 0,
       @separation : Num = 0,
-      @default_text_color : Color = Color::White,
+      @default_text_color : Color = ColorScheme.get(:ui_text),
       @text_color = nil,
       @selected_text_color = nil,
       @items_disabled = [] of Symbol,
-      @disabled_text_color : Color = Color::Gray,
+      @disabled_text_color : Color = ColorScheme.get(:alt),
       @disabled_box = nil,
       @item_width_same : Bool = true,
       @item_height_same : Bool = true,
       @mouse_hover : Bool = false,
-      @hover_text_color = Color::White,
+      @hover_text_color = ColorScheme.get(:highlight),
       @hover_box = nil,
       @z_index : Int32 = 0,
       @draw_relative_to_camera : Bool = false,
@@ -240,7 +240,7 @@ module GSDL
       return @disabled_text_color if disabled?(id)
 
       if index == @selected_index
-        return @selected_text_color.try(&.call(index)) || Color::Lime
+        return @selected_text_color.try(&.call(index)) || ColorScheme.get(:highlight)
       end
 
       if @mouse_hover && index == @hovered_index

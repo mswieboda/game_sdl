@@ -94,7 +94,7 @@ module GSDL
       @offset_y = 0,
       origin = {0_f32, 0_f32},
       scale : Num | Tuple(Num, Num) = {1_f32, 1_f32},
-      color = Color::White,
+      color = ColorScheme.get(:ui_text),
       align = Font::Align::Left,
       z_index = 1000
     )
@@ -154,9 +154,9 @@ module GSDL
       width = 100,
       height = 20,
       value = 0.0_f32,
-      background_color = Color::DarkGray,
-      foreground_color = Color::Green,
-      border_color = Color::White,
+      background_color = ColorScheme.get(:alt),
+      foreground_color = ColorScheme.get(:success),
+      border_color = ColorScheme.get(:border),
       border_width = 1,
       border_radius = 0,
       orientation = Orientation::Horizontal,
@@ -218,7 +218,7 @@ module GSDL
       @anchor = Anchor::TopLeft,
       @offset_x = 20,
       @offset_y = 20,
-      color = Color::White,
+      color = ColorScheme.get(:ui_text),
       scale = 0.5_f32,
       align = Font::Align::Left
     )

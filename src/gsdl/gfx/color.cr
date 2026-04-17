@@ -18,6 +18,36 @@ module GSDL
       Color.new(SDL3::Color.from_hex(hex: hex))
     end
 
+    def self.parse(value : String | Color) : Color
+      return value if value.is_a?(Color)
+      
+      if value.starts_with?("#")
+        return from_hex(value)
+      elsif value.starts_with?("rgba(")
+        return from_rgba(value)
+      elsif value.starts_with?("rgb(")
+        return from_rgb(value)
+      end
+      
+      from_name(value)
+    end
+
+    def self.from_rgb(rgb_string : String) : Color
+      # rgb(r, g, b)
+      parts = rgb_string.gsub("rgb(", "").gsub(")", "").split(',').map(&.strip.to_i)
+      Color.new(r: parts[0], g: parts[1], b: parts[2])
+    rescue
+      White
+    end
+
+    def self.from_rgba(rgba_string : String) : Color
+      # rgba(r, g, b, a)
+      parts = rgba_string.gsub("rgba(", "").gsub(")", "").split(',').map(&.strip.to_i)
+      Color.new(r: parts[0], g: parts[1], b: parts[2], a: parts[3])
+    rescue
+      White
+    end
+
     def self.random(a : UInt8 = 255_u8) : Color
       Color.new(SDL3::Color.random(a: a))
     end

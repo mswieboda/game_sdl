@@ -9,7 +9,7 @@ module GSDL
     property width : Num = 250
     property height : Num = 60
     property text : String = ""
-    property color : Color = Color::White
+    property color : Color = ColorScheme.get(:ui_text)
     property background_color : Color = GSDL.color(r: 30, g: 30, b: 30, a: 220)
     property lifetime : Float32 = 3.0_f32
     property elapsed : Float32 = 0.0_f32
@@ -38,7 +38,7 @@ module GSDL
       @text = "",
       @lifetime = 3.0_f32,
       @background_color = GSDL.color(r: 30, g: 30, b: 30, a: 220),
-      @color = Color::White,
+      @color = ColorScheme.get(:ui_text),
       x = 0, y = 0,
       @z_index = 2000
     )
@@ -100,7 +100,7 @@ module GSDL
     @@margin_right = 20
     @@margin_top = 20
 
-    def self.spawn(text : String, lifetime : Float32 = 3.0_f32, color : Color = Color::White)
+    def self.spawn(text : String, lifetime : Float32 = 3.0_f32, color : Color = ColorScheme.get(:ui_text))
       # Calculate initial off-screen x and target y
       screen_w = Game.width
 

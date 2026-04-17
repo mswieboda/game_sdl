@@ -10,7 +10,7 @@ module GSDL
       text : String,
       x : Num = 0,
       y : Num = 0,
-      color = Color::White,
+      color = ColorScheme.get(:ui_text),
       font = Font.default,
       @velocity = Point.new(0, -100),
       @lifetime = 1.0_f32,
