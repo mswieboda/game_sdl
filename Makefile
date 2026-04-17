@@ -11,11 +11,19 @@ PACKER_FILE := build/assets.pack
 PACKER_BIN := bin/gsdl-packer
 SRC := examples/$(EXAMPLE).cr
 
+# File targets
+DEBUG_BIN := $(BUILD_DIR)/$(EXAMPLE)_debug
+RELEASE_BIN := $(BUILD_DIR)/$(EXAMPLE)
+SOURCES := $(shell find $(SOURCE_DIR) -name "*.cr")
+
 # Phony targets don't represent files
-.PHONY: default clean examples examples_full build_examples_full build run packer pack run-release
+.PHONY: default clean examples examples_full build_examples_full build run packer pack run-release debug re release-package release-package-mac release-package-win release-package-linux
 
 # The default target, executed when you just run `make`
-default:
+default: run
+
+re:
+	@$(MAKE) -B run
 
 release-package:
 	@echo "Creating release package for example: $(EXAMPLE) target: $(TARGET)"
@@ -44,7 +52,7 @@ clean:
 	$(RM_CMD) $(BUILD_DIR)
 	$(RM_CMD) $(LIB_DIR)
 
-$(PACKER_BIN):
+$(PACKER_BIN): $(SOURCES)
 	@echo "Building packer tool..."
 	$(MKDIR_CMD) $(BIN_DIR)
 	$(CRYSTAL_COMPILER) build $(SOURCE_DIR)/packer.cr -o $(BIN_DIR)/gsdl-packer --release --no-debug -p
@@ -105,23 +113,31 @@ build_examples_full:
 	done; \
 	echo "All examples compiled successfully!"
 
-build:
+$(RELEASE_BIN): examples/$(EXAMPLE).cr $(SOURCES)
 	@echo "Building example: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" --no-debug -p
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(RELEASE_BIN) --link-flags "$(LINKFLAGS)" --no-debug -p
+
+build: $(RELEASE_BIN)
 
 run: build
 	@echo "Running example: $(EXAMPLE)"
-	./$(BUILD_DIR)/$(EXAMPLE)
+	./$(RELEASE_BIN)
 
-run-release:
-	@echo "Building and running example: $(EXAMPLE)"
+$(BUILD_DIR)/$(EXAMPLE)_release: examples/$(EXAMPLE).cr $(SOURCES)
+	@echo "Building release example: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --release --link-flags "$(LINKFLAGS)" --no-debug -p
-	./$(BUILD_DIR)/$(EXAMPLE)
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $@ --release --link-flags "$(LINKFLAGS)" --no-debug -p
 
-debug:
-	@echo "Building and running example in debug mode: $(EXAMPLE)"
+run-release: $(BUILD_DIR)/$(EXAMPLE)_release
+	@echo "Running release example: $(EXAMPLE)"
+	./$(BUILD_DIR)/$(EXAMPLE)_release
+
+$(DEBUG_BIN): examples/$(EXAMPLE).cr $(SOURCES)
+	@echo "Building example in debug mode: $(EXAMPLE)"
 	$(MKDIR_CMD) $(BUILD_DIR)
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE)_debug --link-flags "$(LINKFLAGS)" --error-trace -p
-	./$(BUILD_DIR)/$(EXAMPLE)_debug
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(DEBUG_BIN) --link-flags "$(LINKFLAGS)" --error-trace -p
+
+debug: $(DEBUG_BIN)
+	@echo "Running example in debug mode: $(EXAMPLE)"
+	./$(DEBUG_BIN)
