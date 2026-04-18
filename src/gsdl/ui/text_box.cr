@@ -143,6 +143,14 @@ module GSDL
       on_content_changed
     end
 
+    def color : Color
+      @text.color
+    end
+
+    def color=(value : Color)
+      @text.color = value
+    end
+
     def x : Num; @x; end
     def y : Num; @y; end
     def z_index : Int32; @z_index; end
