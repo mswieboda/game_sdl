@@ -27,7 +27,13 @@ module GSDL
       x = (local_tile_id % @columns) * @tile_width
       y = (local_tile_id // @columns) * @tile_height
 
-      FRect.new(x: x, y: y, w: @tile_width, h: @tile_height)
+      epsilon = 0.5_f32
+      FRect.new(
+        x: x.to_f32 + epsilon,
+        y: y.to_f32 + epsilon,
+        w: @tile_width.to_f32 - (epsilon * 2.0_f32),
+        h: @tile_height.to_f32 - (epsilon * 2.0_f32)
+      )
     end
 
     # The number of tiles in this tileset
@@ -41,3 +47,4 @@ module GSDL
     end
   end
 end
+

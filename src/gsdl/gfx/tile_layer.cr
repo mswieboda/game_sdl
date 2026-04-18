@@ -65,9 +65,12 @@ module GSDL
 
           source_rect = tileset.get_local_tile_source_rect(tile_info.local_tile_id)
 
+          tile_world_x = (x_index * tile_width).to_f32 + @offset_x
+          tile_world_y = (y_index * tile_height).to_f32 + @offset_y
+
           dest_rect = FRect.new(
-            x: (x_index * tile_width).to_f32 + @offset_x - (camera_x * @parallax_x),
-            y: (y_index * tile_height).to_f32 + @offset_y - (camera_y * @parallax_y),
+            x: tile_world_x - (camera_x * @parallax_x),
+            y: tile_world_y - (camera_y * @parallax_y),
             w: tile_width.to_f32,
             h: tile_height.to_f32
           )
@@ -89,3 +92,4 @@ module GSDL
     end
   end
 end
+
