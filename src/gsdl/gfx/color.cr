@@ -20,7 +20,7 @@ module GSDL
 
     def self.parse(value : String | Color) : Color
       return value if value.is_a?(Color)
-      
+
       if value.starts_with?("#")
         return from_hex(value)
       elsif value.starts_with?("rgba(")
@@ -28,7 +28,7 @@ module GSDL
       elsif value.starts_with?("rgb(")
         return from_rgb(value)
       end
-      
+
       from_name(value)
     end
 
