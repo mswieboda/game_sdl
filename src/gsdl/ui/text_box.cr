@@ -7,7 +7,8 @@ module GSDL
 
     getter width : Int32
     getter height : Int32
-    getter padding : Int32
+    getter padding_x : Int32
+    getter padding_y : Int32
     getter tweens : Array(Tween) = [] of Tween
 
     @text : TextBase
@@ -32,7 +33,9 @@ module GSDL
       scale = {1_f32, 1_f32},
       width : Int32? = nil,
       height : Int32? = nil,
-      @padding = Padding,
+      padding : Int32? = nil,
+      padding_x : Int32? = nil,
+      padding_y : Int32? = nil,
       align = Font::Align::Left,
       x : Num = 0_f32,
       y : Num = 0_f32,
@@ -40,6 +43,9 @@ module GSDL
       @z_index : Int32 = 900,
       @draw_relative_to_camera : Bool = false
     )
+      @padding_x = padding_x || padding || Padding
+      @padding_y = padding_y || padding || Padding
+
       if text.is_a?(String)
         @text = Text.new(
           font: font,
@@ -48,13 +54,13 @@ module GSDL
           scale: scale,
           color: color,
           align: align,
-          wrap_width: width ? width - padding * 2 : 0,
+          wrap_width: width ? width - @padding_x * 2 : 0,
           z_index: z_index
         )
       else
         @text = text
         # Override properties to match the box if they were provided (or rely on the custom text's own layout)
-        @text.wrap_width = width - padding * 2 if width
+        @text.wrap_width = width - @padding_x * 2 if width
         @text.z_index = z_index
       end
 
@@ -69,14 +75,14 @@ module GSDL
         @width = w
         @width_fixed = true
       else
-        @width = (@text.width + padding * 2).to_i
+        @width = (@text.width + @padding_x * 2).to_i
       end
 
       if h = height
         @height = h
         @height_fixed = true
       else
-        @height = (@text.height + padding * 2).to_i
+        @height = (@text.height + @padding_y * 2).to_i
       end
 
       update_text_position
@@ -85,8 +91,8 @@ module GSDL
     private def update_text_position
       # Formula derived to keep text padded within box regardless of origin:
       # text_x = x + padding * scale_x * (1 - 2 * origin_x)
-      @text.x = @x + padding * scale_x * (1.0_f32 - 2.0_f32 * origin_x)
-      @text.y = @y + padding * scale_y * (1.0_f32 - 2.0_f32 * origin_y)
+      @text.x = @x + @padding_x * scale_x * (1.0_f32 - 2.0_f32 * origin_x)
+      @text.y = @y + @padding_y * scale_y * (1.0_f32 - 2.0_f32 * origin_y)
       @text.origin = @origin
       @text.scale = @scale
       @text.z_index = @z_index
@@ -151,6 +157,26 @@ module GSDL
       @text.color = value
     end
 
+    def padding=(val : Int32)
+      @padding_x = val
+      @padding_y = val
+      on_content_changed
+    end
+
+    def padding_x=(val : Int32)
+      @padding_x = val
+      on_content_changed
+    end
+
+    def padding_y=(val : Int32)
+      @padding_y = val
+      on_content_changed
+    end
+
+    def padding
+      @padding_x
+    end
+
     def x : Num; @x; end
     def y : Num; @y; end
     def z_index : Int32; @z_index; end
@@ -177,10 +203,10 @@ module GSDL
 
     private def on_content_changed
       unless @width_fixed
-        @width = (@text.width + padding * 2).to_i
+        @width = (@text.width + @padding_x * 2).to_i
       end
       unless @height_fixed
-        @height = (@text.height + padding * 2).to_i
+        @height = (@text.height + @padding_y * 2).to_i
       end
       update_text_position
     end
