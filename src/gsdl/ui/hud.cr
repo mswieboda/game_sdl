@@ -1,4 +1,5 @@
 require "./text"
+require "./rich_text"
 require "./progress_bar"
 
 module GSDL
@@ -81,13 +82,15 @@ module GSDL
     end
   end
 
-  class HUDText < Text
+  class HUDText
     include HUDElement
+
     property data_key : String? = nil
+    getter text_element : TextBase
 
     def initialize(
       font = Font.default,
-      text = "",
+      text : String | TextBase = "",
       @data_key = nil,
       @anchor = Anchor::TopLeft,
       @offset_x = 0,
@@ -96,22 +99,50 @@ module GSDL
       scale : Num | Tuple(Num, Num) = {1_f32, 1_f32},
       color = ColorScheme.get(:ui_text),
       align = Font::Align::Left,
-      z_index = 1000
+      z_index = 1000,
+      wrap_width = 0
     )
       actual_scale = scale.is_a?(Tuple) ? scale : {scale, scale}
-      super(
-        font: font,
-        text: text,
-        x: 0,
-        y: 0,
-        origin: origin,
-        scale: actual_scale,
-        color: color,
-        align: align,
-        z_index: z_index
-      )
-      self.draw_relative_to_camera = false
+
+      if text.is_a?(TextBase)
+        @text_element = text
+      elsif text.includes?("<") && (text.includes?("<b>") || text.includes?("<i>") || text.includes?("<c:"))
+        @text_element = RichText.new(
+          font: font,
+          text: text,
+          origin: origin,
+          scale: actual_scale,
+          color: color,
+          align: align,
+          z_index: z_index,
+          wrap_width: wrap_width
+        )
+      else
+        @text_element = Text.new(
+          font: font,
+          text: text,
+          origin: origin,
+          scale: actual_scale,
+          color: color,
+          align: align,
+          z_index: z_index,
+          wrap_width: wrap_width > 0 ? wrap_width : nil
+        )
+      end
+
+      @text_element.draw_relative_to_camera = false
     end
+
+    def text : String; @text_element.text; end
+    def text=(text : String); @text_element.text = text; end
+    def color : Color; @text_element.color; end
+    def color=(color : Color); @text_element.color = color; end
+    def z_index : Int32; @text_element.z_index; end
+    def z_index=(z_index : Int32); @text_element.z_index = z_index; end
+    def origin : Tuple(Float32, Float32); @text_element.origin; end
+    def origin=(origin : Tuple(Float32, Float32)); @text_element.origin = origin; end
+    def scale : Tuple(Num, Num); @text_element.scale; end
+    def scale=(scale : Tuple(Num, Num)); @text_element.scale = scale; end
 
     def x : Num; screen_x; end
     def y : Num; screen_y; end
@@ -121,11 +152,12 @@ module GSDL
     end
 
     def hud_draw(draw : Draw)
-      draw(draw)
+      @text_element.x = x
+      @text_element.y = y
+      @text_element.draw(draw)
     end
 
     def update(dt : Float32)
-      update_tweens(dt)
       if key = @data_key
         val = GSDL::Data.get(key)
         raw = val.raw
@@ -139,6 +171,8 @@ module GSDL
                    end
         self.text = new_text if self.text != new_text
       end
+
+      @text_element.update(dt)
     end
   end
 
@@ -167,8 +201,8 @@ module GSDL
     )
       actual_scale = scale.is_a?(Tuple) ? scale : {scale, scale}
       super(
-        x: 0,
-        y: 0,
+        x: screen_x,
+        y: screen_y,
         width: width,
         height: height,
         value: value,
@@ -194,6 +228,8 @@ module GSDL
     end
 
     def hud_draw(draw : Draw)
+      self.x = screen_x
+      self.y = screen_y
       draw(draw)
     end
 
@@ -210,8 +246,10 @@ module GSDL
     end
   end
 
-  class HUDPerformance < HUDText
+  class HUDPerformance
+    include HUDElement
     @update_timer : Float32 = 0_f32
+    @hud_text : HUDText
 
     def initialize(
       font = Font.default,
@@ -222,7 +260,7 @@ module GSDL
       scale = 0.5_f32,
       align = Font::Align::Left
     )
-      super(
+      @hud_text = HUDText.new(
         font: font,
         anchor: anchor,
         offset_x: offset_x,
@@ -233,8 +271,25 @@ module GSDL
       )
     end
 
+    def text : String; @hud_text.text; end
+    def text=(text : String); @hud_text.text = text; end
+    def color : Color; @hud_text.color; end
+    def color=(color : Color); @hud_text.color = color; end
+    def z_index : Int32; @hud_text.z_index; end
+    def z_index=(z_index : Int32); @hud_text.z_index = z_index; end
+    def origin : Tuple(Float32, Float32); @hud_text.origin; end
+    def origin=(origin : Tuple(Float32, Float32)); @hud_text.origin = origin; end
+    def scale : Tuple(Num, Num); @hud_text.scale; end
+    def scale=(scale : Tuple(Num, Num)); @hud_text.scale = scale; end
+
+    def x : Num; screen_x; end
+    def y : Num; screen_y; end
+
     def hud_update(dt : Float32)
-      update(dt)
+      @hud_text.anchor = @anchor
+      @hud_text.offset_x = @offset_x
+      @hud_text.offset_y = @offset_y
+      @hud_text.update(dt)
 
       @update_timer += dt
       return if @update_timer < 0.1_f32
@@ -270,6 +325,10 @@ module GSDL
         end
       end
       self.text = metrics.join("\n")
+    end
+
+    def hud_draw(draw : Draw)
+      @hud_text.hud_draw(draw)
     end
   end
 end

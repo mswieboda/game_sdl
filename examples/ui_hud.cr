@@ -61,6 +61,16 @@ module HUDEx
         origin: {1.0_f32, 0.0_f32}
       )
 
+      # Center: Quest (Rich Text)
+      h << GSDL::HUDText.new(
+        text: "Quest: <b>Defeat <c:red>Skeleton</c></b>",
+        anchor: GSDL::Anchor::Center,
+        offset_y: -100,
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color::White,
+        scale: 1.2_f32
+      )
+
       # Bottom Center: Instructions
       h << GSDL::HUDText.new(
         text: "WASD: Move | SPACE: Score | H: Drain Health | R: Refill",
