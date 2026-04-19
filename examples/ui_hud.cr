@@ -31,8 +31,7 @@ module HUDEx
 
       # Top Left: Score (Data Bound)
       h << GSDL::HUDText.new(
-        text: "Score: 0",
-        data_key: "score",
+        text_data_template: "Score: {score}",
         anchor: GSDL::Anchor::TopLeft,
         offset_x: 20,
         offset_y: 20,
@@ -41,8 +40,7 @@ module HUDEx
 
       # Top Center: Status (Data Bound)
       h << GSDL::HUDText.new(
-        text: "Active",
-        data_key: "status",
+        text_data_template: "{status}",
         anchor: GSDL::Anchor::TopCenter,
         offset_y: 20,
         origin: {0.5_f32, 0.0_f32},

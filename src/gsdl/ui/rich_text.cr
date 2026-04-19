@@ -80,7 +80,7 @@ module GSDL
       current_color = self.color
       current_style = Font::Style::Normal
 
-      tag_regex = /<((\/?[bc])|(\/?i)|(c:[^>]+))>/
+      tag_regex = /<(\/?b|\/?i|c:[^>]+|\/c)>/
 
       last_pos = 0
       @text.scan(tag_regex) do |match|

@@ -28,8 +28,7 @@ class MainScene < GSDL::Scene
     h = GSDL::HUD.new
 
     h << GSDL::HUDText.new(
-      text: "Zoom: 1.00 (Q/E to zoom, R to reset)",
-      data_key: "zoom_info",
+      text_data_template: "{zoom_info}",
       anchor: GSDL::Anchor::TopLeft,
       offset_x: 10,
       offset_y: 10,
@@ -37,8 +36,7 @@ class MainScene < GSDL::Scene
     )
 
     h << GSDL::HUDText.new(
-      text: "Draw commands: 0",
-      data_key: "cmd_count",
+      text_data_template: "{cmd_count}",
       anchor: GSDL::Anchor::TopLeft,
       offset_x: 10,
       offset_y: 40,

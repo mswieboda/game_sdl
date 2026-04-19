@@ -85,13 +85,26 @@ module GSDL
   class HUDText
     include HUDElement
 
-    property data_key : String? = nil
+    record TemplatePart, value : String, is_key : Bool
+
+    @text_data_template : String? = nil
+    @template_parts = [] of TemplatePart
+    @last_template_values = {} of String => String
+    @force_template_update = true
+
     getter text_element : TextBase
+
+    def text_data_template; @text_data_template; end
+
+    def text_data_template=(template : String?)
+      @text_data_template = template
+      parse_template
+    end
 
     def initialize(
       font = Font.default,
       text : String | TextBase = "",
-      @data_key = nil,
+      text_data_template = nil,
       @anchor = Anchor::TopLeft,
       @offset_x = 0,
       @offset_y = 0,
@@ -104,12 +117,24 @@ module GSDL
     )
       actual_scale = scale.is_a?(Tuple) ? scale : {scale, scale}
 
+      # Robust check for rich text tags in both source strings
+      is_rich = false
+      rich_tags = ["<b>", "</b>", "<i>", "</i>", "<c:", "</c>"]
+
+      if text.is_a?(String)
+        is_rich ||= rich_tags.any? { |t| text.includes?(t) }
+      end
+
+      if text_data_template.is_a?(String)
+        is_rich ||= rich_tags.any? { |t| text_data_template.includes?(t) }
+      end
+
       if text.is_a?(TextBase)
         @text_element = text
-      elsif text.includes?("<") && (text.includes?("<b>") || text.includes?("<i>") || text.includes?("<c:"))
+      elsif is_rich
         @text_element = RichText.new(
           font: font,
-          text: text,
+          text: text.is_a?(String) ? text : "",
           origin: origin,
           scale: actual_scale,
           color: color,
@@ -120,7 +145,7 @@ module GSDL
       else
         @text_element = Text.new(
           font: font,
-          text: text,
+          text: text.is_a?(String) ? text : "",
           origin: origin,
           scale: actual_scale,
           color: color,
@@ -131,6 +156,39 @@ module GSDL
       end
 
       @text_element.draw_relative_to_camera = false
+      self.text_data_template = text_data_template
+    end
+
+    def draw_relative_to_camera=(val : Bool)
+      @text_element.draw_relative_to_camera = val
+    end
+
+    def draw_relative_to_camera?
+      @text_element.draw_relative_to_camera?
+    end
+
+    private def parse_template
+      @template_parts.clear
+      @last_template_values.clear
+      @force_template_update = true
+
+      template = @text_data_template
+      return if template.nil?
+
+      last_idx = 0
+      template.scan(/\{([^}]+)\}/) do |match|
+        if match.begin > last_idx
+          @template_parts << TemplatePart.new(template[last_idx...match.begin], false)
+        end
+        key = match[1]
+        @template_parts << TemplatePart.new(key, true)
+        @last_template_values[key] = ""
+        last_idx = match.end
+      end
+
+      if last_idx < template.bytesize
+        @template_parts << TemplatePart.new(template[last_idx..-1], false)
+      end
     end
 
     def text : String; @text_element.text; end
@@ -158,18 +216,37 @@ module GSDL
     end
 
     def update(dt : Float32)
-      if key = @data_key
-        val = GSDL::Data.get(key)
-        raw = val.raw
-        new_text = case raw
-                   when String
-                     raw
-                   when Nil
-                     ""
-                   else
-                     val.to_s
-                   end
-        self.text = new_text if self.text != new_text
+      if @text_data_template
+        changed = false
+        @template_parts.each do |part|
+          if part.is_key
+            key = part.value
+            val = GSDL::Data.get(key).raw
+            str_val = case val
+                      when String then val
+                      when Nil then ""
+                      else val.to_s
+                      end
+            if @last_template_values[key] != str_val
+              @last_template_values[key] = str_val
+              changed = true
+            end
+          end
+        end
+
+        if changed || @force_template_update
+          @force_template_update = false
+          new_text = String.build do |io|
+            @template_parts.each do |part|
+              if part.is_key
+                io << @last_template_values[part.value]
+              else
+                io << part.value
+              end
+            end
+          end
+          self.text = new_text if self.text != new_text
+        end
       end
 
       @text_element.update(dt)
