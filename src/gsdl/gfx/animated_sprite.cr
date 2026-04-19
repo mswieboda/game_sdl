@@ -54,11 +54,12 @@ module GSDL
       frame_x = (@animation_player.frame_id % columns) * @width
       frame_y = (@animation_player.frame_id / columns).floor * @height
 
+      epsilon = 0.5_f32
       source_rect = FRect.new(
-        x: frame_x.to_f32,
-        y: frame_y.to_f32,
-        w: @width,
-        h: @height
+        x: frame_x.to_f32 + epsilon,
+        y: frame_y.to_f32 + epsilon,
+        w: @width.to_f32 - (epsilon * 2.0_f32),
+        h: @height.to_f32 - (epsilon * 2.0_f32)
       )
 
       dest_rect = FRect.new(

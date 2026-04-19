@@ -64,9 +64,19 @@ module GSDL
       flip_val |= 2 if flip_v?
 
       if source_rect = @source_rect
+        # Apply epsilon to existing source_rect
+        epsilon = 0.5_f32
+
+        adjusted_source_rect = FRect.new(
+          x: source_rect.x + epsilon,
+          y: source_rect.y + epsilon,
+          w: source_rect.w - (epsilon * 2.0_f32),
+          h: source_rect.h - (epsilon * 2.0_f32)
+        )
+
         draw.texture_rotated(
           texture: @texture,
-          source_rect: source_rect,
+          source_rect: adjusted_source_rect,
           dest_rect: dest_rect,
           angle: rotation,
           center: center_point_from_origin,
