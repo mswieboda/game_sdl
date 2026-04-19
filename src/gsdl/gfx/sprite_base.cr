@@ -17,7 +17,7 @@ module GSDL
 
     property render_offset_y : Float32 = 0_f32
 
-    @texture : Texture
+    getter texture : Texture
 
     def size : Tuple(Float32, Float32)
       @texture.size

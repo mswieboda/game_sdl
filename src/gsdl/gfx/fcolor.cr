@@ -21,7 +21,7 @@ module GSDL
         red: rng.rand(0_f32..1_f32),
         green: rng.rand(0_f32..1_f32),
         blue: rng.rand(0_f32..1_f32),
-        alpha: a.to_f32
+        a: a.to_f32
       )
     end
 
@@ -81,7 +81,7 @@ module GSDL
       @internal = fcolor
     end
 
-    def initialize(r : Num = 0_f32, g : Num = 0_f32, b : Num = 0_f32, alpha : Num = 1_f32)
+    def initialize(r : Num = 0_f32, g : Num = 0_f32, b : Num = 0_f32, a : Num = 1_f32)
       @internal = SDL3::FColor.new(r: r.to_f32, g: g.to_f32, b: b.to_f32, a: a.to_f32)
     end
 
@@ -97,16 +97,16 @@ module GSDL
       @internal = SDL3::FColor.new(b: blue.to_f32)
     end
 
-    def initialize(*, red : Num, alpha : Num)
-      @internal = SDL3::FColor.new(r: red.to_f32, a: alpha.to_f32)
+    def initialize(*, red : Num, a : Num)
+      @internal = SDL3::FColor.new(r: red.to_f32, a: a.to_f32)
     end
 
-    def initialize(*, green : Num, alpha : Num)
-      @internal = SDL3::FColor.new(g: green.to_f32, a: alpha.to_f32)
+    def initialize(*, green : Num, a : Num)
+      @internal = SDL3::FColor.new(g: green.to_f32, a: a.to_f32)
     end
 
-    def initialize(*, blue : Num, alpha : Num)
-      @internal = SDL3::FColor.new(b: blue.to_f32, a: alpha.to_f32)
+    def initialize(*, blue : Num, a : Num)
+      @internal = SDL3::FColor.new(b: blue.to_f32, a: a.to_f32)
     end
 
     def initialize(*, red : Num, green : Num)
@@ -121,24 +121,24 @@ module GSDL
       @internal = SDL3::FColor.new(g: green.to_f32, b: blue.to_f32)
     end
 
-    def initialize(*, red : Num, green : Num, alpha : Num)
-      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, a: alpha.to_f32)
+    def initialize(*, red : Num, green : Num, a : Num)
+      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, a: a.to_f32)
     end
 
-    def initialize(*, red : Num, blue : Num, alpha : Num)
-      @internal = SDL3::FColor.new(r: red.to_f32, b: blue.to_f32, a: alpha.to_f32)
+    def initialize(*, red : Num, blue : Num, a : Num)
+      @internal = SDL3::FColor.new(r: red.to_f32, b: blue.to_f32, a: a.to_f32)
     end
 
-    def initialize(*, green : Num, blue : Num, alpha : Num)
-      @internal = SDL3::FColor.new(g: green.to_f32, b: blue.to_f32, a: alpha.to_f32)
+    def initialize(*, green : Num, blue : Num, a : Num)
+      @internal = SDL3::FColor.new(g: green.to_f32, b: blue.to_f32, a: a.to_f32)
     end
 
     def initialize(*, red : Num, green : Num, blue : Num)
       @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32)
     end
 
-    def initialize(*, red : Num, green : Num, blue : Num, alpha : Num)
-      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32, a: alpha.to_f32)
+    def initialize(*, red : Num, green : Num, blue : Num, a : Num)
+      @internal = SDL3::FColor.new(r: red.to_f32, g: green.to_f32, b: blue.to_f32, a: a.to_f32)
     end
 
     def to_color
@@ -148,6 +148,80 @@ module GSDL
     # Returns the wrapped `SDL3::FColor`
     def to_sdl
       @internal
+    end
+
+    def lerp(other : self, t : Float32) : self
+      self.class.new(
+        r: MathUtils.lerp(r, other.r, t),
+        g: MathUtils.lerp(g, other.g, t),
+        b: MathUtils.lerp(b, other.b, t),
+        a: MathUtils.lerp(a, other.a, t)
+      )
+    end
+
+    # Returns a new color that is a linear interpolation between this color and another.
+    def mix(other : self, t : Float32 = 0.5_f32) : self
+      lerp(other, t)
+    end
+
+    # Multiplies each component of this color by the corresponding component of another color.
+    def multiply(other : self) : self
+      self.class.new(
+        r: r * other.r,
+        g: g * other.g,
+        b: b * other.b,
+        a: a * other.a
+      )
+    end
+
+    # Alias for `multiply`.
+    def merge(other : self) : self
+      multiply(other)
+    end
+
+    # Multiplies each component of this color by another color.
+    def *(other : self) : self
+      multiply(other)
+    end
+
+    # Multiplies each component of this color by a scalar value.
+    def *(scalar : Float) : self
+      self.class.new(
+        r: r * scalar.to_f32,
+        g: g * scalar.to_f32,
+        b: b * scalar.to_f32,
+        a: a * scalar.to_f32
+      )
+    end
+
+    # Adds the components of another color to this one.
+    def add(other : self) : self
+      self.class.new(
+        r: r + other.r,
+        g: g + other.g,
+        b: b + other.b,
+        a: a + other.a
+      )
+    end
+
+    # Adds the components of another color to this one.
+    def +(other : self) : self
+      add(other)
+    end
+
+    # Subtracts the components of another color from this one.
+    def subtract(other : self) : self
+      self.class.new(
+        r: r - other.r,
+        g: g - other.g,
+        b: b - other.b,
+        a: a - other.a
+      )
+    end
+
+    # Subtracts the components of another color from this one.
+    def -(other : self) : self
+      subtract(other)
     end
 
     macro mirror_colors_to_fcolor

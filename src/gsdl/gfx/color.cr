@@ -228,6 +228,72 @@ module GSDL
       )
     end
 
+    # Returns a new color that is a linear interpolation between this color and another.
+    def mix(other : Color, t : Float32 = 0.5_f32) : Color
+      lerp(other, t)
+    end
+
+    # Multiplies each component of this color by the corresponding component of another color,
+    # normalized to 0-255. This is useful for tinting or combining two colors.
+    def multiply(other : Color) : Color
+      Color.new(
+        r: (r.to_u32 * other.r.to_u32 / 255).to_u8,
+        g: (g.to_u32 * other.g.to_u32 / 255).to_u8,
+        b: (b.to_u32 * other.b.to_u32 / 255).to_u8,
+        a: (a.to_u32 * other.a.to_u32 / 255).to_u8
+      )
+    end
+
+    # Alias for `multiply`.
+    def merge(other : Color) : Color
+      multiply(other)
+    end
+
+    # Multiplies each component of this color by another color.
+    def *(other : Color) : Color
+      multiply(other)
+    end
+
+    # Multiplies each component of this color by a scalar value, clamping the result to 0-255.
+    def *(scalar : Float) : Color
+      Color.new(
+        r: (r.to_f32 * scalar).clamp(0_f32, 255_f32).to_u8,
+        g: (g.to_f32 * scalar).clamp(0_f32, 255_f32).to_u8,
+        b: (b.to_f32 * scalar).clamp(0_f32, 255_f32).to_u8,
+        a: (a.to_f32 * scalar).clamp(0_f32, 255_f32).to_u8
+      )
+    end
+
+    # Adds the components of another color to this one, clamping the result to 0-255.
+    def add(other : Color) : Color
+      Color.new(
+        r: (r.to_i32 + other.r.to_i32).clamp(0, 255).to_u8,
+        g: (g.to_i32 + other.g.to_i32).clamp(0, 255).to_u8,
+        b: (b.to_i32 + other.b.to_i32).clamp(0, 255).to_u8,
+        a: (a.to_i32 + other.a.to_i32).clamp(0, 255).to_u8
+      )
+    end
+
+    # Adds the components of another color to this one.
+    def +(other : Color) : Color
+      add(other)
+    end
+
+    # Subtracts the components of another color from this one, clamping the result to 0-255.
+    def subtract(other : Color) : Color
+      Color.new(
+        r: (r.to_i32 - other.r.to_i32).clamp(0, 255).to_u8,
+        g: (g.to_i32 - other.g.to_i32).clamp(0, 255).to_u8,
+        b: (b.to_i32 - other.b.to_i32).clamp(0, 255).to_u8,
+        a: (a.to_i32 - other.a.to_i32).clamp(0, 255).to_u8
+      )
+    end
+
+    # Subtracts the components of another color from this one.
+    def -(other : Color) : Color
+      subtract(other)
+    end
+
     # Colors
     Transparent = GSDL.gray(0, 0)
 
