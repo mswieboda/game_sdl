@@ -114,6 +114,7 @@ module GSDL
 
     def zoom=(new_zoom : Float32)
       return if @zoom == new_zoom
+      return if new_zoom.zero?
 
       # Calculate the world coordinates of the center of the current camera view
       center_x = @x + (@width / (2_f32 * @zoom))
