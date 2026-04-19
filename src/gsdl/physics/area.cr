@@ -18,7 +18,7 @@ module GSDL
 
     # TODO: maybe rename to target_overlaps? for consistency
     def target_in?(x : Num, y : Num)
-      area_box.overlaps?(x: x, y: y)
+      area_box.in?(x: x, y: y)
     end
 
     def overlaps?(other : Area) : Bool
