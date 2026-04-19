@@ -37,6 +37,9 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      return unless visible?
+      @children.each &.draw(draw)
+
       old_scale_x = draw.current_scale_x
       old_scale_y = draw.current_scale_y
 
