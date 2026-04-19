@@ -31,7 +31,8 @@ module GSDL
     end
 
     def update(dt : Float32)
-      return if paused?
+      # skip everything paused or static frames (frame_time 1 / 0.0 is infinity)
+      return if paused? || @animation.frame_time.infinite?
 
       @elapsed_time += dt
 
