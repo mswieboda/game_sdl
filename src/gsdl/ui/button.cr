@@ -70,7 +70,7 @@ module GSDL
         z_index: z_index,
         border_radius: border_radius
       )
-
+      box.draw_relative_to_camera = self.draw_relative_to_camera?
       box.draw(draw)
     end
 
@@ -91,7 +91,7 @@ module GSDL
         z_index: z_index,
         draw_mode: Shape::DrawMode::Outline
       )
-
+      box.draw_relative_to_camera = self.draw_relative_to_camera?
       box.draw(draw)
     end
   end
