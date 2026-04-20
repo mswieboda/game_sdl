@@ -21,6 +21,8 @@ module GSDL
       y : Num = 0_f32,
       color = ColorScheme.get(:ui_text),
       border_radius : Num = 0,
+      z_index : Int32 = 900,
+      draw_relative_to_camera : Bool = false,
       @on_click : Callback = -> on_click(String),
     )
       super(
@@ -37,6 +39,8 @@ module GSDL
         x: x,
         y: y,
         color: color,
+        z_index: z_index + 1,
+        draw_relative_to_camera: draw_relative_to_camera,
         border_radius: border_radius
       )
     end
@@ -62,6 +66,7 @@ module GSDL
         width: width,
         height: height,
         color: ColorScheme.get(:ui_bg),
+        z_index: z_index,
         border_radius: border_radius
       )
 
@@ -82,6 +87,7 @@ module GSDL
         height: height - margin * 2,
         color: @text.color,
         border_radius: border_radius - margin,
+        z_index: z_index,
         draw_mode: Shape::DrawMode::Outline
       )
 

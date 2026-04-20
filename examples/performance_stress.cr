@@ -59,8 +59,8 @@ module StressEx
 
   class StressScene < GSDL::Scene
     @entities = [] of GSDL::Entity
-    @fps_text : GSDL::Text
-    @count_text : GSDL::Text
+    @fps_text : GSDL::HUDText
+    @count_text : GSDL::HUDText
     @timer : GSDL::Timer
 
     def initialize
