@@ -52,7 +52,8 @@ module GSDL
     def update(dt : Float32)
       super
 
-      if Mouse.clicked_in?(draw_x, draw_y, draw_width, draw_height)
+      # Use screen-space helpers for accurate mouse interaction under zoom
+      if Mouse.clicked_in?(screen_x, screen_y, screen_width, screen_height)
         @on_click.call(@text.text)
       end
     end

@@ -201,6 +201,23 @@ module GSDL
       draw_relative_to_camera? ? dy - Game.camera.y : dy
     end
 
+    # Helpers for screen-space interaction (Mouse/Input)
+    def screen_x : Num
+      draw_relative_to_camera? ? draw_x * Game.camera.zoom : draw_x
+    end
+
+    def screen_y : Num
+      draw_relative_to_camera? ? draw_y * Game.camera.zoom : draw_y
+    end
+
+    def screen_width : Num
+      draw_relative_to_camera? ? draw_width * Game.camera.zoom : draw_width
+    end
+
+    def screen_height : Num
+      draw_relative_to_camera? ? draw_height * Game.camera.zoom : draw_height
+    end
+
     private def on_content_changed
       unless @width_fixed
         @width = (@text.width + @padding_x * 2).to_i
