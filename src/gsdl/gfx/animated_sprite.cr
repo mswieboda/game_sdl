@@ -13,6 +13,8 @@ module GSDL
     delegate pause, to: @animation_player
     delegate paused?, to: @animation_player
     delegate playing?, to: @animation_player
+    delegate frame_index, to: @animation_player
+    delegate :"frame_index=", to: @animation_player
 
     def initialize(
       key : String,
