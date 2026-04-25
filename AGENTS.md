@@ -27,7 +27,7 @@
 - **Regression Checks:** If your task affects a specific subsystem (e.g., `GSDL::Audio`), identify and run the relevant example (e.g., `examples/audio.cr`).
 - **Error Resolution:** The `Makefile` includes `--error-trace`. Focus on the first few lines of a compile error to identify the root cause.
 - **Validation Mandate:** Frequent compilation checks are mandatory. A task is not complete until behavioral correctness is verified through a successful build and run.
-- **Version Bump Suggestion:** After completing a significant task or Trello card, you must recommend the appropriate semantic version bump. Check `shard.yml` or `git tags` to determine the current version first.
+- **Version Bump Suggestion:** After completing a significant task or feature, you must recommend the appropriate semantic version bump. Check `shard.yml` or `git tags` to determine the current version first.
   - **Minor (`0.Y.0`):** Recommended if there are any **breaking changes** (deleted classes, changed method signatures, or major architectural shifts).
   - **Patch (`0.x.Y`):** Recommended if the changes are **purely additive** (new features, new classes) or backward-compatible bug fixes.
   - **Remind User:** Remind the user they can use `./bump (major|minor|patch)` to perform the bump manually. Do not execute the script yourself.
@@ -35,4 +35,73 @@
 ## Do Not Do
 - **Library Files:** NEVER edit files in `./lib/`. Summarize proposed changes for the user to apply to the source repositories (e.g., `sdl3`).
 - **Git Operations:** NO write commands (`git add`, `git commit`, `git stage`). Use read-only commands only.
-- **Trello:** DO NOT modify the Trello board or cards.
+
+<!-- br-agent-instructions-v1 -->
+
+---
+
+## Beads Workflow Integration
+
+This project uses [beads_rust](https://github.com/Dicklesworthstone/beads_rust) (`br`/`bd`) for issue tracking. Issues are stored in `.beads/` and tracked in git.
+
+### Essential Commands
+
+NOTE: always append `--json` param to each command, so it is machine readable tailored for AI usage.
+
+```bash
+# View ready issues (open, unblocked, not deferred)
+br ready --json              # or: bd ready
+
+# List and search
+br list --status=open --json # All open issues
+br show <id> --json          # Full issue details with dependencies
+br search "keyword" --json   # Full-text search
+
+# Create and update
+br create --title="..." --description="..." --type=task --priority=2 --json
+br create --title="..." --description="..." --type=epic --priority=2 --json
+br update <id> --status=in_progress --json
+br note <ID> --notes "..." --json
+br close <id> --reason="Completed" --json
+br close <id1> <id2> --json  # Close multiple issues at once
+
+# Sync with git
+br sync --flush-only --json  # Export DB to JSONL
+br sync --status --json      # Check sync status
+```
+
+### Workflow Pattern
+
+1. **Start**: Run `br ready --json` to find actionable work
+2. **Claim**: Use `br update <id> --status=in_progress --json`
+3. **Work**: Implement the task
+4. **Complete**: Use `br close <id> --json`
+5. **Sync**: Always run `br sync --flush-only --json` at session end
+
+### Key Concepts
+
+- **Dependencies**: Issues can block other issues. `br ready` shows only open, unblocked work.
+- **Priority**: P0=critical, P1=high, P2=medium, P3=low, P4=backlog (use numbers 0-4, not words)
+- **Types**: task, bug, feature, epic, chore, docs, question
+- **Blocking**: `br dep add <issue> <depends-on>` to add dependencies
+
+### Best Practices
+
+- Check `br ready --json` at session start to find available work
+- Update status as you work (in_progress → closed)
+- Create new issues with `br create --json` when you discover tasks
+- Use descriptive titles and set appropriate priority/type
+- Always sync before ending session
+
+### Session Termination Procedures
+
+When I say "wrap this up", "wrap up task", "task completed", or "sync tasks", you MUST execute the following sequence:
+
+1. **Summarize Work:** Use `br note <ID> --notes "..." --json` to record a technical summary of what was accomplished, any technical debt introduced, and specific findings for the GSDL biotech logic.
+2. **Handle Discoveries:** If new bugs or dependencies were found, create them now using `br create "..." --type bug/chore --deps discovered-from:<ID> --json`.
+3. **Sync to Disk:** Run `br sync --flush-only --json`.
+4. **Final Closure:** If the task is truly finished, run `br close <ID> --json`.
+5. **Summarize to User:** Summarize changes, and task updates to user, and suggest a commit message. DO NOT use any `git` write commands, the user will perform them manually.
+6. **Handoff:** End the session by stating the next unblocked task ID from `br ready --json`.
+
+<!-- end-br-agent-instructions -->
