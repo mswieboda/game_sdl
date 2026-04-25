@@ -178,8 +178,9 @@ module GSDL
       @internal.weight
     end
 
-    def initialize(font : SDL3::TTF::Font)
+    def initialize(font : SDL3::TTF::Font, sdf : Bool = false)
       @internal = font
+      self.sdf = sdf
     end
 
     def add_fallback(font : Font)
@@ -195,7 +196,7 @@ module GSDL
     end
 
     def copy : Font
-      Font.new(@internal.copy)
+      Font.new(@internal.copy, sdf: self.sdf)
     end
 
     def create_text(engine : TextEngine, text : String) : Text

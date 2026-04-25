@@ -335,6 +335,7 @@ module GSDL
 
     def initialize(window : SDL3::Window)
       @r = SDL3::Renderer.new(window)
+      @r.default_texture_scale_mode = LibSDL3::ScaleMode::Nearest
       @layers = Hash(Int32, Layer).new
       @sorted_z_indices = [] of Int32
     end

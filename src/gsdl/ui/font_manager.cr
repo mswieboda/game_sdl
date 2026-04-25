@@ -95,7 +95,6 @@ module GSDL
           return @fonts[font_key]
         end
         font = Font.new(SDL3::TTF::Font.open(path, size))
-        font.sdf = true
         @fonts[font_key] = font
         @base_fonts[key] = font unless @base_fonts.has_key?(key)
         font
@@ -110,7 +109,6 @@ module GSDL
         end
 
         font = Font.new(SDL3::TTF::Font.open_io(io, size, close_io: true))
-        font.sdf = true
         @fonts[font_key] = font
         @base_fonts[key] = font unless @base_fonts.has_key?(key)
         font
@@ -125,7 +123,6 @@ module GSDL
           if base_font = @base_fonts[key]?
             new_font = base_font.copy
             new_font.size = size
-            new_font.sdf = true
             @fonts[font_key] = new_font
             new_font
           else

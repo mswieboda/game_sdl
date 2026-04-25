@@ -4,6 +4,7 @@ module GSDL
 
     property text : String
     property? draw_relative_to_camera : Bool = true
+    property rotation : Num = 0.0
 
     @@draw : Draw?
 
@@ -32,7 +33,8 @@ module GSDL
       align = Font::Align::Left,
       direction = Font::Direction::LTR,
       wrap_width : Int32? = nil,
-      @z_index : Int32 = 0
+      @z_index : Int32 = 0,
+      @rotation : Num = 0.0
     )
       if font.align != align
         font = font.copy
@@ -69,7 +71,7 @@ module GSDL
       end
     end
 
-    # NOTE: used in TextRotated for example
+    # NOTE: used in Text for example
     def self.renderer : SDL3::Renderer
       draw.to_sdl
     end

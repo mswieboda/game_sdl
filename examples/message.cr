@@ -116,7 +116,7 @@ module GameEx
         border_radius: 16
       )
 
-      rotated_text = GSDL::TextRotated.new(
+      rotated_text = GSDL::Text.new(
         font: font,
         text: "Rotated\nmessage\nwow!",
         color: GSDL::Color::Green,
@@ -130,7 +130,7 @@ module GameEx
         border_radius: 16
       )
 
-      rotated_btn_text = GSDL::TextRotated.new(
+      rotated_btn_text = GSDL::Text.new(
         font: font,
         text: "Rotated OK!",
         color: GSDL::Color::Cyan,

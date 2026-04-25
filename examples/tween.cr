@@ -49,14 +49,6 @@ module TweenEx
       text.x = WIDTH / 2_f32
       text.y = 32
 
-      text_rotated = GSDL::TextRotated.new(
-        text: "ROTATED TEXT",
-        origin: origin,
-        color: GSDL::Color::Gold
-      )
-      text_rotated.x = WIDTH / 2_f32
-      text_rotated.y = HEIGHT - 128
-
       @active_info = GSDL::Text.new(
         text: "Active: Sprite",
         origin: text_origin,
@@ -134,7 +126,6 @@ module TweenEx
 
       # add these last, so sprite is first, then shapes, then text
       @objects << text
-      @objects << text_rotated
     end
 
     def active_object
@@ -185,7 +176,7 @@ module TweenEx
         end
 
         # Rotation property - added to the sequence for all objects that support it
-        supports_rotation = obj.is_a?(GSDL::Sprite) || obj.is_a?(GSDL::TextRotated) || obj.is_a?(GSDL::Shape)
+        supports_rotation = obj.is_a?(GSDL::Sprite) || obj.is_a?(GSDL::Text) || obj.is_a?(GSDL::Shape)
 
         tween.add_sequence([
           {

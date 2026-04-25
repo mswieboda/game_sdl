@@ -324,7 +324,12 @@ module GSDL
         @window.not_nil!.resizable = false
       end
 
+      SDL3.pump_events
+
+      @window.not_nil!.raise_window
+
       @draw = Draw.new(@window.not_nil!)
+      @draw.not_nil!.vsync = vsync ? 1 : 0
       Internal.draw = @draw.not_nil!
 
       TextBase.draw = @draw.not_nil!
@@ -343,7 +348,7 @@ module GSDL
       TextBase.draw = Game.draw
 
       if @logical_width > 0 && @logical_height > 0
-        Game.draw.logical_presentation = {@logical_width, @logical_height, SDL3::LogicalPresentation::Letterbox}
+        Game.draw.logical_presentation = {@logical_width, @logical_height, SDL3::LogicalPresentation::IntegerScale}
       end
 
       load_assets

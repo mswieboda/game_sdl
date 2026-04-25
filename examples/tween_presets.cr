@@ -49,7 +49,7 @@ module TweenPresetsEx
       text.x = WIDTH / 2_f32
       text.y = 32
 
-      text_rotated = GSDL::TextRotated.new(
+      text_rotated = GSDL::Text.new(
         text: "ROTATED TEXT",
         origin: origin,
         color: GSDL::Color::Gold
