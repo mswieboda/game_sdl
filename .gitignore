@@ -26,3 +26,6 @@
 
 # AI info, but doesn't need to be committed (too annoying when refining tickets)
 /GAME_CONTEXT.md
+
+# bv (beads viewer) local config and caches
+.bv/
