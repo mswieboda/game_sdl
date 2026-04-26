@@ -61,7 +61,7 @@ br search "keyword" --json   # Full-text search
 br create --title="..." --description="..." --type=task --priority=2 --json
 br create --title="..." --description="..." --type=epic --priority=2 --json
 br update <id> --status=in_progress --json
-br note <ID> --notes "..." --json
+br update <id> --notes "..." --json
 br close <id> --reason="Completed" --json
 br close <id1> <id2> --json  # Close multiple issues at once
 
@@ -97,7 +97,7 @@ br sync --status --json      # Check sync status
 
 When I say "wrap this up", "wrap up task", "task completed", or "sync tasks", you MUST execute the following sequence:
 
-1. **Summarize Work:** Use `br note <ID> --notes "..." --json` to record a technical summary of what was accomplished, any technical debt introduced, and specific findings for the GSDL biotech logic.
+1. **Summarize Work:** Use `br update <id> --notes "..." --json` to record a technical summary of what was accomplished, any technical debt introduced, and specific findings for the GSDL biotech logic.
 2. **Handle Discoveries:** If new bugs or dependencies were found, create them now using `br create "..." --type bug/chore --deps discovered-from:<ID> --json`.
 3. **Sync to Disk:** Run `br sync --flush-only --json`.
 4. **Final Closure:** If the task is truly finished, run `br close <ID> --json`.

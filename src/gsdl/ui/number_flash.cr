@@ -41,9 +41,7 @@ module GSDL
 
       # Fade out over lifetime
       progress = (@elapsed / @lifetime).clamp(0.0_f32, 1.0_f32)
-      new_color = self.color
-      new_color.a = (255 * (1.0_f32 - progress)).to_u8
-      self.color = new_color
+      self.opacity = (255 * (1.0_f32 - progress)).to_u8
     end
   end
 end

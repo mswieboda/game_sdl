@@ -11,7 +11,7 @@ module GSDL
     getter padding_y : Int32
     getter tweens : Array(Tween) = [] of Tween
 
-    @text : TextBase
+    @text : Text
     @x : Num = 0_f32
     @y : Num = 0_f32
     @origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
@@ -28,7 +28,7 @@ module GSDL
 
     def initialize(
       font = Font.default,
-      text : String | TextBase = "",
+      text : String | Text = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
       width : Int32? = nil,

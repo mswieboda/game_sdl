@@ -51,6 +51,9 @@ module GameEx
     def initialize(@current_mode_index = 0)
       super(:logical_presentation)
 
+      mode = @presentation_modes[@current_mode_index]
+      GSDL::Game.draw.logical_presentation = {GSDL::Game.width, GSDL::Game.height, mode}
+
       color = GSDL::Color.new(r: 255, g: 255, b: 255, a: 255)
 
       @instruction_text = GSDL::Text.new(text: "Press SPACE to change presentation mode", color: color)

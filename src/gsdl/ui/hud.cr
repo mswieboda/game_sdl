@@ -92,7 +92,7 @@ module GSDL
     @last_template_values = {} of String => String
     @force_template_update = true
 
-    getter text_element : TextBase
+    getter text_element : Text
 
     def text_data_template; @text_data_template; end
 
@@ -103,7 +103,7 @@ module GSDL
 
     def initialize(
       font = Font.default,
-      text : String | TextBase = "",
+      text : String | Text = "",
       text_data_template = nil,
       @anchor = Anchor::TopLeft,
       @offset_x = 0,
@@ -129,7 +129,7 @@ module GSDL
         is_rich ||= rich_tags.any? { |t| text_data_template.includes?(t) }
       end
 
-      if text.is_a?(TextBase)
+      if text.is_a?(Text)
         @text_element = text
       elsif is_rich
         @text_element = RichText.new(

@@ -331,8 +331,6 @@ module GSDL
       @draw = Draw.new(@window.not_nil!)
       @draw.not_nil!.vsync = vsync ? 1 : 0
       Internal.draw = @draw.not_nil!
-
-      TextBase.draw = @draw.not_nil!
     end
 
     private def _init
@@ -344,8 +342,6 @@ module GSDL
       FontManager.setup
       AudioManager.setup
       TileMapManager.setup
-
-      TextBase.draw = Game.draw
 
       if @logical_width > 0 && @logical_height > 0
         Game.draw.logical_presentation = {@logical_width, @logical_height, SDL3::LogicalPresentation::IntegerScale}

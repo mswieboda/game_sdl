@@ -8,7 +8,7 @@ module GSDL
 
     def initialize(
       font = Font.default,
-      text : String | TextBase = "",
+      text : String | Text = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
       width : Int32? = nil,

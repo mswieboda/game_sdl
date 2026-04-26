@@ -58,6 +58,14 @@ module GSDL
       @internal.fill(color.to_sdl)
     end
 
+    def blit(source_rect : Rect?, dest_rect : Rect?, dest_surface : Surface) : Bool
+      @internal.blit(
+        source_rect.try(&.to_sdl),
+        dest_rect.try(&.to_sdl),
+        dest_surface.to_sdl
+      )
+    end
+
     def to_sdl
       @internal
     end

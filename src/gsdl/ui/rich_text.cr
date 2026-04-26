@@ -1,14 +1,9 @@
 module GSDL
-  class RichText < TextBase
+  class RichText < Text
     record RichTextSegment, text : String, color : Color, style : Font::Style
-    alias WordInfo = NamedTuple(text: String, color: Color, style: Font::Style, x: Int32, y: Int32, w: Int32, h: Int32)
 
     @baked_texture : Texture?
     @segments = Array(RichTextSegment).new
-    @width : Int32 = 0
-    @height : Int32 = 0
-    @wrap_width : Int32 = 0
-    @visible_characters : Int32 = -1
 
     def initialize(
       font = Font.default,
@@ -20,9 +15,11 @@ module GSDL
       color : Color = ColorScheme.get(:ui_text),
       align : Font::Align = Font::Align::Left,
       wrap_width : Int32 = 0,
-      @visible_characters : Int32 = -1,
-      @z_index : Int32 = 0
+      visible_characters : Int32 = -1,
+      @z_index : Int32 = 0,
+      oversample_ratio : Float32 = Text::OversampleRatio
     )
+      # We don't want the Text constructor to bake anything yet because segments aren't parsed
       super(
         font: font,
         text: "",
@@ -33,19 +30,11 @@ module GSDL
         color: color,
         align: align,
         wrap_width: wrap_width,
-        z_index: z_index
+        z_index: z_index,
+        oversample_ratio: oversample_ratio,
+        visible_characters: visible_characters
       )
-      @wrap_width = wrap_width
       self.text = text
-    end
-
-    def visible_characters=(val : Int32)
-      @visible_characters = val
-      bake_texture
-    end
-
-    def visible_characters : Int32
-      @visible_characters
     end
 
     # Returns the total number of characters (excluding tags)
@@ -56,20 +45,22 @@ module GSDL
     def text=(text : String)
       @text = text
       parse_segments
-      bake_texture
+      layout!
+      bake!
     end
 
     def wrap_width=(val : Int32)
       @wrap_width = val
-      bake_texture
+      layout!
+      bake!
     end
 
     def width : Int32
-      @width
+      @logical_width
     end
 
     def height : Int32
-      @height
+      @logical_height
     end
 
     private def on_content_changed
@@ -131,12 +122,13 @@ module GSDL
       self.color
     end
 
-    private def bake_texture
-      @baked_texture.try &.destroy
+    def layout!
+      @layout_info.clear
+      @logical_width = 0
+      @logical_height = 0
       return if @segments.empty?
 
-      # 1. First Pass: Calculate Layout & Group by Lines
-      # Each word has {text, color, style, x, y, w, h}
+      # 1. First Pass: Calculate Layout & Group by Lines (at Logical Scale)
       lines = [] of Array(WordInfo)
       current_line = [] of WordInfo
 
@@ -146,7 +138,6 @@ module GSDL
       line_h = font.line_skip > 0 ? font.line_skip : font.height
 
       @segments.each do |seg|
-        # Split by spaces and newlines, but keep them to preserve spacing
         words = seg.text.split(/([ \n\t]+)/)
         words.each do |word|
           next if word.empty?
@@ -162,42 +153,36 @@ module GSDL
           font.style = seg.style
           w, h = font.text_size(word)
 
-          # Wrap if necessary
-          if @wrap_width > 0 && cursor_x + w > @wrap_width && !word.strip.empty?
+          if (ww = @wrap_width) && ww > 0 && cursor_x + w > ww && !word.strip.empty?
             lines << current_line
             current_line = [] of WordInfo
             cursor_x = 0
             cursor_y += line_h
-
-            # If the word itself is wider than wrap_width, it will just overflow
-            # unless we implement character-level wrapping, which we'll skip for now.
           end
 
-          current_line << {text: word, color: seg.color, style: seg.style, x: cursor_x, y: cursor_y, w: w, h: h}
+          current_line << WordInfo.new(text: word, x: cursor_x, y: cursor_y, w: w, h: h)
           cursor_x += w
           max_w = Math.max(max_w, cursor_x)
         end
       end
       lines << current_line unless current_line.empty?
 
-      @width = @wrap_width > 0 ? @wrap_width : max_w
-      @height = cursor_y + line_h
+      ww = @wrap_width
+      @logical_width = (ww && ww > 0) ? ww : max_w
+      @logical_height = cursor_y + line_h
 
-      return if @width <= 0 || @height <= 0
+      return if @logical_width <= 0 || @logical_height <= 0
 
       # 2. Second Pass: Apply Alignment Offsets
       target_align = font.align
-      layout_info = [] of WordInfo
 
       lines.each do |line|
         next if line.empty?
-
-        # Calculate trailing whitespace width to ignore it for alignment
-        line_w = line.last[:x] + line.last[:w]
+        line_w = line.last.x + line.last.w
         trailing_ws = 0
         line.reverse_each do |w_info|
-          if w_info[:text].strip.empty?
-            trailing_ws += w_info[:w]
+          if w_info.text.strip.empty?
+            trailing_ws += w_info.w
           else
             break
           end
@@ -206,48 +191,69 @@ module GSDL
 
         offset_x = 0
         if target_align == Font::Align::Center
-          offset_x = (@width - visual_line_w) // 2
+          offset_x = (@logical_width - visual_line_w) // 2
         elsif target_align == Font::Align::Right
-          offset_x = @width - visual_line_w
+          offset_x = @logical_width - visual_line_w
         end
-
-        # Don't allow negative offset (pushing off left edge)
         offset_x = Math.max(0, offset_x)
 
         line.each do |w_info|
-          # Create a new tuple with the adjusted X
-          layout_info << {
-            text: w_info[:text],
-            color: w_info[:color],
-            style: w_info[:style],
-            x: w_info[:x] + offset_x,
-            y: w_info[:y],
-            w: w_info[:w],
-            h: w_info[:h]
-          }
+          @layout_info << WordInfo.new(
+            text: w_info.text,
+            x: w_info.x + offset_x,
+            y: w_info.y,
+            w: w_info.w,
+            h: w_info.h
+          )
         end
       end
+    end
 
-      # 3. Create and Bake
-      @baked_texture = Texture.new(@width, @height, access: TextureAccess::Target)
-      @baked_texture.not_nil!.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+    def bake!
+      @baked_texture.try &.destroy
+      @baked_texture = nil
+      return if @layout_info.empty?
 
-      draw = Game.draw
-      # Ensure internal segments are left-aligned so our manual offsets are exact
+      # 3. Create and Bake (at Oversampled Scale)
+      baked_w = (@logical_width * oversample_ratio).to_i
+      baked_h = (@logical_height * oversample_ratio).to_i
+      master_surface = Surface.new(width: baked_w, height: baked_h)
+      master_surface.fill(Color.new(0, 0, 0, 0)) # Transparent
+
       old_align = font.align
       font.align = Font::Align::Left
+      original_size = font.size
+      font.size = original_size * oversample_ratio
 
-      draw.with_target(@baked_texture) do
-        draw.color = Color.new(0, 0, 0, 0)
-        draw.to_sdl.clear
+      remaining_chars = @visible_characters
+      show_all = @visible_characters < 0
 
-        remaining_chars = @visible_characters
-        show_all = @visible_characters < 0
-
-        layout_info.each do |info|
+      # Since we need segment info (style, color) for baking, we need to map layout_info back or store it.
+      # Re-parsing during bake is not ideal. Let's adjust layout_info to include style/color if it's RichText.
+      # Actually, let's just use the segment-based bake logic here.
+      
+      # We need to know which segment each WordInfo came from.
+      # Simplified: re-walk segments with the layout positions.
+      
+      char_count = 0
+      seg_idx = 0
+      layout_idx = 0
+      
+      @segments.each do |seg|
+        words = seg.text.split(/([ \n\t]+)/)
+        words.each do |word|
+          next if word.empty?
+          if word == "\n"
+            next
+          end
+          
+          # This should correspond to @layout_info[layout_idx]
+          info = @layout_info[layout_idx]
+          layout_idx += 1
+          
           break if !show_all && remaining_chars <= 0
 
-          text_to_draw = info[:text]
+          text_to_draw = word
           if !show_all && text_to_draw.size > remaining_chars
             text_to_draw = text_to_draw[0...remaining_chars]
             remaining_chars = 0
@@ -257,26 +263,64 @@ module GSDL
 
           next if text_to_draw.empty?
 
-          font.style = info[:style]
-          temp_text = font.create_text(draw.text_engine, text_to_draw)
-          temp_text.color = info[:color]
-          temp_text._draw(info[:x].to_f32, info[:y].to_f32)
-          temp_text.destroy
+          font.style = seg.style
+          surface = font.render_text_blended(text_to_draw, seg.color)
+          
+          if surface
+            dest_rect = Rect.new(
+              x: (info.x.to_f32 * oversample_ratio).to_i,
+              y: (info.y.to_f32 * oversample_ratio).to_i,
+              w: surface.width,
+              h: surface.height
+            )
+            surface.blit(nil, dest_rect, master_surface)
+            surface.destroy
+          end
         end
       end
 
+      font.size = original_size
       font.style = Font::Style::Normal
       font.align = old_align
+
+      @baked_texture = Texture.from_surface(master_surface)
+      @baked_texture.not_nil!.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
+      master_surface.destroy
     end
 
     def draw(draw : Draw)
       return unless tex = @baked_texture
 
-      draw.texture(
-        tex,
-        dest_rect: FRect.new(x: draw_x, y: draw_y, w: draw_width, h: draw_height),
+      old_scale_x = draw.current_scale_x
+      old_scale_y = draw.current_scale_y
+
+      if draw_relative_to_camera?
+        draw.scale = Game.camera.zoom
+      else
+        draw.scale = 1.0_f32
+      end
+
+      camera_x = draw_relative_to_camera? ? Game.camera.x : 0_f32
+      camera_y = draw_relative_to_camera? ? Game.camera.y : 0_f32
+
+      dest_rect = FRect.new(
+        x: (draw_x - camera_x).to_f32,
+        y: (draw_y - camera_y).to_f32,
+        w: draw_width.to_f32,
+        h: draw_height.to_f32
+      )
+
+      tex.alpha_mod = opacity
+      draw.texture_rotated(
+        texture: tex,
+        dest_rect: dest_rect,
+        angle: rotation.to_f32,
+        center: center_point_from_origin,
         z_index: z_index
       )
+      tex.alpha_mod = 255_u8
+
+      draw.scale = {old_scale_x, old_scale_y}
     end
 
     def _draw(x : Float32, y : Float32)
@@ -286,7 +330,7 @@ module GSDL
       draw.to_sdl.render_texture(
         tex.to_sdl,
         nil,
-        SDL3::FRect.new(x, y, @width.to_f32, @height.to_f32)
+        SDL3::FRect.new(x, y, draw_width.to_f32, draw_height.to_f32)
       )
     end
 

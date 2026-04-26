@@ -25,6 +25,10 @@ module GSDL
       @internal.color_mod = color.to_sdl
     end
 
+    def alpha_mod=(alpha : UInt8)
+      @internal.alpha_mod = alpha
+    end
+
     def destroy : Void
       @internal.destroy
     end
@@ -43,6 +47,14 @@ module GSDL
 
     def size : Tuple(Float32, Float32)
       @internal.size
+    end
+
+    def width : Float32
+      size[0]
+    end
+
+    def height : Float32
+      size[1]
     end
 
     def tint=(color : Color)

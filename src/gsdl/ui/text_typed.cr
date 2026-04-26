@@ -13,7 +13,7 @@ module GSDL
     getter? complete : Bool
     getter on_complete : Proc(Nil) | Nil
 
-    @typed_count : UInt8
+    @typed_count : Int32
     @timer : Timer
 
     def initialize(
@@ -24,7 +24,6 @@ module GSDL
       origin = {0_f32, 0_f32},
       color : Color = ColorScheme.get(:ui_text),
       align = Font::Align::Left,
-      direction = Font::Direction::LTR,
       wrap_width : Int32? = nil,
       z_index : Int32 = 0,
       @types_per_second : UInt8 = 8_u8,
@@ -32,23 +31,20 @@ module GSDL
       @on_type : Callback | Nil = nil,
       @on_complete : Callback | Nil = nil
     )
-      # init with empty text space char, as it will get typed out
-      # empty space char ensures height gets calculated
       super(
         font: font,
-        text: " ",
+        text: text,
         x: x,
         y: y,
         origin: origin,
         color: color,
         align: align,
-        direction: direction,
         wrap_width: wrap_width,
-        z_index: z_index
+        z_index: z_index,
+        visible_characters: 0
       )
-
       @full_text = text
-      @typed_count = 1
+      @typed_count = 0
       @timer = Timer.new(seconds_per_type)
       @complete = false
     end
@@ -58,24 +54,22 @@ module GSDL
     end
 
     def types_per_second=(types_per_second : UInt8)
+      @types_per_second = types_per_second
       @timer = Timer.new(seconds_per_type)
     end
 
     # restarts the typing animation
     def restart
-      @typed_count = 1
+      @typed_count = 0
       @complete = false
+      self.visible_characters = 0
 
       @timer.restart
     end
 
     def full_text=(value : String)
       @full_text = value
-
-      # update the underlying Text's display and internals, with empty space
-      # empty space char ensures height gets calculated
-      self.text = " "
-
+      self.text = value
       restart
     end
 
@@ -89,14 +83,14 @@ module GSDL
 
     def type_text
       if type.char?
-        # append one char at a time
-        self.text = @full_text[0...@typed_count]
+        @typed_count += 1
+        self.visible_characters = @typed_count
       else
-        # append next word (including pre whitespace)
-        self.text = @full_text.scan(/(\s*\S+)/).compact[0...@typed_count].join("")
+        @typed_count += 1
+        # Calculate characters for words
+        words = @full_text.scan(/(\s*\S+)/).compact[0...@typed_count]
+        self.visible_characters = words.sum(&.[0].size)
       end
-
-      @typed_count += 1
 
       @on_type.try(&.call)
 
@@ -105,7 +99,7 @@ module GSDL
     end
 
     def complete
-      self.text = @full_text
+      self.visible_characters = -1
       @complete = true
 
       @timer.stop

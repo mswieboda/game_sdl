@@ -27,7 +27,8 @@ module GSDL
       @types_per_second : UInt8 = 20_u8,
       @type : Type = Type::Char,
       @on_type : Callback | Nil = nil,
-      @on_complete : Callback | Nil = nil
+      @on_complete : Callback | Nil = nil,
+      oversample_ratio : Float32 = Text::OversampleRatio
     )
       super(
         font: font,
@@ -39,7 +40,8 @@ module GSDL
         align: align,
         wrap_width: wrap_width,
         visible_characters: 0, # Start hidden
-        z_index: z_index
+        z_index: z_index,
+        oversample_ratio: oversample_ratio
       )
 
       @timer = Timer.new(seconds_per_type)

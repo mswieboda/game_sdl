@@ -10,9 +10,13 @@ module GameEx
         end
 
     def init
+      GSDL::ColorScheme.configure(
+        ui_bg: "rgb(33, 33, 33)"
+      )
+
       GSDL::Events.esc_exits = true
       GSDL::Game.push(StartScene.new)
-        end
+    end
 
     def load_default_font
       "fonts/PressStart2P.ttf"

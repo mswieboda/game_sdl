@@ -92,34 +92,6 @@ module GSDL
       end
     end
 
-    class DrawTextCommand < DrawCommand
-      property text : Text
-      property screen_x : Float32
-      property screen_y : Float32
-
-      def initialize(@text : Text, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
-        super(z_index: @text.z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
-        @screen_x = @text.draw_x.to_f32
-        @screen_y = @text.draw_y.to_f32
-      end
-
-      def y : Num?
-        @text.y
-      end
-
-      def on_screen? : Bool
-        screen_w = GSDL::Game.width.to_f32
-        screen_h = GSDL::Game.height.to_f32
-
-        sx = @screen_x * scale_x.abs
-        sy = @screen_y * scale_y.abs
-        r_w = @text.width.to_f32 * scale_x.abs
-        r_h = @text.height.to_f32 * scale_y.abs
-
-        sx + r_w >= 0_f32 && sx <= screen_w && sy + r_h >= 0_f32 && sy <= screen_h
-      end
-    end
-
     class DrawGeometryCommand < DrawCommand
       property vertices : Array(SDL3::Vertex)
       property indices : Array(Int32)
@@ -218,7 +190,7 @@ module GSDL
       end
     end
 
-    alias Command = DrawTextureCommand | DrawTextCommand | DrawFRectCommand | DrawPointCommand | DrawLineCommand | DrawGeometryCommand | DrawFRectsCommand | DrawPointsCommand | DrawLinesCommand
+    alias Command = DrawTextureCommand | DrawFRectCommand | DrawPointCommand | DrawLineCommand | DrawGeometryCommand | DrawFRectsCommand | DrawPointsCommand | DrawLinesCommand
 
     class Layer
       getter commands = [] of Command
@@ -247,7 +219,6 @@ module GSDL
 
     @layers : Hash(Int32, Layer)
     @sorted_z_indices : Array(Int32)
-    @text_engine : TextEngine?
     @current_command_count : Int32 = 0
     @last_command_count : Int32 = 0
 
@@ -265,16 +236,11 @@ module GSDL
 
     property culling_enabled : Bool = true
 
-    def text_engine : TextEngine
-      @text_engine ||= TextEngine.new(@r.create_text_engine)
-    end
-
     def clear : Bool
       @r.clear
     end
 
     def destroy : Void
-      @text_engine.try(&.destroy)
       @r.destroy
     end
 
@@ -362,6 +328,11 @@ module GSDL
 
     def create_texture(surface : Surface) : Texture
       Texture.from_surface(surface)
+    end
+
+    def surface(surface : Surface, x : Num, y : Num, z_index : Int32 = 0)
+      tex = create_texture(surface)
+      texture(tex, x: x.to_f32, y: y.to_f32, z_index: z_index, destroy: true)
     end
 
     private def flush_batch
@@ -607,11 +578,6 @@ module GSDL
               tint: command.tint,
               destroy: command.destroy?
             )
-
-          when DrawTextCommand
-            active_color = nil
-            active_blend_mode = nil
-            command.text._draw(command.screen_x, command.screen_y)
 
           when DrawGeometryCommand
             active_color = nil
@@ -932,12 +898,6 @@ module GSDL
     def rects_outline(boxes : Array(Box))
       box = boxes.first.color
       rects_outline(rects: boxes.map(&.to_frect), color: box.color, z_index: box.z_index)
-    end
-
-    # text
-
-    def text(text : Text)
-      push_cmd(DrawTextCommand.new(text, @current_scale_x, @current_scale_y, @current_clip_rect))
     end
 
     # textures

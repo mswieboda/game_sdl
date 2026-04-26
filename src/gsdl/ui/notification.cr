@@ -49,6 +49,8 @@ module GSDL
       @message = Text.new(
         text: @text,
         color: @color,
+        x: -1000, # make sure it's off the screen first
+        y: -1000, # make sure it's off the screen first
         z_index: @z_index + 1,
         origin: {0.5_f32, 0.5_f32}
       )

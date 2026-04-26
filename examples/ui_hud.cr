@@ -128,17 +128,33 @@ module HUDEx
 
       (0..30).each do |i|
         x = i * grid_size
-        draw.line(x - cam_x, 0 - cam_y, x - cam_x, 2000 - cam_y, GSDL::Color::DarkerGray)
+        draw.line(
+          x1: x - cam_x,
+          y1: 0 - cam_y,
+          x2: x - cam_x,
+          y2: 2000 - cam_y,
+          color: GSDL::Color::DarkerGray,
+          z_index: -1
+        )
       end
+
       (0..30).each do |i|
         y = i * grid_size
-        draw.line(0 - cam_x, y - cam_y, 2000 - cam_x, y - cam_y, GSDL::Color::DarkerGray)
+        draw.line(
+          x1: 0 - cam_x,
+          y1: y - cam_y,
+          x2: 2000 - cam_x,
+          y2: y - cam_y,
+          color: GSDL::Color::DarkerGray,
+          z_index: -1
+        )
       end
 
       # Draw player
       draw.rect_fill(
         rect: GSDL::FRect.new(x: @player_x - cam_x - 16, y: @player_y - cam_y - 16, w: 32, h: 32),
-        color: GSDL::Color::Lime
+        color: GSDL::Color::Lime,
+        z_index: 3
       )
     end
   end
