@@ -72,7 +72,7 @@ br sync --status --json      # Check sync status
 
 ### Workflow Pattern
 
-1. **Start**: Run `br ready --json` to find actionable work
+1. **Start**: Run `bv --robot-triage` to find actionable work
 2. **Claim**: Use `br update <id> --status=in_progress --json`
 3. **Work**: Implement the task
 4. **Complete**: Use `br close <id> --json`
@@ -80,14 +80,14 @@ br sync --status --json      # Check sync status
 
 ### Key Concepts
 
-- **Dependencies**: Issues can block other issues. `br ready` shows only open, unblocked work.
+- **Dependencies**: Issues can block other issues. `bv --robot-triage` shows only open, unblocked work.
 - **Priority**: P0=critical, P1=high, P2=medium, P3=low, P4=backlog (use numbers 0-4, not words)
 - **Types**: task, bug, feature, epic, chore, docs, question
 - **Blocking**: `br dep add <issue> <depends-on>` to add dependencies
 
 ### Best Practices
 
-- Check `br ready --json` at session start to find available work
+- Check `bv --robot-triage` at session start to find available work
 - Update status as you work (in_progress → closed)
 - Create new issues with `br create --json` when you discover tasks
 - Use descriptive titles and set appropriate priority/type
@@ -95,14 +95,14 @@ br sync --status --json      # Check sync status
 
 ### Session Termination Procedures
 
-When I say "wrap this up", "wrap up task", "task completed", or "sync tasks", you MUST execute the following sequence:
+Always ask the user to confirm via their own manual testing. And then when the user says "wrap this up", "wrap up task", "task completed", or "sync tasks", you MUST execute the following sequence:
 
 1. **Summarize Work:** Use `br update <id> --notes "..." --json` to record a technical summary of what was accomplished, any technical debt introduced, and specific findings for the GSDL biotech logic.
 2. **Handle Discoveries:** If new bugs or dependencies were found, create them now using `br create "..." --type bug/chore --deps discovered-from:<ID> --json`.
 3. **Sync to Disk:** Run `br sync --flush-only --json`.
 4. **Final Closure:** If the task is truly finished, run `br close <ID> --json`.
 5. **Summarize to User:** Summarize changes, and task updates to user, and suggest a commit message. DO NOT use any `git` write commands, the user will perform them manually.
-6. **Handoff:** End the session by stating the next unblocked task ID from `br ready --json`.
+6. **Handoff:** End the session by stating the next unblocked task ID from `bv --robot-triage`.
 
 <!-- end-br-agent-instructions -->
 
