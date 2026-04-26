@@ -60,7 +60,61 @@ cd my_foo_game
 shards install
 ```
 
-5. Install GameSDL Tools
+## Usage & Examples
+
+See the many examples in `examples` directory! They are all standalone files that contain the normal overrided `Game` and `Scene` set up, and any other custom additional classes.
+
+Here is the boilerplate setup to get game initialized, set up a scene, and render text:
+
+```crystal
+require "game_sdl"
+
+module GameEx
+  class Game < GSDL::Game
+    def initialize
+      super(title: "Text Example")
+    end
+
+    def init
+      GSDL::Game.push(StartScene.new)
+    end
+
+    def load_default_font
+      "fonts/PressStart2P.ttf"
+    end
+  end
+
+  class StartScene < GSDL::Scene
+    @text : GSDL::Text
+
+    def initialize
+      super(:start)
+
+      @text = GSDL::Text.new(
+        text: "hello world!",
+        x: Game.width / 2,
+        y: Game.height / 2,
+        origin: {0.5_f32, 0.5_f32},
+        color: GSDL::Color::White
+      )
+    end
+
+    def update(dt : Float32)
+      # do stuff here
+    end
+
+    def draw(draw : GSDL::Draw)
+      @text.draw(draw)
+    end
+  end
+
+  Game.new.run
+end
+```
+
+## Prepping for Platform Releases
+
+### Install GameSDL Tools
 
 This step is optional, but required when you run `make release` or with any `--release` flagged crystal compile. In the release mode, GameSDL expects a `.pack` file of the packed assets (using in `build/assets.pack`)
 
@@ -98,7 +152,7 @@ pack: $(PACKER_FILE)
 
 or use the https://github.com/mswieboda/template_game_sdl template repo to start from that has it included
 
-## Release Packaging
+### Release Packaging
 
 To create a distribution-ready package for your game (on macOS, Windows, or Linux), you can use the built-in release helper.
 
@@ -129,26 +183,6 @@ make release-package-mac GAME=my_game SRC=src/my_game.cr APP_NAME="My Awesome Ga
 - `ICON`: Path to the icon file (e.g., `.icns` for macOS).
 - `BUNDLE_ID`: macOS Bundle ID (e.g., `com.mygame.app`).
 - `OUTPUT`: The directory to save the release package (default: `build/release`).
-
-## Usage
-
-```crystal
-require "game_sdl"
-```
-
-## Documentation
-
-To see full documentation of GameSDL, and SDL3 (included bindings library) you can run the `crystal docs` command, but specify the lib entry points, in correct order (SDL3 first, GSDL second, because GSDL depends on SDL3):
-
-```
-crystal docs lib/sdl3/src/sdl3.cr src/game_sdl.cr
-```
-
-or in your game:
-
-```
-crystal docs lib/sdl3/src/sdl3.cr lib/game_sdl/src/game_sdl.cr src/your_game_entry_point.cr
-```
 
 ### Consumer App Release Package Makefile Instructions
 
@@ -185,16 +219,29 @@ release-package-linux:
 	@$(MAKE) release-package TARGET=linux
 ```
 
-### Dynamic Libraries
+### Releases and Dynamic Libraries
 
 The release helper bundles the game binary, the `assets.pack`, and necessary dynamic libraries:
 - **macOS:** Bundles `.dylib` files into `Contents/Frameworks/` and updates the binary's `@rpath`.
 - **Windows:** Bundles all `.dll` files from the build directory into the same folder as the `.exe`.
 - **Linux:** Currently requires system-wide libraries or manual bundling in the `.tar.gz`.
 
+## Documentation
+
+To see full documentation of GameSDL, and SDL3 (included bindings library) you can run the `crystal docs` command, but specify the lib entry points, in correct order (SDL3 first, GSDL second, because GSDL depends on SDL3):
+
+```
+crystal docs lib/sdl3/src/sdl3.cr src/game_sdl.cr
+```
+
+or in your game:
+
+```
+crystal docs lib/sdl3/src/sdl3.cr lib/game_sdl/src/game_sdl.cr src/your_game_entry_point.cr
+```
+
 Unfortunately the `delegate` methods docs
  will not expand to full method signatures, so you'll need to infer wrapped classes like GSDL::Point that wraps SDL3::FPoint to see those method signatures. Eventually I plan to either document each delegate so the parameters and return types are clear, or fully wrap the methods themselves so it is even more clear.
-
 
 ## Contributing
 
