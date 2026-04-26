@@ -2,7 +2,7 @@ module GSDL
   class Text < Entity
     include Centerable
 
-    OversampleRatio = 4_f32
+    OversampleRatio = 8_f32
 
     record WordInfo, text : String, x : Int32, y : Int32, w : Int32, h : Int32
 

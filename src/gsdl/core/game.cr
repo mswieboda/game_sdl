@@ -344,7 +344,7 @@ module GSDL
       TileMapManager.setup
 
       if @logical_width > 0 && @logical_height > 0
-        Game.draw.logical_presentation = {@logical_width, @logical_height, SDL3::LogicalPresentation::IntegerScale}
+        Game.draw.logical_presentation = {@logical_width, @logical_height, SDL3::LogicalPresentation::Letterbox}
       end
 
       load_assets
