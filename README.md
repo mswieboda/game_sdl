@@ -156,7 +156,7 @@ or use the https://github.com/mswieboda/template_game_sdl template repo to start
 
 To create a distribution-ready package for your game (on macOS, Windows, or Linux), you can use the built-in release helper.
 
-This will build your game in release mode, bundle all assets into an `assets.pack`, and package everything into a platform-specific format (e.g., a `.app` bundle on macOS or a `.zip` file on Windows).
+This will build your game in release mode, bundle all assets into an `assets.pack`, and package everything into a platform-specific format (e.g., a `.app` bundle on macOS or a `.exe` file on Windows).
 
 for consumers, add this by adding `release-package` (and aliases) to **your** `Makefile`: (you'll need to add the `release-package` command and the `release-package-[platform]` alias, or see `template_game_sdl`)
 
@@ -219,12 +219,14 @@ release-package-linux:
 	@$(MAKE) release-package TARGET=linux
 ```
 
+Or if using the `template_game_sdl` git template, they should already be included in your `Makefile`.
+
 ### Releases and Dynamic Libraries
 
 The release helper bundles the game binary, the `assets.pack`, and necessary dynamic libraries:
 - **macOS:** Bundles `.dylib` files into `Contents/Frameworks/` and updates the binary's `@rpath`.
 - **Windows:** Bundles all `.dll` files from the build directory into the same folder as the `.exe`.
-- **Linux:** Currently requires system-wide libraries or manual bundling in the `.tar.gz`.
+- **Linux:** Bundles major dependencies, as `.so` files, but not all common shared libraries, as is typical in Linux, into in the `.tar.gz`.
 
 ## Documentation
 
@@ -240,8 +242,7 @@ or in your game:
 crystal docs lib/sdl3/src/sdl3.cr lib/game_sdl/src/game_sdl.cr src/your_game_entry_point.cr
 ```
 
-Unfortunately the `delegate` methods docs
- will not expand to full method signatures, so you'll need to infer wrapped classes like GSDL::Point that wraps SDL3::FPoint to see those method signatures. Eventually I plan to either document each delegate so the parameters and return types are clear, or fully wrap the methods themselves so it is even more clear.
+Unfortunately the `delegate` methods docs will not expand to full method signatures, so you'll need to infer wrapped classes like `GSDL::Point` that wraps `SDL3::FPoint` to see those method signatures. Eventually I plan to either document each delegate so the parameters and return types are clear, or fully wrap the methods themselves so it is even more clear.
 
 ## Contributing
 
