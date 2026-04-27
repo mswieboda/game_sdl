@@ -15,7 +15,7 @@ module GSDL
 
     def initialize(@sample_limit = 120)
       # Pre-initialize common metrics in GSDL::Data
-      ["update", "draw", "collision", "query"].each do |name|
+      ["update", "draw", "collision", "query", "commands", "flushes"].each do |name|
         GSDL::Data.set("perf_#{name}", 0.0)
       end
     end
@@ -68,7 +68,8 @@ module GSDL
 
       @session_totals.each do |name, total|
         avg = total / @total_frames
-        if name == "query"
+        case name
+        when "query", "commands", "flushes"
           puts "#{name.capitalize}: Total=#{total.to_i}, Avg/Frame=#{avg.round(2)}"
         else
           puts "#{name.capitalize}: Total=#{total.round(2)}ms, Avg/Frame=#{avg.round(4)}ms"

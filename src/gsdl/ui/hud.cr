@@ -334,7 +334,7 @@ module GSDL
       @offset_x = 20,
       @offset_y = 20,
       color = ColorScheme.get(:ui_text),
-      scale = 0.5_f32,
+      scale = 1_f32,
       align = Font::Align::Left
     )
       @hud_text = HUDText.new(
@@ -377,6 +377,17 @@ module GSDL
         "Cmds: #{GSDL::Game.draw.command_count}",
         "Flushes: #{GSDL::Game.draw.flush_count}"
       ]
+
+      # Add rolling averages if performance monitoring is enabled
+      if GSDL::Game.instance.performance_monitoring_enabled
+        if avg_cmds = GSDL::Performance.instance.metrics["commands"]?
+          metrics << "Avg Cmds: #{avg_cmds.round(1)}"
+        end
+        if avg_flushes = GSDL::Performance.instance.metrics["flushes"]?
+          metrics << "Avg Flushes: #{avg_flushes.round(1)}"
+        end
+      end
+
       {
         "update" => "Update",
         "draw" => "Draw",

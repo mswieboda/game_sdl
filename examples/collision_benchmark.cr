@@ -7,7 +7,6 @@ module BenchmarkEx
   class Game < GSDL::Game
     def initialize
       super(title: "Collision Benchmark")
-      self.target_fps = 60
     end
 
     def init
@@ -116,8 +115,6 @@ module BenchmarkEx
 
     def initialize
       super(:benchmark)
-
-      GSDL::Game.instance.performance_monitoring_enabled = true
 
       GSDL::Input.set(:move_left) { GSDL::Keys.pressed?([GSDL::Keys::A, GSDL::Keys::Left]) }
       GSDL::Input.set(:move_right) { GSDL::Keys.pressed?([GSDL::Keys::D, GSDL::Keys::Right]) }

@@ -636,6 +636,10 @@ module GSDL
 
       @r.scale = {1_f32, 1_f32}
       @r.present
+
+      # Record metrics for performance monitoring
+      Performance.instance.increment("commands", @last_command_count)
+      Performance.instance.increment("flushes", @last_flush_count)
     end
 
     private def can_batch_rect?(next_cmd : DrawCommand, current_cmd : DrawFRectCommand, active_color : Color?, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool

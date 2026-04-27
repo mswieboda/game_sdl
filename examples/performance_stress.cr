@@ -120,6 +120,8 @@ module StressEx
         return
       end
 
+      super(dt)
+
       # Automatic camera movement (Circular pattern)
       t = @timer.percent
       camera.x = (Math.sin(t * Math::PI * 2) * (WORLD_SIZE - WIDTH) / 2 + (WORLD_SIZE - WIDTH) / 2).to_f32
@@ -136,9 +138,8 @@ module StressEx
         color: GSDL::Color::Red
       )
 
-      @entities.each(&.draw(draw))
-
-      # HUD is drawn automatically by super(draw) if we call it,
+      # entities are drawn automatically by super(draw)
+      # HUD is drawn automatically by super(draw)
       super(draw)
     end
   end
