@@ -4,6 +4,7 @@ module GSDL
 
     @draw : Draw
     @textures : Hash(String, Texture)
+    @atlases = [] of Texture
     @mutex = Mutex.new
 
     private def initialize(@draw : Draw)
@@ -14,6 +15,107 @@ module GSDL
     # This should be called once at the start of the application.
     def self.setup(draw : Draw)
       @@instance = new(draw)
+    end
+
+    def self.finalize_atlas
+      instance.finalize_atlas
+    end
+
+    def finalize_atlas
+      @mutex.synchronize do
+        return if @textures.empty?
+
+        # Gather textures that aren't already part of an atlas
+        to_pack = @textures.values.select { |t| t.atlas_handle.nil? }.sort_by { |t| -t.height }
+        return if to_pack.empty?
+
+        max_size = @draw.to_sdl.properties.get_number(LibSDL3::SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER).to_i
+        padding = 2
+
+        current_atlas_w = 512
+        current_atlas_h = 512
+        
+        # Determine initial POT size that can fit the largest item
+        while current_atlas_w < to_pack.first.width + padding * 2 || current_atlas_h < to_pack.first.height + padding * 2
+          if current_atlas_w <= current_atlas_h
+            current_atlas_w *= 2
+          else
+            current_atlas_h *= 2
+          end
+        end
+
+        pages = [] of Array(Tuple(Texture, Int32, Int32))
+        
+        loop do
+          current_page = [] of Tuple(Texture, Int32, Int32)
+          remaining = [] of Texture
+          
+          shelf_x = padding
+          shelf_y = padding
+          shelf_h = 0
+
+          to_pack.each do |tex|
+            tw = tex.width.to_i + padding * 2
+            th = tex.height.to_i + padding * 2
+
+            if shelf_x + tw > current_atlas_w
+              shelf_x = padding
+              shelf_y += shelf_h
+              shelf_h = 0
+            end
+
+            if shelf_y + th > current_atlas_h
+              # Won't fit in current atlas size
+              remaining << tex
+              next
+            end
+
+            current_page << {tex, shelf_x, shelf_y}
+            shelf_x += tw
+            shelf_h = Math.max(shelf_h, th)
+          end
+
+          if remaining.empty?
+            pages << current_page
+            break
+          elsif pages.empty? && (current_atlas_w < max_size || current_atlas_h < max_size)
+            # Try growing the atlas if we haven't committed any pages yet
+            if current_atlas_w <= current_atlas_h
+              current_atlas_w *= 2
+            else
+              current_atlas_h *= 2
+            end
+            next
+          else
+            # Commit current page and try to pack remaining into new pages
+            pages << current_page
+            to_pack = remaining
+            # Reset dimensions for next pages (could optimize to keep large, but start small)
+            # Actually better to keep the size we found for subsequent pages
+          end
+        end
+
+        # Render atlases
+        pages.each do |page|
+          atlas_tex = Texture.new(current_atlas_w, current_atlas_h, access: TextureAccess::Target)
+          @draw.with_target(atlas_tex) do
+            @draw.color = Color::Transparent
+            @draw.clear
+            
+            page.each do |(tex, x, y)|
+              # Draw sub-texture into atlas
+              # We use draw_immediately to avoid recursive push_cmd issues
+              @draw.texture(tex, x: x.to_f32, y: y.to_f32, draw_immediately: true)
+              
+              # Set atlas metadata
+              tex.atlas_handle = atlas_tex.to_sdl
+              tex.atlas_rect = FRect.new(x: x.to_f32, y: y.to_f32, w: tex.width, h: tex.height)
+            end
+          end
+          
+          @atlases << atlas_tex
+        end
+      end
     end
 
     # Retrieves the singleton instance of TextureManager.
@@ -138,6 +240,11 @@ module GSDL
           texture.destroy
         end
         @textures.clear
+
+        @atlases.each do |atlas|
+          atlas.destroy
+        end
+        @atlases.clear
       end
     end
   end

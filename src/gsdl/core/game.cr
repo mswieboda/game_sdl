@@ -348,8 +348,10 @@ module GSDL
       end
 
       load_assets
+      TextureManager.finalize_atlas
 
       {% if flag?(:release) %}
+
         AssetManager.close_pack
       {% end %}
     end

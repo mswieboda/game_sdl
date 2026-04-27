@@ -5,6 +5,9 @@ module GSDL
   class Texture
     @internal : SDL3::Texture
 
+    property atlas_rect : FRect? = nil
+    property atlas_handle : SDL3::Texture? = nil
+
     def self.from_surface(surface : Surface) : Texture
       texture = SDL3::Texture.from_surface(
         renderer: Game.draw.to_sdl,

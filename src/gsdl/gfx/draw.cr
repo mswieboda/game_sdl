@@ -31,6 +31,8 @@ module GSDL
 
     class DrawTextureCommand < DrawCommand
       property texture : SDL3::Texture
+      property atlas_rect : FRect?
+      property atlas_handle : SDL3::Texture?
       property source_rect : SDL3::FRect?
       property dest_rect : SDL3::FRect
       property angle : Float64
@@ -47,6 +49,8 @@ module GSDL
       def initialize(
         z_index : Int32,
         @texture : SDL3::Texture,
+        @atlas_rect : FRect?,
+        @atlas_handle : SDL3::Texture?,
         @source_rect : SDL3::FRect?,
         @dest_rect : SDL3::FRect,
         scale_x : Float32,
@@ -96,6 +100,8 @@ module GSDL
       property vertices : Array(SDL3::Vertex)
       property indices : Array(Int32)
       property texture : SDL3::Texture? = nil
+      property atlas_rect : FRect? = nil
+      property atlas_handle : SDL3::Texture? = nil
 
       def initialize(
         z_index : Int32,
@@ -104,6 +110,8 @@ module GSDL
         scale_x : Float32,
         scale_y : Float32,
         @texture : SDL3::Texture? = nil,
+        @atlas_rect : FRect? = nil,
+        @atlas_handle : SDL3::Texture? = nil,
         clip_rect : SDL3::Rect? = nil
       )
         super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
@@ -363,7 +371,7 @@ module GSDL
     end
 
     private def add_texture_to_batch(command : DrawTextureCommand)
-      texture = command.texture
+      texture = command.atlas_handle || command.texture
       tw, th = 0_f32, 0_f32
       LibSDL3.get_texture_size(texture, pointerof(tw), pointerof(th))
 
@@ -410,7 +418,21 @@ module GSDL
       # UVs
       u1, v1 = 0_f32, 0_f32
       u2, v2 = 1_f32, 1_f32
-      if src = command.source_rect
+
+      if a_rect = command.atlas_rect
+        base_x, base_y = a_rect.x, a_rect.y
+        if src = command.source_rect
+          u1 = (base_x + src.x) / tw
+          v1 = (base_y + src.y) / th
+          u2 = (base_x + src.x + src.w) / tw
+          v2 = (base_y + src.y + src.h) / th
+        else
+          u1 = base_x / tw
+          v1 = base_y / th
+          u2 = (base_x + a_rect.w) / tw
+          v2 = (base_y + a_rect.h) / th
+        end
+      elsif src = command.source_rect
         u1 = src.x / tw
         v1 = src.y / th
         u2 = (src.x + src.w) / tw
@@ -465,6 +487,38 @@ module GSDL
       end
     end
 
+    private def add_geometry_to_batch(command : DrawGeometryCommand)
+      texture = command.atlas_handle || command.texture
+      return unless texture
+      
+      tw, th = 0_f32, 0_f32
+      LibSDL3.get_texture_size(texture, pointerof(tw), pointerof(th))
+
+      base_idx = @vertex_buffer.size
+      
+      if a_rect = command.atlas_rect
+        # Offset UVs in vertices to match atlas position
+        command.vertices.each do |v|
+          # Original UVs were likely 0..1 relative to original texture
+          # We need to transform them to be relative to the atlas
+          
+          # Note: v.texture_fpoint.x is typically 0..1
+          # We multiply by original size then add atlas offset, then divide by atlas size
+          new_u = (a_rect.x + v.texture_fpoint.x * a_rect.w) / tw
+          new_v = (a_rect.y + v.texture_fpoint.y * a_rect.h) / th
+          
+          @vertex_buffer << SDL3::Vertex.new(v.fpoint.x, v.fpoint.y, v.fcolor, LibSDL3::FPoint.new(x: new_u, y: new_v))
+        end
+      else
+        @vertex_buffer.concat(command.vertices)
+      end
+
+      # Add indices with offset
+      command.indices.each do |idx|
+        @index_buffer << base_idx + idx
+      end
+    end
+
     def draw
       @last_command_count = @current_command_count
       @current_command_count = 0
@@ -508,14 +562,15 @@ module GSDL
             active_clip_rect = cmd.clip_rect
 
             # Check if this command can continue the current batch
+            current_tex_handle = command.atlas_handle || command.texture
             can_batch = @active_batch_texture &&
-                        @active_batch_texture.not_nil!.to_unsafe == cmd.texture.to_unsafe &&
-                        @active_batch_scale_x == cmd.scale_x &&
-                        @active_batch_scale_y == cmd.scale_y &&
-                        @active_batch_clip_rect == cmd.clip_rect
+                        @active_batch_texture.not_nil!.to_unsafe == current_tex_handle.to_unsafe &&
+                        @active_batch_scale_x == command.scale_x &&
+                        @active_batch_scale_y == command.scale_y &&
+                        @active_batch_clip_rect == command.clip_rect
 
             if can_batch
-              add_texture_to_batch(cmd)
+              add_texture_to_batch(command)
               cursor += 1
               next
             else
@@ -523,11 +578,11 @@ module GSDL
               flush_batch if @active_batch_texture
 
               # Start new batch
-              @active_batch_texture = cmd.texture
-              @active_batch_scale_x = cmd.scale_x
-              @active_batch_scale_y = cmd.scale_y
-              @active_batch_clip_rect = cmd.clip_rect
-              add_texture_to_batch(cmd)
+              @active_batch_texture = current_tex_handle
+              @active_batch_scale_x = command.scale_x
+              @active_batch_scale_y = command.scale_y
+              @active_batch_clip_rect = command.clip_rect
+              add_texture_to_batch(command)
               cursor += 1
               next
             end
@@ -589,18 +644,43 @@ module GSDL
             )
 
           when DrawGeometryCommand
-            active_color = nil
-            active_blend_mode = nil
+            # Check if this command can continue the current batch
+            current_tex_handle = command.atlas_handle || command.texture
+            
+            if current_tex_handle
+              can_batch = @active_batch_texture &&
+                          @active_batch_texture.not_nil!.to_unsafe == current_tex_handle.to_unsafe &&
+                          @active_batch_scale_x == command.scale_x &&
+                          @active_batch_scale_y == command.scale_y &&
+                          @active_batch_clip_rect == command.clip_rect
 
-            @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-            if texture = command.texture
-              texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-              texture.tint = SDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
-              @r.render_geometry(texture: texture, vertices: command.vertices, indices: command.indices)
+              if can_batch
+                add_geometry_to_batch(command)
+                cursor += 1
+                next
+              else
+                # Flush previous batch if it exists
+                flush_batch if @active_batch_texture
+
+                # Start new batch
+                @active_batch_texture = current_tex_handle
+                @active_batch_scale_x = command.scale_x
+                @active_batch_scale_y = command.scale_y
+                @active_batch_clip_rect = command.clip_rect
+                add_geometry_to_batch(command)
+                cursor += 1
+                next
+              end
             else
+              # No texture, flush batch and draw geometry normally (unbatched for now)
+              flush_batch if @active_batch_texture
+              
+              active_color = nil
+              active_blend_mode = nil
+              @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
               @r.render_geometry(vertices: command.vertices, indices: command.indices)
+              @current_flush_count += 1
             end
-            @current_flush_count += 1
 
           when DrawFRectsCommand
             slice = Slice.new(command.rects.to_unsafe, command.rects.size)
@@ -736,6 +816,8 @@ module GSDL
         vertices: vertices.map(&.to_sdl),
         indices: indices,
         texture: texture.try(&.to_sdl),
+        atlas_rect: texture.try(&.atlas_rect),
+        atlas_handle: texture.try(&.atlas_handle),
         scale_x: @current_scale_x,
         scale_y: @current_scale_y,
         clip_rect: @current_clip_rect
@@ -987,6 +1069,8 @@ module GSDL
         push_cmd(DrawTextureCommand.new(
           z_index: z_index,
           texture: texture.to_sdl,
+          atlas_rect: texture.atlas_rect,
+          atlas_handle: texture.atlas_handle,
           source_rect: source_rect.try(&.to_sdl),
           dest_rect: actual_dest_rect.to_sdl,
           scale_x: @current_scale_x,
