@@ -221,6 +221,8 @@ module GSDL
     @sorted_z_indices : Array(Int32)
     @current_command_count : Int32 = 0
     @last_command_count : Int32 = 0
+    @current_flush_count : Int32 = 0
+    @last_flush_count : Int32 = 0
 
     # Batching buffers
     @vertex_buffer = [] of SDL3::Vertex
@@ -232,6 +234,10 @@ module GSDL
 
     def command_count : Int32
       @current_command_count > 0 ? @current_command_count : @last_command_count
+    end
+
+    def flush_count : Int32
+      @current_flush_count > 0 ? @current_flush_count : @last_flush_count
     end
 
     property culling_enabled : Bool = true
@@ -348,6 +354,7 @@ module GSDL
 
       if !@vertex_buffer.empty?
         @r.render_geometry(texture: texture, vertices: @vertex_buffer, indices: @index_buffer)
+        @current_flush_count += 1
       end
 
       @vertex_buffer.clear
@@ -460,8 +467,9 @@ module GSDL
 
     def draw
       @last_command_count = @current_command_count
-      # puts "Command Count: #{@last_command_count}" # Uncomment to see in logs
       @current_command_count = 0
+      @last_flush_count = @current_flush_count
+      @current_flush_count = 0
 
       @active_batch_texture = nil
       @active_batch_scale_x = 0.0_f32
@@ -559,6 +567,7 @@ module GSDL
           case command
           when DrawFRectCommand
             command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
+            @current_flush_count += 1
 
           when DrawTextureCommand
             # This case should theoretically be unreachable due to batching logic above,
@@ -591,24 +600,30 @@ module GSDL
             else
               @r.render_geometry(vertices: command.vertices, indices: command.indices)
             end
+            @current_flush_count += 1
 
           when DrawFRectsCommand
             slice = Slice.new(command.rects.to_unsafe, command.rects.size)
             command.outline? ? @r.draw_rects(slice) : @r.fill_rects(slice)
+            @current_flush_count += 1
 
           when DrawPointCommand
             @r.draw_point(x: command.x, y: command.y)
+            @current_flush_count += 1
 
           when DrawPointsCommand
             slice = Slice.new(command.points.to_unsafe, command.points.size)
             @r.draw_points(slice)
+            @current_flush_count += 1
 
           when DrawLineCommand
             @r.draw_line(x1: command.x1, y1: command.y1, x2: command.x2, y2: command.y2)
+            @current_flush_count += 1
 
           when DrawLinesCommand
             slice = Slice.new(command.points.to_unsafe, command.points.size)
             @r.draw_lines(slice)
+            @current_flush_count += 1
           end
 
           cursor += 1
@@ -660,6 +675,7 @@ module GSDL
           flip: flip
         )
       end
+      @current_flush_count += 1
     end
 
     private def _draw_texture_rotated(

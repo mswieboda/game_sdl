@@ -12,6 +12,7 @@ module BenchmarkEx
 
     def init
       GSDL::Events.esc_exits = true
+      self.target_fps = 60
       # Enable performance monitoring
       self.performance_monitoring_enabled = true
       GSDL::Game.push(BenchmarkScene.new)

@@ -14,6 +14,8 @@ module StressEx
     def init
       GSDL::Events.esc_exits = true
       self.target_fps = 60
+      # Enable performance monitoring
+      self.performance_monitoring_enabled = true
       GSDL::Game.push(StressScene.new)
     end
 
@@ -59,8 +61,6 @@ module StressEx
 
   class StressScene < GSDL::Scene
     @entities = [] of GSDL::Entity
-    @fps_text : GSDL::HUDText
-    @count_text : GSDL::HUDText
     @timer : GSDL::Timer
 
     def initialize
@@ -102,11 +102,16 @@ module StressEx
       camera.speed = 1000 # High speed for flying around
       camera.type = GSDL::Camera::Type::Manual
 
-      @fps_text = GSDL::HUDText.new(text: "FPS: 0", offset_x: 10, offset_y: 10, color: GSDL::Color::Lime)
-      @fps_text.draw_relative_to_camera = false
-
-      @count_text = GSDL::HUDText.new(text: "Entities: #{ENTITY_COUNT}", offset_x: 10, offset_y: 40, color: GSDL::Color::White)
-      @count_text.draw_relative_to_camera = false
+      # Add Performance HUD
+      h = GSDL::HUD.new
+      h << GSDL::HUDPerformance.new(
+        anchor: GSDL::Anchor::TopLeft,
+        offset_x: 20,
+        offset_y: 20,
+        color: GSDL::Color::Yellow,
+        align: GSDL::Font::Align::Left
+      )
+      self.hud = h
     end
 
     def update(dt : Float32)
@@ -122,9 +127,6 @@ module StressEx
 
       @entities.each(&.update(dt))
       camera.update(dt)
-
-      @fps_text.text = "FPS: #{GSDL::Game.fps}"
-      @count_text.text = "Entities: #{ENTITY_COUNT} | Cmds: #{GSDL::Game.draw.command_count}"
     end
 
     def draw(draw : GSDL::Draw)
@@ -136,8 +138,8 @@ module StressEx
 
       @entities.each(&.draw(draw))
 
-      @fps_text.draw(draw)
-      @count_text.draw(draw)
+      # HUD is drawn automatically by super(draw) if we call it,
+      super(draw)
     end
   end
 

@@ -372,7 +372,11 @@ module GSDL
       return if @update_timer < 0.1_f32
       @update_timer = 0_f32
 
-      metrics = ["FPS: #{GSDL::Game.fps}"]
+      metrics = [
+        "FPS: #{GSDL::Game.fps}",
+        "Cmds: #{GSDL::Game.draw.command_count}",
+        "Flushes: #{GSDL::Game.draw.flush_count}"
+      ]
       {
         "update" => "Update",
         "draw" => "Draw",
