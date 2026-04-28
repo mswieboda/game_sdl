@@ -3,6 +3,7 @@ module GSDL
     @@instance : AudioManager? = nil
 
     @mixer : LibSDL3Mixer::Mixer*
+    getter mixer
     @audio_assets : Hash(String, GSDL::Audio)
     @mutex = Mutex.new
 
@@ -36,7 +37,7 @@ module GSDL
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,
     # prepending GSDL::AssetManager.asset_path.
-    def self.load(key : String, path_key : String) : GSDL::Audio
+    def self.load(key : String, path_key : String, category : String? = nil) : GSDL::Audio
       # see TextureManager.load comments for more details on path_key
       # which is a key based on the path like 'sfx/race_car.wav'
       # and will either load from the asset.pack file in release mode
@@ -49,19 +50,19 @@ module GSDL
         # The `with_io_stream` method ensures the underlying data stays alive.
         # with audio, the io_stream needs to stay open, hence `close_io: false`
         AssetManager.with_io_stream(path_key, close_io: false) do |io_stream|
-          load_from_memory(key, io_stream)
+          load_from_memory(key, io_stream, category)
         end
       {% else %}
         # In debug mode, load from loose files
         full_path = GSDL::AssetManager.asset_path + path_key
-        instance.load(key, full_path) # Delegate to the internal instance method
+        instance.load(key, full_path, category) # Delegate to the internal instance method
       {% end %}
     end
 
     # Loads audio from raw byte data and associates it with a key
     # This method is primarily intended to be called by load if in release mode
-    def self.load_from_memory(key : String, io : SDL3::IOStream) : GSDL::Audio
-      instance.load_from_memory(key, io)
+    def self.load_from_memory(key : String, io : SDL3::IOStream, category : String? = nil) : GSDL::Audio
+      instance.load_from_memory(key, io, category)
     end
 
     # Retrieves a loaded audio by its key.
@@ -81,7 +82,7 @@ module GSDL
 
     # --- Instance methods (called by class methods via the singleton instance) ---
 
-    def load(key : String, path : String) : GSDL::Audio
+    def load(key : String, path : String, category : String? = nil) : GSDL::Audio
       @mutex.synchronize do
         if @audio_assets.has_key?(key)
           return @audio_assets[key]
@@ -105,12 +106,13 @@ module GSDL
         end
 
         audio_instance = GSDL::Audio.new(path, audio_lib, track_lib)
+        audio_instance.category = category if category
         @audio_assets[key] = audio_instance
         audio_instance
       end
     end
 
-    def load_from_memory(key : String, io : SDL3::IOStream) : GSDL::Audio
+    def load_from_memory(key : String, io : SDL3::IOStream, category : String? = nil) : GSDL::Audio
       @mutex.synchronize do
         if @audio_assets.has_key?(key)
           return @audio_assets[key]
@@ -134,6 +136,7 @@ module GSDL
         end
 
         audio_instance = GSDL::Audio.new(key, audio_lib, track_lib) # Using key as path for now
+        audio_instance.category = category if category
         @audio_assets[key] = audio_instance
         audio_instance
       end

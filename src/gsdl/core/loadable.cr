@@ -21,8 +21,13 @@ module GSDL
 
       # audio
       audio_load_data = load_audio
-      audio_load_data.each do |key, path_key|
-        AudioManager.load(key: key, path_key: path_key)
+      audio_load_data.each do |audio_tuple|
+        case audio_tuple
+        when Tuple(String, String)
+          AudioManager.load(key: audio_tuple[0], path_key: audio_tuple[1])
+        when Tuple(String, String, String)
+          AudioManager.load(key: audio_tuple[0], path_key: audio_tuple[1], category: audio_tuple[2])
+        end
       end
 
       # tile maps
@@ -49,8 +54,14 @@ module GSDL
         tasks << Loader::AssetTask.new(:Texture, key, path_key)
       end
 
-      load_audio.each do |key, path_key|
-        tasks << Loader::AssetTask.new(:Audio, key, path_key)
+      load_audio.each do |audio_tuple|
+        case audio_tuple
+        when Tuple(String, String)
+          tasks << Loader::AssetTask.new(:Audio, audio_tuple[0], audio_tuple[1])
+        when Tuple(String, String, String)
+          # Note: Loader::AssetTask would need an update for categories in async mode
+          tasks << Loader::AssetTask.new(:Audio, audio_tuple[0], audio_tuple[1])
+        end
       end
 
       load_tile_maps.each do |key, path_key|
@@ -76,8 +87,8 @@ module GSDL
       [] of Tuple(String, String)
     end
 
-    def load_audio : Array(Tuple(String, String))
-      [] of Tuple(String, String)
+    def load_audio : Array(Tuple(String, String) | Tuple(String, String, String))
+      [] of Tuple(String, String) | Tuple(String, String, String)
     end
 
     def load_tile_maps : Array(Tuple(String, String))
