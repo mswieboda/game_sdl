@@ -45,6 +45,19 @@ module GSDL
       entity
     end
 
+    def save_snapshot : Hash(String, JSON::Any)
+      entities_state = {} of String => JSON::Any
+      @entities.each_with_index do |entity, i|
+        # Use object ID or a custom name if available as key
+        key = "entity_#{i}"
+        entities_state[key] = JSON.parse(entity.save_state.to_json)
+      end
+      {
+        "room_id" => JSON::Any.new(name.to_s),
+        "entities" => JSON::Any.new(entities_state)
+      }
+    end
+
     def remove_child(entity : Entity)
       @entities.delete(entity)
       entity.parent = nil

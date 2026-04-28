@@ -1,6 +1,21 @@
 module GSDL
   abstract class Entity
     include Tweenable
+    include Saveable
+
+    def save_state : Hash(String, JSON::Any)
+      {
+        "x" => JSON::Any.new(x.to_f64),
+        "y" => JSON::Any.new(y.to_f64),
+        "visible" => JSON::Any.new(visible?)
+      }
+    end
+
+    def load_state(state : Hash(String, JSON::Any))
+      self.x = state["x"].as_f.to_f32
+      self.y = state["y"].as_f.to_f32
+      self.visible = state["visible"].as_bool
+    end
 
     property x : Num = 0
     property y : Num = 0
