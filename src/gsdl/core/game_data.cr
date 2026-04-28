@@ -1,10 +1,13 @@
 require "json"
+require "compress/zlib"
+require "digest/crc32"
 
 module GSDL
   # NOTE: can be accessed from GSDL::Data singleton
   # defined at the bottom of this file
   class GameData
     @data : Hash(String, JSON::Any)
+    private XOR_KEY = 0xAAu8
 
     def initialize
       @data = {} of String => JSON::Any
@@ -80,14 +83,67 @@ module GSDL
     end
 
     # Save the entire state to a JSON file
-    def save(path : String)
+    def save_json(path : String)
       File.write(path, @data.to_json)
     end
 
-    # Load state from a JSON file
+    # Save the entire state to a binary file
+    def save_binary(path : String)
+      json_data = @data.to_json
+      compressed = IO::Memory.new
+      Compress::Zlib::Writer.open(compressed) { |w| w.print json_data }
+      payload = compressed.to_slice
+      
+      # XOR Obfuscation
+      payload.map! { |b| b ^ XOR_KEY }
+      
+      checksum = Digest::CRC32.checksum(payload)
+      
+      tmp_path = "#{path}.tmp"
+      File.open(tmp_path, "wb") do |f|
+        f.write "GSDL".to_slice    # Magic Number
+        f.write_bytes 1u32         # Version
+        f.write_bytes checksum     # Checksum
+        f.write payload
+      end
+      File.rename(tmp_path, path)
+    end
+
+    # Default save uses binary format
+    def save(path : String)
+      save_binary(path)
+    end
+
+    # Load state from a file, auto-detecting binary or JSON format
     def load(path : String)
-      if File.exists?(path)
-        @data = Hash(String, JSON::Any).from_json(File.read(path))
+      return unless File.exists?(path)
+
+      File.open(path, "rb") do |f|
+        magic = f.read_string(4)
+        if magic == "GSDL"
+          version = f.read_bytes(UInt32)
+          checksum = f.read_bytes(UInt32)
+          payload = f.gets_to_end.to_slice
+          
+          # Verify Checksum
+          if Digest::CRC32.checksum(payload) != checksum
+            puts "Error: Binary save file checksum mismatch for #{path}"
+            return
+          end
+
+          # Undo XOR
+          writable_payload = payload.dup
+          writable_payload.map! { |b| b ^ XOR_KEY }
+          
+          # Decompress
+          json_data = IO::Memory.new(writable_payload)
+          decompressed = Compress::Zlib::Reader.open(json_data) { |r| r.gets_to_end }
+          @data = Hash(String, JSON::Any).from_json(decompressed)
+        else
+          # Fallback to JSON
+          f.rewind
+          @data = Hash(String, JSON::Any).from_json(f.gets_to_end)
+        end
       end
     end
 
