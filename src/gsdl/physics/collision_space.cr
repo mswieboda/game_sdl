@@ -18,7 +18,7 @@ module GSDL
     end
 
     # Refresh the spatial grid if it hasn't been updated this frame
-    private def refresh_grid
+    def refresh_grid
       current_frame = Internal.instance.fps_counter.frame_count
       return if @last_refresh_frame == current_frame
 

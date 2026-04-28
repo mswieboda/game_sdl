@@ -71,6 +71,9 @@ module GSDL
     end
 
     def update(dt : Float32)
+      if self.is_a?(SceneCollisions)
+        self.refresh_collision_space
+      end
       @hud.try &.update(dt)
       @entities.each &.update(dt)
     end
