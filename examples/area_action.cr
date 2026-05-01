@@ -93,7 +93,7 @@ module GameEx
       )
       text.text = "dir: #{direction}"
       text.x = x
-      text.y = y - draw_height / 2 - 4
+      text.y = y - render_height / 2 - 4
       text.draw(draw)
     end
 
@@ -103,8 +103,8 @@ module GameEx
       GSDL::FRect.new(
         x: -32,
         y: -32,
-        w: draw_width + 64,
-        h: draw_height + 64
+        w: render_width + 64,
+        h: render_height + 64
       )
     end
   end
@@ -139,7 +139,7 @@ module GameEx
       )
       text.text = "dir: #{direction}"
       text.x = x
-      text.y = y - draw_height / 2 - 4
+      text.y = y - render_height / 2 - 4
       text.draw(draw)
     end
   end

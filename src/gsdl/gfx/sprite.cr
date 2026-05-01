@@ -40,23 +40,11 @@ module GSDL
       return unless visible?
       @children.each &.draw(draw)
 
-      old_scale_x = draw.current_scale_x
-      old_scale_y = draw.current_scale_y
-
-      if draw_relative_to_camera?
-        draw.scale = Game.camera.zoom
-      else
-        draw.scale = 1.0_f32
-      end
-
-      camera_x = draw_relative_to_camera? ? Game.camera.x : 0_f32
-      camera_y = draw_relative_to_camera? ? Game.camera.y : 0_f32
-
       dest_rect = FRect.new(
-        x: draw_x - camera_x,
-        y: draw_y - camera_y,
-        w: draw_width,
-        h: draw_height
+        x: render_x,
+        y: render_y,
+        w: render_width,
+        h: render_height
       )
 
       flip_val = 0
@@ -97,8 +85,6 @@ module GSDL
           sort_y: ground_y.to_f32
         )
       end
-
-      draw.scale = {old_scale_x, old_scale_y}
     end
   end
 end

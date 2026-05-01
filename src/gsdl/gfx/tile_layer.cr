@@ -17,8 +17,12 @@ module GSDL
       return unless @visible
       return if @opacity <= 0.0_f32
 
-      camera_x = Game.camera.x.to_f32
-      camera_y = Game.camera.y.to_f32
+      # We must access Game.camera manually here because TileMap wraps the layer drawing in with_camera(nil)
+      # to handle custom parallax math.
+      cam = Game.camera
+      camera_x = cam.x.to_f32
+      camera_y = cam.y.to_f32
+      zoom = cam.zoom
 
       tint = Color.new(255, 255, 255, (@opacity * 255).to_u8)
 
@@ -32,12 +36,12 @@ module GSDL
         screen_h = GSDL::Game.height.to_f32
 
         # Viewport in world space relative to this layer
-        view_x = (Game.camera.x * @parallax_x) - @offset_x
-        view_y = (Game.camera.y * @parallax_y) - @offset_y
+        view_x = (camera_x * @parallax_x) - @offset_x
+        view_y = (camera_y * @parallax_y) - @offset_y
 
         # Adjust viewport size based on zoom
-        view_w = screen_w / Game.camera.zoom
-        view_h = screen_h / Game.camera.zoom
+        view_w = screen_w / zoom
+        view_h = screen_h / zoom
 
         min_x = (view_x / tile_width).floor.to_i
         max_x = ((view_x + view_w) / tile_width).ceil.to_i

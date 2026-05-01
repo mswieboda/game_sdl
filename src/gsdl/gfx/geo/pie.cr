@@ -54,13 +54,13 @@ module GSDL
 
       if radius > 0
         # TODO: calculate this, like resolution in Oval
-        segments = [12, (Math.sqrt(draw_radius_x) * 4).to_i].max
+        segments = [12, (Math.sqrt(render_radius_x) * 4).to_i].max
         angle_step = (end_angle - start_angle) / segments
 
         points = [] of Point
 
         # Center vertex (rotated)
-        cp = rotate_point(center_x, center_y)
+        cp = rotate_point(render_center_x, render_center_y)
         @fill_vertices << Vertex.new(cp, color)
         center_point = Point.new(cp)
         points << center_point
@@ -69,8 +69,8 @@ module GSDL
         # Vertices along the arc (rotated)
         (segments + 1).times do |i|
           angle = start_angle + i * angle_step
-          arc_x = center_x + (draw_radius_x / 2) * Math.cos(angle)
-          arc_y = center_y + (draw_radius_y / 2) * Math.sin(angle)
+          arc_x = render_center_x + (render_radius_x / 2) * Math.cos(angle)
+          arc_y = render_center_y + (render_radius_y / 2) * Math.sin(angle)
 
           rv = rotate_point(arc_x, arc_y)
           @fill_vertices << Vertex.new(rv, color)

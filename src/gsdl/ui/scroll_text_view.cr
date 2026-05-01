@@ -93,7 +93,7 @@ module GSDL
       @text.update(dt)
 
       # Handle scrolling
-      if @mouse_scroll_enabled && Mouse.in?(draw_x, draw_y, draw_width, draw_height)
+      if @mouse_scroll_enabled && Mouse.in?(render_x, render_y, render_width, render_height)
         # Mouse wheel works if enabled and over the view
         multiplier = @mouse_scroll_reversed ? -1.0_f32 : 1.0_f32
         @scroll_offset -= Mouse.wheel_y * scroll_speed * multiplier
@@ -116,11 +116,11 @@ module GSDL
       old_clip = draw.clip_rect
 
       # Set clipping to the viewport
-      draw.clip_rect = GSDL::Rect.new(draw_x.to_i, draw_y.to_i, draw_width.to_i, draw_height.to_i)
+      draw.clip_rect = GSDL::Rect.new(render_x.to_i, render_y.to_i, render_width.to_i, render_height.to_i)
 
       # Position text relative to viewport
-      @text.x = draw_x + padding
-      @text.y = draw_y + padding - @scroll_offset
+      @text.x = render_x + padding
+      @text.y = render_y + padding - @scroll_offset
       @text.draw(draw)
 
       draw.clip_rect = old_clip
@@ -138,12 +138,12 @@ module GSDL
 
       # Calculate thumb Y position
       scroll_ratio = @scroll_offset / (ch - height)
-      thumb_y = draw_y + scroll_ratio * (height - thumb_h)
+      thumb_y = render_y + scroll_ratio * (height - thumb_h)
 
       # Draw scrollbar on the right
       draw.rect_fill(
         rect: FRect.new(
-          x: draw_x + draw_width - scrollbar_width - scrollbar_padding,
+          x: render_x + render_width - scrollbar_width - scrollbar_padding,
           y: thumb_y,
           w: scrollbar_width.to_f32,
           h: thumb_h
@@ -155,9 +155,9 @@ module GSDL
 
     def origin_x : Float32; origin[0]; end
     def origin_y : Float32; origin[1]; end
-    def draw_width : Num; width; end
-    def draw_height : Num; height; end
-    def draw_x : Num; x - (draw_width * origin_x); end
-    def draw_y : Num; y - (draw_height * origin_y); end
+    def render_width : Num; width; end
+    def render_height : Num; height; end
+    def render_x : Num; x - (render_width * origin_x); end
+    def render_y : Num; y - (render_height * origin_y); end
   end
 end

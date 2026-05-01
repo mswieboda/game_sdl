@@ -30,10 +30,10 @@ module GameEx
       self.velocity_x = 200_f32
         end
 
-    def draw_x : GSDL::Num; x; end
-    def draw_y : GSDL::Num; y; end
-    def draw_width : GSDL::Num; radius * 2; end
-    def draw_height : GSDL::Num; radius * 2; end
+    def render_x : GSDL::Num; x; end
+    def render_y : GSDL::Num; y; end
+    def render_width : GSDL::Num; radius * 2; end
+    def render_height : GSDL::Num; radius * 2; end
 
     def collision_bounding_box : GSDL::FRect
       GSDL::FRect.new(x: -radius, y: -radius, w: radius * 2, h: radius * 2)
@@ -77,8 +77,8 @@ module GameEx
       self.velocity_x = -150_f32
     end
 
-    def draw_x : GSDL::Num; x; end
-    def draw_y : GSDL::Num; y; end
+    def render_x : GSDL::Num; x; end
+    def render_y : GSDL::Num; y; end
     def collision_bounding_box : GSDL::FRect
       @triangle.collision_bounding_box
     end
@@ -130,8 +130,8 @@ module GameEx
       self.velocity_x = 300_f32
     end
 
-    def draw_x : GSDL::Num; x; end
-    def draw_y : GSDL::Num; y; end
+    def render_x : GSDL::Num; x; end
+    def render_y : GSDL::Num; y; end
     def collision_bounding_box : GSDL::FRect
       @box.collision_bounding_box
     end
@@ -182,8 +182,8 @@ module GameEx
       self.use_gravity = true
     end
 
-    def draw_x : GSDL::Num; x; end
-    def draw_y : GSDL::Num; y; end
+    def render_x : GSDL::Num; x; end
+    def render_y : GSDL::Num; y; end
     def collision_bounding_box : GSDL::FRect
       @oval.collision_bounding_box
     end
@@ -219,8 +219,8 @@ module GameEx
     def initialize(@x, @y, @w, @h)
     end
 
-    def draw_x : GSDL::Num; x; end
-    def draw_y : GSDL::Num; y; end
+    def render_x : GSDL::Num; x; end
+    def render_y : GSDL::Num; y; end
     def collision_bounding_box : GSDL::FRect
       GSDL::FRect.new(x: 0, y: 0, w: w, h: h)
     end

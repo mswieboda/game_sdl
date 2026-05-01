@@ -44,23 +44,24 @@ module GSDL
     )
     end
 
-    def draw_width : Num
+    def render_width : Num
       width * scale_x
     end
 
-    def draw_height : Num
+    def render_height : Num
       height * scale_y
     end
 
-    def draw_x : Num
-      dx = x - (draw_width * origin_x)
-      draw_relative_to_camera? ? dx - Game.camera.x : dx
+    def render_x : Num
+      global_x - (render_width * origin_x)
     end
 
-    def draw_y : Num
-      dy = y - (draw_height * origin_y)
-      draw_relative_to_camera? ? dy - Game.camera.y : dy
+    def render_y : Num
+      global_y - (render_height * origin_y)
     end
+
+    def global_x; x; end
+    def global_y; y; end
 
     def origin_x : Float32
       origin[0]

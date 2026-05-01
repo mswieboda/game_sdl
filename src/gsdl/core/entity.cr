@@ -30,17 +30,17 @@ module GSDL
 
     getter tweens : Array(Tween) = [] of Tween
 
-    def scene_x : Num
+    def global_x : Num
       if (p = parent) && p.is_a?(Entity)
-        p.scene_x + x
+        p.global_x + x
       else
         x
       end
     end
 
-    def scene_y : Num
+    def global_y : Num
       if (p = parent) && p.is_a?(Entity)
-        p.scene_y + y
+        p.global_y + y
       else
         y
       end

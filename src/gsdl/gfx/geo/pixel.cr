@@ -28,10 +28,10 @@ module GSDL
       @changed = false
     end
 
-    def draw(draw : Draw)
+    def perform_draw(draw : Draw)
       # Rotation on a single pixel doesn't change its appearance,
       # but it will correctly pivot around its (x,y) if origin is used.
-      draw.point(draw_x, draw_y, color: color, z_index: z_index)
+      draw.point(render_x, render_y, color: color, z_index: z_index)
     end
   end
 end

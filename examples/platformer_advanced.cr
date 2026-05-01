@@ -90,8 +90,8 @@ module PlatformerAdvancedEx
         current_tint = GSDL::Color::Yellow
       end
 
-      draw_x_offset = 0_f32
-      draw_y_offset = 0_f32
+      render_x_offset = 0_f32
+      render_y_offset = 0_f32
 
       old_tint = self.tint
       self.tint = current_tint

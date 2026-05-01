@@ -225,10 +225,10 @@ module GSDL
 
       if tm = tile_map
         # Using a small margin or checking specific sides
-        if tm.solid_up?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h) ||
-           tm.solid_down?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h) ||
-           tm.solid_left?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h) ||
-           tm.solid_right?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+        if tm.solid_up?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h) ||
+           tm.solid_down?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h) ||
+           tm.solid_left?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h) ||
+           tm.solid_right?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
           # We don't have a Collidable object for the tile map here, just return self as a dummy
           return self.as(GSDL::Collidable)
         end

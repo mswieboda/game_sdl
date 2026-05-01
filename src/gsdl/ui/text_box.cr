@@ -179,6 +179,8 @@ module GSDL
 
     def x : Num; @x; end
     def y : Num; @y; end
+    def global_x : Num; @x; end
+    def global_y : Num; @y; end
     def z_index : Int32; @z_index; end
     def scale : Tuple(Num, Num); @scale; end
     def origin : Tuple(Float32, Float32); @origin; end
@@ -188,34 +190,32 @@ module GSDL
     def scale_x : Num; scale[0]; end
     def scale_y : Num; scale[1]; end
 
-    def draw_width : Num; width * scale_x; end
-    def draw_height : Num; height * scale_y; end
+    def render_width : Num; width * scale_x; end
+    def render_height : Num; height * scale_y; end
 
-    def draw_x : Num
-      dx = x - (draw_width * origin_x)
-      draw_relative_to_camera? ? dx - Game.camera.x : dx
+    def render_x : Num
+      global_x - (render_width * origin_x)
     end
 
-    def draw_y : Num
-      dy = y - (draw_height * origin_y)
-      draw_relative_to_camera? ? dy - Game.camera.y : dy
+    def render_y : Num
+      global_y - (render_height * origin_y)
     end
 
     # Helpers for screen-space interaction (Mouse/Input)
     def screen_x : Num
-      draw_relative_to_camera? ? draw_x * Game.camera.zoom : draw_x
+      draw_relative_to_camera? ? (render_x - Game.camera.x) * Game.camera.zoom : render_x
     end
 
     def screen_y : Num
-      draw_relative_to_camera? ? draw_y * Game.camera.zoom : draw_y
+      draw_relative_to_camera? ? (render_y - Game.camera.y) * Game.camera.zoom : render_y
     end
 
     def screen_width : Num
-      draw_relative_to_camera? ? draw_width * Game.camera.zoom : draw_width
+      draw_relative_to_camera? ? render_width * Game.camera.zoom : render_width
     end
 
     def screen_height : Num
-      draw_relative_to_camera? ? draw_height * Game.camera.zoom : draw_height
+      draw_relative_to_camera? ? render_height * Game.camera.zoom : render_height
     end
 
     private def on_content_changed

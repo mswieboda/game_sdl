@@ -211,7 +211,7 @@ module GameEx
       @box.update(dt)
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       @tile_map.draw(draw)
 
       @text.draw(draw)

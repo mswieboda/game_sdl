@@ -81,7 +81,7 @@ module PauseEx
       @menu.update(dt)
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_screen_overlay(draw : GSDL::Draw)
       @background.draw(draw)
       @title.draw(draw)
       @menu.draw(draw)
@@ -114,7 +114,7 @@ module PauseEx
       @text.scale = {1_f32 + Math.sin(@rotation * 0.05_f32) * 0.2_f32, 1_f32 + Math.sin(@rotation * 0.05_f32) * 0.2_f32}
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       @text.draw(draw)
     end
   end

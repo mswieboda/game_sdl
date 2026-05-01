@@ -51,9 +51,9 @@ module GSDL
       )
     end
 
-    def draw_border_radius : Num
+    def render_border_radius : Num
       border_radius * [scale_x, scale_y].min
-      max_border_radius = ([draw_width, draw_height].min / 2).to_f32
+      max_border_radius = ([render_width, render_height].min / 2).to_f32
       [border_radius, max_border_radius].min
     end
 
@@ -63,12 +63,12 @@ module GSDL
       @outline_arc_points = [] of Points
 
       # For rotated box with sharp corners, we need to generate vertices
-      if rotation != 0 && draw_border_radius <= 0
-        # Define 4 corners relative to draw_x, draw_y
-        p1 = rotate_point(draw_x, draw_y)
-        p2 = rotate_point(draw_x + draw_width, draw_y)
-        p3 = rotate_point(draw_x + draw_width, draw_y + draw_height)
-        p4 = rotate_point(draw_x, draw_y + draw_height)
+      if rotation != 0 && render_border_radius <= 0
+        # Define 4 corners relative to render_x, render_y
+        p1 = rotate_point(render_x, render_y)
+        p2 = rotate_point(render_x + render_width, render_y)
+        p3 = rotate_point(render_x + render_width, render_y + render_height)
+        p4 = rotate_point(render_x, render_y + render_height)
 
         @fill_vertices << Vertex.new(point: p1, color: color)
         @fill_vertices << Vertex.new(point: p2, color: color)
@@ -84,15 +84,15 @@ module GSDL
           Point.new(p4),
           Point.new(p1)
         ]
-      elsif draw_border_radius > 0
+      elsif render_border_radius > 0
         # top left, top right, bottom left, bottom right
         [
-          { center: {draw_x + draw_border_radius, draw_y + draw_border_radius}, dir: {1_i8, 1_i8} },
-          { center: {draw_x + draw_width - draw_border_radius, draw_y + draw_border_radius}, dir: {-1_i8, 1_i8} },
-          { center: {draw_x + draw_border_radius, draw_y + draw_height - draw_border_radius}, dir: {1_i8, -1_i8} },
-          { center: {draw_x + draw_width - draw_border_radius, draw_y + draw_height - draw_border_radius}, dir: {-1_i8, -1_i8} }
+          { center: {render_x + render_border_radius, render_y + render_border_radius}, dir: {1_i8, 1_i8} },
+          { center: {render_x + render_width - render_border_radius, render_y + render_border_radius}, dir: {-1_i8, 1_i8} },
+          { center: {render_x + render_border_radius, render_y + render_height - render_border_radius}, dir: {1_i8, -1_i8} },
+          { center: {render_x + render_width - render_border_radius, render_y + render_height - render_border_radius}, dir: {-1_i8, -1_i8} }
         ].each do |data|
-          build_corner_radius(center: data[:center], dir: data[:dir], radius: draw_border_radius)
+          build_corner_radius(center: data[:center], dir: data[:dir], radius: render_border_radius)
         end
       end
 
@@ -175,16 +175,16 @@ module GSDL
 
     def collision_polygon_vertices : Points
       [
-        Point.new(rotate_point(draw_x, draw_y)),
-        Point.new(rotate_point(draw_x + draw_width, draw_y)),
-        Point.new(rotate_point(draw_x + draw_width, draw_y + draw_height)),
-        Point.new(rotate_point(draw_x, draw_y + draw_height))
+        Point.new(rotate_point(render_x, render_y)),
+        Point.new(rotate_point(render_x + render_width, render_y)),
+        Point.new(rotate_point(render_x + render_width, render_y + render_height)),
+        Point.new(rotate_point(render_x, render_y + render_height))
       ]
     end
 
     def collision_bounding_box : FRect
       if rotation == 0
-        FRect.new(x: -draw_width * origin_x, y: -draw_height * origin_y, w: draw_width, h: draw_height)
+        FRect.new(x: -render_width * origin_x, y: -render_height * origin_y, w: render_width, h: render_height)
       else
         # For rotated, return a box that contains all rotated vertices
         vs = collision_polygon_vertices
@@ -197,20 +197,20 @@ module GSDL
     end
 
     def to_rect
-      Rect.new(x: draw_x.to_i, y: draw_y.to_i, w: draw_width.to_i, h: draw_height.to_i)
+      Rect.new(x: render_x.to_i, y: render_y.to_i, w: render_width.to_i, h: render_height.to_i)
     end
 
     def to_frect
-      FRect.new(x: draw_x, y: draw_y, w: draw_width, h: draw_height)
+      FRect.new(x: render_x, y: render_y, w: render_width, h: render_height)
     end
 
     private def draw_fill(draw : Draw)
-      if rotation == 0 && draw_border_radius <= 0
+      if rotation == 0 && render_border_radius <= 0
         draw.rect_fill(to_frect, color: color, z_index: z_index)
       else
         update_geometry if changed?
 
-        if draw_border_radius > 0
+        if render_border_radius > 0
           draw_fill_cross(draw)
         end
         draw_fill_border_radius(draw)
@@ -219,35 +219,35 @@ module GSDL
 
     # Rotate the 4 corners of each cross-rect and draw as geometry
     private def draw_fill_cross(draw : Draw)
-      r = draw_border_radius.to_f32
+      r = render_border_radius.to_f32
 
       # 1. Center-vertical strip (spans full height, but not full width)
-      # x ranges from [draw_x + r, draw_x + draw_width - r]
-      # y ranges from [draw_y, draw_y + draw_height]
-      hx = draw_x.to_f32 + r
-      hy = draw_y.to_f32
-      hw = draw_width.to_f32 - r * 2
-      hh = draw_height.to_f32
+      # x ranges from [render_x + r, render_x + render_width - r]
+      # y ranges from [render_y, render_y + render_height]
+      hx = render_x.to_f32 + r
+      hy = render_y.to_f32
+      hw = render_width.to_f32 - r * 2
+      hh = render_height.to_f32
 
       draw_rotated_rect(draw, hx, hy, hw, hh)
 
       # 2. Left side strip (spans partial height, from y + r to y + h - r)
-      # x ranges from [draw_x, draw_x + r]
-      # y ranges from [draw_y + r, draw_y + draw_height - r]
-      lx = draw_x.to_f32
-      ly = draw_y.to_f32 + r
+      # x ranges from [render_x, render_x + r]
+      # y ranges from [render_y + r, render_y + render_height - r]
+      lx = render_x.to_f32
+      ly = render_y.to_f32 + r
       lw = r
-      lh = draw_height.to_f32 - r * 2
+      lh = render_height.to_f32 - r * 2
 
       draw_rotated_rect(draw, lx, ly, lw, lh)
 
       # 3. Right side strip (spans partial height, from y + r to y + h - r)
-      # x ranges from [draw_x + draw_width - r, draw_x + draw_width]
-      # y ranges from [draw_y + r, draw_y + draw_height - r]
-      rx = draw_x.to_f32 + draw_width.to_f32 - r
-      ry = draw_y.to_f32 + r
+      # x ranges from [render_x + render_width - r, render_x + render_width]
+      # y ranges from [render_y + r, render_y + render_height - r]
+      rx = render_x.to_f32 + render_width.to_f32 - r
+      ry = render_y.to_f32 + r
       rw = r
-      rh = draw_height.to_f32 - r * 2
+      rh = render_height.to_f32 - r * 2
 
       draw_rotated_rect(draw, rx, ry, rw, rh)
     end
@@ -277,11 +277,11 @@ module GSDL
     end
 
     private def draw_outline(draw : Draw)
-      if rotation == 0 && draw_border_radius <= 0
+      if rotation == 0 && render_border_radius <= 0
         draw.rect_outline(to_frect, color: color, z_index: z_index)
       else
         update_geometry if changed?
-        if draw_border_radius > 0
+        if render_border_radius > 0
           draw_outline_cross(draw)
         end
         draw_outline_border_radius(draw)
@@ -290,23 +290,23 @@ module GSDL
 
     private def draw_outline_cross(draw : Draw)
       # top
-      p1 = rotate_point(draw_x + draw_border_radius, draw_y)
-      p2 = rotate_point(draw_x + draw_width - draw_border_radius, draw_y)
+      p1 = rotate_point(render_x + render_border_radius, render_y)
+      p2 = rotate_point(render_x + render_width - render_border_radius, render_y)
       draw.line(p1[0], p1[1], p2[0], p2[1], color: color, z_index: z_index)
 
       # bottom
-      p3 = rotate_point(draw_x + draw_border_radius, draw_y + draw_height)
-      p4 = rotate_point(draw_x + draw_width - draw_border_radius, draw_y + draw_height)
+      p3 = rotate_point(render_x + render_border_radius, render_y + render_height)
+      p4 = rotate_point(render_x + render_width - render_border_radius, render_y + render_height)
       draw.line(p3[0], p3[1], p4[0], p4[1], color: color, z_index: z_index)
 
       # left
-      p5 = rotate_point(draw_x, draw_y + draw_border_radius)
-      p6 = rotate_point(draw_x, draw_y + draw_height - draw_border_radius)
+      p5 = rotate_point(render_x, render_y + render_border_radius)
+      p6 = rotate_point(render_x, render_y + render_height - render_border_radius)
       draw.line(p5[0], p5[1], p6[0], p6[1], color: color, z_index: z_index)
 
       # right
-      p7 = rotate_point(draw_x + draw_width, draw_y + draw_border_radius)
-      p8 = rotate_point(draw_x + draw_width, draw_y + draw_height - draw_border_radius)
+      p7 = rotate_point(render_x + render_width, render_y + render_border_radius)
+      p8 = rotate_point(render_x + render_width, render_y + render_height - render_border_radius)
       draw.line(p7[0], p7[1], p8[0], p8[1], color: color, z_index: z_index)
     end
 

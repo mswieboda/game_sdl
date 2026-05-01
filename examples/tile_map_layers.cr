@@ -61,15 +61,14 @@ module MultiLayerMapEx
       end
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       @tile_map.draw(draw)
+    end
 
+    def draw_screen_overlay(draw : GSDL::Draw)
       font = GSDL::Font.default(16_f32)
       text = "Press 'B' to toggle Background\nPress 'F' to toggle Foreground\nPress 'O' to toggle Objects"
       draw.text(GSDL::Text.new(font: font, text: text, x: 16, y: 16, z_index: 99))
-
-      # Demonstrate independent layer rendering
-      # @tile_map.draw_layer(draw, "Foreground")
     end
   end
 

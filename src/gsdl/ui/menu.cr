@@ -305,8 +305,8 @@ module GSDL
     end
 
     private def draw_icon(draw : Draw, icon : SpriteBase, rect)
-      icon_w = icon.draw_width
-      icon_h = icon.draw_height
+      icon_w = icon.render_width
+      icon_h = icon.render_height
 
       icon_y = rect[:y] + (rect[:h] - icon_h) / 2.0_f32
       icon.z_index = @z_index

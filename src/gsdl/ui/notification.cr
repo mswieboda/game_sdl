@@ -58,8 +58,8 @@ module GSDL
       # Dynamic sizing with padding
       padding_x = 40
       padding_y = 30
-      @width = @message.draw_width + padding_x
-      @height = @message.draw_height + padding_y
+      @width = @message.render_width + padding_x
+      @height = @message.render_height + padding_y
     end
 
     def update(dt : Float32)

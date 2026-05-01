@@ -48,23 +48,16 @@ module GSDL
     )
     end
 
-    def draw_width : Num
-      width * scale_x
+    def render_x : Num
+      global_x - (render_width * origin_x)
     end
 
-    def draw_height : Num
-      height * scale_y
+    def render_y : Num
+      global_y - (render_height * origin_y)
     end
 
-    def draw_x : Num
-      dx = x - (draw_width * origin_x)
-      draw_relative_to_camera? ? dx - Game.camera.x : dx
-    end
-
-    def draw_y : Num
-      dy = y - (draw_height * origin_y)
-      draw_relative_to_camera? ? dy - Game.camera.y : dy
-    end
+    def global_x; x; end
+    def global_y; y; end
 
     def origin_x : Float32
       origin[0]
@@ -102,11 +95,24 @@ module GSDL
       end
     end
 
+    def screen_x : Num
+      draw_relative_to_camera? ? (render_x - Game.camera.x) * Game.camera.zoom : render_x
+    end
+
+    def screen_y : Num
+      draw_relative_to_camera? ? (render_y - Game.camera.y) * Game.camera.zoom : render_y
+    end
+
     def update(dt : Float32)
       update_tweens(dt)
 
+      sx = screen_x
+      sy = screen_y
+      sw = draw_relative_to_camera? ? render_width * Game.camera.zoom : render_width
+      sh = draw_relative_to_camera? ? render_height * Game.camera.zoom : render_height
+
       if Mouse.just_pressed?(Mouse::ButtonLeft)
-        if Mouse.in?(draw_x, draw_y, draw_width, draw_height) || handle_rect.in?(Mouse.x, Mouse.y)
+        if Mouse.in?(sx, sy, sw, sh) || handle_rect.in?(Mouse.x, Mouse.y)
           @active = true
         end
       end
@@ -117,12 +123,12 @@ module GSDL
 
       if @active
         if orientation == Orientation::Horizontal
-          norm = ((Mouse.x - draw_x) / draw_width).to_f32
+          norm = ((Mouse.x - sx) / sw).to_f32
           set_value_from_normalized(norm)
         else
           # Vertical slider: bottom is 0, top is 1 usually, or vice versa
           # Let's go with top is max, bottom is min
-          norm = 1.0_f32 - ((Mouse.y - draw_y) / draw_height).to_f32
+          norm = 1.0_f32 - ((Mouse.y - sy) / sh).to_f32
           set_value_from_normalized(norm)
         end
       end
@@ -130,15 +136,22 @@ module GSDL
 
     private def handle_rect : FRect
       norm = normalized_value
+      sx = screen_x
+      sy = screen_y
+      sw = draw_relative_to_camera? ? render_width * Game.camera.zoom : render_width
+      sh = draw_relative_to_camera? ? render_height * Game.camera.zoom : render_height
+      h_size_x = draw_relative_to_camera? ? handle_size * scale_x * Game.camera.zoom : handle_size * scale_x
+      h_size_y = draw_relative_to_camera? ? handle_size * scale_y * Game.camera.zoom : handle_size * scale_y
+
       if orientation == Orientation::Horizontal
-        hx = draw_x + (draw_width * norm) - (handle_size * scale_x / 2)
-        hy = draw_y + (draw_height / 2) - (handle_size * scale_y / 2)
-        FRect.new(x: hx.to_f32, y: hy.to_f32, w: (handle_size * scale_x).to_f32, h: (handle_size * scale_y).to_f32)
+        hx = sx + (sw * norm) - (h_size_x / 2)
+        hy = sy + (sh / 2) - (h_size_y / 2)
+        FRect.new(x: hx.to_f32, y: hy.to_f32, w: h_size_x.to_f32, h: h_size_y.to_f32)
       else
-        hx = draw_x + (draw_width / 2) - (handle_size * scale_x / 2)
+        hx = sx + (sw / 2) - (h_size_x / 2)
         # top is max, bottom is min
-        hy = draw_y + (draw_height * (1.0_f32 - norm)) - (handle_size * scale_y / 2)
-        FRect.new(x: hx.to_f32, y: hy.to_f32, w: (handle_size * scale_x).to_f32, h: (handle_size * scale_y).to_f32)
+        hy = sy + (sh * (1.0_f32 - norm)) - (h_size_y / 2)
+        FRect.new(x: hx.to_f32, y: hy.to_f32, w: h_size_x.to_f32, h: h_size_y.to_f32)
       end
     end
 

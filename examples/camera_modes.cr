@@ -188,17 +188,9 @@ module CameraEx
       camera.update(dt)
     end
 
-    def draw(draw : GSDL::Draw)
-      old_scale = draw.scale
-      draw.scale = camera.zoom
-
+    def draw_camera_view(draw : GSDL::Draw)
       draw_floor(draw)
-
       @player.draw(draw)
-
-      draw.scale = old_scale
-
-      super(draw)
     end
 
     def draw_floor(draw : GSDL::Draw)
@@ -212,8 +204,8 @@ module CameraEx
 
           draw.rect_fill(
             rect: GSDL::FRect.new(
-              x: @boundary.x + x.to_f32 - camera.x,
-              y: @boundary.y + y.to_f32 - camera.y,
+              x: @boundary.x + x.to_f32,
+              y: @boundary.y + y.to_f32,
               w: GRID_SIZE.to_f32,
               h: GRID_SIZE.to_f32
             ),

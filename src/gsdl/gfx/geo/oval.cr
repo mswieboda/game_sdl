@@ -49,11 +49,11 @@ module GSDL
       )
     end
 
-    def draw_radius_x : Num
+    def render_radius_x : Num
       radius_x * scale_x
     end
 
-    def draw_radius_y : Num
+    def render_radius_y : Num
       radius_y * scale_y
     end
 
@@ -78,13 +78,13 @@ module GSDL
     end
 
     # TODO: add setter
-    def center_x : Num
-      draw_x + draw_radius_x
+    def render_center_x : Num
+      render_x + render_radius_x
     end
 
     # TODO: add setter
-    def center_y : Num
-      draw_y + draw_radius_y
+    def render_center_y : Num
+      render_y + render_radius_y
     end
 
     def collision_shape : GSDL::Collidable::Shape
@@ -98,7 +98,7 @@ module GSDL
     end
 
     def collision_bounding_box : FRect
-      FRect.new(x: -draw_radius_x * origin_x, y: -draw_radius_y * origin_y, w: draw_radius_x * 2, h: draw_radius_y * 2)
+      FRect.new(x: -render_radius_x * origin_x, y: -render_radius_y * origin_y, w: render_radius_x * 2, h: render_radius_y * 2)
     end
 
     def update_geometry
@@ -106,7 +106,7 @@ module GSDL
       @fill_indices = [] of Int32
       @outline_arc_points = [] of Points
 
-      if draw_radius_x > 0 && draw_radius_y > 0
+      if render_radius_x > 0 && render_radius_y > 0
         # top left, top right, bottom left, bottom right
         [
           {1_i8, 1_i8},
@@ -127,13 +127,13 @@ module GSDL
     #   instead of doing this calc 4 times with each corner
     private def build_corner(dir : Tuple(Int8, Int8))
       x_dir, y_dir = dir
-      corner_radius_x = draw_radius_x / 2
-      corner_radius_y = draw_radius_y / 2
+      corner_radius_x = render_radius_x / 2
+      corner_radius_y = render_radius_y / 2
       max_radius = [corner_radius_x, corner_radius_y].max
       segments = [12, (Math.sqrt(max_radius) * 4).to_i].max
 
       # Center vertex (rotated)
-      cp = rotate_point(center_x, center_y)
+      cp = rotate_point(render_center_x, render_center_y)
       @fill_vertices << Vertex.new(cp, color)
 
       start_v = @fill_vertices.size
@@ -143,8 +143,8 @@ module GSDL
 
       (segments + 1).times do |i|
         angle = Math::PI + i * (0.5 * Math::PI / segments)
-        vx = center_x + x_dir * corner_radius_x * Math.cos(angle)
-        vy = center_y + y_dir * corner_radius_y * Math.sin(angle)
+        vx = render_center_x + x_dir * corner_radius_x * Math.cos(angle)
+        vy = render_center_y + y_dir * corner_radius_y * Math.sin(angle)
 
         rv = rotate_point(vx, vy)
         @fill_vertices << Vertex.new(rv, color)
@@ -177,8 +177,8 @@ module GSDL
 
     private def draw_border(draw : Draw)
       border_thickness.to_i.times do |i|
-        inner_radius_x = (self.draw_radius_x - i * 2).to_f32
-        inner_radius_y = (self.draw_radius_y - i * 2).to_f32
+        inner_radius_x = (self.render_radius_x - i * 2).to_f32
+        inner_radius_y = (self.render_radius_y - i * 2).to_f32
 
         if inner_radius_x > 0 && inner_radius_y > 0
           Oval.new(

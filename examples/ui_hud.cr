@@ -113,26 +113,16 @@ module HUDEx
       end
     end
 
-    def draw(draw : GSDL::Draw)
-      # Draw world with camera transform
-      draw_world(draw)
-
-      # Draw HUD (camera NOT applied, it's screen space)
-      super(draw)
-    end
-
-    def draw_world(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       grid_size = 64
-      cam_x = camera.x
-      cam_y = camera.y
 
       (0..30).each do |i|
         x = i * grid_size
         draw.line(
-          x1: x - cam_x,
-          y1: 0 - cam_y,
-          x2: x - cam_x,
-          y2: 2000 - cam_y,
+          x1: x,
+          y1: 0,
+          x2: x,
+          y2: 2000,
           color: GSDL::Color::DarkerGray,
           z_index: -1
         )
@@ -141,10 +131,10 @@ module HUDEx
       (0..30).each do |i|
         y = i * grid_size
         draw.line(
-          x1: 0 - cam_x,
-          y1: y - cam_y,
-          x2: 2000 - cam_x,
-          y2: y - cam_y,
+          x1: 0,
+          y1: y,
+          x2: 2000,
+          y2: y,
           color: GSDL::Color::DarkerGray,
           z_index: -1
         )
@@ -152,7 +142,7 @@ module HUDEx
 
       # Draw player
       draw.rect_fill(
-        rect: GSDL::FRect.new(x: @player_x - cam_x - 16, y: @player_y - cam_y - 16, w: 32, h: 32),
+        rect: GSDL::FRect.new(x: @player_x - 16, y: @player_y - 16, w: 32, h: 32),
         color: GSDL::Color::Lime,
         z_index: 3
       )

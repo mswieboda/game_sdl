@@ -92,7 +92,20 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      draw.with_camera(self.camera) do
+        draw_camera_view(draw)
+      end
+
+      draw.with_camera(nil) do
+        draw_screen_overlay(draw)
+      end
+    end
+
+    def draw_camera_view(draw : Draw)
       @entities.each &.draw(draw)
+    end
+
+    def draw_screen_overlay(draw : Draw)
       @hud.try &.draw(draw)
     end
   end

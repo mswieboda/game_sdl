@@ -289,25 +289,23 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      if draw_relative_to_camera?
+        perform_draw(draw)
+      else
+        draw.with_camera(nil) do
+          perform_draw(draw)
+        end
+      end
+    end
+
+    private def perform_draw(draw : Draw)
       return unless tex = @baked_texture
 
-      old_scale_x = draw.current_scale_x
-      old_scale_y = draw.current_scale_y
-
-      if draw_relative_to_camera?
-        draw.scale = Game.camera.zoom
-      else
-        draw.scale = 1.0_f32
-      end
-
-      camera_x = draw_relative_to_camera? ? Game.camera.x : 0_f32
-      camera_y = draw_relative_to_camera? ? Game.camera.y : 0_f32
-
       dest_rect = FRect.new(
-        x: (draw_x - camera_x).to_f32,
-        y: (draw_y - camera_y).to_f32,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
+        x: render_x.to_f32,
+        y: render_y.to_f32,
+        w: render_width.to_f32,
+        h: render_height.to_f32
       )
 
       tex.alpha_mod = opacity
@@ -319,8 +317,6 @@ module GSDL
         z_index: z_index
       )
       tex.alpha_mod = 255_u8
-
-      draw.scale = {old_scale_x, old_scale_y}
     end
 
     def _draw(x : Float32, y : Float32)
@@ -330,7 +326,7 @@ module GSDL
       draw.to_sdl.render_texture(
         tex.to_sdl,
         nil,
-        SDL3::FRect.new(x, y, draw_width.to_f32, draw_height.to_f32)
+        SDL3::FRect.new(x, y, render_width.to_f32, render_height.to_f32)
       )
     end
 

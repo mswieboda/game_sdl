@@ -574,16 +574,18 @@ module GSDL
 
     # Draws the tilemap
     def draw(draw : Draw)
-      old_scale_x = draw.current_scale_x
-      old_scale_y = draw.current_scale_y
+      draw.with_camera(nil) do
+        old_scale_x = draw.current_scale_x
+        old_scale_y = draw.current_scale_y
 
-      draw.scale = Game.camera.zoom
+        draw.scale = Game.camera.zoom
 
-      @layers.each do |layer|
-        layer.draw(draw, @tilesets, @tile_width, @tile_height, @z_index + layer.z_index)
+        @layers.each do |layer|
+          layer.draw(draw, @tilesets, @tile_width, @tile_height, @z_index + layer.z_index)
+        end
+
+        draw.scale = {old_scale_x, old_scale_y}
       end
-
-      draw.scale = {old_scale_x, old_scale_y}
     end
   end
 end
