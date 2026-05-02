@@ -205,6 +205,14 @@ module GSDL
       @paused = !@paused
     end
 
+    def register_event_handler(handler : EventHandler)
+      Events.add_handler(handler)
+    end
+
+    def unregister_event_handler(handler : EventHandler)
+      Events.remove_handler(handler)
+    end
+
     def quit!
       @exit = true
     end
@@ -417,7 +425,7 @@ module GSDL
         InputEvents.update
         loader.update
 
-        Events.handle_events
+        Events.handle_events(@window.not_nil!)
 
         break if Events.exit? || exit?
 

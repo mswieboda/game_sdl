@@ -17,6 +17,8 @@ module GSDL
     GamepadAdded = LibSDL3::SDL_EVENT_GAMEPAD_ADDED
     GamepadRemoved = LibSDL3::SDL_EVENT_GAMEPAD_REMOVED
     TextInput = LibSDL3::SDL_EVENT_TEXT_INPUT
+    WindowResized = LibSDL3::SDL_EVENT_WINDOW_RESIZED
+    WindowPixelSizeChanged = LibSDL3::SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
 
     @@esc_exits = false
     @@exit = false
@@ -33,9 +35,30 @@ module GSDL
       @@exit = false
     end
 
-    def self.handle_events
+    @@handlers = [] of EventHandler
+
+    def self.add_handler(handler : EventHandler)
+      @@handlers << handler
+    end
+
+    def self.remove_handler(handler : EventHandler)
+      @@handlers.delete(handler)
+    end
+
+    def self.handle_events(window : SDL3::Window)
       event = uninitialized Event
       while SDL3.poll_event(pointerof(event))
+        # Chain through all handlers
+        handled = false
+        @@handlers.each do |h|
+          if h.handle(event, window)
+            handled = true
+            break
+          end
+        end
+
+        next if handled # Skip engine-internal logic if handled
+
         case event.type
         when Quit, WindowClose
           @@exit = true
@@ -44,6 +67,7 @@ module GSDL
             @@exit = true
           end
         end
+
         break if @@exit # Break from event polling if quit is signaled
 
         InputEvents.handle_event(event)

@@ -4,7 +4,7 @@
 
 ## Workflow & Constraints
 - **Reading Bindings:** Copy `../sdl3` source or specific C headers to `./tmp` to inspect.
-    - SDL3 headers in `/opt/homebrew/Cellar/sdl3/3.4.0/include/SDL3`
+    - SDL3 headers in `/opt/homebrew/Cellar/sdl3/3.4.4/include/SDL3`
     - SDL3_image headers in `/opt/homebrew/Cellar/sdl3_image/3.4.0/include/`
     - SDL3_ttf headers in `/opt/homebrew/Cellar/sdl3_ttf/3.2.2/include/`
 - **Editing Bindings:** **Read-only access** to `../sdl3`. Write suggested changes to `./tmp/sdl3.cr-changes`. Summarize changes to the user so they can update `../sdl3`.

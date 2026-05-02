@@ -72,11 +72,15 @@ module GSDL
     end
 
     def exit
+      destroy
       @exit = true
     end
 
     def exit_with_transition
       @transition_out.start
+    end
+
+    def destroy
     end
 
     def reset
