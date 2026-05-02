@@ -24,14 +24,14 @@ module GSDL
 
   module Directionable
     # requires
-    abstract def draw_x : Num
-    abstract def draw_y : Num
+    abstract def render_x : Num
+    abstract def render_y : Num
 
     property direction = Direction::Down
 
     def facing?(x : Num, y : Num) : Bool
-      dx = x - draw_x
-      dy = y - draw_y
+      dx = x - render_x
+      dy = y - render_y
 
       case direction
       when .up?

@@ -304,10 +304,10 @@ module GSDL
       camera_y = draw_relative_to_camera? ? Game.camera.y : 0_f32
 
       dest_rect = FRect.new(
-        x: (draw_x - camera_x).to_f32,
-        y: (draw_y - camera_y).to_f32,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
+        x: (render_x - camera_x).to_f32,
+        y: (render_y - camera_y).to_f32,
+        w: render_width.to_f32,
+        h: render_height.to_f32
       )
 
       tex.alpha_mod = opacity
@@ -330,7 +330,7 @@ module GSDL
       draw.to_sdl.render_texture(
         tex.to_sdl,
         nil,
-        SDL3::FRect.new(x, y, draw_width.to_f32, draw_height.to_f32)
+        SDL3::FRect.new(x, y, render_width.to_f32, render_height.to_f32)
       )
     end
 

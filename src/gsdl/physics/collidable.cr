@@ -15,8 +15,8 @@ module GSDL
     def self.vertices_buffer_b; @@vertices_buffer_b; end
 
     # requires
-    abstract def draw_x : Num
-    abstract def draw_y : Num
+    abstract def render_x : Num
+    abstract def render_y : Num
 
     # collision bounding box of the collidable object as an FRect
     abstract def collision_bounding_box : FRect
@@ -66,8 +66,8 @@ module GSDL
 
     def collision_box : FRect
       FRect.new(
-        x: draw_x + collision_bounding_box.x,
-        y: draw_y + collision_bounding_box.y,
+        x: render_x + collision_bounding_box.x,
+        y: render_y + collision_bounding_box.y,
         w: collision_bounding_box.w,
         h: collision_bounding_box.h
       )

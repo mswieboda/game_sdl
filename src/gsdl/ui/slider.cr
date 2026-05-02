@@ -48,21 +48,21 @@ module GSDL
     )
     end
 
-    def draw_width : Num
+    def render_width : Num
       width * scale_x
     end
 
-    def draw_height : Num
+    def render_height : Num
       height * scale_y
     end
 
-    def draw_x : Num
-      dx = x - (draw_width * origin_x)
+    def render_x : Num
+      dx = x - (render_width * origin_x)
       draw_relative_to_camera? ? dx - Game.camera.x : dx
     end
 
-    def draw_y : Num
-      dy = y - (draw_height * origin_y)
+    def render_y : Num
+      dy = y - (render_height * origin_y)
       draw_relative_to_camera? ? dy - Game.camera.y : dy
     end
 
@@ -106,7 +106,7 @@ module GSDL
       update_tweens(dt)
 
       if Mouse.just_pressed?(Mouse::ButtonLeft)
-        if Mouse.in?(draw_x, draw_y, draw_width, draw_height) || handle_rect.in?(Mouse.x, Mouse.y)
+        if Mouse.in?(render_x, render_y, render_width, render_height) || handle_rect.in?(Mouse.x, Mouse.y)
           @active = true
         end
       end
@@ -117,12 +117,12 @@ module GSDL
 
       if @active
         if orientation == Orientation::Horizontal
-          norm = ((Mouse.x - draw_x) / draw_width).to_f32
+          norm = ((Mouse.x - render_x) / render_width).to_f32
           set_value_from_normalized(norm)
         else
           # Vertical slider: bottom is 0, top is 1 usually, or vice versa
           # Let's go with top is max, bottom is min
-          norm = 1.0_f32 - ((Mouse.y - draw_y) / draw_height).to_f32
+          norm = 1.0_f32 - ((Mouse.y - render_y) / render_height).to_f32
           set_value_from_normalized(norm)
         end
       end
@@ -131,13 +131,13 @@ module GSDL
     private def handle_rect : FRect
       norm = normalized_value
       if orientation == Orientation::Horizontal
-        hx = draw_x + (draw_width * norm) - (handle_size * scale_x / 2)
-        hy = draw_y + (draw_height / 2) - (handle_size * scale_y / 2)
+        hx = render_x + (render_width * norm) - (handle_size * scale_x / 2)
+        hy = render_y + (render_height / 2) - (handle_size * scale_y / 2)
         FRect.new(x: hx.to_f32, y: hy.to_f32, w: (handle_size * scale_x).to_f32, h: (handle_size * scale_y).to_f32)
       else
-        hx = draw_x + (draw_width / 2) - (handle_size * scale_x / 2)
+        hx = render_x + (render_width / 2) - (handle_size * scale_x / 2)
         # top is max, bottom is min
-        hy = draw_y + (draw_height * (1.0_f32 - norm)) - (handle_size * scale_y / 2)
+        hy = render_y + (render_height * (1.0_f32 - norm)) - (handle_size * scale_y / 2)
         FRect.new(x: hx.to_f32, y: hy.to_f32, w: (handle_size * scale_x).to_f32, h: (handle_size * scale_y).to_f32)
       end
     end

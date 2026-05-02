@@ -230,20 +230,20 @@ module GSDL
       @logical_height
     end
 
-    def draw_width : Num
+    def render_width : Num
       width * scale_x
     end
 
-    def draw_height : Num
+    def render_height : Num
       height * scale_y
     end
 
-    def draw_x : Num
-      scene_x - (draw_width * origin_x)
+    def render_x : Num
+      global_x - (render_width * origin_x)
     end
 
-    def draw_y : Num
-      scene_y - (draw_height * origin_y)
+    def render_y : Num
+      global_y - (render_height * origin_y)
     end
 
     def draw(draw : Draw)
@@ -262,10 +262,10 @@ module GSDL
       camera_y = draw_relative_to_camera? ? Game.camera.y : 0_f32
 
       dest_rect = FRect.new(
-        x: (draw_x - camera_x).to_f32,
-        y: (draw_y - camera_y).to_f32,
-        w: draw_width.to_f32,
-        h: draw_height.to_f32
+        x: (render_x - camera_x).to_f32,
+        y: (render_y - camera_y).to_f32,
+        w: render_width.to_f32,
+        h: render_height.to_f32
       )
 
       tex.alpha_mod = opacity

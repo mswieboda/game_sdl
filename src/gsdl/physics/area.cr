@@ -1,16 +1,16 @@
 module GSDL
   module Area
     # requires
-    abstract def draw_x : Num
-    abstract def draw_y : Num
+    abstract def render_x : Num
+    abstract def render_y : Num
 
     # area bounding box for the trigger area
     abstract def area_bounding_box : FRect
 
     def area_box : FRect
       FRect.new(
-        x: draw_x + area_bounding_box.x,
-        y: draw_y + area_bounding_box.y,
+        x: render_x + area_bounding_box.x,
+        y: render_y + area_bounding_box.y,
         w: area_bounding_box.w,
         h: area_bounding_box.h
       )
@@ -33,7 +33,7 @@ module GSDL
     # Always returns true if this object is not Directionable.
     def facing_area?(other : Area) : Bool
       if self.is_a?(Directionable)
-        self.facing?(other.draw_x, other.draw_y)
+        self.facing?(other.render_x, other.render_y)
       else
         true
       end

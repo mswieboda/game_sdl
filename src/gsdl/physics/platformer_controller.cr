@@ -168,9 +168,9 @@ module GSDL
       # Check TileMap
       if tm = tile_map
         if direction.right?
-          return true if tm.solid_right?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+          return true if tm.solid_right?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
         else
-          return true if tm.solid_left?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+          return true if tm.solid_left?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
         end
       end
 
@@ -202,27 +202,27 @@ module GSDL
       @grounded = false
       dy = @velocity_y * dt
       next_y = self.y + dy
-      next_draw_y = next_y - (draw_height * origin_y)
+      next_render_y = next_y - (render_height * origin_y)
 
       collided = false
 
       # 1. TileMap Collision
       if tm = tile_map
         if @velocity_y > 0 # Moving down
-          if tm.solid_down?(draw_x + collision_bounding_box.x, next_draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+          if tm.solid_down?(render_x + collision_bounding_box.x, next_render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
             @velocity_y = 0
             # Snap self.y so that the collision box bottom aligns with the tile
-            target_draw_y = (((next_draw_y + collision_bounding_box.y + collision_bounding_box.h) / tm.tile_height).to_i * tm.tile_height - collision_bounding_box.y - collision_bounding_box.h).to_f32
-            self.y = target_draw_y + (draw_height * origin_y)
+            target_render_y = (((next_render_y + collision_bounding_box.y + collision_bounding_box.h) / tm.tile_height).to_i * tm.tile_height - collision_bounding_box.y - collision_bounding_box.h).to_f32
+            self.y = target_render_y + (render_height * origin_y)
             @grounded = true
             collided = true
           end
         elsif @velocity_y < 0 # Moving up
-          if tm.solid_up?(draw_x + collision_bounding_box.x, next_draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+          if tm.solid_up?(render_x + collision_bounding_box.x, next_render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
             @velocity_y = 0
             # Snap self.y so that the collision box top aligns with the tile
-            target_draw_y = (((next_draw_y + collision_bounding_box.y) / tm.tile_height).to_i + 1) * tm.tile_height - collision_bounding_box.y
-            self.y = target_draw_y + (draw_height * origin_y)
+            target_render_y = (((next_render_y + collision_bounding_box.y) / tm.tile_height).to_i + 1) * tm.tile_height - collision_bounding_box.y
+            self.y = target_render_y + (render_height * origin_y)
             collided = true
           end
         end
@@ -244,19 +244,19 @@ module GSDL
 
       # 3. World Bounds Collision
       if !collided && (bounds = world_bounds)
-        next_collision_box_top = next_draw_y + collision_bounding_box.y
+        next_collision_box_top = next_render_y + collision_bounding_box.y
         next_collision_box_bottom = next_collision_box_top + collision_bounding_box.h
 
         if next_collision_box_bottom > bounds.bottom
           @velocity_y = 0_f32
-          target_draw_y = bounds.bottom - collision_bounding_box.y - collision_bounding_box.h
-          self.y = target_draw_y + (draw_height * origin_y)
+          target_render_y = bounds.bottom - collision_bounding_box.y - collision_bounding_box.h
+          self.y = target_render_y + (render_height * origin_y)
           @grounded = true
           collided = true
         elsif next_collision_box_top < bounds.top
           @velocity_y = 0_f32
-          target_draw_y = bounds.top - collision_bounding_box.y
-          self.y = target_draw_y + (draw_height * origin_y)
+          target_render_y = bounds.top - collision_bounding_box.y
+          self.y = target_render_y + (render_height * origin_y)
           collided = true
         end
       end
@@ -267,24 +267,24 @@ module GSDL
     private def platformer_move_horizontal(dt : Float32, collidables : Array(Collidable), tile_map : TileMap?, world_bounds : FRect?)
       dx = @velocity_x * dt
       next_x = self.x + dx
-      next_draw_x = next_x - (draw_width * origin_x)
+      next_render_x = next_x - (render_width * origin_x)
 
       collided = false
 
       # 1. TileMap Collision
       if tm = tile_map
         if dx > 0 # Moving right
-          if tm.solid_right?(next_draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+          if tm.solid_right?(next_render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
             @velocity_x = 0_f32
-            target_draw_x = (((next_draw_x + collision_bounding_box.x + collision_bounding_box.w) / tm.tile_width).to_i * tm.tile_width - collision_bounding_box.x - collision_bounding_box.w).to_f32
-            self.x = target_draw_x + (draw_width * origin_x)
+            target_render_x = (((next_render_x + collision_bounding_box.x + collision_bounding_box.w) / tm.tile_width).to_i * tm.tile_width - collision_bounding_box.x - collision_bounding_box.w).to_f32
+            self.x = target_render_x + (render_width * origin_x)
             collided = true
           end
         elsif dx < 0 # Moving left
-          if tm.solid_left?(next_draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+          if tm.solid_left?(next_render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
             @velocity_x = 0_f32
-            target_draw_x = (((next_draw_x + collision_bounding_box.x) / tm.tile_width).to_i + 1) * tm.tile_width - collision_bounding_box.x
-            self.x = target_draw_x + (draw_width * origin_x)
+            target_render_x = (((next_render_x + collision_bounding_box.x) / tm.tile_width).to_i + 1) * tm.tile_width - collision_bounding_box.x
+            self.x = target_render_x + (render_width * origin_x)
             collided = true
           end
         end
@@ -305,18 +305,18 @@ module GSDL
 
       # 3. World Bounds Collision
       if !collided && (bounds = world_bounds)
-        next_collision_box_left = next_draw_x + collision_bounding_box.x
+        next_collision_box_left = next_render_x + collision_bounding_box.x
         next_collision_box_right = next_collision_box_left + collision_bounding_box.w
 
         if next_collision_box_right > bounds.right
           @velocity_x = 0_f32
-          target_draw_x = bounds.right - collision_bounding_box.x - collision_bounding_box.w
-          self.x = target_draw_x + (draw_width * origin_x)
+          target_render_x = bounds.right - collision_bounding_box.x - collision_bounding_box.w
+          self.x = target_render_x + (render_width * origin_x)
           collided = true
         elsif next_collision_box_left < bounds.left
           @velocity_x = 0_f32
-          target_draw_x = bounds.left - collision_bounding_box.x
-          self.x = target_draw_x + (draw_width * origin_x)
+          target_render_x = bounds.left - collision_bounding_box.x
+          self.x = target_render_x + (render_width * origin_x)
           collided = true
         end
       end

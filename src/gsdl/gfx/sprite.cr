@@ -53,10 +53,10 @@ module GSDL
       camera_y = draw_relative_to_camera? ? Game.camera.y : 0_f32
 
       dest_rect = FRect.new(
-        x: draw_x - camera_x,
-        y: draw_y - camera_y,
-        w: draw_width,
-        h: draw_height
+        x: render_x - camera_x,
+        y: render_y - camera_y,
+        w: render_width,
+        h: render_height
       )
 
       flip_val = 0

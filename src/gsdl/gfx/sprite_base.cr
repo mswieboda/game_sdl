@@ -42,13 +42,18 @@ module GSDL
     abstract def height : Num
 
     def on_screen? : Bool
-      cam_rect = Game.camera.viewport_rect
-      sx = draw_x
-      sy = draw_y
-      sw = draw_width
-      sh = draw_height
+      cam = Game.camera
+      view = cam.viewport_rect
 
-      sx + sw >= cam_rect.x && sx <= cam_rect.x + cam_rect.w && sy + sh >= cam_rect.y && sy <= cam_rect.y + cam_rect.h
+      rw = render_width
+      rh = render_height
+      gx = global_x
+      gy = global_y
+
+      sx = gx - (rw * origin_x)
+      sy = gy - (rh * origin_y) + render_offset_y
+
+      sx + rw >= view.x && sx <= view.x + view.w && sy + rh >= view.y && sy <= view.y + view.h
     end
 
     # Base update logic for all sprites.
@@ -65,39 +70,43 @@ module GSDL
     # override this method in parent class for custom area box
     def area_bounding_box : FRect
       FRect.new(
-        w: draw_width,
-        h: draw_height
+        w: render_width,
+        h: render_height
       )
     end
 
     # override this method in parent class for custom collision box
     def collision_bounding_box : FRect
       FRect.new(
-        w: draw_width,
-        h: draw_height
+        w: render_width,
+        h: render_height
       )
     end
 
-    def draw_width : Num
+    @[AlwaysInline]
+    def render_width : Num
       width * scale_x
     end
 
-    def draw_height : Num
+    @[AlwaysInline]
+    def render_height : Num
       height * scale_y
     end
 
-    def draw_x : Num
-      scene_x - (draw_width * origin_x)
+    @[AlwaysInline]
+    def render_x : Num
+      global_x - (render_width * origin_x)
     end
 
-    def draw_y : Num
-      scene_y - (draw_height * origin_y) + render_offset_y
+    @[AlwaysInline]
+    def render_y : Num
+      global_y - (render_height * origin_y) + render_offset_y
     end
 
     # The ground position (bottom) of the sprite, ignoring any height/oblique offsets.
     # Used for depth sorting in 3/4 perspective.
     def ground_y : Num
-      draw_y - render_offset_y + draw_height
+      render_y - render_offset_y + render_height
     end
 
     abstract def draw(draw : Draw)

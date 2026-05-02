@@ -14,12 +14,12 @@ module GSDL
     property collision_offset_x : Float32 = 0_f32
     property collision_offset_y : Float32 = 0_f32
 
-    def draw_x : Num
-      scene_x
+    def render_x : Num
+      global_x
     end
 
-    def draw_y : Num
-      scene_y
+    def render_y : Num
+      global_y
     end
 
     def collision_bounding_box : FRect

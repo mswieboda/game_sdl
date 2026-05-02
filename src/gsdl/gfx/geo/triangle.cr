@@ -113,34 +113,34 @@ module GSDL
       [y1, y2, y3].max - [y1, y2, y3].min
     end
 
-    def draw_x1 : Num
+    def render_x1 : Num
       base_min_x = [x1, x2, x3].min
-      draw_x + (x1 - base_min_x) * scale_x
+      render_x + (x1 - base_min_x) * scale_x
     end
 
-    def draw_y1 : Num
+    def render_y1 : Num
       base_min_y = [y1, y2, y3].min
-      draw_y + (y1 - base_min_y) * scale_y
+      render_y + (y1 - base_min_y) * scale_y
     end
 
-    def draw_x2 : Num
+    def render_x2 : Num
       base_min_x = [x1, x2, x3].min
-      draw_x + (x2 - base_min_x) * scale_x
+      render_x + (x2 - base_min_x) * scale_x
     end
 
-    def draw_y2 : Num
+    def render_y2 : Num
       base_min_y = [y1, y2, y3].min
-      draw_y + (y2 - base_min_y) * scale_y
+      render_y + (y2 - base_min_y) * scale_y
     end
 
-    def draw_x3 : Num
+    def render_x3 : Num
       base_min_x = [x1, x2, x3].min
-      draw_x + (x3 - base_min_x) * scale_x
+      render_x + (x3 - base_min_x) * scale_x
     end
 
-    def draw_y3 : Num
+    def render_y3 : Num
       base_min_y = [y1, y2, y3].min
-      draw_y + (y3 - base_min_y) * scale_y
+      render_y + (y3 - base_min_y) * scale_y
     end
 
     def center(x : Num = 0, y : Num = 0, width : Num = 1, height : Num = 1)
@@ -164,9 +164,9 @@ module GSDL
       vertices = [] of Vertex
 
       # Rotate each corner point
-      p1 = rotate_point(draw_x1, draw_y1)
-      p2 = rotate_point(draw_x2, draw_y2)
-      p3 = rotate_point(draw_x3, draw_y3)
+      p1 = rotate_point(render_x1, render_y1)
+      p2 = rotate_point(render_x2, render_y2)
+      p3 = rotate_point(render_x3, render_y3)
 
       vertices << Vertex.new(p1, color)
       vertices << Vertex.new(p2, color)

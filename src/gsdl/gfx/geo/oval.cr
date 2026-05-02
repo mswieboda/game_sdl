@@ -79,12 +79,12 @@ module GSDL
 
     # TODO: add setter
     def center_x : Num
-      draw_x + draw_radius_x
+      render_x + draw_radius_x
     end
 
     # TODO: add setter
     def center_y : Num
-      draw_y + draw_radius_y
+      render_y + draw_radius_y
     end
 
     def collision_shape : GSDL::Collidable::Shape

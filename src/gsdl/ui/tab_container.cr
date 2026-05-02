@@ -57,20 +57,20 @@ module GSDL
       calculate_layout
     end
 
-    def draw_width : Num
+    def render_width : Num
       width * scale_x
     end
 
-    def draw_height : Num
+    def render_height : Num
       height * scale_y
     end
 
-    def draw_x : Num
-      x - (draw_width * origin_x)
+    def render_x : Num
+      x - (render_width * origin_x)
     end
 
-    def draw_y : Num
-      y - (draw_height * origin_y)
+    def render_y : Num
+      y - (render_height * origin_y)
     end
 
     def origin_x : Float32
@@ -101,11 +101,11 @@ module GSDL
       return if @tabs.empty?
 
       @tab_rects.clear
-      tab_w = draw_width / @tabs.size
+      tab_w = render_width / @tabs.size
 
       @tabs.each_with_index do |_, i|
-        tx = draw_x + (i * tab_w)
-        ty = draw_y
+        tx = render_x + (i * tab_w)
+        ty = render_y
         @tab_rects << FRect.new(x: tx.to_f32, y: ty.to_f32, w: tab_w.to_f32, h: (tab_height * scale_y).to_f32)
 
         @tab_texts[i].x = tx + (tab_w / 2)
@@ -136,8 +136,8 @@ module GSDL
 
     def draw(draw : GSDL::Draw)
       # Content Background
-      content_y = draw_y + (tab_height * scale_y)
-      content_h = draw_height - (tab_height * scale_y)
+      content_y = render_y + (tab_height * scale_y)
+      content_h = render_height - (tab_height * scale_y)
 
       bg = Box.new(
         width: width, height: height - tab_height,

@@ -90,10 +90,10 @@ module ScrollTextEx
       # Draw a background box for the scroll view
       draw.rect_outline(
         rect: GSDL::FRect.new(
-          x: @scroll_view.draw_x,
-          y: @scroll_view.draw_y,
-          w: @scroll_view.draw_width,
-          h: @scroll_view.draw_height
+          x: @scroll_view.render_x,
+          y: @scroll_view.render_y,
+          w: @scroll_view.render_width,
+          h: @scroll_view.render_height
         ),
         color: GSDL::Color::Gray
       )

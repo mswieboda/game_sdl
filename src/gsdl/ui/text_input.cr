@@ -155,9 +155,9 @@ module GSDL
         font = @text.font
         offset_x, _ = font.text_size(before_cursor)
 
-        cursor_x = @text.draw_x + (offset_x * @text.scale_x)
-        cursor_y_top = @text.draw_y
-        cursor_y_bottom = @text.draw_y + @text.draw_height
+        cursor_x = @text.render_x + (offset_x * @text.scale_x)
+        cursor_y_top = @text.render_y
+        cursor_y_bottom = @text.render_y + @text.render_height
 
         draw.color = @text.color
         draw.line(cursor_x, cursor_y_top, cursor_x, cursor_y_bottom, z_index: z_index + 1)

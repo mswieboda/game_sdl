@@ -111,9 +111,9 @@ module GameEx
 
     private def hit?(input : GSDL::TextInput, x : GSDL::Num, y : GSDL::Num) : Bool
       # We need to calculate the bounding box
-      # TextInput inherits from TextBox which has draw_x, draw_y, draw_width, draw_height
-      x >= input.draw_x && x <= input.draw_x + input.draw_width &&
-        y >= input.draw_y && y <= input.draw_y + input.draw_height
+      # TextInput inherits from TextBox which has render_x, render_y, render_width, render_height
+      x >= input.render_x && x <= input.render_x + input.render_width &&
+        y >= input.render_y && y <= input.render_y + input.render_height
     end
 
     def draw(draw : GSDL::Draw)

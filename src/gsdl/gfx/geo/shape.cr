@@ -155,11 +155,13 @@ module GSDL
     abstract def width : Num
     abstract def height : Num
 
-    def draw_width : Num
+    @[AlwaysInline]
+    def render_width : Num
       width * scale_x
     end
 
-    def draw_height : Num
+    @[AlwaysInline]
+    def render_height : Num
       height * scale_y
     end
 
@@ -179,20 +181,30 @@ module GSDL
       origin[1]
     end
 
-    def draw_x : Num
-      dx = x - (draw_width * origin_x)
-      draw_relative_to_camera? ? dx - Game.camera.x : dx
+    @[AlwaysInline]
+    def global_x : Num
+      x
     end
 
-    def draw_y : Num
-      dy = y - (draw_height * origin_y)
-      draw_relative_to_camera? ? dy - Game.camera.y : dy
+    @[AlwaysInline]
+    def global_y : Num
+      y
+    end
+
+    @[AlwaysInline]
+    def render_x : Num
+      global_x - (render_width * origin_x)
+    end
+
+    @[AlwaysInline]
+    def render_y : Num
+      global_y - (render_height * origin_y)
     end
 
     def in?(px : Num, py : Num) : Bool
       if rotation == 0
-        return px >= draw_x && px <= draw_x + draw_width &&
-               py >= draw_y && py <= draw_y + draw_height
+        return px >= render_x && px <= render_x + render_width &&
+               py >= render_y && py <= render_y + render_height
       end
 
       # For rotated, use point-in-polygon (only if we have collision_polygon_vertices)
@@ -218,15 +230,16 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      old_scale_x = draw.current_scale_x
-      old_scale_y = draw.current_scale_y
-
       if draw_relative_to_camera?
-        draw.scale = Game.camera.zoom
+        perform_draw(draw)
       else
-        draw.scale = 1.0_f32
+        draw.with_camera(nil) do
+          perform_draw(draw)
+        end
       end
+    end
 
+    private def perform_draw(draw : Draw)
       draw_fill(draw) if draw_mode.fill? || draw_mode.border?
 
       if draw_mode.border?
@@ -234,8 +247,6 @@ module GSDL
       elsif draw_mode.outline?
         draw_outline(draw)
       end
-
-      draw.scale = {old_scale_x, old_scale_y}
     end
 
     private def draw_fill(draw : Draw)

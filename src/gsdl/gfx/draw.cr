@@ -232,7 +232,26 @@ module GSDL
     @current_flush_count : Int32 = 0
     @last_flush_count : Int32 = 0
 
-    # Batching buffers
+    @camera : Camera? = nil
+
+    def camera : Camera?
+      @camera
+    end
+
+    def camera=(camera : Camera?)
+      @camera = camera
+    end
+    @vertex_buffer = [] of SDL3::Vertex
+    @index_buffer = [] of Int32
+    @camera : Camera? = nil
+
+    def with_camera(camera : Camera?, &block)
+      old_camera = @camera
+      @camera = camera
+      yield
+      @camera = old_camera
+    end
+
     @vertex_buffer = [] of SDL3::Vertex
     @index_buffer = [] of Int32
     @active_batch_texture : SDL3::Texture? = nil
@@ -811,15 +830,32 @@ module GSDL
     # geometry
 
     def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : Texture? = nil)
+      cam = @camera
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      v_sdl = if cam
+        sx *= cam.zoom
+        sy *= cam.zoom
+        vertices.map do |v|
+          sdl_v = v.to_sdl
+          sdl_v.fpoint.x -= cam.x
+          sdl_v.fpoint.y -= cam.y
+          sdl_v
+        end
+      else
+        vertices.map(&.to_sdl)
+      end
+
       push_cmd(DrawGeometryCommand.new(
         z_index: z_index,
-        vertices: vertices.map(&.to_sdl),
+        vertices: v_sdl,
         indices: indices,
         texture: texture.try(&.to_sdl),
         atlas_rect: texture.try(&.atlas_rect),
         atlas_handle: texture.try(&.atlas_handle),
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -827,13 +863,25 @@ module GSDL
     # points
 
     def point(x : Num, y : Num, color = Color::White, z_index = 0)
+      px = x.to_f32
+      py = y.to_f32
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      if cam = @camera
+        px -= cam.x
+        py -= cam.y
+        sx *= cam.zoom
+        sy *= cam.zoom
+      end
+
       push_cmd(DrawPointCommand.new(
         z_index: z_index,
         color: color,
-        x: x.to_f32,
-        y: y.to_f32,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        x: px,
+        y: py,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -843,12 +891,29 @@ module GSDL
     end
 
     def points(points : Points, color = Color::White, z_index = 0)
+      cam = @camera
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      pts_sdl = if cam
+        sx *= cam.zoom
+        sy *= cam.zoom
+        points.map do |p|
+          sdl_p = p.to_sdl
+          sdl_p.x -= cam.x
+          sdl_p.y -= cam.y
+          sdl_p
+        end
+      else
+        points.map(&.to_sdl)
+      end
+
       push_cmd(DrawPointsCommand.new(
-        points: points.map(&.to_sdl),
+        points: pts_sdl,
         color: color,
         z_index: z_index,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -865,15 +930,31 @@ module GSDL
     # lines
 
     def line(x1 : Num, y1 : Num, x2 : Num, y2 : Num, color = Color::White, z_index = 0)
+      lx1 = x1.to_f32
+      ly1 = y1.to_f32
+      lx2 = x2.to_f32
+      ly2 = y2.to_f32
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      if cam = @camera
+        lx1 -= cam.x
+        ly1 -= cam.y
+        lx2 -= cam.x
+        ly2 -= cam.y
+        sx *= cam.zoom
+        sy *= cam.zoom
+      end
+
       push_cmd(DrawLineCommand.new(
         z_index: z_index,
         color: color,
-        x1: x1.to_f32,
-        y1: y1.to_f32,
-        x2: x2.to_f32,
-        y2: y2.to_f32,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        x1: lx1,
+        y1: ly1,
+        x2: lx2,
+        y2: ly2,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -890,12 +971,29 @@ module GSDL
     end
 
     def lines(points : Points, color = Color::White, z_index = 0)
+      cam = @camera
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      pts_sdl = if cam
+        sx *= cam.zoom
+        sy *= cam.zoom
+        points.map do |p|
+          sdl_p = p.to_sdl
+          sdl_p.x -= cam.x
+          sdl_p.y -= cam.y
+          sdl_p
+        end
+      else
+        points.map(&.to_sdl)
+      end
+
       push_cmd(DrawLinesCommand.new(
-        points: points.map(&.to_sdl),
+        points: pts_sdl,
         color: color,
         z_index: z_index,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -921,13 +1019,24 @@ module GSDL
     # rects
 
     def rect_fill(rect : FRect, color = Color::White, z_index : Int32 = 0)
+      r = rect.to_sdl
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      if cam = @camera
+        r.x -= cam.x
+        r.y -= cam.y
+        sx *= cam.zoom
+        sy *= cam.zoom
+      end
+
       push_cmd(DrawFRectCommand.new(
-        rect: rect.to_sdl,
+        rect: r,
         color: color,
         outline: false,
         z_index: z_index,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -941,13 +1050,30 @@ module GSDL
     end
 
     def rects_fill(rects : FRects, color = Color::White, z_index = 0)
+      cam = @camera
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      rs_sdl = if cam
+        sx *= cam.zoom
+        sy *= cam.zoom
+        rects.map do |r|
+          sdl_r = r.to_sdl
+          sdl_r.x -= cam.x
+          sdl_r.y -= cam.y
+          sdl_r
+        end
+      else
+        rects.map(&.to_sdl)
+      end
+
       push_cmd(DrawFRectsCommand.new(
-        rects: rects.map(&.to_sdl),
+        rects: rs_sdl,
         color: color,
         z_index: z_index,
         outline: false,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -962,13 +1088,24 @@ module GSDL
     end
 
     def rect_outline(rect : FRect, color = Color::White, z_index : Int32 = 0)
+      r = rect.to_sdl
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      if cam = @camera
+        r.x -= cam.x
+        r.y -= cam.y
+        sx *= cam.zoom
+        sy *= cam.zoom
+      end
+
       push_cmd(DrawFRectCommand.new(
-        rect: rect.to_sdl,
+        rect: r,
         color: color,
         z_index: z_index,
         outline: true,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -982,13 +1119,30 @@ module GSDL
     end
 
     def rects_outline(rects : FRects, color = Color::White, z_index = 0)
+      cam = @camera
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      rs_sdl = if cam
+        sx *= cam.zoom
+        sy *= cam.zoom
+        rects.map do |r|
+          sdl_r = r.to_sdl
+          sdl_r.x -= cam.x
+          sdl_r.y -= cam.y
+          sdl_r
+        end
+      else
+        rects.map(&.to_sdl)
+      end
+
       push_cmd(DrawFRectsCommand.new(
-        rects: rects.map(&.to_sdl),
+        rects: rs_sdl,
         color: color,
         z_index: z_index,
         outline: true,
-        scale_x: @current_scale_x,
-        scale_y: @current_scale_y,
+        scale_x: sx,
+        scale_y: sy,
         clip_rect: @current_clip_rect
       ))
     end
@@ -1047,18 +1201,28 @@ module GSDL
       draw_immediately : Bool = false,
       sort_y : Float32? = nil
     )
-      actual_dest_rect = dest_rect || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)
+      actual_dest_rect = (dest_rect.try(&.dup) || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)).to_sdl
+      actual_center = center.to_sdl
+      sx = @current_scale_x
+      sy = @current_scale_y
+
+      if cam = @camera
+        actual_dest_rect.x -= cam.x
+        actual_dest_rect.y -= cam.y
+        sx *= cam.zoom
+        sy *= cam.zoom
+      end
 
       if draw_immediately
         current_active_scale = @r.scale
-        @r.scale = {@current_scale_x, @current_scale_y}
+        @r.scale = {sx, sy}
 
         _draw_texture_rotated(
           texture: texture.to_sdl,
           source_rect: source_rect.try(&.to_sdl),
-          dest_rect: actual_dest_rect.to_sdl,
+          dest_rect: actual_dest_rect,
           angle: angle.to_f64,
-          center: center.to_sdl,
+          center: actual_center,
           flip: flip,
           tint: tint,
           destroy: destroy,
@@ -1072,11 +1236,11 @@ module GSDL
           atlas_rect: texture.atlas_rect,
           atlas_handle: texture.atlas_handle,
           source_rect: source_rect.try(&.to_sdl),
-          dest_rect: actual_dest_rect.to_sdl,
-          scale_x: @current_scale_x,
-          scale_y: @current_scale_y,
+          dest_rect: actual_dest_rect,
+          scale_x: sx,
+          scale_y: sy,
           angle: angle.to_f64,
-          center: center.to_sdl,
+          center: actual_center,
           flip: flip,
           tint: tint,
           destroy: destroy,

@@ -9,10 +9,10 @@ module GSDL
     abstract def x=(x : Num)
     abstract def y=(y : Num)
     abstract def move_speed : Num
-    abstract def draw_x : Num
-    abstract def draw_y : Num
-    abstract def draw_width : Num
-    abstract def draw_height : Num
+    abstract def render_x : Num
+    abstract def render_y : Num
+    abstract def render_width : Num
+    abstract def render_height : Num
     abstract def collision_bounding_box : FRect
 
     property dx : Num = 0
@@ -95,10 +95,10 @@ module GSDL
       return true if collidables.any? { |c| c.solid? && c != self && collides?(c) }
 
       if tm = tile_map
-        return true if tm.solid_up?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
-        return true if tm.solid_down?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
-        return true if tm.solid_left?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
-        return true if tm.solid_right?(draw_x + collision_bounding_box.x, draw_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+        return true if tm.solid_up?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+        return true if tm.solid_down?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+        return true if tm.solid_left?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
+        return true if tm.solid_right?(render_x + collision_bounding_box.x, render_y + collision_bounding_box.y, collision_bounding_box.w, collision_bounding_box.h)
       end
 
       false
