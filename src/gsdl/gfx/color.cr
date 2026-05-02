@@ -294,6 +294,18 @@ module GSDL
       subtract(other)
     end
 
+    def transparent?
+      self == Transparent
+    end
+
+    def white?
+      self == White
+    end
+
+    def black?
+      self == Black
+    end
+
     # Colors
     Transparent = GSDL.gray(0, 0)
 
