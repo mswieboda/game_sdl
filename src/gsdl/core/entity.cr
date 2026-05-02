@@ -30,6 +30,7 @@ module GSDL
 
     getter tweens : Array(Tween) = [] of Tween
 
+    @[AlwaysInline]
     def global_x : Num
       if (p = parent) && p.is_a?(Entity)
         p.global_x + x
@@ -38,6 +39,7 @@ module GSDL
       end
     end
 
+    @[AlwaysInline]
     def global_y : Num
       if (p = parent) && p.is_a?(Entity)
         p.global_y + y

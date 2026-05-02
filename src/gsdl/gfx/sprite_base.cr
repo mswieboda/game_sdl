@@ -42,13 +42,18 @@ module GSDL
     abstract def height : Num
 
     def on_screen? : Bool
-      cam_rect = Game.camera.viewport_rect
-      sx = render_x
-      sy = render_y
-      sw = render_width
-      sh = render_height
+      cam = Game.camera
+      view = cam.viewport_rect
 
-      sx + sw >= cam_rect.x && sx <= cam_rect.x + cam_rect.w && sy + sh >= cam_rect.y && sy <= cam_rect.y + cam_rect.h
+      rw = render_width
+      rh = render_height
+      gx = global_x
+      gy = global_y
+
+      sx = gx - (rw * origin_x)
+      sy = gy - (rh * origin_y) + render_offset_y
+
+      sx + rw >= view.x && sx <= view.x + view.w && sy + rh >= view.y && sy <= view.y + view.h
     end
 
     # Base update logic for all sprites.
@@ -78,18 +83,22 @@ module GSDL
       )
     end
 
+    @[AlwaysInline]
     def render_width : Num
       width * scale_x
     end
 
+    @[AlwaysInline]
     def render_height : Num
       height * scale_y
     end
 
+    @[AlwaysInline]
     def render_x : Num
       global_x - (render_width * origin_x)
     end
 
+    @[AlwaysInline]
     def render_y : Num
       global_y - (render_height * origin_y) + render_offset_y
     end

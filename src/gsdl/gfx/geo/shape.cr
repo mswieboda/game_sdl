@@ -155,10 +155,12 @@ module GSDL
     abstract def width : Num
     abstract def height : Num
 
+    @[AlwaysInline]
     def render_width : Num
       width * scale_x
     end
 
+    @[AlwaysInline]
     def render_height : Num
       height * scale_y
     end
@@ -179,18 +181,22 @@ module GSDL
       origin[1]
     end
 
+    @[AlwaysInline]
     def global_x : Num
       x
     end
 
+    @[AlwaysInline]
     def global_y : Num
       y
     end
 
+    @[AlwaysInline]
     def render_x : Num
       global_x - (render_width * origin_x)
     end
 
+    @[AlwaysInline]
     def render_y : Num
       global_y - (render_height * origin_y)
     end
