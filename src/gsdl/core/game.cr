@@ -55,6 +55,14 @@ module GSDL
       instance.height
     end
 
+    def self.window_width : Int32
+      instance.window_width
+    end
+
+    def self.window_height : Int32
+      instance.window_height
+    end
+
     def self.center_x : Int32
       instance.center_x
     end
@@ -155,7 +163,7 @@ module GSDL
       if @logical_width > 0
         @logical_width
       elsif wnd = @window
-        wnd.size[0]
+        wnd.pixel_size[0]
       else
         @width || 0
       end
@@ -165,6 +173,22 @@ module GSDL
       if @logical_height > 0
         @logical_height
       elsif wnd = @window
+        wnd.pixel_size[1]
+      else
+        @height || 0
+      end
+    end
+
+    def window_width : Int32
+      if wnd = @window
+        wnd.size[0]
+      else
+        @width || 0
+      end
+    end
+
+    def window_height : Int32
+      if wnd = @window
         wnd.size[1]
       else
         @height || 0
