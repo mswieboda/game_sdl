@@ -26,35 +26,39 @@ STB_TRUETYPE_SRC := $(EXT_DIR)/stb_truetype
 STB_TRUETYPE_OBJ := $(BUILD_DIR)/stb_truetype$(OBJ_EXT)
 
 # Combine them for Crystal
-# LINKFLAGS := $(SDL_FLAGS) $(abspath $(STB_TRUETYPE_OBJ))
-LINKFLAGS := $(abspath $(STB_TRUETYPE_OBJ))
+LINKFLAGS := $(SDL_FLAGS) $(abspath $(STB_TRUETYPE_OBJ))
 
 # File targets
 SOURCES := $(shell find $(SOURCE_DIR) -name "*.cr")
 
 # Phony targets don't represent files
-.PHONY: default clean tt example
+.PHONY: default clean build run
 
 # The default target, executed when you just run `make`
-default: example
+default: run
 
 clean:
 	@echo "Executing clean..."
 	$(RM) $(BUILD_DIR)
 
-$(BUILD_DIR):
-	${MKDIR} $@
-
-$(STB_TRUETYPE_OBJ): $(STB_TRUETYPE_SRC).c $(STB_TRUETYPE_SRC).h | $(BUILD_DIR)
+$(STB_TRUETYPE_OBJ): $(STB_TRUETYPE_SRC).c $(STB_TRUETYPE_SRC).h
+	@${MKDIR} $(BUILD_DIR)
 	@echo "Building stb_truetype..."
 	$(C_COMPILER) $(CFLAGS) -c $< -o $@
 
-example: $(STB_TRUETYPE_OBJ) $(SOURCES) | $(BUILD_DIR)
+build: $(STB_TRUETYPE_OBJ) $(SOURCES)
 	@if [ -z "$(EXAMPLE)" ]; then \
 		echo "Error: You must provide EXAMPLE=name"; \
 		exit 1; \
 	fi
+	@${MKDIR} $(BUILD_DIR)
 	@echo "Building example: $(EXAMPLE)..."
 	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(LINKFLAGS)" -p
+
+run: build
+	@if [ -z "$(EXAMPLE)" ]; then \
+		echo "Error: You must provide EXAMPLE=name"; \
+		exit 1; \
+	fi
 	@echo "Running example: $(EXAMPLE)..."
 	./$(BUILD_DIR)/$(EXAMPLE)
