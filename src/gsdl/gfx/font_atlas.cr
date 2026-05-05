@@ -1,7 +1,4 @@
 module GSDL
-  # TODO: Move this to the sdl3 bindings library
-  SDL_PIXELFORMAT_R8 = 0x11210101_u32
-
   class FontAtlas
     @texture : Texture
     @chars : Pointer(LibSTBTrueType::PackedChar)
@@ -56,13 +53,31 @@ module GSDL
       @texture = Texture.new(
         width: atlas_size,
         height: atlas_size,
-        format: LibSDL3::PixelFormat.new(SDL_PIXELFORMAT_R8.to_i32),
+        format: SDL3::PixelFormat::ABGR8888,
         access: TextureAccess::Static
       )
+
+      # convert to rgba8888
+      rgba_pixels = Bytes.new(atlas_size * atlas_size * 4)
+      pixels.each_with_index do |alpha, i|
+        dest = i * 4
+        rgba_pixels[dest + 0] = 255 # Must manually set to 255
+        rgba_pixels[dest + 1] = 255 # Must manually set to 255
+        rgba_pixels[dest + 2] = 255 # Must manually set to 255
+        rgba_pixels[dest + 3] = alpha
+      end
+
+      # # Fast expansion logic
+      # rgba_ptr = pixels.to_unsafe.as(UInt32*)
+      # pixels.each_with_index do |alpha, i|
+      #   # Pack the bytes into a single 32-bit integer (0xAABBGGRR)
+      #   # Assuming little-endian (most common)
+      #   rgba_ptr[i] = (alpha.to_u32 << 24) | 0x00FFFFFF_u32
+      # end
       
       # Upload pixel data
       # pitch is atlas_size (1 byte per pixel)
-      @texture.update(nil, pixels.to_unsafe.as(Void*), atlas_size)
+      @texture.update(nil, rgba_pixels.to_unsafe.as(Void*), atlas_size * 4)
       
       # Alpha Blending is critical for font backgrounds
       @texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
