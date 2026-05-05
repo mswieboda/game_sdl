@@ -6,12 +6,12 @@ module GameEx
   class GameEx < GSDL::Game
     def initialize
       super(title: "Sprite Ex", width: 800, height: 600)
-        end
+    end
 
     def init
       GSDL::Events.esc_exits = true
       GSDL::Game.push(StartScene.new)
-        end
+    end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
