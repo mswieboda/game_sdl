@@ -5,11 +5,18 @@ module GSDL
     Right
   end
 
+  enum VerticalAlign
+    Top
+    Center
+    Bottom
+  end
+
   class TextBeta < Entity
     # include Centerable
 
     property z_index : Int32
     property h_align : HorizontalAlign
+    property v_align : VerticalAlign
     property line_spacing : Num
 
     # TODO: make a setter to change font / font path
@@ -27,8 +34,10 @@ module GSDL
       @x : Num = 0,
       @y : Num = 0,
       @h_align : HorizontalAlign = HorizontalAlign::Left,
+      @v_align : VerticalAlign = VerticalAlign::Top,
       @line_spacing : Num = 1.2_f32,
       @origin = {0_f32, 0_f32},
+      @scale = {1_f32, 1_f32},
       @color = GSDL::Color::White,
       @width = nil,
       @height = nil,
@@ -105,7 +114,7 @@ module GSDL
       @lines.each_with_index do |line_text, line_index|
         line_width = @font_atlas.calculate_width(line_text)
         offset_x = 0
-        offset_y = line_index * line_height
+        line_offset_y = line_index * line_height
 
         if width = @width
           offset_x = case @h_align
@@ -120,16 +129,19 @@ module GSDL
           end
         end
 
-        x = @x + offset_x - (offset_x * origin_x) - (render_width * origin_x)
-        y = @y + offset_y - (offset_y * origin_y) - (render_height * origin_y)
+        x = @x + offset_x - (render_width * origin_x)
+        y = @y + line_offset_y - (render_height * origin_y)
 
         @font_atlas.draw_text(
           text: line_text,
           x: x.to_f32,
           y: y.to_f32,
           color: @color,
+
+          # TODO: scale is broken!
           scale_x: scale_x,
           scale_y: scale_y,
+
           z_index: @z_index
         )
       end

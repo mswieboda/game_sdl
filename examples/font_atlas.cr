@@ -19,6 +19,7 @@ class MainScene < GSDL::Scene
     h_align : GSDL::HorizontalAlign = GSDL::HorizontalAlign::Left,
     line_spacing : GSDL::Num = 1.2_f32,
     origin = {0_f32, 0_f32},
+    scale = {1_f32, 1_f32},
     color = GSDL::Color::White,
     width : GSDL::Num? = nil,
     height : GSDL::Num? = nil,
@@ -32,6 +33,7 @@ class MainScene < GSDL::Scene
       line_spacing: line_spacing,
       origin: origin,
       color: color,
+      scale: scale,
       width: width,
       height: height,
       z_index: z_index,
@@ -43,8 +45,9 @@ class MainScene < GSDL::Scene
       width: text.width,
       height: text.height,
       origin: origin,
+      scale: scale,
       color: GSDL::Color.gray(64),
-      z_index: z_index,
+      z_index: z_index - 1,
     )
 
     circle_xy = GSDL::Circle.new(
@@ -64,8 +67,12 @@ class MainScene < GSDL::Scene
     draw_text_beta(
       draw: draw,
       text: "jumping quickly over lazy dogs\nis good exercise!",
-      x: 16,
+      # text: "j",
+      # x: 16,
+      x: 600,
       y: 128,
+      # scale: {2_f32, 2_f32},
+      origin: {0.5_f32, 0.5_f32},
       h_align: GSDL::HorizontalAlign::Center,
       # line_spacing: 1_f32,
       # width: 900,
