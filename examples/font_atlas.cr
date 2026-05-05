@@ -11,37 +11,65 @@ class MainScene < GSDL::Scene
     @font_small = GSDL::FontAtlas.new("./assets/fonts/PressStart2P.ttf", 16.0_f32)
   end
 
+  def draw_text_beta(
+    draw : GSDL::Draw,
+    text : String,
+    x : GSDL::Num,
+    y : GSDL::Num,
+    h_align : GSDL::HorizontalAlign = GSDL::HorizontalAlign::Left,
+    line_spacing : GSDL::Num = 1.2_f32,
+    origin = {0_f32, 0_f32},
+    color = GSDL::Color::White,
+    width : GSDL::Num? = nil,
+    height : GSDL::Num? = nil,
+    z_index : Int32 = 0,
+  )
+    text = GSDL::TextBeta.new(
+      text: text,
+      x: x,
+      y: y,
+      h_align: h_align,
+      line_spacing: line_spacing,
+      origin: origin,
+      color: color,
+      width: width,
+      height: height,
+      z_index: z_index,
+    )
+
+    box_bg = GSDL::Box.new(
+      x: x,
+      y: y,
+      width: text.width,
+      height: text.height,
+      origin: origin,
+      color: GSDL::Color.gray(64),
+      z_index: z_index,
+    )
+
+    circle_xy = GSDL::Circle.new(
+      x: x,
+      y: y,
+      origin: {0.5_f32, 0.5_f32},
+      radius: 8,
+      z_index: z_index + 1,
+    )
+
+    box_bg.draw(draw)
+    text.draw(draw)
+    circle_xy.draw(draw)
+  end
+
   def draw_screen_overlay(draw : GSDL::Draw)
-    # Test basic rendering and different colors
-    @font.draw_text("GSDL Font Atlas Rendering", 40, 40, GSDL::Color::White)
-    GSDL::Circle.new(x: 40, y: 40, origin: {0.5_f32, 0.5_f32}, radius: 8, z_index: 0).draw(draw)
-
-    # @font.draw_text("High Performance & Batched", 40, 90, GSDL::Color::Yellow)
-    GSDL::TextBeta.new(text: "TextBeta rendering", x: 40, y: 90, color: GSDL::Color::Yellow).draw(draw)
-    GSDL::Circle.new(x: 40, y: 90, origin: {0.5_f32, 0.5_f32}, radius: 8, z_index: 0).draw(draw)
-
-    # Baseline check: 'j', 'g', 'p', 'q', 'y' have descenders
-    # @font.draw_text("jumping quickly over lazy dogs", 40, 160, GSDL::Color::Cyan)
-    GSDL::TextBeta.new(text: "jumping quickly over lazy dogs", x: 40, y: 160, color: GSDL::Color::Cyan).draw(draw)
-    GSDL::Circle.new(x: 40, y: 160, origin: {0.5_f32, 0.5_f32}, radius: 8, z_index: 0).draw(draw)
-
-    # Numbers and symbols
-    # @font.draw_text("0123456789 !@#$%^&*()_+", 40, 230, GSDL::Color::Red)
-    GSDL::TextBeta.new(text: "0123456789 !@#$%^&*()_+", x: 40, y: 230, color: GSDL::Color::Red).draw(draw)
-    GSDL::Circle.new(x: 40, y: 230, origin: {0.5_f32, 0.5_f32}, radius: 8, z_index: 0).draw(draw)
-
-    # Alpha transparency test
-    @font.draw_text("Alpha Blending Test", 40, 300, GSDL::Color.new(0, 255, 0, 128))
-    GSDL::Circle.new(x: 40, y: 300, origin: {0.5_f32, 0.5_f32}, radius: 8, z_index: 0).draw(draw)
-
-    # Smaller text for comparison
-    # Note: We'd need another FontAtlas for a different size, or we could scale this one
-    # but standard atlas usage is one per size for crispness.
-    @font_small.draw_text("Smaller text size", 40, 400, GSDL::Color::LimeGreen)
-    GSDL::Circle.new(x: 40, y: 400, origin: {0.5_f32, 0.5_f32}, radius: 8, z_index: 0).draw(draw)
-
-    @font.draw_text("Press ESC to Quit", 40, 500, GSDL::Color::Gray)
-    GSDL::Circle.new(x: 40, y: 500, origin: {0.5_f32, 0.5_f32}, radius: 8, z_index: 0).draw(draw)
+    draw_text_beta(
+      draw: draw,
+      text: "jumping quickly over lazy dogs\nis good exercise!",
+      x: 16,
+      y: 128,
+      h_align: GSDL::HorizontalAlign::Center,
+      # line_spacing: 1_f32,
+      # width: 900,
+    )
   end
 
   def update(dt : Float32)

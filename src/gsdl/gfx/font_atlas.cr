@@ -96,7 +96,30 @@ module GSDL
       @ascent = ascent.to_f32 * scale
     end
 
-    def draw_text(text : String, x : Num, y : Num, color : Color = Color::WHITE, z_index : Int32 = 0)
+    def calculate_width(text : String) : Float32
+      total_width = 0_f32
+
+      text.each_char do |char|
+        glyph_idx = char.ord - @first_char
+        next if glyph_idx < 0 || glyph_idx >= @char_count
+
+        # We only care about the advance, not the visual width (x1-x0)
+        # because the advance includes the whitespace/spacing.
+        total_width += @chars[glyph_idx].xadvance
+      end
+
+      total_width
+    end
+
+    def draw_text(
+      text : String,
+      x : Num,
+      y : Num,
+      color : Color = Color::White,
+      scale_x : Num = 1,
+      scale_y : Num = 1,
+      z_index : Int32 = 0
+    )
       current_x = x.to_f32
       baseline_y = y + @ascent
 
@@ -118,8 +141,8 @@ module GSDL
         dest = FRect.new(
           x: current_x + glyph.xoff,
           y: baseline_y + glyph.yoff,
-          w: src.w,
-          h: src.h
+          w: src.w * scale_x,
+          h: src.h * scale_y
         )
 
         # Render glyph using GSDL::Draw batching
