@@ -5,6 +5,7 @@ module GSDL
     @font_size : Float32
     @char_count : Int32 = 95
     @first_char : Int32 = 32
+    @ascent : Float32 = 0_f32
 
     def initialize(font_path : String, font_size : Float32, atlas_size : Int32 = 1024)
       @font_size = font_size
@@ -32,6 +33,7 @@ module GSDL
       unless File.exists?(font_path)
         raise "Font file not found: #{font_path}"
       end
+
       font_data = File.read(font_path).to_slice
 
       res = LibSTBTrueType.pack_font_range(
@@ -48,8 +50,8 @@ module GSDL
       # 5. Finalization
       LibSTBTrueType.pack_end(pointerof(context))
 
-      # Move to GPU
-      # We use R8 (1-byte per pixel) for the atlas
+      # 6. Move to GPU
+      # We use ABGR8888 (4-byte per pixel) for the atlas
       @texture = Texture.new(
         width: atlas_size,
         height: atlas_size,
@@ -57,38 +59,46 @@ module GSDL
         access: TextureAccess::Static
       )
 
-      # convert to rgba8888
+      # convert to ABGR8888
       rgba_pixels = Bytes.new(atlas_size * atlas_size * 4)
+      rgba_ptr = rgba_pixels.to_unsafe.as(UInt32*)
+
+      # convert 1-byte pixels to 4-byte pixels in ONE pass
       pixels.each_with_index do |alpha, i|
-        dest = i * 4
-        rgba_pixels[dest + 0] = 255 # Must manually set to 255
-        rgba_pixels[dest + 1] = 255 # Must manually set to 255
-        rgba_pixels[dest + 2] = 255 # Must manually set to 255
-        rgba_pixels[dest + 3] = alpha
+        # pack: alpha (shifted 24 bits) + blue/green/red (0x00FFFFFF)
+        # this assumes ABGR8888 on a little-endian system
+        rgba_ptr[i] = (alpha.to_u32 << 24) | 0x00FFFFFF_u32
       end
 
-      # # Fast expansion logic
-      # rgba_ptr = pixels.to_unsafe.as(UInt32*)
-      # pixels.each_with_index do |alpha, i|
-      #   # Pack the bytes into a single 32-bit integer (0xAABBGGRR)
-      #   # Assuming little-endian (most common)
-      #   rgba_ptr[i] = (alpha.to_u32 << 24) | 0x00FFFFFF_u32
-      # end
+      # upload to texture
+      @texture.update(nil, rgba_ptr.as(Void*), atlas_size * 4)
       
-      # Upload pixel data
-      # pitch is atlas_size (1 byte per pixel)
-      @texture.update(nil, rgba_pixels.to_unsafe.as(Void*), atlas_size * 4)
-      
-      # Alpha Blending is critical for font backgrounds
+      # alpha Blending is critical for font backgrounds
       @texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
       
-      # Default to NEAREST for crisp pixel fonts as requested
+      # default to NEAREST for crisp pixel fonts as requested
       @texture.scale_mode = LibSDL3::ScaleMode::Nearest
+
+      # 7. Get ascent data
+      font_info = LibSTBTrueType::FontInfo.new
+      LibSTBTrueType.init_font(pointerof(font_info), font_data.to_unsafe, 0)
+
+      scale = LibSTBTrueType.scale_for_pixel_height(pointerof(font_info), font_size)
+
+      # Get vertical metrics
+      ascent = 0
+      descent = 0
+      line_gap = 0
+
+      LibSTBTrueType.get_font_v_metrics(pointerof(font_info), pointerof(ascent), pointerof(descent), pointerof(line_gap))
+
+      # Scale them to pixels
+      @ascent = ascent.to_f32 * scale
     end
 
     def draw_text(text : String, x : Num, y : Num, color : Color = Color::WHITE, z_index : Int32 = 0)
       current_x = x.to_f32
-      current_y = y.to_f32
+      baseline_y = y + @ascent
 
       text.each_char do |char|
         glyph_idx = char.ord - @first_char
@@ -107,7 +117,7 @@ module GSDL
         # Destination rect with offsets applied
         dest = FRect.new(
           x: current_x + glyph.xoff,
-          y: current_y + glyph.yoff,
+          y: baseline_y + glyph.yoff,
           w: src.w,
           h: src.h
         )
