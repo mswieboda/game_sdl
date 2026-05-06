@@ -150,15 +150,31 @@ module GSDL
 
     def update_lines
       if width = @width
-        @lines = @full_text.lines.flat_map do |text|
-          wrap(text, width)
+        max_lines = Int32::MAX
+
+        if height = @height
+          max_lines = (height / line_height).to_i
         end
+
+        @lines = [] of String
+
+        @full_text.lines.each do |text|
+          break if @lines.size >= max_lines
+
+          wrapped = wrap(text, width, max_lines - @lines.size)
+
+          @lines.concat(wrapped)
+        end
+
+        # @lines = @full_text.lines.flat_map do |text|
+        #   wrap(text, width)
+        # end
       else
         @lines = @full_text.lines
       end
     end
 
-    private def wrap(text : String, max_width : Num)
+    private def wrap(text : String, max_width : Num, remaining_lines : Int32)
       words = text.split(' ')
 
       return [""] if words.all?(&.empty?)
@@ -169,11 +185,20 @@ module GSDL
       current_line = [] of String
       current_width = 0.0_f32
 
-      words.each do |word|
+      words.each_with_index do |word, index|
         word_width = @font_atlas.calculate_width(word)
 
         # If adding this word exceeds width, flush current_line
         if !current_line.empty? && (current_width + word_width > max_width)
+          # If we are on the very last line allowed, we must truncate this line instead of wrapping
+          if lines.size + 1 >= remaining_lines
+            truncated_line = truncate(current_line.join(" ") + " " + word, max_width)
+            lines << truncated_line
+
+            # Stop processing words entirely
+            return lines
+          end
+
           lines << current_line.join(" ")
           current_line = [] of String
           current_width = 0.0_f32
@@ -183,8 +208,39 @@ module GSDL
         current_width += word_width + space_width
       end
 
-      lines << current_line.join(" ") unless current_line.empty?
+      # Handle the final leftover line
+      if !current_line.empty?
+        final_text = current_line.join(" ")
+
+        if lines.size >= remaining_lines || @font_atlas.calculate_width(final_text) > max_width
+          final_text = truncate(final_text, max_width)
+        end
+
+        lines << final_text
+      end
+
       lines
+    end
+
+    private def truncate(text, max_width)
+      ellipsis = "..."
+      e_width = @font_atlas.calculate_width(ellipsis)
+
+      # If even the ellipsis doesn't fit, just return an empty string or a dot
+      return "" if e_width > max_width
+
+      # Start dropping characters from the end
+      i = text.size
+
+      while i > 0
+        candidate = text[0...i] + ellipsis
+
+        return candidate if @font_atlas.calculate_width(candidate) <= max_width
+
+        i -= 1
+      end
+
+      ellipsis
     end
 
     def draw(draw : Draw)
