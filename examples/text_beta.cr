@@ -7,7 +7,7 @@ class MainScene < GSDL::Scene
     super(:main)
 
     @text = GSDL::TextBeta.new(
-      text: "jumping quickly over lazy dogs\nis   good   exercise!\nbatt1 batt2 batt3",
+      text: "jumping quickly over lazy dogs\nis good exercise!\nbatt1 batt2 batt3",
       x: FontAtlasExample.width // 2,
       y: 300,
       origin: {0.5_f32, 0.5_f32},
@@ -42,7 +42,7 @@ class MainScene < GSDL::Scene
 
     box_bg.draw(draw)
     @text.draw(draw)
-    circle_xy.draw(draw)
+    # circle_xy.draw(draw)
   end
 
   def update(dt : Float32)

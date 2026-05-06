@@ -14,6 +14,9 @@ module GSDL
   class TextBeta < Entity
     # include Centerable
 
+    EllipsisMarker = "|^.~.^|"
+    Ellipsis = "..."
+
     property z_index : Int32
     property h_align : HorizontalAlign
     property v_align : VerticalAlign
@@ -157,90 +160,114 @@ module GSDL
         end
 
         @lines = [] of String
+        all_lines = @full_text.lines
 
-        @full_text.lines.each do |text|
-          break if @lines.size >= max_lines
+        all_lines.each_with_index do |text, index|
+          # Check budget before even trying a new segment
+          lines_left = max_lines - @lines.size
+          break if lines_left <= 0
 
-          wrapped = wrap(text, width, max_lines - @lines.size)
+          # Check if this is the final piece of the entire string
+          is_last_segment = (index == all_lines.size - 1)
+
+          wrapped = wrap(text, width, lines_left, is_last_segment)
+
+          # If we truncated, we stop immediately
+          if wrapped.any?(&.ends_with?(EllipsisMarker))
+            wrapped[-1] = wrapped[-1][0..-(EllipsisMarker.size + 1)] + Ellipsis
+            @lines.concat(wrapped)
+            break
+          end
 
           @lines.concat(wrapped)
         end
-
-        # @lines = @full_text.lines.flat_map do |text|
-        #   wrap(text, width)
-        # end
       else
         @lines = @full_text.lines
       end
     end
 
-    private def wrap(text : String, max_width : Num, remaining_lines : Int32)
+    private def wrap(text : String, max_width : Num, remaining_lines : Int32, is_last_segment : Bool)
       words = text.split(' ')
 
       return [""] if words.all?(&.empty?)
 
-      space_width = @font_atlas.calculate_width(" ")
-
       lines = [] of String
       current_line = [] of String
       current_width = 0.0_f32
+      space_width = @font_atlas.calculate_width(" ")
 
       words.each_with_index do |word, index|
         word_width = @font_atlas.calculate_width(word)
+        is_last_word = (index == words.size - 1)
 
-        # If adding this word exceeds width, flush current_line
+        # If single word is wider than max width
+        if word_width > max_width
+          lines << current_line.join(" ") unless current_line.empty?
+          if lines.size >= remaining_lines
+            lines[-1] = truncate(lines[-1] + EllipsisMarker, max_width)
+          else
+            lines << truncate(word, max_width)
+          end
+
+          return lines
+        end
+
+        # If word forces a wrap
         if !current_line.empty? && (current_width + word_width > max_width)
-          # If we are on the very last line allowed, we must truncate this line instead of wrapping
+          # If no more lines are allowed, truncate the current content + this word
           if lines.size + 1 >= remaining_lines
-            truncated_line = truncate(current_line.join(" ") + " " + word, max_width)
-            lines << truncated_line
-
-            # Stop processing words entirely
+            lines << truncate(current_line.join(" ") + " " + word, max_width)
             return lines
           end
 
+          # Wrap
           lines << current_line.join(" ")
-          current_line = [] of String
-          current_width = 0.0_f32
+          current_line = [word]
+          current_width = word_width + space_width
+        else
+          # Append
+          current_line << word
+          current_width += word_width + space_width
         end
 
-        current_line << word
-        current_width += word_width + space_width
-      end
+        # Handle the end of the words
+        if is_last_word
+          line_text = current_line.join(" ")
 
-      # Handle the final leftover line
-      if !current_line.empty?
-        final_text = current_line.join(" ")
-
-        if lines.size >= remaining_lines || @font_atlas.calculate_width(final_text) > max_width
-          final_text = truncate(final_text, max_width)
+          # If this is the last available line, but NOT the last segment
+          # of the full text, we must truncate to show there is more content
+          if lines.size + 1 >= remaining_lines && !is_last_segment
+            lines << truncate(line_text, max_width)
+          else
+            lines << line_text
+          end
         end
-
-        lines << final_text
       end
 
       lines
     end
 
     private def truncate(text, max_width)
-      ellipsis = "..."
-      e_width = @font_atlas.calculate_width(ellipsis)
+      return EllipsisMarker if @font_atlas.calculate_width(Ellipsis) > max_width
 
-      # If even the ellipsis doesn't fit, just return an empty string or a dot
-      return "" if e_width > max_width
+      # Binary search approach for better performance with long words
+      low = 0
+      high = text.size
+      best_fit = ""
 
-      # Start dropping characters from the end
-      i = text.size
+      while low <= high
+        mid = (low + high) // 2
+        candidate = text[0...mid]
 
-      while i > 0
-        candidate = text[0...i] + ellipsis
-
-        return candidate if @font_atlas.calculate_width(candidate) <= max_width
-
-        i -= 1
+        if @font_atlas.calculate_width(candidate + Ellipsis) <= max_width
+          best_fit = candidate
+          low = mid + 1
+        else
+          high = mid - 1
+        end
       end
 
-      ellipsis
+      (best_fit.empty? ? "" : best_fit) + EllipsisMarker
     end
 
     def draw(draw : Draw)
