@@ -150,16 +150,16 @@ module GSDL
 
     def update_lines
       if width = @width
-        @lines = @full_text.lines.flat_map do |segment|
-          wrap_segment(segment, width)
+        @lines = @full_text.lines.flat_map do |text|
+          wrap(text, width)
         end
       else
         @lines = @full_text.lines
       end
     end
 
-    private def wrap_segment(segment : String, max_width : Num)
-      words = segment.split(' ')
+    private def wrap(text : String, max_width : Num)
+      words = text.split(' ')
 
       return [""] if words.all?(&.empty?)
 
