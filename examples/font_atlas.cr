@@ -78,7 +78,7 @@ class MainScene < GSDL::Scene
       h_align: GSDL::HorizontalAlign::Center,
       # h_align: GSDL::HorizontalAlign::Right,
       # line_spacing: 1_f32,
-      # line_spacing: 3_f32,
+      line_spacing: 3_f32,
       width: 500,
     )
   end

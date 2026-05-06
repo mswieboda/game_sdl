@@ -82,7 +82,7 @@ module GSDL
 
     @[AlwaysInline]
     def line_height
-      @font_size * (@lines.size > 1 ? @line_spacing : 1)
+      @font_size * @line_spacing
     end
 
     def height : Num
@@ -90,7 +90,7 @@ module GSDL
         return height
       end
 
-      @height = line_height * @lines.size
+      @height = line_height * (@lines.size - 1) + @font_size
       @height.not_nil!
     end
 
