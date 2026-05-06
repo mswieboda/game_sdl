@@ -149,62 +149,42 @@ module GSDL
     end
 
     def update_lines
-      segments = @full_text.split("\n")
+      if width = @width
+        @lines = @full_text.lines.flat_map do |segment|
+          wrap_segment(segment, width)
+        end
+      else
+        @lines = @full_text.lines
+      end
+    end
+
+    private def wrap_segment(segment : String, max_width : Num)
+      words = segment.split(' ')
+
+      return [""] if words.all?(&.empty?)
 
       space_width = @font_atlas.calculate_width(" ")
 
-      if width = @width
-        current_line_width = 0.0_f32
+      lines = [] of String
+      current_line = [] of String
+      current_width = 0.0_f32
 
-        @lines = [] of String
-        line = [] of String
+      words.each do |word|
+        word_width = @font_atlas.calculate_width(word)
 
-        segments.each_with_index do |segment, segment_index|
-          words = segment.split(' ')
-
-          # If all words are empty, it was a new line (with potential spaces)
-          if words.all?(&.empty?)
-            @lines << ""
-            next
-          end
-
-          words.each_with_index do |word, word_index|
-            # Measure the word (plus a space)
-            word_width = @font_atlas.calculate_width(word)
-
-            # Check if this word pushes us over the boundary
-            if current_line_width + word_width > width
-              # Add the current line
-              @lines << line.join(" ")
-
-              # Start the next line
-              line = [word]
-              current_line_width = word_width + space_width
-            else
-              # Add word to the line
-              line << word
-              current_line_width += word_width + space_width
-            end
-
-            # Check if this was the last word in the segment
-            if word_index >= words.size - 1
-              # Add the current line
-              @lines << line.join(" ")
-              line = [] of String
-              current_line_width = 0_f32
-            end
-          end
-
-          # Check if this was the last segment
-          if segment_index >= segments.size - 1 && !line.empty?
-            # Add the current line
-            @lines << line.join(" ")
-            current_line_width = 0_f32
-          end
+        # If adding this word exceeds width, flush current_line
+        if !current_line.empty? && (current_width + word_width > max_width)
+          lines << current_line.join(" ")
+          current_line = [] of String
+          current_width = 0.0_f32
         end
-      else
-        @lines = segments
+
+        current_line << word
+        current_width += word_width + space_width
       end
+
+      lines << current_line.join(" ") unless current_line.empty?
+      lines
     end
 
     def draw(draw : Draw)
