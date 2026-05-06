@@ -26,6 +26,7 @@ module GSDL
     @width : Num?
     @height : Num?
     @lines : Array(String)
+    @text_width : Float32?
 
     def initialize(
       font_path = "./assets/fonts/PressStart2P.ttf",
@@ -53,14 +54,15 @@ module GSDL
 
     def text=(text : String)
       @lines = text.split("\n")
+      @text_width = nil
     end
 
-    def width : Num
-      if width = @width
-        return width
+    def text_width : Float32
+      if text_width = @text_width
+        return text_width
       end
 
-      max_line_width = 0
+      max_line_width = 0_f32
 
       @lines.each do |line_text|
         line_width = @font_atlas.calculate_width(line_text)
@@ -70,7 +72,16 @@ module GSDL
         end
       end
 
-      @width = max_line_width
+      @text_width = max_line_width
+      @text_width.not_nil!
+    end
+
+    def width : Num
+      if width = @width
+        return width
+      end
+
+      @width = text_width
       @width.not_nil!
     end
 
@@ -81,8 +92,13 @@ module GSDL
     end
 
     @[AlwaysInline]
-    def line_height
+    def line_height : Float32
       @font_size * @line_spacing
+    end
+
+    @[AlwaysInline]
+    def text_height : Float32
+      @font_size * @line_spacing * (@lines.size - 1) + @font_size
     end
 
     def height : Num
@@ -90,7 +106,7 @@ module GSDL
         return height
       end
 
-      @height = line_height * (@lines.size - 1) + @font_size
+      @height = text_height
       @height.not_nil!
     end
 
@@ -111,10 +127,21 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      offset_y = case @v_align
+      when .top?
+        0
+      when .center?
+        self.height / 2 - text_height / 2
+      when .bottom?
+        self.height - text_height
+        0
+      else
+        0
+      end
+
       @lines.each_with_index do |line_text, line_index|
         line_width = @font_atlas.calculate_width(line_text)
         offset_x = 0
-        line_offset_y = line_index * line_height
 
         if width = @width
           offset_x = case @h_align
@@ -129,8 +156,10 @@ module GSDL
           end
         end
 
+        line_offset_y = line_index * line_height
+
         x = @x + offset_x * scale_x - (self.width * scale_x * origin_x)
-        y = @y + line_offset_y * scale_y - (self.height * scale_y * origin_y)
+        y = @y + offset_y * scale_y + line_offset_y * scale_y - (self.height * scale_y * origin_y)
 
         @font_atlas.draw_text(
           text: line_text,

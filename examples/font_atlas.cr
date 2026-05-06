@@ -14,9 +14,10 @@ class MainScene < GSDL::Scene
   def draw_text_beta(
     draw : GSDL::Draw,
     text : String,
-    x : GSDL::Num,
-    y : GSDL::Num,
+    x : GSDL::Num = 0,
+    y : GSDL::Num = 0,
     h_align : GSDL::HorizontalAlign = GSDL::HorizontalAlign::Left,
+    v_align : GSDL::VerticalAlign = GSDL::VerticalAlign::Top,
     line_spacing : GSDL::Num = 1.2_f32,
     origin = {0_f32, 0_f32},
     scale = {1_f32, 1_f32},
@@ -30,6 +31,7 @@ class MainScene < GSDL::Scene
       x: x,
       y: y,
       h_align: h_align,
+      v_align: v_align,
       line_spacing: line_spacing,
       origin: origin,
       color: color,
@@ -54,7 +56,8 @@ class MainScene < GSDL::Scene
       x: x,
       y: y,
       origin: {0.5_f32, 0.5_f32},
-      radius: 8,
+      radius: 16,
+      color: GSDL::Color::Magenta,
       z_index: z_index + 1,
     )
 
@@ -66,20 +69,27 @@ class MainScene < GSDL::Scene
   def draw_screen_overlay(draw : GSDL::Draw)
     draw_text_beta(
       draw: draw,
-      text: "jumping quickly over lazy dogs\nis good exercise!",
+      text: "jumping quickly over lazy dogs\nis good exercise!\nbatty batty batty",
       # text: "jumping",
       # text: "jump",
       # x: 16,
-      x: 600,
-      y: 128,
+      x: FontAtlasExample.width // 2,
+      # x: 300,
+      # y: 128,
+      y: 300,
+      # y: 600,
+      # y: FontAtlasExample.height // 2,
       # scale: {2_f32, 2_f32},
       # scale: {3_f32, 3_f32},
       origin: {0.5_f32, 0.5_f32},
       h_align: GSDL::HorizontalAlign::Center,
       # h_align: GSDL::HorizontalAlign::Right,
+      v_align: GSDL::VerticalAlign::Center,
       # line_spacing: 1_f32,
       line_spacing: 3_f32,
-      width: 500,
+      width: 600,
+      # height: 112,
+      height: 300,
     )
   end
 
