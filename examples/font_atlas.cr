@@ -7,7 +7,7 @@ class MainScene < GSDL::Scene
     super(:main)
 
     @text = GSDL::TextBeta.new(
-      text: "jumping quickly over lazy dogs\nis   good   exercise!\n\nbatt1 batt2 batt3",
+      text: "jumping_ quickly_ over_ lazy_ dogs_\nis_   good_   exercise!_\n\nbatt1_ batt2_ batt3_",
       # text: "jumping quickly over lazy dogs is   good   exercise! batt1 batt2 batt3",
       # text: "jumping",
       # text: "jump",
@@ -26,9 +26,9 @@ class MainScene < GSDL::Scene
       # v_align: GSDL::VerticalAlign::Center,
       # line_spacing: 1_f32,
       line_spacing: 3_f32,
-      width: 334,
+      # width: 300,
       # height: 112,
-      # height: 300,
+      height: 300,
     )
   end
 
@@ -65,12 +65,40 @@ class MainScene < GSDL::Scene
       GSDL::Game.quit!
     end
 
-    if GSDL::Keys.just_pressed?([GSDL::Keys::A, GSDL::Keys::Left])
+    # reset width
+    if GSDL::Keys.just_pressed?(GSDL::Keys::Tab)
+      @text.width = nil
+    end
+
+    # reset height
+    if GSDL::Keys.just_pressed?(GSDL::Keys::Return)
+      @text.height = nil
+    end
+
+    # reset width & height
+    if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
+      @text.width = nil
+      @text.height = nil
+    end
+
+    # width decrease
+    if GSDL::Keys.just_pressed?(GSDL::Keys::A) || GSDL::Keys.pressed?(GSDL::Keys::Left)
       @text.width -= 1
     end
 
-    if GSDL::Keys.just_pressed?([GSDL::Keys::D, GSDL::Keys::Right])
+    # width increase
+    if GSDL::Keys.just_pressed?(GSDL::Keys::D) || GSDL::Keys.pressed?(GSDL::Keys::Right)
       @text.width += 1
+    end
+
+    # height decrease
+    if GSDL::Keys.just_pressed?(GSDL::Keys::W) || GSDL::Keys.pressed?(GSDL::Keys::Up)
+      @text.height -= 1
+    end
+
+    # height increase
+    if GSDL::Keys.just_pressed?(GSDL::Keys::S) || GSDL::Keys.pressed?(GSDL::Keys::Down)
+      @text.height += 1
     end
   end
 end

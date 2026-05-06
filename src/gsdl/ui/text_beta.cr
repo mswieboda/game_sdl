@@ -21,6 +21,8 @@ module GSDL
 
     # TODO: make a setter to change font / font path
     getter font_size : Float32
+    getter? width_fixed : Bool
+    getter? height_fixed : Bool
 
     @font_atlas : FontAtlas
     @full_text : String
@@ -48,6 +50,9 @@ module GSDL
       @font_atlas = GSDL::FontAtlas.new(font_path, @font_size)
       @full_text = text
       @lines = [] of String
+
+      @width_fixed = !@width.nil?
+      @height_fixed = !@height.nil?
 
       update_lines
     end
@@ -89,12 +94,16 @@ module GSDL
       @width.not_nil!
     end
 
-    def width=(width : Num)
-      puts ">>> width=(#{width}) @width=#{@width}"
+    def width=(width : Num?)
       if width != @width
         @width = width
 
         update_lines
+
+        # reset height based on line changes, unless it's fixed
+        if !height_fixed?
+          self.height = nil
+        end
       end
     end
 
@@ -117,7 +126,7 @@ module GSDL
       @height.not_nil!
     end
 
-    def height=(height : Num)
+    def height=(height : Num?)
       if height != @height
         @height = height
 
@@ -140,6 +149,8 @@ module GSDL
       segments = @full_text.split("\n")
 
       # puts ">>> segments: `#{segments}`"
+
+      space_width = @font_atlas.calculate_width(" ")
 
       if width = @width
         current_line_width = 0.0_f32
@@ -164,18 +175,19 @@ module GSDL
             # puts ">>> word: `#{word}` #{typeof(word)} empty?: #{word.empty?}"
 
             # Measure the word (plus a space)
-            word_width = @font_atlas.calculate_width(word + " ")
+            word_width = @font_atlas.calculate_width(word)
 
             # Check if this word pushes us over the boundary
             if current_line_width + word_width > width
               # puts ">>> LAST WORD FOR LENGTH word: `#{word}`"
               # puts ">>> line to add: `#{line}`"
+
               # Add the current line
               @lines << line.join(" ")
 
               # Start the next line
               line = [word]
-              current_line_width = word_width
+              current_line_width = word_width + space_width
 
               # puts ">>> @lines: `#{@lines}`"
             else
@@ -183,7 +195,7 @@ module GSDL
               # puts ">>> ADD WORD word: `#{word}`"
               line << word
               # puts ">>> line: `#{line}`"
-              current_line_width += word_width
+              current_line_width += word_width + space_width
             end
 
             # Check if this was the last word in the segment
