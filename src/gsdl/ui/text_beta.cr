@@ -82,7 +82,7 @@ module GSDL
 
     @[AlwaysInline]
     def line_height
-      @font_size * @line_spacing
+      @font_size * (@lines.size > 1 ? @line_spacing : 1)
     end
 
     def height : Num
@@ -129,19 +129,16 @@ module GSDL
           end
         end
 
-        x = @x + offset_x - (render_width * origin_x)
-        y = @y + line_offset_y - (render_height * origin_y)
+        x = @x + offset_x * scale_x - (self.width * scale_x * origin_x)
+        y = @y + line_offset_y * scale_y - (self.height * scale_y * origin_y)
 
         @font_atlas.draw_text(
           text: line_text,
           x: x.to_f32,
           y: y.to_f32,
           color: @color,
-
-          # TODO: scale is broken!
           scale_x: scale_x,
           scale_y: scale_y,
-
           z_index: @z_index
         )
       end

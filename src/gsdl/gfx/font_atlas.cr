@@ -121,7 +121,7 @@ module GSDL
       z_index : Int32 = 0
     )
       current_x = x.to_f32
-      baseline_y = y + @ascent
+      baseline_y = y + @ascent * scale_y
 
       text.each_char do |char|
         glyph_idx = char.ord - @first_char
@@ -137,12 +137,17 @@ module GSDL
           h: (glyph.y1 - glyph.y0).to_f32
         )
 
+        w = src.w * scale_x
+        h = src.h * scale_y
+        x = current_x + glyph.xoff * scale_x
+        y = baseline_y + glyph.yoff * scale_y
+
         # Destination rect with offsets applied
         dest = FRect.new(
-          x: current_x + glyph.xoff,
-          y: baseline_y + glyph.yoff,
-          w: src.w * scale_x,
-          h: src.h * scale_y
+          x: x,
+          y: y,
+          w: w,
+          h: h
         )
 
         # Render glyph using GSDL::Draw batching
@@ -155,7 +160,7 @@ module GSDL
         )
 
         # Advance horizontal position
-        current_x += glyph.xadvance
+        current_x += glyph.xadvance * scale_x
       end
     end
 

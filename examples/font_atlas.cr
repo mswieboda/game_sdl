@@ -67,15 +67,19 @@ class MainScene < GSDL::Scene
     draw_text_beta(
       draw: draw,
       text: "jumping quickly over lazy dogs\nis good exercise!",
-      # text: "j",
+      # text: "jumping",
+      # text: "jump",
       # x: 16,
       x: 600,
       y: 128,
       # scale: {2_f32, 2_f32},
+      # scale: {3_f32, 3_f32},
       origin: {0.5_f32, 0.5_f32},
       h_align: GSDL::HorizontalAlign::Center,
+      # h_align: GSDL::HorizontalAlign::Right,
       # line_spacing: 1_f32,
-      # width: 900,
+      # line_spacing: 3_f32,
+      width: 500,
     )
   end
 
