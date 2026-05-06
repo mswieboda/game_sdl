@@ -98,6 +98,8 @@ module GSDL
       if width != @width
         @width = width
 
+        @width_fixed = !@width.nil?
+
         update_lines
 
         # reset height based on line changes, unless it's fixed
@@ -130,6 +132,8 @@ module GSDL
       if height != @height
         @height = height
 
+        @height_fixed = !@height.nil?
+
         update_lines
       end
     end
@@ -145,10 +149,7 @@ module GSDL
     end
 
     def update_lines
-      # puts ">>> update_lines w: #{@width}"
       segments = @full_text.split("\n")
-
-      # puts ">>> segments: `#{segments}`"
 
       space_width = @font_atlas.calculate_width(" ")
 
@@ -159,11 +160,7 @@ module GSDL
         line = [] of String
 
         segments.each_with_index do |segment, segment_index|
-          # puts ">>> segment: `#{segment}`"
-
           words = segment.split(' ')
-
-          # puts ">>> words: `#{words}` all empty?: #{words.all?(&.empty?)}"
 
           # If all words are empty, it was a new line (with potential spaces)
           if words.all?(&.empty?)
@@ -172,39 +169,27 @@ module GSDL
           end
 
           words.each_with_index do |word, word_index|
-            # puts ">>> word: `#{word}` #{typeof(word)} empty?: #{word.empty?}"
-
             # Measure the word (plus a space)
             word_width = @font_atlas.calculate_width(word)
 
             # Check if this word pushes us over the boundary
             if current_line_width + word_width > width
-              # puts ">>> LAST WORD FOR LENGTH word: `#{word}`"
-              # puts ">>> line to add: `#{line}`"
-
               # Add the current line
               @lines << line.join(" ")
 
               # Start the next line
               line = [word]
               current_line_width = word_width + space_width
-
-              # puts ">>> @lines: `#{@lines}`"
             else
               # Add word to the line
-              # puts ">>> ADD WORD word: `#{word}`"
               line << word
-              # puts ">>> line: `#{line}`"
               current_line_width += word_width + space_width
             end
 
             # Check if this was the last word in the segment
             if word_index >= words.size - 1
               # Add the current line
-              # puts ">>> LAST WORD FOR WORDS word: `#{word}`"
-              # puts ">>> line: `#{line}`"
               @lines << line.join(" ")
-              # puts ">>> @lines: `#{@lines}`"
               line = [] of String
               current_line_width = 0_f32
             end
@@ -212,15 +197,10 @@ module GSDL
 
           # Check if this was the last segment
           if segment_index >= segments.size - 1 && !line.empty?
-            # puts ">>> LAST SEGMENT line: `#{line}`"
-            # puts ">>> line to add: `#{line}`"
             # Add the current line
             @lines << line.join(" ")
-            # puts ">>> @lines: `#{@lines}`"
             current_line_width = 0_f32
           end
-
-          # puts ">>>"
         end
       else
         @lines = segments
