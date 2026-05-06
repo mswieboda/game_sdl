@@ -145,7 +145,7 @@ module GSDL
     end
 
     def update_lines
-      puts ">>> update_lines w: #{@width}"
+      # puts ">>> update_lines w: #{@width}"
       segments = @full_text.split("\n")
 
       # puts ">>> segments: `#{segments}`"
@@ -232,10 +232,9 @@ module GSDL
       when .top?
         0
       when .center?
-        self.height / 2 - text_height / 2
+        [self.height / 2 - text_height / 2, 0].max
       when .bottom?
-        self.height - text_height
-        0
+        [self.height - text_height, 0].max
       else
         0
       end

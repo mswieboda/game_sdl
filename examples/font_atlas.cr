@@ -7,8 +7,8 @@ class MainScene < GSDL::Scene
     super(:main)
 
     @text = GSDL::TextBeta.new(
-      text: "jumping_ quickly_ over_ lazy_ dogs_\nis_   good_   exercise!_\n\nbatt1_ batt2_ batt3_",
-      # text: "jumping quickly over lazy dogs is   good   exercise! batt1 batt2 batt3",
+      # text: "jumping_ quickly_ over_ lazy_ dogs_\nis_   good_   exercise!_\n\nbatt1_ batt2_ batt3_",
+      text: "jumping quickly over lazy dogs is   good   exercise! batt1 batt2 batt3",
       # text: "jumping",
       # text: "jump",
       # x: 16,
@@ -24,9 +24,10 @@ class MainScene < GSDL::Scene
       # h_align: GSDL::HorizontalAlign::Center,
       # h_align: GSDL::HorizontalAlign::Right,
       # v_align: GSDL::VerticalAlign::Center,
+      # v_align: GSDL::VerticalAlign::Bottom,
       # line_spacing: 1_f32,
       line_spacing: 3_f32,
-      # width: 300,
+      width: 300,
       # height: 112,
       height: 300,
     )
