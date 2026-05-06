@@ -1,75 +1,14 @@
 require "../src/game_sdl"
 
 class MainScene < GSDL::Scene
-  @font : GSDL::FontAtlas
+  @text : GSDL::TextBeta
 
   def initialize
     super(:main)
 
-    # Use a common font size for testing
-    @font = GSDL::FontAtlas.new("./assets/fonts/PressStart2P.ttf", 32.0_f32)
-    @font_small = GSDL::FontAtlas.new("./assets/fonts/PressStart2P.ttf", 16.0_f32)
-  end
-
-  def draw_text_beta(
-    draw : GSDL::Draw,
-    text : String,
-    x : GSDL::Num = 0,
-    y : GSDL::Num = 0,
-    h_align : GSDL::HorizontalAlign = GSDL::HorizontalAlign::Left,
-    v_align : GSDL::VerticalAlign = GSDL::VerticalAlign::Top,
-    line_spacing : GSDL::Num = 1.2_f32,
-    origin = {0_f32, 0_f32},
-    scale = {1_f32, 1_f32},
-    color = GSDL::Color::White,
-    width : GSDL::Num? = nil,
-    height : GSDL::Num? = nil,
-    z_index : Int32 = 0,
-  )
-    text = GSDL::TextBeta.new(
-      text: text,
-      x: x,
-      y: y,
-      h_align: h_align,
-      v_align: v_align,
-      line_spacing: line_spacing,
-      origin: origin,
-      color: color,
-      scale: scale,
-      width: width,
-      height: height,
-      z_index: z_index,
-    )
-
-    box_bg = GSDL::Box.new(
-      x: x,
-      y: y,
-      width: text.width,
-      height: text.height,
-      origin: origin,
-      scale: scale,
-      color: GSDL::Color.gray(64),
-      z_index: z_index - 1,
-    )
-
-    circle_xy = GSDL::Circle.new(
-      x: x,
-      y: y,
-      origin: {0.5_f32, 0.5_f32},
-      radius: 16,
-      color: GSDL::Color::Magenta,
-      z_index: z_index + 1,
-    )
-
-    box_bg.draw(draw)
-    text.draw(draw)
-    circle_xy.draw(draw)
-  end
-
-  def draw_screen_overlay(draw : GSDL::Draw)
-    draw_text_beta(
-      draw: draw,
-      text: "jumping quickly over lazy dogs\nis good exercise!\nbatty batty batty",
+    @text = GSDL::TextBeta.new(
+      text: "jumping quickly over lazy dogs\nis   good   exercise!\n\nbatt1 batt2 batt3",
+      # text: "jumping quickly over lazy dogs is   good   exercise! batt1 batt2 batt3",
       # text: "jumping",
       # text: "jump",
       # x: 16,
@@ -82,26 +21,57 @@ class MainScene < GSDL::Scene
       # scale: {2_f32, 2_f32},
       # scale: {3_f32, 3_f32},
       origin: {0.5_f32, 0.5_f32},
-      h_align: GSDL::HorizontalAlign::Center,
+      # h_align: GSDL::HorizontalAlign::Center,
       # h_align: GSDL::HorizontalAlign::Right,
-      v_align: GSDL::VerticalAlign::Center,
+      # v_align: GSDL::VerticalAlign::Center,
       # line_spacing: 1_f32,
       line_spacing: 3_f32,
-      width: 600,
+      width: 334,
       # height: 112,
-      height: 300,
+      # height: 300,
     )
+  end
+
+  def draw_screen_overlay(draw : GSDL::Draw)
+    box_bg = GSDL::Box.new(
+      x: @text.x,
+      y: @text.y,
+      width: @text.width,
+      height: @text.height,
+      origin: @text.origin,
+      scale: @text.scale,
+      color: GSDL::Color.gray(64),
+      z_index: @text.z_index - 1,
+    )
+
+    circle_xy = GSDL::Circle.new(
+      x: @text.x,
+      y: @text.y,
+      origin: {0.5_f32, 0.5_f32},
+      radius: 16,
+      color: GSDL::Color::Magenta,
+      z_index: @text.z_index + 1,
+    )
+
+    box_bg.draw(draw)
+    @text.draw(draw)
+    circle_xy.draw(draw)
   end
 
   def update(dt : Float32)
     super
+
     if GSDL::Keys.pressed?(GSDL::Keys::Escape)
       GSDL::Game.quit!
     end
-  end
 
-  def destroy
-    @font.try(&.destroy)
+    if GSDL::Keys.just_pressed?([GSDL::Keys::A, GSDL::Keys::Left])
+      @text.width -= 1
+    end
+
+    if GSDL::Keys.just_pressed?([GSDL::Keys::D, GSDL::Keys::Right])
+      @text.width += 1
+    end
   end
 end
 

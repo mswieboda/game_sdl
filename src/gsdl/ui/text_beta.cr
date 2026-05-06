@@ -23,6 +23,7 @@ module GSDL
     getter font_size : Float32
 
     @font_atlas : FontAtlas
+    @full_text : String
     @width : Num?
     @height : Num?
     @lines : Array(String)
@@ -31,7 +32,7 @@ module GSDL
     def initialize(
       font_path = "./assets/fonts/PressStart2P.ttf",
       @font_size : Float32 = 16_f32, # TODO: maybe make this a Num or Int32
-      text = "foo",
+      text : String = "foo",
       @x : Num = 0,
       @y : Num = 0,
       @h_align : HorizontalAlign = HorizontalAlign::Left,
@@ -45,7 +46,10 @@ module GSDL
       @z_index : Int32 = 0,
     )
       @font_atlas = GSDL::FontAtlas.new(font_path, @font_size)
-      @lines = text.split("\n")
+      @full_text = text
+      @lines = [] of String
+
+      update_lines
     end
 
     def text : String
@@ -53,8 +57,8 @@ module GSDL
     end
 
     def text=(text : String)
-      @lines = text.split("\n")
-      @text_width = nil
+      @full_text = text
+      update_lines
     end
 
     def text_width : Float32
@@ -86,8 +90,11 @@ module GSDL
     end
 
     def width=(width : Num)
+      puts ">>> width=(#{width}) @width=#{@width}"
       if width != @width
         @width = width
+
+        update_lines
       end
     end
 
@@ -113,6 +120,8 @@ module GSDL
     def height=(height : Num)
       if height != @height
         @height = height
+
+        update_lines
       end
     end
 
@@ -124,6 +133,86 @@ module GSDL
     @[AlwaysInline]
     def render_height : Num
       height * scale_y
+    end
+
+    def update_lines
+      puts ">>> update_lines w: #{@width}"
+      segments = @full_text.split("\n")
+
+      # puts ">>> segments: `#{segments}`"
+
+      if width = @width
+        current_line_width = 0.0_f32
+
+        @lines = [] of String
+        line = [] of String
+
+        segments.each_with_index do |segment, segment_index|
+          # puts ">>> segment: `#{segment}`"
+
+          words = segment.split(' ')
+
+          # puts ">>> words: `#{words}` all empty?: #{words.all?(&.empty?)}"
+
+          # If all words are empty, it was a new line (with potential spaces)
+          if words.all?(&.empty?)
+            @lines << ""
+            next
+          end
+
+          words.each_with_index do |word, word_index|
+            # puts ">>> word: `#{word}` #{typeof(word)} empty?: #{word.empty?}"
+
+            # Measure the word (plus a space)
+            word_width = @font_atlas.calculate_width(word + " ")
+
+            # Check if this word pushes us over the boundary
+            if current_line_width + word_width > width
+              # puts ">>> LAST WORD FOR LENGTH word: `#{word}`"
+              # puts ">>> line to add: `#{line}`"
+              # Add the current line
+              @lines << line.join(" ")
+
+              # Start the next line
+              line = [word]
+              current_line_width = word_width
+
+              # puts ">>> @lines: `#{@lines}`"
+            else
+              # Add word to the line
+              # puts ">>> ADD WORD word: `#{word}`"
+              line << word
+              # puts ">>> line: `#{line}`"
+              current_line_width += word_width
+            end
+
+            # Check if this was the last word in the segment
+            if word_index >= words.size - 1
+              # Add the current line
+              # puts ">>> LAST WORD FOR WORDS word: `#{word}`"
+              # puts ">>> line: `#{line}`"
+              @lines << line.join(" ")
+              # puts ">>> @lines: `#{@lines}`"
+              line = [] of String
+              current_line_width = 0_f32
+            end
+          end
+
+          # Check if this was the last segment
+          if segment_index >= segments.size - 1 && !line.empty?
+            # puts ">>> LAST SEGMENT line: `#{line}`"
+            # puts ">>> line to add: `#{line}`"
+            # Add the current line
+            @lines << line.join(" ")
+            # puts ">>> @lines: `#{@lines}`"
+            current_line_width = 0_f32
+          end
+
+          # puts ">>>"
+        end
+      else
+        @lines = segments
+      end
     end
 
     def draw(draw : Draw)
