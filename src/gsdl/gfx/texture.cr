@@ -8,6 +8,25 @@ module GSDL
     property atlas_rect : FRect? = nil
     property atlas_handle : SDL3::Texture? = nil
 
+    def initialize(texture : SDL3::Texture)
+      @internal = texture
+    end
+
+    def initialize(
+      width : Num,
+      height : Num,
+      format : PixelFormat = PixelFormat::RGBA8888,
+      access : TextureAccess = TextureAccess::Static
+    )
+      @internal = SDL3::Texture.create(
+        renderer: Game.draw.to_sdl,
+        format: format,
+        access: access,
+        w: width.to_i,
+        h: height.to_i
+      )
+    end
+
     def self.from_surface(surface : Surface) : Texture
       texture = SDL3::Texture.from_surface(
         renderer: Game.draw.to_sdl,
@@ -74,25 +93,6 @@ module GSDL
 
     def update(rect : LibSDL3::Rect?, pixels : Pointer(Void), pitch : Int32) : Bool
       @internal.update(rect, pixels, pitch)
-    end
-
-    def initialize(texture : SDL3::Texture)
-      @internal = texture
-    end
-
-    def initialize(
-      width : Num,
-      height : Num,
-      format : PixelFormat = PixelFormat::RGBA8888,
-      access : TextureAccess = TextureAccess::Static
-    )
-      @internal = SDL3::Texture.create(
-        renderer: Game.draw.to_sdl,
-        format: format,
-        access: access,
-        w: width.to_i,
-        h: height.to_i
-      )
     end
 
     def to_sdl

@@ -29,7 +29,7 @@ module GSDL
       end
     end
 
-    class DrawTextureCommand < DrawCommand
+    class DrawTextureCommand < DrawColorCommand
       property texture : SDL3::Texture
       property atlas_rect : FRect?
       property atlas_handle : SDL3::Texture?
@@ -58,12 +58,13 @@ module GSDL
         @angle : Float64 = 0.0,
         @center : SDL3::FPoint = SDL3::FPoint.new,
         @flip : Int32 = 0,
+        color : Color = Color::White,
         tint : Color? = nil,
         @destroy : Bool = false,
         clip_rect : SDL3::Rect? = nil,
         @sort_y : Float32? = nil
       )
-        super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
+        super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
         if t = tint
           @tint_r, @tint_g, @tint_b, @tint_a = t.r, t.g, t.b, t.a
           @has_tint = true
@@ -456,17 +457,16 @@ module GSDL
         v1, v2 = v2, v1
       end
 
-      white = LibSDL3::FColor.new(r: 1_f32, g: 1_f32, b: 1_f32, a: 1_f32)
-
       # Determine passes
       if command.has_tint? && (command.tint_r != 255 || command.tint_g != 255 || command.tint_b != 255)
         # Two pass batching
         # Pass 1: Base (White)
         base_idx = @vertex_buffer.size
-        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, white, LibSDL3::FPoint.new(x: u1, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, white, LibSDL3::FPoint.new(x: u2, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, white, LibSDL3::FPoint.new(x: u2, y: v2))
-        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, white, LibSDL3::FPoint.new(x: u1, y: v2))
+        fcolor = command.color.to_fcolor.to_sdl
+        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, fcolor, LibSDL3::FPoint.new(x: u1, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, fcolor, LibSDL3::FPoint.new(x: u2, y: v1))
+        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, fcolor, LibSDL3::FPoint.new(x: u2, y: v2))
+        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, fcolor, LibSDL3::FPoint.new(x: u1, y: v2))
         @index_buffer.concat([base_idx, base_idx + 1, base_idx + 2, base_idx, base_idx + 2, base_idx + 3])
 
         # Pass 2: Tint (Color)
@@ -484,8 +484,10 @@ module GSDL
         @index_buffer.concat([tint_idx, tint_idx + 1, tint_idx + 2, tint_idx, tint_idx + 2, tint_idx + 3])
       else
         # Single pass (maybe with alpha)
-        alpha = command.has_tint? ? command.tint_a / 255_f32 : 1_f32
-        final_color = LibSDL3::FColor.new(r: 1_f32, g: 1_f32, b: 1_f32, a: alpha)
+        fcolor = command.color.to_fcolor.to_sdl
+        alpha = command.has_tint? ? command.tint_a / 255_f32 : fcolor.a
+        fcolor.a = alpha
+        final_color = fcolor
 
         base_idx = @vertex_buffer.size
         @vertex_buffer << SDL3::Vertex.new(v0x, v0y, final_color, LibSDL3::FPoint.new(x: u1, y: v1))
@@ -648,6 +650,7 @@ module GSDL
               angle: command.angle,
               center: command.center,
               flip: command.flip,
+              color: command.color,
               tint: command.tint,
               destroy: command.destroy?
             )
@@ -778,6 +781,7 @@ module GSDL
       angle : Float64 = 0.0,
       center : SDL3::FPoint = SDL3::FPoint.new,
       flip : Int32 = 0,
+      color : Color = Color::White,
       tint : Color? = nil,
       destroy : Bool = false
     )
@@ -791,7 +795,7 @@ module GSDL
 
       if (t = tint) && !t.white?
         # Pass 1: Base texture (Full original alpha)
-        texture.tint = Color::White.to_sdl
+        texture.tint = color.to_sdl
         _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
 
         # Pass 2: Tint overlay (Target color and alpha)
@@ -800,10 +804,10 @@ module GSDL
       else
         # Single pass: No tint or Alpha-only tint
         if tint_val = tint
-          texture.tint = SDL3::Color.new(r: 255, g: 255, b: 255, a: tint_val.a)
-        else
-          texture.tint = Color::White.to_sdl
+          color.a = tint_val.a
         end
+
+        texture.tint = color.to_sdl
 
         _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
       end
@@ -1156,7 +1160,8 @@ module GSDL
       dest_rect : FRect? = nil,
       flip : Int32 = 0,
       z_index : Int32 = 0,
-      tint : Color = Color::White,
+      color : Color = Color::White,
+      tint : Color? = nil,
       destroy : Bool = false,
       draw_immediately : Bool = false,
       sort_y : Float32? = nil
@@ -1169,6 +1174,7 @@ module GSDL
         dest_rect: dest_rect,
         flip: flip,
         z_index: z_index,
+        color: color,
         tint: tint,
         destroy: destroy,
         draw_immediately: draw_immediately,
@@ -1185,6 +1191,7 @@ module GSDL
       angle : Num = 0.0,
       center : Point = Point.new,
       flip : Int32 = 0,
+      color : Color = Color::White,
       tint : Color? = nil,
       z_index : Int32 = 0,
       destroy : Bool = false,
@@ -1214,6 +1221,7 @@ module GSDL
           angle: angle.to_f64,
           center: actual_center,
           flip: flip,
+          color: color,
           tint: tint,
           destroy: destroy,
         )
@@ -1232,6 +1240,7 @@ module GSDL
           angle: angle.to_f64,
           center: actual_center,
           flip: flip,
+          color: color,
           tint: tint,
           destroy: destroy,
           clip_rect: @current_clip_rect,

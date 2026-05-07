@@ -17,6 +17,7 @@ module GSDL
     EllipsisMarker = "|^.~.^|"
     Ellipsis = "..."
 
+    property color : Color
     property z_index : Int32
     property h_align : HorizontalAlign
     property v_align : VerticalAlign
@@ -35,8 +36,7 @@ module GSDL
     @text_width : Float32?
 
     def initialize(
-      font_path = "./assets/fonts/PressStart2P.ttf",
-      @font_size : Float32 = 16_f32, # TODO: maybe make this a Num or Int32
+      @font_atlas : FontAtlas,
       text : String = "foo",
       @x : Num = 0,
       @y : Num = 0,
@@ -50,7 +50,7 @@ module GSDL
       @height = nil,
       @z_index : Int32 = 0,
     )
-      @font_atlas = GSDL::FontAtlas.new(font_path, @font_size)
+      @font_size = @font_atlas.font_size
       @full_text = text
       @lines = [] of String
 

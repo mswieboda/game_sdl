@@ -1,8 +1,9 @@
 module GSDL
   class FontAtlas
+    getter font_size : Float32
+
     @texture : Texture
     @chars : Pointer(LibSTBTrueType::PackedChar)
-    @font_size : Float32
     @char_count : Int32 = 95
     @first_char : Int32 = 32
     @ascent : Float32 = 0_f32
@@ -155,7 +156,8 @@ module GSDL
           texture: @texture,
           source_rect: src,
           dest_rect: dest,
-          tint: color,
+          # NOTE: do not use tint here, use `color` to apply full color and alpha
+          color: color,
           z_index: z_index
         )
 
