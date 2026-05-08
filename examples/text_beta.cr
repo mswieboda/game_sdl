@@ -19,9 +19,10 @@ class MainScene < GSDL::Scene
       v_align: GSDL::VerticalAlign::Center,
       line_spacing: 1.2_f32,
       typing: GSDL::TextBeta::Typing::Word,
-      character_spacing: 3,
-      width: 300,
-      height: 300,
+      # rotation: 30,
+      # character_spacing: 3,
+      # width: 300,
+      # height: 300,
     )
   end
 

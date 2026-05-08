@@ -113,6 +113,7 @@ module GSDL
     end
 
     def draw_text(
+      draw : Draw,
       text : String,
       x : Num,
       y : Num,
@@ -153,7 +154,7 @@ module GSDL
         )
 
         # Render glyph using GSDL::Draw batching
-        Game.draw.texture(
+        draw.texture(
           texture: @texture,
           source_rect: src,
           dest_rect: dest,
@@ -163,7 +164,100 @@ module GSDL
         )
 
         # Advance horizontal position
-        current_x += glyph.xadvance * scale_x + character_spacing * scale_x
+        current_x += (glyph.xadvance + character_spacing) * scale_x
+      end
+    end
+
+    def draw_text_rotated(
+      draw : Draw,
+      text : String,
+      x : Num,
+      y : Num,
+      rotation : Num,
+      character_spacing : Num = 0,
+      color : Color = Color::White,
+      origin_x : Num = 0,
+      origin_y : Num = 0,
+      scale_x : Num = 1,
+      scale_y : Num = 1,
+      z_index : Int32 = 0
+    )
+      radians = rotation * (Math::PI / 180.0)
+      cos_theta = Math.cos(radians)
+      sin_theta = Math.sin(radians)
+
+      tex_w = @texture.width.to_f32
+      tex_h = @texture.height.to_f32
+
+      # Calculate where the "start" of the text is relative to the pivot
+      # This depends on your alignment math passed down from TextBeta
+      current_x = x
+      current_y = y
+
+      text.each_char do |char|
+        glyph_idx = char.ord - @first_char
+        next if glyph_idx < 0 || glyph_idx >= @char_count
+
+        glyph = @chars[glyph_idx]
+
+        # Normalize atlas coordinates to 0.0-1.0 range
+        u1 = glyph.x0 / tex_w
+        v1 = glyph.y0 / tex_h
+        u2 = glyph.x1 / tex_w
+        v2 = glyph.y1 / tex_h
+
+        # Calculate actual pixel dimensions for the quad
+        gw = (glyph.x1 - glyph.x0) * scale_x
+        gh = (glyph.y1 - glyph.y0) * scale_y
+
+        # Apply offsets (xoff/yoff) to ensure the glyph sits correctly relative to the baseline
+        char_x = current_x + (glyph.xoff * scale_x)
+        char_y = current_y + (glyph.yoff * scale_y)
+
+        # Vertex Rotation Math
+        # Define local quad corners relative to current_x/y
+        corners = [
+          # top left
+          {px: char_x, py: char_y, u: u1, v: v1},
+          # top right
+          {px: char_x + gw, py: char_y, u: u2, v: v1},
+          # bottom right
+          {px: char_x + gw, py: char_y + gh, u: u2, v: v2},
+          # bottom left
+          {px: char_x, py: char_y + gh, u: u1, v: v2}
+        ]
+
+        # Rotate each corner and create vertex objects
+        vertices = corners.map do |p|
+          # Translate to pivot
+          tx = p[:px] - x
+          ty = p[:py] - y
+
+          # Rotate and translate back
+          rx = x + (tx * cos_theta - ty * sin_theta)
+          ry = y + (tx * sin_theta + ty * cos_theta)
+
+          # Build the Vertex with texture coordinates (texture_point)
+          GSDL::Vertex.new(
+            x: rx.to_f32,
+            y: ry.to_f32,
+            color: color,
+            texture_point: GSDL::Point.new(p[:u], p[:v])
+          )
+        end
+
+        # Standard quad indices for two triangles
+        indices = [0, 1, 2, 2, 3, 0]
+
+        draw.geometry(
+          vertices: vertices,
+          indices: indices,
+          z_index: z_index,
+          texture: @texture # The FontAtlas texture
+        )
+
+        # Advance horizontal position
+        current_x += (glyph.xadvance + character_spacing) * scale_x
       end
     end
 

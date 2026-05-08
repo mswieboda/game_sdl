@@ -42,7 +42,7 @@ module GSDL
     property v_align : VerticalAlign
     property line_spacing : Num
     property character_spacing : Num
-
+    property rotation : Num
 
     # TODO: make a setter to change font / font path
     getter font_size : Float32
@@ -72,6 +72,7 @@ module GSDL
       typing_speed : Time::Span? = nil,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
+      @rotation : Num = 0,
       @color = GSDL::Color::White,
       @width = nil,
       @height = nil,
@@ -377,17 +378,13 @@ module GSDL
         if shown_text.size > 0 || line_text.empty?
           # Horizontal Alignment (full line_text for width)
           line_width = @font_atlas.calculate_width(line_text, @character_spacing)
-          offset_x = 0
-
-          if width = @width
-            offset_x = case @h_align
-            when .center?
-              (width - line_width) / 2
-            when .right?
-              width - line_width
-            else
-              0
-            end
+          offset_x = case @h_align
+          when .center?
+            (self.width - line_width) / 2
+          when .right?
+            self.width - line_width
+          else
+            0
           end
 
           # Coordinate Calculation
@@ -395,16 +392,35 @@ module GSDL
           draw_x = @x + offset_x * scale_x - self.width * scale_x * origin_x
           draw_y = @y + offset_y * scale_y + line_offset_y * scale_y - (self.height * scale_y * origin_y)
 
-          @font_atlas.draw_text(
-            text: shown_text,
-            x: draw_x.to_f32,
-            y: draw_y.to_f32,
-            character_spacing: @character_spacing,
-            color: @color,
-            scale_x: scale_x,
-            scale_y: scale_y,
-            z_index: @z_index
-          )
+          if @rotation % 360 == 0
+            @font_atlas.draw_text(
+              draw: draw,
+              text: shown_text,
+              x: draw_x.to_f32,
+              y: draw_y.to_f32,
+              character_spacing: @character_spacing,
+              color: @color,
+              scale_x: scale_x,
+              scale_y: scale_y,
+              z_index: @z_index
+            )
+          else
+            # TODO: add rotation
+            @font_atlas.draw_text_rotated(
+              draw: draw,
+              text: shown_text,
+              x: draw_x.to_f32,
+              y: draw_y.to_f32,
+              rotation: @rotation,
+              character_spacing: @character_spacing,
+              color: @color,
+              origin_x: origin_x,
+              origin_y: origin_y,
+              scale_x: scale_x,
+              scale_y: scale_y,
+              z_index: @z_index
+            )
+          end
         end
 
         # Update progress (+1 accounts for the stripped newline character)
