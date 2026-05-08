@@ -171,8 +171,10 @@ module GSDL
     def draw_text_rotated(
       draw : Draw,
       text : String,
-      x : Num,
-      y : Num,
+      pivot_x : Num,
+      pivot_y : Num,
+      start_x : Num,
+      start_y : Num,
       rotation : Num,
       character_spacing : Num = 0,
       color : Color = Color::White,
@@ -191,8 +193,8 @@ module GSDL
 
       # Calculate where the "start" of the text is relative to the pivot
       # This depends on your alignment math passed down from TextBeta
-      current_x = x
-      current_y = y
+      current_x = start_x
+      current_y = start_y
 
       text.each_char do |char|
         glyph_idx = char.ord - @first_char
@@ -210,7 +212,7 @@ module GSDL
         gw = (glyph.x1 - glyph.x0) * scale_x
         gh = (glyph.y1 - glyph.y0) * scale_y
 
-        # Apply offsets (xoff/yoff) to ensure the glyph sits correctly relative to the baseline
+        # char_x/y is the position relative to the pivot
         char_x = current_x + (glyph.xoff * scale_x)
         char_y = current_y + (glyph.yoff * scale_y)
 
@@ -229,13 +231,9 @@ module GSDL
 
         # Rotate each corner and create vertex objects
         vertices = corners.map do |p|
-          # Translate to pivot
-          tx = p[:px] - x
-          ty = p[:py] - y
-
-          # Rotate and translate back
-          rx = x + (tx * cos_theta - ty * sin_theta)
-          ry = y + (tx * sin_theta + ty * cos_theta)
+          # Rotate
+          rx = pivot_x + (p[:px] * cos_theta - p[:py] * sin_theta)
+          ry = pivot_y + (p[:px] * sin_theta + p[:py] * cos_theta)
 
           # Build the Vertex with texture coordinates (texture_point)
           GSDL::Vertex.new(

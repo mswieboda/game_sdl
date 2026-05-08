@@ -11,18 +11,18 @@ class MainScene < GSDL::Scene
     font_atlas = GSDL::FontAtlas.new(font_path, font_size)
     @text = GSDL::TextBeta.new(
       font_atlas: font_atlas,
-      text: "jumping quickly over lazy dogs\nis good exercise!\nbatt1 batt2 batt3",
+      text: "jumping quickly over lazy dogs\nis good exercise!\nbatty1 batty2 batty3",
       x: FontAtlasExample.width // 2,
-      y: 300,
+      y: FontAtlasExample.height // 2,
       origin: {0.5_f32, 0.5_f32},
       h_align: GSDL::HorizontalAlign::Center,
       v_align: GSDL::VerticalAlign::Center,
-      line_spacing: 1.2_f32,
-      typing: GSDL::TextBeta::Typing::Word,
-      # rotation: 30,
+      # line_spacing: 1.2_f32,
+      # typing: GSDL::TextBeta::Typing::Word,
+      rotation: 30,
       # character_spacing: 3,
-      # width: 300,
-      # height: 300,
+      width: 300,
+      height: 300,
     )
   end
 
@@ -34,6 +34,7 @@ class MainScene < GSDL::Scene
       height: @text.height,
       origin: @text.origin,
       scale: @text.scale,
+      rotation: @text.rotation,
       color: GSDL::Color.gray(64),
       z_index: @text.z_index - 1,
     )
@@ -49,7 +50,7 @@ class MainScene < GSDL::Scene
 
     box_bg.draw(draw)
     @text.draw(draw)
-    # circle_xy.draw(draw)
+    circle_xy.draw(draw)
   end
 
   def update(dt : Float32)
@@ -104,6 +105,7 @@ class FontAtlasExample < GSDL::Game
 end
 
 # Set target_fps to 60 for consistency
-game = FontAtlasExample.new(title: "Font Atlas Example", width: 1280, height: 1024)
+# game = FontAtlasExample.new(title: "Font Atlas Example", width: 1280, height: 1024)
+game = FontAtlasExample.new(title: "Font Atlas Example", width: 640, height: 512)
 game.target_fps = 60
 game.run
