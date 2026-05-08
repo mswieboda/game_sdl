@@ -97,7 +97,7 @@ module GSDL
       @ascent = ascent.to_f32 * scale
     end
 
-    def calculate_width(text : String) : Float32
+    def calculate_width(text : String, character_spacing : Num = 0) : Float32
       total_width = 0_f32
 
       text.each_char do |char|
@@ -106,16 +106,17 @@ module GSDL
 
         # We only care about the advance, not the visual width (x1-x0)
         # because the advance includes the whitespace/spacing.
-        total_width += @chars[glyph_idx].xadvance
+        total_width += @chars[glyph_idx].xadvance + character_spacing
       end
 
-      total_width
+      total_width - character_spacing
     end
 
     def draw_text(
       text : String,
       x : Num,
       y : Num,
+      character_spacing : Num = 0,
       color : Color = Color::White,
       scale_x : Num = 1,
       scale_y : Num = 1,
@@ -162,7 +163,7 @@ module GSDL
         )
 
         # Advance horizontal position
-        current_x += glyph.xadvance * scale_x
+        current_x += glyph.xadvance * scale_x + character_spacing * scale_x
       end
     end
 

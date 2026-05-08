@@ -22,6 +22,7 @@ module GSDL
     property h_align : HorizontalAlign
     property v_align : VerticalAlign
     property line_spacing : Num
+    property character_spacing : Num
 
     # TODO: make a setter to change font / font path
     getter font_size : Float32
@@ -43,6 +44,7 @@ module GSDL
       @h_align : HorizontalAlign = HorizontalAlign::Left,
       @v_align : VerticalAlign = VerticalAlign::Top,
       @line_spacing : Num = 1.2_f32,
+      @character_spacing : Num = 0,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
       @color = GSDL::Color::White,
@@ -77,7 +79,7 @@ module GSDL
       max_line_width = 0_f32
 
       @lines.each do |line_text|
-        line_width = @font_atlas.calculate_width(line_text)
+        line_width = @font_atlas.calculate_width(line_text, @character_spacing)
 
         if line_width > max_line_width
           max_line_width = line_width
@@ -197,7 +199,7 @@ module GSDL
       space_width = @font_atlas.calculate_width(" ")
 
       words.each_with_index do |word, index|
-        word_width = @font_atlas.calculate_width(word)
+        word_width = @font_atlas.calculate_width(word, @character_spacing)
         is_last_word = (index == words.size - 1)
 
         # If single word is wider than max width
@@ -259,7 +261,7 @@ module GSDL
         mid = (low + high) // 2
         candidate = text[0...mid]
 
-        if @font_atlas.calculate_width(candidate + Ellipsis) <= max_width
+        if @font_atlas.calculate_width(candidate + Ellipsis, @character_spacing) <= max_width
           best_fit = candidate
           low = mid + 1
         else
@@ -283,7 +285,7 @@ module GSDL
       end
 
       @lines.each_with_index do |line_text, line_index|
-        line_width = @font_atlas.calculate_width(line_text)
+        line_width = @font_atlas.calculate_width(line_text, @character_spacing)
         offset_x = 0
 
         if width = @width
@@ -308,6 +310,7 @@ module GSDL
           text: line_text,
           x: x.to_f32,
           y: y.to_f32,
+          character_spacing: @character_spacing,
           color: @color,
           scale_x: scale_x,
           scale_y: scale_y,

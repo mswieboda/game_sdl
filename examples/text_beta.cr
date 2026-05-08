@@ -6,7 +6,11 @@ class MainScene < GSDL::Scene
   def initialize
     super(:main)
 
+    font_path = "./assets/fonts/PressStart2P.ttf"
+    font_size : Float32 = 16_f32
+    font_atlas = GSDL::FontAtlas.new(font_path, font_size)
     @text = GSDL::TextBeta.new(
+      font_atlas: font_atlas,
       text: "jumping quickly over lazy dogs\nis good exercise!\nbatt1 batt2 batt3",
       x: FontAtlasExample.width // 2,
       y: 300,
@@ -14,6 +18,7 @@ class MainScene < GSDL::Scene
       h_align: GSDL::HorizontalAlign::Center,
       v_align: GSDL::VerticalAlign::Center,
       line_spacing: 1.2_f32,
+      # character_spacing: 3,
       # width: 300,
       # height: 300,
     )
