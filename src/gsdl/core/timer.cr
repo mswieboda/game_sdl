@@ -41,20 +41,14 @@ module GSDL
       @start_time != nil
     end
 
-    def elapsed
+    def elapsed : Time::Span
       if paused_duration = @paused_duration
         return paused_duration
       end
 
       return Time::Span.new unless start_time = @start_time
 
-      expired = Time.local - start_time
-
-      if expired < @duration
-        expired
-      else
-        @duration
-      end
+      Time.local - start_time
     end
 
     def done?
@@ -69,8 +63,17 @@ module GSDL
       elapsed < @duration
     end
 
-    def percent
-      elapsed / @duration
+    def percent : Float32
+      if elapsed >= duration
+        1.0_f32
+      else
+        [percent_infinite, 1.0_f32].min
+      end
+    end
+
+    @[AlwaysInline]
+    def percent_infinite : Float32
+      (elapsed / @duration).to_f32
     end
   end
 end

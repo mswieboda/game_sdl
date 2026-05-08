@@ -16,6 +16,25 @@ module GSDL
 
     EllipsisMarker = "|^.~.^|"
     Ellipsis = "..."
+    CharacterDefaultTypingSpeed = 0.075.seconds
+    WordDefaultTypingSpeed = 0.25.seconds
+
+    enum Typing
+      None
+      Character
+      Word
+
+      def typing_speed : Time::Span?
+        case self
+        when .character?
+          CharacterDefaultTypingSpeed
+        when .word?
+          WordDefaultTypingSpeed
+        else
+          nil
+        end
+      end
+    end
 
     property color : Color
     property z_index : Int32
@@ -24,10 +43,13 @@ module GSDL
     property line_spacing : Num
     property character_spacing : Num
 
+
     # TODO: make a setter to change font / font path
     getter font_size : Float32
     getter? width_fixed : Bool
     getter? height_fixed : Bool
+    getter typing : Typing
+    getter? typed : Bool
 
     @font_atlas : FontAtlas
     @full_text : String
@@ -35,6 +57,7 @@ module GSDL
     @height : Num?
     @lines : Array(String)
     @text_width : Float32?
+    @typing_timer : Timer?
 
     def initialize(
       @font_atlas : FontAtlas,
@@ -45,6 +68,8 @@ module GSDL
       @v_align : VerticalAlign = VerticalAlign::Top,
       @line_spacing : Num = 1.2_f32,
       @character_spacing : Num = 0,
+      @typing = Typing::None,
+      typing_speed : Time::Span? = nil,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
       @color = GSDL::Color::White,
@@ -58,6 +83,17 @@ module GSDL
 
       @width_fixed = !@width.nil?
       @height_fixed = !@height.nil?
+
+      unless typing_speed
+        @typed = false
+        typing_speed = @typing.typing_speed
+        if speed = typing_speed
+          @typing_timer = Timer.new(speed)
+          @typing_timer.not_nil!.start
+        end
+      else
+        @typed = true
+      end
 
       update_lines
     end
@@ -151,6 +187,22 @@ module GSDL
     @[AlwaysInline]
     def render_height : Num
       height * scale_y
+    end
+
+    def typing_speed : Time::Span?
+      if timer = @typing_timer.duration
+        timer.duration
+      else
+        nil
+      end
+    end
+
+    def typing_speed=(typing_speed : TimeSpan?)
+      if speed = typing_speed
+        @typing_timer.duration = speed
+      else
+        @typing = Typing::None
+      end
     end
 
     def update_lines
@@ -272,12 +324,44 @@ module GSDL
       (best_fit.empty? ? "" : best_fit) + EllipsisMarker
     end
 
+    private def calculate_visible_limit : Int32
+      return @full_text.size if typed? || @typing.none?
+
+      # How many "units" (chars or words) have been revealed
+      elapsed_units = @full_text.size
+      if timer = @typing_timer
+        elapsed_units = timer.percent_infinite.to_i
+      end
+
+      case @typing
+      when .character?
+        elapsed_units
+      when .word?
+        # Find the character index where the Nth word ends
+        count = 0
+
+        @full_text.each_char_with_index do |char, i|
+          if char.whitespace? || i >= @full_text.size - 1
+            return i if count >= elapsed_units
+
+            count += 1
+          end
+        end
+
+        @full_text.size
+      else
+        @full_text.size
+      end
+    end
+
     def draw(draw : Draw)
+      limit = calculate_visible_limit
+      chars_processed = 0
+
+      # Vertical Alignment
       offset_y = case @v_align
-      when .top?
-        0
       when .center?
-        [self.height / 2 - text_height / 2, 0].max
+        [(self.height - text_height) / 2, 0].max
       when .bottom?
         [self.height - text_height, 0].max
       else
@@ -285,37 +369,56 @@ module GSDL
       end
 
       @lines.each_with_index do |line_text, line_index|
-        line_width = @font_atlas.calculate_width(line_text, @character_spacing)
-        offset_x = 0
+        # Determine visibility for this specific line
+        # We account for the \n that existed in @full_text but isn't in line_text
+        line_limit = [limit - chars_processed, 0].max
+        shown_text = line_text[0..[line_limit, line_text.size].min]
 
-        if width = @width
-          offset_x = case @h_align
-          when .left?
-            0
-          when .center?
-            width / 2 - line_width / 2
-          when .right?
-            width - line_width
-          else
-            0
+        if shown_text.size > 0 || line_text.empty?
+          # Horizontal Alignment (full line_text for width)
+          line_width = @font_atlas.calculate_width(line_text, @character_spacing)
+          offset_x = 0
+
+          if width = @width
+            offset_x = case @h_align
+            when .center?
+              (width - line_width) / 2
+            when .right?
+              width - line_width
+            else
+              0
+            end
           end
+
+          # Coordinate Calculation
+          line_offset_y = line_index * line_height
+          draw_x = @x + offset_x * scale_x - self.width * scale_x * origin_x
+          draw_y = @y + offset_y * scale_y + line_offset_y * scale_y - (self.height * scale_y * origin_y)
+
+          @font_atlas.draw_text(
+            text: shown_text,
+            x: draw_x.to_f32,
+            y: draw_y.to_f32,
+            character_spacing: @character_spacing,
+            color: @color,
+            scale_x: scale_x,
+            scale_y: scale_y,
+            z_index: @z_index
+          )
         end
 
-        line_offset_y = line_index * line_height
+        # Update progress (+1 accounts for the stripped newline character)
+        chars_processed += line_text.size + 1
 
-        x = @x + offset_x * scale_x - (self.width * scale_x * origin_x)
-        y = @y + offset_y * scale_y + line_offset_y * scale_y - (self.height * scale_y * origin_y)
+        # Early exit if we've reached the typing limit
+        if chars_processed > limit && !typed?
+          # Check if we literally just finished the last character
+          if line_index == @lines.size - 1 && shown_text.size == line_text.size
+            @typed = true
+          end
 
-        @font_atlas.draw_text(
-          text: line_text,
-          x: x.to_f32,
-          y: y.to_f32,
-          character_spacing: @character_spacing,
-          color: @color,
-          scale_x: scale_x,
-          scale_y: scale_y,
-          z_index: @z_index
-        )
+          return
+        end
       end
     end
   end
