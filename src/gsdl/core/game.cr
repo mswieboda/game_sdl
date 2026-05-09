@@ -151,8 +151,12 @@ module GSDL
     property logical_width
     property logical_height
 
+    property? high_pixel_density
 
-    def window; @window.not_nil!; end
+    def window : SDL3::Window
+      @window.not_nil!
+    end
+
     def loader; @loader ||= Loader.new; end
     def fps_counter; @fps_counter; end
     def exit?; @exit; end
@@ -307,7 +311,7 @@ module GSDL
       minimized = false,
       borderless = false,
       always_on_top = false,
-      high_pixel_density = false,
+      @high_pixel_density = false,
       renderer_type : Symbol? = nil,
       window_flags : Array(SDL3::Window::Flags)? = nil
     )

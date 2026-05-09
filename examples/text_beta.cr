@@ -6,9 +6,10 @@ class MainScene < GSDL::Scene
   def initialize
     super(:main)
 
+    font_path = "./assets/fonts/Roboto-Regular.ttf"
     font_path = "./assets/fonts/PressStart2P.ttf"
-    font_size : Float32 = 16_f32
-    font_atlas = GSDL::FontAtlas.new(font_path, font_size)
+    font_path = "./assets/fonts/Electrolize-Regular.ttf"
+    font_atlas = GSDL::FontAtlas.new(font_path, 16)
     @text = GSDL::TextBeta.new(
       font_atlas: font_atlas,
       text: "jumping quickly over lazy dogs\nis good exercise!\nbatty1 batty2 batty3",
@@ -19,9 +20,9 @@ class MainScene < GSDL::Scene
       v_align: GSDL::VerticalAlign::Center,
       line_spacing: 2,
       # typing: GSDL::TextBeta::Typing::Word,
-      shadow: {1, 1},
+      shadow: {2, 2},
       shadow_color: GSDL::Color::Magenta,
-      outline: 2,
+      # outline: 2,
       # rotation: 30,
       character_spacing: 2,
       width: 300,
@@ -48,7 +49,7 @@ class MainScene < GSDL::Scene
       origin: {0.5_f32, 0.5_f32},
       radius: 16,
       color: GSDL::Color::Magenta,
-      z_index: @text.z_index + 1,
+      z_index: @text.z_index_max + 1,
     )
 
     box_bg.draw(draw)
@@ -118,7 +119,8 @@ class FontAtlasExample < GSDL::Game
 end
 
 # Set target_fps to 60 for consistency
-# game = FontAtlasExample.new(title: "Font Atlas Example", width: 1280, height: 1024)
-game = FontAtlasExample.new(title: "Font Atlas Example", width: 640, height: 512)
+game = FontAtlasExample.new(title: "Font Atlas Example", width: 640, height: 640, high_pixel_density: true)
+# game = FontAtlasExample.new(title: "Font Atlas Example", logical_width: 1280, logical_height: 1024, width: 640, height: 512, high_pixel_density: true)
+# game = FontAtlasExample.new(title: "Font Atlas Example", logical_width: 640, logical_height: 512, fullscreen: true, high_pixel_density: true)
 game.target_fps = 60
 game.run

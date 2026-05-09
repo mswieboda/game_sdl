@@ -61,7 +61,7 @@ module GameEx
       end
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       @text.draw(draw)
       @sprite.draw(draw)
     end

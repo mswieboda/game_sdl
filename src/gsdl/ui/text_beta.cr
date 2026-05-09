@@ -48,7 +48,6 @@ module GSDL
     property outline : Num
     property outline_color : Color
 
-    getter font_size : Float32
     getter? width_fixed : Bool
     getter? height_fixed : Bool
     getter typing : Typing
@@ -86,7 +85,6 @@ module GSDL
       @height = nil,
       @z_index : Int32 = 0,
     )
-      @font_size = @font_atlas.font_size
       @full_text = text
       @lines = [] of String
 
@@ -107,6 +105,26 @@ module GSDL
       update_lines
     end
 
+    def z_index_max
+      z_index = @z_index
+
+      if outline
+        z_index += 1
+      end
+
+      if !@shadow.all?(&.zero?)
+        z_index += 1
+      end
+
+      z_index
+    end
+
+    @[AlwaysInline]
+    def font_size : Num
+      @font_atlas.font_size
+    end
+
+    @[AlwaysInline]
     def text : String
       @lines.join("\n")
     end
@@ -160,13 +178,13 @@ module GSDL
     end
 
     @[AlwaysInline]
-    def line_height : Float32
-      @font_size * @line_spacing
+    def line_height : Num
+      font_size * @line_spacing
     end
 
     @[AlwaysInline]
-    def text_height : Float32
-      @font_size * @line_spacing * (@lines.size - 1) + @font_size
+    def text_height : Num
+      font_size * @line_spacing * (@lines.size - 1) + font_size
     end
 
     def height : Num
@@ -407,7 +425,7 @@ module GSDL
       # Vertical Alignment
       offset_y += case @v_align
       when .center?
-        [(self.height - text_height) / 2, 0].max
+        [(self.height - text_height) / 2_f32, 0].max
       when .bottom?
         [self.height - text_height, 0].max
       else
@@ -450,6 +468,7 @@ module GSDL
     private def _draw_line(draw : Draw, text : String, color : Color, line_index : Int32, offset_x : Num, offset_y : Num, z_index : Int32)
       # Horizontal Alignment (full text for width)
       line_width = @font_atlas.calculate_width(text, @character_spacing)
+
       offset_x += case @h_align
       when .center?
         (self.width - line_width) / 2

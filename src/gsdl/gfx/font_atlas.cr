@@ -1,57 +1,91 @@
 module GSDL
   class FontAtlas
-    getter font_size : Float32
+    getter font_size : Num
+    getter outline : Int32
+
+    DefaultAtlasSize = 1024
+    DefaultFontSize = 16
 
     @texture : Texture
     @chars : Pointer(LibSTBTrueType::PackedChar)
     @char_count : Int32 = 95
     @first_char : Int32 = 32
     @ascent : Float32 = 0_f32
+    @oversample : Int32
+    @render_font_size : Float32
+    @render_outline : Int32
 
-    def initialize(font_path : String, font_size : Float32, atlas_size : Int32 = 1024)
-      @font_size = font_size
+    getter thickness : Int32 = 0
 
-      # 1. Buffer Allocation
-      pixels = Bytes.new(atlas_size * atlas_size)
-
-      # 2. Context Initialization
-      context = LibSTBTrueType::PackContext.new
-      res = LibSTBTrueType.pack_begin(
-        pointerof(context),
-        pixels.to_unsafe,
-        atlas_size,
-        atlas_size,
-        0, # stride (0 = width)
-        1, # padding
-        nil # alloc_context
-      )
-      raise "Could not initialize STB font packer" unless res == 1
-
-      # 3. Metadata Preparation
-      @chars = Pointer(LibSTBTrueType::PackedChar).malloc(@char_count)
-
-      # 4. Range Packing
+    def initialize(
+      font_path : String,
+      font_size : Num = DefaultFontSize,
+      atlas_size : Int32 = DefaultAtlasSize,
+      @outline : Int32 = 0,
+    )
       unless File.exists?(font_path)
         raise "Font file not found: #{font_path}"
       end
 
+      total_scale = calculate_total_scale
+      @font_size = font_size * total_scale
+      @oversample = calculate_oversample(@font_size, total_scale)
+      @render_font_size = font_size.to_f32 * @oversample
+      @render_outline = @outline * @oversample
+
       font_data = File.read(font_path).to_slice
+      @chars = Pointer(LibSTBTrueType::PackedChar).malloc(@char_count)
 
-      res = LibSTBTrueType.pack_font_range(
-        pointerof(context),
-        font_data.to_unsafe,
-        0, # font_index
-        font_size,
-        @first_char,
-        @char_count,
-        @chars
-      )
-      raise "Could not pack font range" unless res == 1
+      pixels = Bytes.new(0)
+      atlas_size = calculate_initial_size(@char_count, @render_font_size, @render_outline)
+      success = false
 
-      # 5. Finalization
-      LibSTBTrueType.pack_end(pointerof(context))
+      pack_context = LibSTBTrueType::PackContext.new
 
-      # 6. Move to GPU
+      until success
+        # Setup the packing context for current atlas_size
+        pixels = Bytes.new(atlas_size * atlas_size)
+
+        res = LibSTBTrueType.pack_begin(
+          pointerof(pack_context),
+          pixels.to_unsafe,
+          atlas_size,
+          atlas_size,
+          0, # stride (0 = width)
+          1, # padding
+          nil # alloc_context
+        )
+        raise "Could not initialize STB font packer" unless res == 1
+
+        # Try to pack the range
+        res = LibSTBTrueType.pack_font_range(
+          pointerof(pack_context),
+          font_data,
+          0, # font index
+          @render_font_size,
+          @first_char,
+          @char_count,
+          @chars
+        )
+
+        if res == 1 # Success!
+          success = true
+
+          LibSTBTrueType.pack_end(pointerof(pack_context))
+        else
+          # Too small! Double the dimensions and wipe the buffer
+          atlas_size *= 2
+          raise "Font Atlas too large for GPU" if atlas_size > 4096
+        end
+      end
+
+      # account for outline
+      if @outline > 0
+        # 1. Create a "fat" version of the 1-byte alpha mask
+        pixels = dilate(pixels, atlas_size, atlas_size, @render_outline)
+      end
+
+      # Move to GPU
       # We use ABGR8888 (4-byte per pixel) for the atlas
       @texture = Texture.new(
         width: atlas_size,
@@ -80,7 +114,7 @@ module GSDL
       # default to NEAREST for crisp pixel fonts as requested
       @texture.scale_mode = LibSDL3::ScaleMode::Nearest
 
-      # 7. Get ascent data
+      # Get ascent data
       font_info = LibSTBTrueType::FontInfo.new
       LibSTBTrueType.init_font(pointerof(font_info), font_data.to_unsafe, 0)
 
@@ -97,6 +131,109 @@ module GSDL
       @ascent = ascent.to_f32 * scale
     end
 
+    def calculate_total_scale : Float32
+      # 1. How much is the game stretched logically?
+      # Assuming you have access to the window size and logical size
+      window_w = Game.instance.window_width
+      window_h = Game.instance.window_height
+
+      scale_x = 1
+      scale_y = 1
+
+      if Game.instance.logical_width > 0
+        scale_x = window_w.to_f32 / Game.instance.logical_width
+      end
+
+      if Game.instance.logical_height > 0
+        scale_y = window_h.to_f32 / Game.instance.logical_height
+      end
+
+      # We care about the larger scale to ensure crispness
+      logical_scale = Math.max(scale_x, scale_y)
+
+      # 2. Get the OS/DPI scale (usually 1.0, 1.5, or 2.0)
+      display_id = LibSDL3.get_display_for_window(Game.instance.window)
+      dpi_scale = LibSDL3.get_display_content_scale(display_id)
+
+      # The total physical-to-logical ratio
+      logical_scale * dpi_scale
+    end
+
+    def calculate_oversample(font_size : Num, total_scale : Float32) : Int32
+      # If we are scaling up 3x, we want at least 3x oversampling.
+      # We still apply the "diminishing returns" so big fonts don't explode the atlas.
+      quality_multiplier = case font_size
+       when 0..16
+        # Extra boost for tiny text
+        1.5
+       when 17..48
+        1.0
+       else
+        # Larger text needs less help
+        0.5
+       end
+
+      # Resulting oversample ratio
+      (total_scale * quality_multiplier).ceil.to_i.clamp(1, 8)
+    end
+
+    def calculate_initial_size(char_count : Int32, font_size : Float32, outline : Int32) : Int32
+      # Add padding for the outline on all sides of the glyph
+      glyph_box = font_size + (outline * 2)
+      total_area = char_count * glyph_box * glyph_box
+
+      # Find the side length, then find the next power of 2
+      side = Math.sqrt(total_area).ceil.to_i
+      power_of_2 = 128
+      while power_of_2 < side
+        power_of_2 <<= 1
+      end
+
+      # Clamp to a reasonable max (like 4096) for GPU limits
+      power_of_2.clamp(128, 4096)
+    end
+
+    private def dilate(original_pixels : Bytes, width : Int32, height : Int32, thickness : Int32) : Bytes
+      dilated = Bytes.new(width * height)
+
+      # For every pixel in the texture
+      height.times do |y|
+        width.times do |x|
+          # If the original pixel is already "on", the dilated one is too
+          if original_pixels[y * width + x] > 0
+            dilated[y * width + x] = 255
+            next
+          end
+
+          # Search neighborhood within the thickness radius
+          # Using a square bounding box for the search
+          found = false
+          (-thickness..thickness).each do |dy|
+            ny = y + dy
+            next if ny < 0 || ny >= height
+
+            (-thickness..thickness).each do |dx|
+              nx = x + dx
+              next if nx < 0 || nx >= width
+
+              # Circular check: is this pixel within the radius?
+              if (dx*dx + dy*dy) <= (thickness * thickness)
+                if original_pixels[ny * width + nx] > 0
+                  found = true
+                  break
+                end
+              end
+            end
+            break if found
+          end
+
+          dilated[y * width + x] = 255 if found
+        end
+      end
+
+      dilated
+    end
+
     def calculate_width(text : String, character_spacing : Num = 0) : Float32
       total_width = 0_f32
 
@@ -106,7 +243,7 @@ module GSDL
 
         # We only care about the advance, not the visual width (x1-x0)
         # because the advance includes the whitespace/spacing.
-        total_width += @chars[glyph_idx].xadvance + character_spacing
+        total_width += (@chars[glyph_idx].xadvance / @oversample) + character_spacing
       end
 
       total_width - character_spacing
@@ -123,10 +260,11 @@ module GSDL
       scale_y : Num = 1,
       z_index : Int32 = 0
     )
-      current_x = x.to_f32
-      baseline_y = y + @ascent * scale_y
+      # Undo oversample for the ascent to find the correct logical baseline
+      current_x = x
+      current_y = y + @ascent * scale_y
 
-      text.each_char do |char|
+      text.each_char_with_index do |char, i|
         glyph_idx = char.ord - @first_char
         next if glyph_idx < 0 || glyph_idx >= @char_count
 
@@ -140,15 +278,16 @@ module GSDL
           h: (glyph.y1 - glyph.y0).to_f32
         )
 
-        w = src.w * scale_x
-        h = src.h * scale_y
-        x = current_x + glyph.xoff * scale_x
-        y = baseline_y + glyph.yoff * scale_y
+        # Divide physical dimensions and offsets by @oversample to get logical size
+        w = (src.w / @oversample) * scale_x
+        h = (src.h / @oversample) * scale_y
+        gx = current_x + (glyph.xoff / @oversample) * scale_x
+        gy = current_y + (glyph.yoff / @oversample) * scale_y
 
         # Destination rect with offsets applied
         dest = FRect.new(
-          x: x,
-          y: y,
+          x: gx,
+          y: gy,
           w: w,
           h: h
         )
@@ -163,8 +302,8 @@ module GSDL
           z_index: z_index
         )
 
-        # Advance horizontal position
-        current_x += (glyph.xadvance + character_spacing) * scale_x
+        # Advance horizontal position and undo oversample
+        current_x += ((glyph.xadvance / @oversample) + character_spacing) * scale_x
       end
     end
 
@@ -192,7 +331,7 @@ module GSDL
       # Calculate where the "start" of the text is relative to the pivot
       # This depends on your alignment math passed down from TextBeta
       current_x = start_x
-      current_y = start_y + (@ascent * scale_y)
+      current_y = start_y + @ascent * scale_y
 
       text.each_char do |char|
         glyph_idx = char.ord - @first_char
@@ -206,13 +345,11 @@ module GSDL
         u2 = glyph.x1 / tex_w
         v2 = glyph.y1 / tex_h
 
-        # Calculate actual pixel dimensions for the quad
-        gw = (glyph.x1 - glyph.x0) * scale_x
-        gh = (glyph.y1 - glyph.y0) * scale_y
-
-        # char_x/y is the position relative to the pivot
-        char_x = current_x + (glyph.xoff * scale_x)
-        char_y = current_y + (glyph.yoff * scale_y)
+        # Calculate logical dimensions and offsets, undo oversample
+        gw = ((glyph.x1 - glyph.x0) / @oversample) * scale_x
+        gh = ((glyph.y1 - glyph.y0) / @oversample) * scale_y
+        char_x = current_x + ((glyph.xoff / @oversample) * scale_x)
+        char_y = current_y + ((glyph.yoff / @oversample) * scale_y)
 
         # Vertex Rotation Math
         # Define local quad corners relative to current_x/y
@@ -252,8 +389,8 @@ module GSDL
           texture: @texture # The FontAtlas texture
         )
 
-        # Advance horizontal position
-        current_x += (glyph.xadvance + character_spacing) * scale_x
+        # Advance horizontal position and undo oversample
+        current_x += ((glyph.xadvance / @oversample) + character_spacing) * scale_x
       end
     end
 
