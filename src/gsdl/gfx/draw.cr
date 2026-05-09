@@ -16,7 +16,7 @@ module GSDL
         nil
       end
 
-      def on_screen? : Bool
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
         true
       end
     end
@@ -81,12 +81,9 @@ module GSDL
         Color.new(r: tint_r, g: tint_g, b: tint_b, a: tint_a)
       end
 
-      def on_screen? : Bool
-        # Get actual screen dimensions for culling
-        screen_w = GSDL::Game.width.to_f32
-        screen_h = GSDL::Game.height.to_f32
-
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
         # Basic bounding box check with circumscribed circle to account for arbitrary rotation
+        # scale_x already includes content_scale
         cx = (@dest_rect.x + @dest_rect.w / 2_f32) * scale_x.abs
         cy = (@dest_rect.y + @dest_rect.h / 2_f32) * scale_y.abs
 
@@ -131,10 +128,7 @@ module GSDL
         @rect.y
       end
 
-      def on_screen? : Bool
-        screen_w = GSDL::Game.width.to_f32
-        screen_h = GSDL::Game.height.to_f32
-
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
         r_x = @rect.x * scale_x.abs
         r_y = @rect.y * scale_y.abs
         r_w = @rect.w * scale_x.abs
@@ -161,9 +155,7 @@ module GSDL
         super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
 
-      def on_screen? : Bool
-        screen_w = GSDL::Game.width.to_f32
-        screen_h = GSDL::Game.height.to_f32
+      def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
         px = @x * scale_x.abs
         py = @y * scale_y.abs
         px >= 0_f32 && px <= screen_w && py >= 0_f32 && py <= screen_h
@@ -233,13 +225,28 @@ module GSDL
     @current_flush_count : Int32 = 0
     @last_flush_count : Int32 = 0
 
-    property camera : Camera? = nil
+    property content_scale : Float32 = 1.0_f32
+    property projection : ProjectionMatrix? = nil
+
+    def with_projection(projection : ProjectionMatrix?, &block)
+      old_projection = @projection
+      @projection = projection
+      yield
+      @projection = old_projection
+    end
+
+    def camera : Camera?
+      @projection.as?(Camera)
+    end
+
+    def camera=(camera : Camera?)
+      @projection = camera
+    end
 
     def with_camera(camera : Camera?, &block)
-      old_camera = @camera
-      @camera = camera
-      yield
-      @camera = old_camera
+      with_projection(camera) do
+        yield
+      end
     end
 
     # Batching buffers
@@ -306,12 +313,30 @@ module GSDL
       @current_clip_rect
     end
 
+    private def effective_content_scale : Float32
+      # 1. If we are drawing to an off-screen target (like an atlas), we use 1:1 scaling.
+      return 1.0_f32 if @r.render_target
+
+      # 2. If SDL3 Logical Presentation is active, SDL3 handles the scaling to the window size 
+      # automatically. In this mode, we should not apply our own content_scale.
+      w, h, mode = @r.logical_presentation
+      return 1.0_f32 if w > 0 && h > 0
+
+      # 3. Otherwise, apply High-DPI scaling for window-direct drawing.
+      @content_scale
+    end
+
     private def push_cmd(cmd : Command)
       c = cmd
 
       # Still cull if enabled, but use local variables to be safe
-      if @culling_enabled && !c.on_screen?
-        return
+      if @culling_enabled
+        # Calculate actual physical screen dimensions for culling
+        # window_width returns points, multiplying by content_scale gives physical pixels
+        cs = effective_content_scale
+        sw = GSDL::Game.window_width.to_f32 * cs
+        sh = GSDL::Game.window_height.to_f32 * cs
+        return if !c.on_screen?(sw, sh)
       end
 
       layer = @layers[c.z_index] ||= begin
@@ -328,6 +353,10 @@ module GSDL
       @r.default_texture_scale_mode = LibSDL3::ScaleMode::Nearest
       @layers = Hash(Int32, Layer).new
       @sorted_z_indices = [] of Int32
+
+      # Initialize content scale from window display scale
+      # This handles High-DPI scaling for high pixel density windows
+      @content_scale = LibSDL3.get_window_pixel_density(window.to_unsafe).to_f32
     end
 
     private def set_color(color : Color)
@@ -501,23 +530,23 @@ module GSDL
     private def add_geometry_to_batch(command : DrawGeometryCommand)
       texture = command.atlas_handle || command.texture
       return unless texture
-      
+
       tw, th = 0_f32, 0_f32
       LibSDL3.get_texture_size(texture, pointerof(tw), pointerof(th))
 
       base_idx = @vertex_buffer.size
-      
+
       if a_rect = command.atlas_rect
         # Offset UVs in vertices to match atlas position
         command.vertices.each do |v|
           # Original UVs were likely 0..1 relative to original texture
           # We need to transform them to be relative to the atlas
-          
+
           # Note: v.texture_fpoint.x is typically 0..1
           # We multiply by original size then add atlas offset, then divide by atlas size
           new_u = (a_rect.x + v.texture_fpoint.x * a_rect.w) / tw
           new_v = (a_rect.y + v.texture_fpoint.y * a_rect.h) / th
-          
+
           @vertex_buffer << SDL3::Vertex.new(v.fpoint.x, v.fpoint.y, v.fcolor, LibSDL3::FPoint.new(x: new_u, y: new_v))
         end
       else
@@ -658,7 +687,7 @@ module GSDL
           when DrawGeometryCommand
             # Check if this command can continue the current batch
             current_tex_handle = command.atlas_handle || command.texture
-            
+
             if current_tex_handle
               can_batch = @active_batch_texture &&
                           @active_batch_texture.not_nil!.to_unsafe == current_tex_handle.to_unsafe &&
@@ -686,7 +715,7 @@ module GSDL
             else
               # No texture, flush batch and draw geometry normally (unbatched for now)
               flush_batch if @active_batch_texture
-              
+
               active_color = nil
               active_blend_mode = nil
               @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
@@ -824,17 +853,17 @@ module GSDL
     # geometry
 
     def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : Texture? = nil)
-      cam = @camera
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      v_sdl = if cam
-        sx *= cam.zoom
-        sy *= cam.zoom
+      v_sdl = if proj = @projection
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
         vertices.map do |v|
           sdl_v = v.to_sdl
-          sdl_v.fpoint.x -= cam.x
-          sdl_v.fpoint.y -= cam.y
+          sdl_v.fpoint.x -= proj.x
+          sdl_v.fpoint.y -= proj.y
           sdl_v
         end
       else
@@ -859,14 +888,15 @@ module GSDL
     def point(x : Num, y : Num, color = Color::White, z_index = 0)
       px = x.to_f32
       py = y.to_f32
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      if cam = @camera
-        px -= cam.x
-        py -= cam.y
-        sx *= cam.zoom
-        sy *= cam.zoom
+      if proj = @projection
+        px -= proj.x
+        py -= proj.y
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
       end
 
       push_cmd(DrawPointCommand.new(
@@ -885,17 +915,17 @@ module GSDL
     end
 
     def points(points : Points, color = Color::White, z_index = 0)
-      cam = @camera
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      pts_sdl = if cam
-        sx *= cam.zoom
-        sy *= cam.zoom
+      pts_sdl = if proj = @projection
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
         points.map do |p|
           sdl_p = p.to_sdl
-          sdl_p.x -= cam.x
-          sdl_p.y -= cam.y
+          sdl_p.x -= proj.x
+          sdl_p.y -= proj.y
           sdl_p
         end
       else
@@ -928,16 +958,17 @@ module GSDL
       ly1 = y1.to_f32
       lx2 = x2.to_f32
       ly2 = y2.to_f32
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      if cam = @camera
-        lx1 -= cam.x
-        ly1 -= cam.y
-        lx2 -= cam.x
-        ly2 -= cam.y
-        sx *= cam.zoom
-        sy *= cam.zoom
+      if proj = @projection
+        lx1 -= proj.x
+        ly1 -= proj.y
+        lx2 -= proj.x
+        ly2 -= proj.y
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
       end
 
       push_cmd(DrawLineCommand.new(
@@ -965,17 +996,17 @@ module GSDL
     end
 
     def lines(points : Points, color = Color::White, z_index = 0)
-      cam = @camera
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      pts_sdl = if cam
-        sx *= cam.zoom
-        sy *= cam.zoom
+      pts_sdl = if proj = @projection
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
         points.map do |p|
           sdl_p = p.to_sdl
-          sdl_p.x -= cam.x
-          sdl_p.y -= cam.y
+          sdl_p.x -= proj.x
+          sdl_p.y -= proj.y
           sdl_p
         end
       else
@@ -1014,14 +1045,15 @@ module GSDL
 
     def rect_fill(rect : FRect, color = Color::White, z_index : Int32 = 0)
       r = rect.to_sdl
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      if cam = @camera
-        r.x -= cam.x
-        r.y -= cam.y
-        sx *= cam.zoom
-        sy *= cam.zoom
+      if proj = @projection
+        r.x -= proj.x
+        r.y -= proj.y
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
       end
 
       push_cmd(DrawFRectCommand.new(
@@ -1044,17 +1076,17 @@ module GSDL
     end
 
     def rects_fill(rects : FRects, color = Color::White, z_index = 0)
-      cam = @camera
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      rs_sdl = if cam
-        sx *= cam.zoom
-        sy *= cam.zoom
+      rs_sdl = if proj = @projection
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
         rects.map do |r|
           sdl_r = r.to_sdl
-          sdl_r.x -= cam.x
-          sdl_r.y -= cam.y
+          sdl_r.x -= proj.x
+          sdl_r.y -= proj.y
           sdl_r
         end
       else
@@ -1083,14 +1115,15 @@ module GSDL
 
     def rect_outline(rect : FRect, color = Color::White, z_index : Int32 = 0)
       r = rect.to_sdl
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      if cam = @camera
-        r.x -= cam.x
-        r.y -= cam.y
-        sx *= cam.zoom
-        sy *= cam.zoom
+      if proj = @projection
+        r.x -= proj.x
+        r.y -= proj.y
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
       end
 
       push_cmd(DrawFRectCommand.new(
@@ -1113,17 +1146,17 @@ module GSDL
     end
 
     def rects_outline(rects : FRects, color = Color::White, z_index = 0)
-      cam = @camera
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      rs_sdl = if cam
-        sx *= cam.zoom
-        sy *= cam.zoom
+      rs_sdl = if proj = @projection
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
         rects.map do |r|
           sdl_r = r.to_sdl
-          sdl_r.x -= cam.x
-          sdl_r.y -= cam.y
+          sdl_r.x -= proj.x
+          sdl_r.y -= proj.y
           sdl_r
         end
       else
@@ -1200,14 +1233,15 @@ module GSDL
     )
       actual_dest_rect = (dest_rect.try(&.dup) || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)).to_sdl
       actual_center = center.to_sdl
-      sx = @current_scale_x
-      sy = @current_scale_y
+      cs = effective_content_scale
+      sx = @current_scale_x * cs
+      sy = @current_scale_y * cs
 
-      if cam = @camera
-        actual_dest_rect.x -= cam.x
-        actual_dest_rect.y -= cam.y
-        sx *= cam.zoom
-        sy *= cam.zoom
+      if proj = @projection
+        actual_dest_rect.x -= proj.x
+        actual_dest_rect.y -= proj.y
+        sx *= proj.zoom_x
+        sy *= proj.zoom_y
       end
 
       if draw_immediately

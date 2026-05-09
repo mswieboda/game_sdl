@@ -167,7 +167,7 @@ module GSDL
       if @logical_width > 0
         @logical_width
       elsif wnd = @window
-        wnd.pixel_size[0]
+        wnd.size[0]
       else
         @width || 0
       end
@@ -177,7 +177,7 @@ module GSDL
       if @logical_height > 0
         @logical_height
       elsif wnd = @window
-        wnd.pixel_size[1]
+        wnd.size[1]
       else
         @height || 0
       end

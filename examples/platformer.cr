@@ -4,12 +4,9 @@ module PlatformerEx
   alias Keys = GSDL::Keys
   alias Input = GSDL::Input
 
-  WIDTH = 800
-  HEIGHT = 600
-
   class Game < GSDL::Game
     def initialize
-      super(title: "Platformer Example")
+      super(title: "Platformer Example", logical_width: 480, logical_height: 320)
     end
 
     def init
@@ -48,7 +45,7 @@ module PlatformerEx
     SPEED = 192_f32
 
     def initialize(key, width, height)
-      super(key: key, width: width, height: height)
+      super(key: key, width: width, height: height, origin: {0.5_f32, 0_f32})
 
       # turns gravity on from PlatformerController / TileMapCollidable
       @use_gravity = true
@@ -128,9 +125,6 @@ module PlatformerEx
     @player : Player
     @coins : Array(GSDL::AnimatedSprite)
     @coin_audio : GSDL::Audio
-    @coin_text : GSDL::Text
-    @info_text : GSDL::Text
-    @fps_text : GSDL::Text
 
     property? debug = false
 
@@ -162,7 +156,7 @@ module PlatformerEx
         @player.x = spawn.x
         @player.y = spawn.y
       else
-        @player.center(width: WIDTH, height: HEIGHT - 300)
+        @player.center(width: Game.width, height: Game.height - 300)
       end
       add_child(@player) # Auto-registered as a Collidable
 
@@ -178,35 +172,49 @@ module PlatformerEx
         add_child(coin) # Auto-registered as a Collidable
       end
 
-      GSDL::Data.set("coins_collected", 0)
-      @coin_text = GSDL::Text.new(
-        text: "Coins: 0",
-        x: WIDTH - 32,
-        y: 32,
-        origin: {1.0_f32, 0_f32},
-        z_index: 5,
-        color: GSDL::Color::Gold
-      )
-
       # Add a floating sprite block
       # add_child automatically registers it with collision_space because CustomPlatform (Sprite) is Collidable
       add_child(CustomPlatform.new(x: 160, y: 384, w: 160, h: 16))
 
+      # HUD
+      hud = GSDL::HUD.new
       small_font = GSDL::Font.default.copy
       small_font.size = 12
+      tiny_font = GSDL::Font.default.copy
+      tiny_font.size = 6
 
-      @info_text = GSDL::Text.new(
+      GSDL::Data.set("coins_collected", 0)
+      hud << GSDL::HUDText.new(
         font: small_font,
-        text: "TAB to toggle debug",
-        x: WIDTH / 2_f32,
-        y: 16,
-        z_index: 5,
+        text_data_template: "Coins: {coins_collected}",
+        anchor: GSDL::Anchor::TopLeft,
+        offset_x: 8,
+        offset_y: 8,
+        color: GSDL::Color::Gold
+      )
+
+      hud << GSDL::HUDText.new(
+        font: tiny_font,
+        text: "TAB\nto debug",
+        anchor: GSDL::Anchor::TopCenter,
+        align: GSDL::Font::Align::Center,
         origin: {0.5_f32, 0_f32},
+        offset_y: 8,
         color: GSDL::Color::Lime
       )
 
-      @fps_text = GSDL::Text.new(text: "FPS: 0", x: 16, y: 16, color: GSDL::Color::Lime)
-      @fps_text.draw_relative_to_camera = false
+      GSDL::Data.set("fps", 0)
+      hud << GSDL::HUDText.new(
+        font: tiny_font,
+        text_data_template: "FPS: {fps}",
+        anchor: GSDL::Anchor::TopRight,
+        origin: {1_f32, 0_f32},
+        offset_x: 8,
+        offset_y: 8,
+        color: GSDL::Color::Lime
+      )
+
+      self.hud = hud
     end
 
     def update(dt : Float32)
@@ -220,7 +228,6 @@ module PlatformerEx
           @coins.delete(coin)
           remove_child(coin) # Auto-unregistered from collision_space
           GSDL::Data.increment("coins_collected")
-          @coin_text.text = "Coins: #{GSDL::Data.get("coins_collected")}"
         end
       end
 
@@ -228,30 +235,26 @@ module PlatformerEx
       camera.look_at(@player.x, @player.y)
       camera.update(dt)
 
-      @fps_text.text = "FPS: #{GSDL::Game.fps}"
+      GSDL::Data.set("fps", GSDL::Game.fps)
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       # Draw bounds in red
       if bounds = collision_space.space_bounds
-        bounds_camera = GSDL::FRect.new(x: bounds.x - camera.x, y: bounds.y - camera.y, w: bounds.w, h: bounds.h)
-        draw.rect_outline(bounds_camera, GSDL::Color::Red, z_index: 1)
+        draw.rect_outline(bounds, GSDL::Color::Red, z_index: 1)
       end
 
       @tile_map.draw(draw)
 
       super(draw) # Draws all children (player, coins, platforms)
-      @coin_text.draw(draw)
-      @info_text.draw(draw)
-      @fps_text.draw(draw)
 
       return unless debug?
       # Debug: Draw collision boxes
       player_box = @player.collision_box
       draw.rect_outline(
         rect: GSDL::FRect.new(
-          x: player_box.x - camera.x,
-          y: player_box.y - camera.y,
+          x: player_box.x,
+          y: player_box.y,
           w: player_box.w,
           h: player_box.h
         ),
@@ -264,8 +267,8 @@ module PlatformerEx
         coin_box = coin.collision_box
         draw.rect_outline(
           rect: GSDL::FRect.new(
-            x: coin_box.x - camera.x,
-            y: coin_box.y - camera.y,
+            x: coin_box.x,
+            y: coin_box.y,
             w: coin_box.w,
             h: coin_box.h
           ),

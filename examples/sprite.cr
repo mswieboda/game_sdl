@@ -5,7 +5,7 @@ module GameEx
 
   class GameEx < GSDL::Game
     def initialize
-      super(title: "Sprite Ex", width: 800, height: 600)
+      super(title: "Sprite Ex", width: 800, height: 600, high_pixel_density: true)
     end
 
     def init

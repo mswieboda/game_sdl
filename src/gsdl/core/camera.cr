@@ -2,7 +2,7 @@ require "./tween"
 require "./tweenable"
 
 module GSDL
-  class Camera
+  class Camera < ProjectionMatrix
     include Tweenable
 
     enum Type
@@ -23,9 +23,6 @@ module GSDL
 
     property tweens : Array(Tween) = [] of Tween
 
-    property width : Num
-    property height : Num
-
     # Target coordinates
     property target_x : Num? = nil
     property target_y : Num? = nil
@@ -44,11 +41,8 @@ module GSDL
     property input_left : Symbol = :camera_left
     property input_right : Symbol = :camera_right
 
-    @zoom : Float32 = 1.0_f32
-    @x : Float32 = 0_f32
-    @y : Float32 = 0_f32
-
-    def initialize(@width : Num, @height : Num)
+    def initialize(width : Num, height : Num)
+      super(0_f32, 0_f32, width.to_f32, height.to_f32, 1.0_f32, 1.0_f32)
     end
 
     def look_at(tx : Num, ty : Num)
@@ -79,17 +73,17 @@ module GSDL
     def z_index=(z_index : Int32); end
 
     def scale : Tuple(Num, Num)
-      {@zoom, @zoom}
+      {@zoom_x, @zoom_y}
     end
 
     def scale=(scale : Tuple(Num, Num))
       self.zoom = scale[0].to_f32
     end
 
-    def scale_x : Num; @zoom; end
+    def scale_x : Num; @zoom_x; end
     def scale_x=(scale_x : Num); self.zoom = scale_x.to_f32; end
 
-    def scale_y : Num; @zoom; end
+    def scale_y : Num; @zoom_y; end
     def scale_y=(scale_y : Num); self.zoom = scale_y.to_f32; end
 
     def x : Float32
@@ -109,26 +103,23 @@ module GSDL
     end
 
     def zoom
-      @zoom
+      @zoom_x
     end
 
     def zoom=(new_zoom : Float32)
-      return if @zoom == new_zoom
+      return if @zoom_x == new_zoom
       return if new_zoom.zero?
 
       # Calculate the world coordinates of the center of the current camera view
-      center_x = @x + (@width / (2_f32 * @zoom))
-      center_y = @y + (@height / (2_f32 * @zoom))
+      center_x = @x + (@width / (2_f32 * @zoom_x))
+      center_y = @y + (@height / (2_f32 * @zoom_y))
 
-      @zoom = new_zoom
+      @zoom_x = new_zoom
+      @zoom_y = new_zoom
 
       # Update @x and @y so that center_x and center_y are still at the center of the view
-      @x = center_x - (@width / (2_f32 * @zoom))
-      @y = center_y - (@height / (2_f32 * @zoom))
-    end
-
-    def viewport_rect : FRect
-      FRect.new(x: @x, y: @y, w: @width / @zoom, h: @height / @zoom)
+      @x = center_x - (@width / (2_f32 * @zoom_x))
+      @y = center_y - (@height / (2_f32 * @zoom_y))
     end
 
     def shake(duration : Float32, intensity : Float32 = 10_f32)
@@ -184,8 +175,8 @@ module GSDL
 
     private def update_center_on_target(dt : Float32)
       if (tx = @target_x) && (ty = @target_y)
-        target_cam_x = tx.to_f32 - (@width / (2_f32 * @zoom))
-        target_cam_y = ty.to_f32 - (@height / (2_f32 * @zoom))
+        target_cam_x = tx.to_f32 - (@width / (2_f32 * @zoom_x))
+        target_cam_y = ty.to_f32 - (@height / (2_f32 * @zoom_y))
 
         if @lerp_speed > 0
           # Frame-rate independent lerp
@@ -200,8 +191,8 @@ module GSDL
     end
 
     private def apply_boundary
-      effective_width = @width / @zoom
-      effective_height = @height / @zoom
+      effective_width = @width / @zoom_x
+      effective_height = @height / @zoom_y
 
       if @boundary_width > 0 && @boundary_height > 0
         if @boundary_width > effective_width
