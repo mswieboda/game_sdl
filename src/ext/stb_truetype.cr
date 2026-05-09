@@ -2,7 +2,7 @@
   # This tells Crystal: "Link this object file specifically on Windows"
   @[Link(ldflags: "#{__DIR__}/stb_truetype_win_x64.obj")]
 {% else %}
-  @[Link(ldflags: "#{__DIR__}/../../build/stb_truetype.o")]
+  @[Link(ldflags: "{{ `pwd`.strip }}/build/stb_truetype.o")]
 {% end %}
 
 lib LibSTBTrueType
