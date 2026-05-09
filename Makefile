@@ -12,30 +12,18 @@ MKDIR = mkdir -p
 
 # Get all sdl3 and sdl3-mixer flags automatically
 ifeq ($(OS),Windows_NT)
-	SDL_FLAGS :=
+  SDL_FLAGS :=
 else
-	SDL_FLAGS := $(shell pkg-config --libs sdl3-mixer)
+  SDL_FLAGS := $(shell pkg-config --libs sdl3-mixer)
 endif
 
-# Your local stb_truetype object
 STB_TRUETYPE_SRC := $(EXT_DIR)/stb_truetype
-STB_TRUETYPE_OBJ := $(BUILD_DIR)/stb_truetype$(OBJ_EXT)
-
-# Combine them for unix
-ifeq ($(OS),Windows_NT)
-	LINKFLAGS := $(abspath $(STB_TRUETYPE_OBJ)) /NODEFAULTLIB:libcmt.lib
-else
-	LINKFLAGS := $(SDL_FLAGS) $(abspath $(STB_TRUETYPE_OBJ))
-endif
 
 # File targets
 SOURCES := $(shell find $(SOURCE_DIR) -name "*.cr")
 
-# Windows cl.exe loading env
-VCVARS = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat"
-
 # Phony targets don't represent files
-.PHONY: default clean build run
+.PHONY: default clean build run build_win_stb_truetype
 
 # The default target, executed when you just run `make`
 default: run
@@ -44,16 +32,29 @@ clean:
 	@echo "Executing clean..."
 	$(RM) $(BUILD_DIR)
 
-$(STB_TRUETYPE_OBJ): $(STB_TRUETYPE_SRC).c $(STB_TRUETYPE_SRC).h
-	@echo "Building stb_truetype..."
-	@${MKDIR} $(BUILD_DIR)
+build_win_stb_truetype: $(STB_TRUETYPE_SRC).c $(STB_TRUETYPE_SRC).h
+	@echo "Building windows stb_truetype..."
+	msvc_env.bat /O2 /c $< /Fo:$(EXT_DIR)/stb_truetype_win_x64.obj
+	@echo "Built windows $(EXT_DIR)/stb_truetype_win_x64.obj"
+
 ifeq ($(OS),Windows_NT)
-	msvc_env.bat /O2 /c $< /Fo:$@
+  # Use the pre-compiled object on Windows
+  STB_TRUETYPE_OBJ = $(EXT_DIR)/stb_truetype_win_x64.obj
 else
-	$(C_COMPILER) $(CFLAGS) -c $< -o $@
+  # Compile from source on Linux/macOS
+  STB_TRUETYPE_OBJ = build/stb_truetype.o
+  $(STB_TRUETYPE_OBJ): $(STB_TRUETYPE_SRC).c $(STB_TRUETYPE_SRC).h
+  	mkdir -p build
+  	$(CC) -O3 -fPIC -c $< -o $@
 endif
 
-build: $(STB_TRUETYPE_OBJ) $(SOURCES)
+ifeq ($(OS),Windows_NT)
+  LINKFLAGS := $(abspath $(STB_TRUETYPE_OBJ)) /NODEFAULTLIB:libcmt.lib
+else
+  LINKFLAGS := $(SDL_FLAGS) $(abspath $(STB_TRUETYPE_OBJ))
+endif
+
+build: $(SOURCES)
 	@if [ -z "$(EXAMPLE)" ]; then \
 		@echo "Error: You must provide EXAMPLE=name"; \
 		exit 1; \
