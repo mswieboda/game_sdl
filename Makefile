@@ -12,9 +12,9 @@ MKDIR = mkdir -p
 
 # Get all sdl3 and sdl3-mixer flags automatically
 ifeq ($(OS),Windows_NT)
-  SDL_FLAGS :=
+  LINKFLAGS := /NODEFAULTLIB:libcmt.lib
 else
-  SDL_FLAGS := $(shell pkg-config --libs sdl3-mixer)
+  LINKFLAGS := $(shell pkg-config --libs sdl3-mixer)
 endif
 
 STB_TRUETYPE_SRC := $(EXT_DIR)/stb_truetype
@@ -44,14 +44,8 @@ else
   # Compile from source on Linux/macOS
   STB_TRUETYPE_OBJ = build/stb_truetype.o
   $(STB_TRUETYPE_OBJ): $(STB_TRUETYPE_SRC).c $(STB_TRUETYPE_SRC).h
-  	mkdir -p build
-  	$(CC) -O3 -fPIC -c $< -o $@
-endif
-
-ifeq ($(OS),Windows_NT)
-  LINKFLAGS := $(abspath $(STB_TRUETYPE_OBJ)) /NODEFAULTLIB:libcmt.lib
-else
-  LINKFLAGS := $(SDL_FLAGS) $(abspath $(STB_TRUETYPE_OBJ))
+	mkdir -p build
+	$(CC) -O3 -fPIC -c $< -o $@
 endif
 
 build: $(SOURCES)

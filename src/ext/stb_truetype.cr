@@ -1,4 +1,10 @@
-# We don't use @[Link] here because the Makefile handles it via --link-flags
+{% if flag?(:win32) %}
+  # This tells Crystal: "Link this object file specifically on Windows"
+  @[Link(ldflags: "#{__DIR__}/stb_truetype_win_x64.obj")]
+{% else %}
+  @[Link(ldflags: "#{__DIR__}/../../build/stb_truetype.o")]
+{% end %}
+
 lib LibSTBTrueType
   # This matches the stbtt_fontinfo struct in C
   struct FontInfo
