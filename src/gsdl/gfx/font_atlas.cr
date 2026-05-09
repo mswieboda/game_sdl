@@ -178,8 +178,6 @@ module GSDL
       rotation : Num,
       character_spacing : Num = 0,
       color : Color = Color::White,
-      origin_x : Num = 0,
-      origin_y : Num = 0,
       scale_x : Num = 1,
       scale_y : Num = 1,
       z_index : Int32 = 0
@@ -194,7 +192,7 @@ module GSDL
       # Calculate where the "start" of the text is relative to the pivot
       # This depends on your alignment math passed down from TextBeta
       current_x = start_x
-      current_y = start_y
+      current_y = start_y + (@ascent * scale_y)
 
       text.each_char do |char|
         glyph_idx = char.ord - @first_char

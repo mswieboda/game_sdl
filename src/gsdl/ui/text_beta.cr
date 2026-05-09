@@ -416,15 +416,6 @@ module GSDL
             local_start_x = (base_offset_x + offset_x) * scale_x
             local_start_y = (base_offset_y + offset_y + (line_index * line_height)) * scale_y
 
-            # Calculate the stationary rotation pivot point
-            # pivot_x = @x - (self.width * scale_x * origin_x)
-            # pivot_y = @y - (self.height * scale_y * origin_y)
-
-            # These represent where the text starts RELATIVE to the pivot
-            # We don't subtract origin here because we did it in the pivot_x/y calculation
-            # relative_x = offset_x * scale_x
-            # relative_y = (offset_y + (line_index * line_height)) * scale_y
-
             @font_atlas.draw_text_rotated(
               draw: draw,
               text: shown_text,
@@ -435,8 +426,6 @@ module GSDL
               rotation: @rotation,
               character_spacing: @character_spacing,
               color: @color,
-              origin_x: origin_x,
-              origin_y: origin_y,
               scale_x: scale_x,
               scale_y: scale_y,
               z_index: @z_index

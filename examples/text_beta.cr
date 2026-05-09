@@ -17,10 +17,10 @@ class MainScene < GSDL::Scene
       origin: {0.5_f32, 0.5_f32},
       h_align: GSDL::HorizontalAlign::Center,
       v_align: GSDL::VerticalAlign::Center,
-      # line_spacing: 1.2_f32,
-      # typing: GSDL::TextBeta::Typing::Word,
-      rotation: 30,
-      # character_spacing: 3,
+      line_spacing: 3_f32,
+      typing: GSDL::TextBeta::Typing::Word,
+      rotation: 45,
+      character_spacing: 3,
       width: 300,
       height: 300,
     )
@@ -94,6 +94,16 @@ class MainScene < GSDL::Scene
     # height increase
     if GSDL::Keys.just_pressed?(GSDL::Keys::S) || GSDL::Keys.pressed?(GSDL::Keys::Down)
       @text.height += 1
+    end
+
+    # rotation increase
+    if GSDL::Keys.pressed?(GSDL::Keys::E)
+      @text.rotation += 1
+    end
+
+    # rotation decrease
+    if GSDL::Keys.pressed?(GSDL::Keys::Q)
+      @text.rotation -= 1
     end
   end
 end
