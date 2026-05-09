@@ -45,6 +45,8 @@ module GSDL
     property rotation : Num
     property shadow : {Num, Num}
     property shadow_color : Color
+    property outline : Num
+    property outline_color : Color
 
     getter font_size : Float32
     getter? width_fixed : Bool
@@ -74,6 +76,8 @@ module GSDL
       typing_speed : Time::Span? = nil,
       @shadow = {0, 0},
       @shadow_color : Color = Color::Black,
+      @outline = 0,
+      @outline_color : Color = Color::Black,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
       @rotation : Num = 0,
@@ -362,13 +366,38 @@ module GSDL
     def draw(draw : Draw)
       limit = calculate_visible_limit
 
-      # Draw the Shadow (if enabled)
+      z_index = @z_index
+
+      # shadow
       if !@shadow.all?(&.zero?)
-        _draw(draw: draw, limit: limit, color: @shadow_color, offset: @shadow, z_index: @z_index - 1)
+        offset = {
+          @shadow[0] + ( @shadow[0] > 0 ? @outline : -@outline ),
+          @shadow[1] + ( @shadow[1] > 0 ? @outline : -@outline )
+        }
+
+        _draw(draw: draw, limit: limit, color: @shadow_color, offset: offset, z_index: z_index)
+
+        z_index += 1
+      end
+
+      # outline
+      if !@outline.zero?
+        # 8-pass approach
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {@outline, 0}, z_index: z_index)
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {-@outline, 0}, z_index: z_index)
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {0, @outline}, z_index: z_index)
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {0, -@outline}, z_index: z_index)
+
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {@outline, @outline}, z_index: z_index)
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {@outline, -@outline}, z_index: z_index)
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {-@outline, @outline}, z_index: z_index)
+        _draw(draw: draw, limit: limit, color: @outline_color, offset: {-@outline, -@outline}, z_index: z_index)
+
+        z_index += 1
       end
 
       # Draw the Main Text
-      _draw(draw: draw, limit: limit, color: @color, offset: {0_f32, 0_f32}, z_index: @z_index)
+      _draw(draw: draw, limit: limit, color: @color, offset: {0_f32, 0_f32}, z_index: z_index)
     end
 
     private def _draw(draw : Draw, limit : Int32, color : Color, offset : {Num, Num}, z_index : Int32)
