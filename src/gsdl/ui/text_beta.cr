@@ -43,14 +43,16 @@ module GSDL
     property line_spacing : Num
     property character_spacing : Num
     property rotation : Num
+    property shadow : {Num, Num}
+    property shadow_color : Color
 
-    # TODO: make a setter to change font / font path
     getter font_size : Float32
     getter? width_fixed : Bool
     getter? height_fixed : Bool
     getter typing : Typing
     getter? typed : Bool
 
+    # TODO: make a setter to change font atlas
     @font_atlas : FontAtlas
     @full_text : String
     @width : Num?
@@ -70,6 +72,8 @@ module GSDL
       @character_spacing : Num = 0,
       @typing = Typing::None,
       typing_speed : Time::Span? = nil,
+      @shadow = {0, 0},
+      @shadow_color : Color = Color::Black,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
       @rotation : Num = 0,
@@ -357,10 +361,22 @@ module GSDL
 
     def draw(draw : Draw)
       limit = calculate_visible_limit
+
+      # Draw the Shadow (if enabled)
+      if !@shadow.all?(&.zero?)
+        _draw(draw: draw, limit: limit, color: @shadow_color, offset: @shadow, z_index: @z_index - 1)
+      end
+
+      # Draw the Main Text
+      _draw(draw: draw, limit: limit, color: @color, offset: {0_f32, 0_f32}, z_index: @z_index)
+    end
+
+    private def _draw(draw : Draw, limit : Int32, color : Color, offset : {Num, Num}, z_index : Int32)
       chars_processed = 0
+      offset_x, offset_y = offset
 
       # Vertical Alignment
-      offset_y = case @v_align
+      offset_y += case @v_align
       when .center?
         [(self.height - text_height) / 2, 0].max
       when .bottom?
@@ -376,61 +392,15 @@ module GSDL
         shown_text = line_text[0..[line_limit, line_text.size].min]
 
         if shown_text.size > 0 || line_text.empty?
-          # Horizontal Alignment (full line_text for width)
-          line_width = @font_atlas.calculate_width(line_text, @character_spacing)
-          offset_x = case @h_align
-          when .center?
-            (self.width - line_width) / 2
-          when .right?
-            self.width - line_width
-          else
-            0
-          end
-
-          # Coordinate Calculation
-          line_offset_y = line_index * line_height
-          draw_x = @x + offset_x * scale_x - self.width * scale_x * origin_x
-          draw_y = @y + offset_y * scale_y + line_offset_y * scale_y - (self.height * scale_y * origin_y)
-
-          if @rotation % 360 == 0
-            @font_atlas.draw_text(
-              draw: draw,
-              text: shown_text,
-              x: draw_x.to_f32,
-              y: draw_y.to_f32,
-              character_spacing: @character_spacing,
-              color: @color,
-              scale_x: scale_x,
-              scale_y: scale_y,
-              z_index: @z_index
-            )
-          else
-            anchor_x = @x
-            anchor_y = @y
-
-            base_offset_x = -(self.width * origin_x)
-            base_offset_y = -(self.height * origin_y)
-
-            # Combine base origin offset with alignment and line height
-            # These are purely LOCAL to the pivot point.
-            local_start_x = (base_offset_x + offset_x) * scale_x
-            local_start_y = (base_offset_y + offset_y + (line_index * line_height)) * scale_y
-
-            @font_atlas.draw_text_rotated(
-              draw: draw,
-              text: shown_text,
-              pivot_x: anchor_x,
-              pivot_y: anchor_y,
-              start_x: local_start_x,
-              start_y: local_start_y,
-              rotation: @rotation,
-              character_spacing: @character_spacing,
-              color: @color,
-              scale_x: scale_x,
-              scale_y: scale_y,
-              z_index: @z_index
-            )
-          end
+          _draw_line(
+            draw: draw,
+            text: shown_text,
+            color: color,
+            line_index: line_index,
+            offset_x: offset_x,
+            offset_y: offset_y,
+            z_index: z_index
+          )
         end
 
         # Update progress (+1 accounts for the stripped newline character)
@@ -445,6 +415,66 @@ module GSDL
 
           return
         end
+      end
+    end
+
+    private def _draw_line(draw : Draw, text : String, color : Color, line_index : Int32, offset_x : Num, offset_y : Num, z_index : Int32)
+      # Horizontal Alignment (full text for width)
+      line_width = @font_atlas.calculate_width(text, @character_spacing)
+      offset_x += case @h_align
+      when .center?
+        (self.width - line_width) / 2
+      when .right?
+        self.width - line_width
+      else
+        0
+      end
+
+      offset_y += line_index * line_height
+
+      if @rotation % 360 == 0
+        # draw not rotated
+        draw_x = @x + offset_x * scale_x - self.width * scale_x * origin_x
+        draw_y = @y + offset_y * scale_y - self.height * scale_y * origin_y
+
+        @font_atlas.draw_text(
+          draw: draw,
+          text: text,
+          x: draw_x.to_f32,
+          y: draw_y.to_f32,
+          character_spacing: @character_spacing,
+          color: color,
+          scale_x: scale_x,
+          scale_y: scale_y,
+          z_index: z_index
+        )
+      else
+        # draw rotated
+        anchor_x = @x
+        anchor_y = @y
+
+        base_offset_x = -(self.width * origin_x)
+        base_offset_y = -(self.height * origin_y)
+
+        # Combine base origin offset with alignment and line height
+        # These are purely LOCAL to the pivot point.
+        local_start_x = (base_offset_x + offset_x) * scale_x
+        local_start_y = (base_offset_y + offset_y) * scale_y
+
+        @font_atlas.draw_text_rotated(
+          draw: draw,
+          text: text,
+          pivot_x: anchor_x,
+          pivot_y: anchor_y,
+          start_x: local_start_x,
+          start_y: local_start_y,
+          rotation: @rotation,
+          character_spacing: @character_spacing,
+          color: color,
+          scale_x: scale_x,
+          scale_y: scale_y,
+          z_index: z_index
+        )
       end
     end
   end
