@@ -55,6 +55,7 @@ module GSDL
 
     # TODO: make a setter to change font atlas
     @font_atlas : FontAtlas
+    @font_atlas_outline : FontAtlas
     @full_text : String
     @width : Num?
     @height : Num?
@@ -64,6 +65,7 @@ module GSDL
 
     def initialize(
       @font_atlas : FontAtlas,
+      @font_atlas_outline : FontAtlas,
       text : String = "foo",
       @x : Num = 0,
       @y : Num = 0,
@@ -393,32 +395,29 @@ module GSDL
           @shadow[1] + ( @shadow[1] > 0 ? @outline : -@outline )
         }
 
-        _draw(draw: draw, limit: limit, color: @shadow_color, offset: offset, z_index: z_index)
+        _draw(draw: draw, font_atlas: @font_atlas, limit: limit, color: @shadow_color, offset: offset, z_index: z_index)
 
         z_index += 1
       end
 
       # outline
       if !@outline.zero?
-        # 8-pass approach
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {@outline, 0}, z_index: z_index)
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {-@outline, 0}, z_index: z_index)
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {0, @outline}, z_index: z_index)
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {0, -@outline}, z_index: z_index)
-
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {@outline, @outline}, z_index: z_index)
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {@outline, -@outline}, z_index: z_index)
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {-@outline, @outline}, z_index: z_index)
-        _draw(draw: draw, limit: limit, color: @outline_color, offset: {-@outline, -@outline}, z_index: z_index)
-
+        _draw(draw: draw, font_atlas: @font_atlas_outline, limit: limit, color: @outline_color, z_index: z_index)
         z_index += 1
       end
 
       # Draw the Main Text
-      _draw(draw: draw, limit: limit, color: @color, offset: {0_f32, 0_f32}, z_index: z_index)
+      _draw(draw: draw, font_atlas: @font_atlas, limit: limit, color: @color, z_index: z_index)
     end
 
-    private def _draw(draw : Draw, limit : Int32, color : Color, offset : {Num, Num}, z_index : Int32)
+    private def _draw(
+      draw : Draw,
+      font_atlas : FontAtlas,
+      limit : Int32,
+      color : Color,
+      offset : {Num, Num} = {0, 0},
+      z_index : Int32 = 0
+    )
       chars_processed = 0
       offset_x, offset_y = offset
 
@@ -441,6 +440,7 @@ module GSDL
         if shown_text.size > 0 || line_text.empty?
           _draw_line(
             draw: draw,
+            font_atlas: font_atlas,
             text: shown_text,
             color: color,
             line_index: line_index,
@@ -465,7 +465,16 @@ module GSDL
       end
     end
 
-    private def _draw_line(draw : Draw, text : String, color : Color, line_index : Int32, offset_x : Num, offset_y : Num, z_index : Int32)
+    private def _draw_line(
+      draw : Draw,
+      font_atlas : FontAtlas,
+      text : String,
+      color : Color,
+      line_index : Int32,
+      offset_x : Num,
+      offset_y : Num,
+      z_index : Int32
+    )
       # Horizontal Alignment (full text for width)
       line_width = @font_atlas.calculate_width(text, @character_spacing)
 
@@ -485,7 +494,7 @@ module GSDL
         draw_x = @x + offset_x * scale_x - self.width * scale_x * origin_x
         draw_y = @y + offset_y * scale_y - self.height * scale_y * origin_y
 
-        @font_atlas.draw_text(
+        font_atlas.draw_text(
           draw: draw,
           text: text,
           x: draw_x.to_f32,
@@ -509,7 +518,7 @@ module GSDL
         local_start_x = (base_offset_x + offset_x) * scale_x
         local_start_y = (base_offset_y + offset_y) * scale_y
 
-        @font_atlas.draw_text_rotated(
+        font_atlas.draw_text_rotated(
           draw: draw,
           text: text,
           pivot_x: anchor_x,

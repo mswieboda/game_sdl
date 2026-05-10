@@ -2,11 +2,11 @@ module GSDL
   class FontAtlas
     getter font_size : Num
     getter outline : Int32
+    getter texture : Texture
 
     DefaultAtlasSize = 1024
     DefaultFontSize = 16
 
-    @texture : Texture
     @chars : Pointer(LibSTBTrueType::PackedChar)
     @char_count : Int32 = 95
     @first_char : Int32 = 32
@@ -15,25 +15,35 @@ module GSDL
     @render_font_size : Float32
     @render_outline : Int32
 
-    getter thickness : Int32 = 0
+    getter outline : Int32 = 0
 
     def initialize(
-      font_path : String,
-      font_size : Num = DefaultFontSize,
-      atlas_size : Int32 = DefaultAtlasSize,
+      path : String,
+      size : Num = DefaultFontSize,
       @outline : Int32 = 0,
+      atlas_size : Int32 = DefaultAtlasSize,
     )
-      unless File.exists?(font_path)
-        raise "Font file not found: #{font_path}"
+      unless File.exists?(path)
+        raise "Font file not found: #{path}"
       end
 
       total_scale = calculate_total_scale
-      @font_size = font_size * total_scale
+      @font_size = size * total_scale
       @oversample = calculate_oversample(@font_size, total_scale)
-      @render_font_size = font_size.to_f32 * @oversample
+      @render_font_size = @font_size.to_f32 * @oversample
       @render_outline = @outline * @oversample
 
-      font_data = File.read(font_path).to_slice
+      if @outline > 0
+        puts ">>> FontAtlas:"
+        puts ">>>   total_scale: #{total_scale}"
+        puts ">>>   @font_size: #{@font_size}"
+        puts ">>>   @outline: #{@outline}"
+        puts ">>>   @oversample: #{@oversample}"
+        puts ">>>   @render_font_size: #{@render_font_size}"
+        puts ">>>   @render_outline: #{@render_outline}"
+      end
+
+      font_data = File.read(path).to_slice
       @chars = Pointer(LibSTBTrueType::PackedChar).malloc(@char_count)
 
       pixels = Bytes.new(0)
@@ -45,14 +55,14 @@ module GSDL
       until success
         # Setup the packing context for current atlas_size
         pixels = Bytes.new(atlas_size * atlas_size)
-
+        padding = @outline.zero? ? 1 : @render_outline * 2
         res = LibSTBTrueType.pack_begin(
           pointerof(pack_context),
           pixels.to_unsafe,
           atlas_size,
           atlas_size,
           0, # stride (0 = width)
-          1, # padding
+          padding,
           nil # alloc_context
         )
         raise "Could not initialize STB font packer" unless res == 1
@@ -80,8 +90,8 @@ module GSDL
       end
 
       # account for outline
-      if @outline > 0
-        # 1. Create a "fat" version of the 1-byte alpha mask
+      if @render_outline > 0
+        # Create a "fat" version of the 1-byte alpha mask
         pixels = dilate(pixels, atlas_size, atlas_size, @render_outline)
       end
 
@@ -118,7 +128,7 @@ module GSDL
       font_info = LibSTBTrueType::FontInfo.new
       LibSTBTrueType.init_font(pointerof(font_info), font_data.to_unsafe, 0)
 
-      scale = LibSTBTrueType.scale_for_pixel_height(pointerof(font_info), font_size)
+      scale = LibSTBTrueType.scale_for_pixel_height(pointerof(font_info), @font_size)
 
       # Get vertical metrics
       ascent = 0
@@ -180,7 +190,8 @@ module GSDL
     def calculate_initial_size(char_count : Int32, font_size : Float32, outline : Int32) : Int32
       # Add padding for the outline on all sides of the glyph
       glyph_box = font_size + (outline * 2)
-      total_area = char_count * glyph_box * glyph_box
+      total_area = char_count * (glyph_box ** 2) * 1.2
+      # total_area = char_count * glyph_box * glyph_box
 
       # Find the side length, then find the next power of 2
       side = Math.sqrt(total_area).ceil.to_i
@@ -193,7 +204,7 @@ module GSDL
       power_of_2.clamp(128, 4096)
     end
 
-    private def dilate(original_pixels : Bytes, width : Int32, height : Int32, thickness : Int32) : Bytes
+    private def dilate(original_pixels : Bytes, width : Int32, height : Int32, outline : Int32) : Bytes
       dilated = Bytes.new(width * height)
 
       # For every pixel in the texture
@@ -205,23 +216,20 @@ module GSDL
             next
           end
 
-          # Search neighborhood within the thickness radius
-          # Using a square bounding box for the search
           found = false
-          (-thickness..thickness).each do |dy|
+          # Search neighborhood: just a flat box check
+          (-outline..outline).each do |dy|
             ny = y + dy
             next if ny < 0 || ny >= height
 
-            (-thickness..thickness).each do |dx|
+            (-outline..outline).each do |dx|
               nx = x + dx
               next if nx < 0 || nx >= width
 
-              # Circular check: is this pixel within the radius?
-              if (dx*dx + dy*dy) <= (thickness * thickness)
-                if original_pixels[ny * width + nx] > 0
-                  found = true
-                  break
-                end
+              # No circular math here! If any pixel in this square is "on", we turn "on".
+              if original_pixels[ny * width + nx] > 0
+                found = true
+                break
               end
             end
             break if found
@@ -271,18 +279,26 @@ module GSDL
         glyph = @chars[glyph_idx]
 
         # Source rect in the atlas
+        # Expand Source Rect to capture the outline pixels in the atlas
+        # We reach "outward" by the render_outline
         src = FRect.new(
-          x: glyph.x0.to_f32,
-          y: glyph.y0.to_f32,
-          w: (glyph.x1 - glyph.x0).to_f32,
-          h: (glyph.y1 - glyph.y0).to_f32
+          x: (glyph.x0 - @render_outline).to_f32,
+          y: (glyph.y0 - @render_outline).to_f32,
+          w: ((glyph.x1 - glyph.x0) + (@render_outline * 2)).to_f32,
+          h: ((glyph.y1 - glyph.y0) + (@render_outline * 2)).to_f32
         )
 
         # Divide physical dimensions and offsets by @oversample to get logical size
         w = (src.w / @oversample) * scale_x
         h = (src.h / @oversample) * scale_y
-        gx = current_x + (glyph.xoff / @oversample) * scale_x
-        gy = current_y + (glyph.yoff / @oversample) * scale_y
+
+        # Correct the Position for outline
+        # We must subtract the logical outline from the offset so the
+        # extra outline width doesn't "push" the character down and right
+        logical_outline = @render_outline / @oversample
+
+        gx = current_x + ((glyph.xoff / @oversample) - logical_outline) * scale_x
+        gy = current_y + ((glyph.yoff / @oversample) - logical_outline) * scale_y
 
         # Destination rect with offsets applied
         dest = FRect.new(
@@ -303,6 +319,8 @@ module GSDL
         )
 
         # Advance horizontal position and undo oversample
+        # Do NOT include the outline in the advance
+        # The distance to the next character stays the same regardless of stroke outline
         current_x += ((glyph.xadvance / @oversample) + character_spacing) * scale_x
       end
     end
@@ -328,6 +346,9 @@ module GSDL
       tex_w = @texture.width.to_f32
       tex_h = @texture.height.to_f32
 
+      # Logical shift for outlines to keep the glyph centered within its new larger box
+      logical_outline = @render_outline / @oversample
+
       # Calculate where the "start" of the text is relative to the pivot
       # This depends on your alignment math passed down from TextBeta
       current_x = start_x
@@ -340,16 +361,32 @@ module GSDL
         glyph = @chars[glyph_idx]
 
         # Normalize atlas coordinates to 0.0-1.0 range
-        u1 = glyph.x0 / tex_w
-        v1 = glyph.y0 / tex_h
-        u2 = glyph.x1 / tex_w
-        v2 = glyph.y1 / tex_h
+        # Expand the Atlas Coordinates (reaching into the padded space)
+        # We subtract render_outline from the start and add 2 * render_outline to the end
+        u1 = (glyph.x0 - @render_outline) / tex_w
+        v1 = (glyph.y0 - @render_outline) / tex_h
+        u2 = (glyph.x1 + @render_outline) / tex_w
+        v2 = (glyph.y1 + @render_outline) / tex_h
+        # u1 = glyph.x0 / tex_w
+        # v1 = glyph.y0 / tex_h
+        # u2 = glyph.x1 / tex_w
+        # v2 = glyph.y1 / tex_h
 
-        # Calculate logical dimensions and offsets, undo oversample
-        gw = ((glyph.x1 - glyph.x0) / @oversample) * scale_x
-        gh = ((glyph.y1 - glyph.y0) / @oversample) * scale_y
-        char_x = current_x + ((glyph.xoff / @oversample) * scale_x)
-        char_y = current_y + ((glyph.yoff / @oversample) * scale_y)
+        # Calculate expanded logical dimensions and undo oversample
+        # This width/height now includes the outline area
+        gw = (((glyph.x1 - glyph.x0) + (@render_outline * 2)) / @oversample) * scale_x
+        gh = (((glyph.y1 - glyph.y0) + (@render_outline * 2)) / @oversample) * scale_y
+
+        # # Calculate logical dimensions and offsets, undo oversample
+        # gw = ((glyph.x1 - glyph.x0) / @oversample) * scale_x
+        # gh = ((glyph.y1 - glyph.y0) / @oversample) * scale_y
+
+        # Position the Quad and undo oversample
+        # Subtract logical_outline so the "core" glyph stays aligned with current_x/y
+        char_x = current_x + ((glyph.xoff / @oversample) - logical_outline) * scale_x
+        char_y = current_y + ((glyph.yoff / @oversample) - logical_outline) * scale_y
+        # char_x = current_x + ((glyph.xoff / @oversample) * scale_x)
+        # char_y = current_y + ((glyph.yoff / @oversample) * scale_y)
 
         # Vertex Rotation Math
         # Define local quad corners relative to current_x/y

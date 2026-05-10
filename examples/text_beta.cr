@@ -2,16 +2,25 @@ require "../src/game_sdl"
 
 class MainScene < GSDL::Scene
   @text : GSDL::TextBeta
+  @font_texture : GSDL::Texture
+  @outline_texture : GSDL::Texture
 
   def initialize
     super(:main)
 
+    outline = 4
     font_path = "./assets/fonts/Roboto-Regular.ttf"
-    font_path = "./assets/fonts/PressStart2P.ttf"
-    font_path = "./assets/fonts/Electrolize-Regular.ttf"
-    font_atlas = GSDL::FontAtlas.new(font_path, 16)
+    # font_path = "./assets/fonts/PressStart2P.ttf"
+    # font_path = "./assets/fonts/Electrolize-Regular.ttf"
+    font_atlas = GSDL::FontAtlas.new(font_path, size: 32)
+    font_atlas_outline = GSDL::FontAtlas.new(font_path, size: 32, outline: outline)
+
+    @font_texture = font_atlas.texture
+    @outline_texture = font_atlas_outline.texture
+
     @text = GSDL::TextBeta.new(
       font_atlas: font_atlas,
+      font_atlas_outline: font_atlas_outline,
       text: "jumping quickly over lazy dogs\nis good exercise!\nbatty1 batty2 batty3",
       x: FontAtlasExample.width // 2,
       y: FontAtlasExample.height // 2,
@@ -22,7 +31,7 @@ class MainScene < GSDL::Scene
       # typing: GSDL::TextBeta::Typing::Word,
       shadow: {2, 2},
       shadow_color: GSDL::Color::Magenta,
-      # outline: 2,
+      outline: outline,
       # rotation: 30,
       character_spacing: 2,
       width: 300,
@@ -56,6 +65,18 @@ class MainScene < GSDL::Scene
     @text.draw(draw)
     circle_xy.draw(draw)
   end
+
+  # def draw_screen_overlay(draw : GSDL::Draw)
+  #   draw.texture(
+  #     texture: @outline_texture,
+  #     z_index: 1
+  #   )
+  #   draw.texture(
+  #     texture: @font_texture,
+  #     tint: GSDL::Color::Magenta,
+  #     z_index: 5
+  #   )
+  # end
 
   def update(dt : Float32)
     super

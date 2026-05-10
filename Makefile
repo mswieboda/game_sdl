@@ -35,7 +35,7 @@ build_win_stb_truetype: $(STB_TRUETYPE_SRC).c $(STB_TRUETYPE_SRC).h
 
 build: $(SOURCES)
 	@if [ -z "$(EXAMPLE)" ]; then \
-		@echo "Error: You must provide EXAMPLE=name"; \
+		echo "Error: You must provide EXAMPLE=name"; \
 		exit 1; \
 	fi
 	@${MKDIR} $(BUILD_DIR)
