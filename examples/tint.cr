@@ -56,9 +56,6 @@ module GameEx
         y: 32_f32,
         tint: GSDL::Color.new(0, 0, 255, 128)
       )
-
-      # Draw some text via GSDL::Draw just to confirm the system is alive
-      draw.text(GSDL::Text.new(text: "Testing DEFERRED with 2 different textures (Red vs Blue)", x: 32, y: 200))
     end
   end
 

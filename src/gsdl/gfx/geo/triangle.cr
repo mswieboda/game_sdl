@@ -162,15 +162,16 @@ module GSDL
 
     def vertices : Vertices
       vertices = [] of Vertex
+      fcolor = color.to_fcolor
 
       # Rotate each corner point
       p1 = rotate_point(render_x1, render_y1)
       p2 = rotate_point(render_x2, render_y2)
       p3 = rotate_point(render_x3, render_y3)
 
-      vertices << Vertex.new(p1, color)
-      vertices << Vertex.new(p2, color)
-      vertices << Vertex.new(p3, color)
+      vertices << Vertex.new(p1, fcolor)
+      vertices << Vertex.new(p2, fcolor)
+      vertices << Vertex.new(p3, fcolor)
     end
 
     def indices : Array(Int32)
@@ -199,16 +200,16 @@ module GSDL
 
     private def draw_outline(draw : Draw)
       vs = vertices
-      lines = vs.map { |v| Point.from(v) }
-      lines << Point.from(vs.first)
+      lines = vs.map { |v| v.fpoint }
+      lines << vs.first.fpoint
 
       draw.lines(points: lines, color: color, z_index: z_index)
     end
 
     private def draw_border(draw : Draw)
       vs = vertices
-      original_lines = vs.map { |v| Point.from(v) }
-      original_lines << Point.from(vs.first)
+      original_lines = vs.map { |v| v.fpoint }
+      original_lines << vs.first.fpoint
 
       border_thickness.to_i.times do |i|
         current_lines = original_lines.map(&.dup) # Work on a copy of points for each iteration

@@ -123,6 +123,7 @@ module TweenPresetsEx
         x2: WIDTH / 2_f32 + 96,
         y2: HEIGHT / 2_f32 + 96,
       )
+      line.origin = {0.5_f32, 0.5_f32}
       line.center(width: WIDTH, height: HEIGHT)
       line.y += 96
       @objects << line

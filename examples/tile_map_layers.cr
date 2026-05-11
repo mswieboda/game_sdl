@@ -42,6 +42,12 @@ module MultiLayerMapEx
       super(:map)
 
       @tile_map = GSDL::TileMapManager.get("map")
+
+      hud = GSDL::HUD.new
+      font = GSDL::Font.default(16_f32)
+      text = "Press 'B' to toggle Background\nPress 'F' to toggle Foreground\nPress 'O' to toggle Objects"
+      hud << GSDL::HUDText.new(text: text, offset_x: 16, offset_y: 16)
+      self.hud = hud
     end
 
     def update(dt : Float32)
@@ -63,12 +69,6 @@ module MultiLayerMapEx
 
     def draw_camera_view(draw : GSDL::Draw)
       @tile_map.draw(draw)
-    end
-
-    def draw_screen_overlay(draw : GSDL::Draw)
-      font = GSDL::Font.default(16_f32)
-      text = "Press 'B' to toggle Background\nPress 'F' to toggle Foreground\nPress 'O' to toggle Objects"
-      draw.text(GSDL::Text.new(font: font, text: text, x: 16, y: 16, z_index: 99))
     end
   end
 

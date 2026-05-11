@@ -47,7 +47,7 @@ module GSDL
     end
 
     def draw_rect_fill(rect : Rect, color : Color)
-      @internal.fill_rect(rect: rect.to_sdl, color: color.to_sdl)
+      @internal.fill_rect(rect: rect.to_sdl, color: color)
     end
 
     def draw_text(text : Text, x : Num, y : Num) : Bool
@@ -55,7 +55,7 @@ module GSDL
     end
 
     def fill(color : Color)
-      @internal.fill(color.to_sdl)
+      @internal.fill(color)
     end
 
     def blit(source_rect : Rect?, dest_rect : Rect?, dest_surface : Surface) : Bool

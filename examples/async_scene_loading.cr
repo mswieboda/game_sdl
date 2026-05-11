@@ -1,5 +1,6 @@
 require "../src/game_sdl"
 
+# TODO: this example is broken, async scene loading might need fixing
 module AsyncSceneLoadingEx
   class Game < GSDL::Game
     def initialize
@@ -93,14 +94,21 @@ module AsyncSceneLoadingEx
     end
   end
 
+  # TODO: this example is broken, async scene loading might need fixing
   class MainScene < GSDL::Scene
     # Define what this scene needs BEFORE it's instantiated
     def self.manifest : Array(GSDL::Loader::AssetTask)
-      [
+      tasks = [
         GSDL::Loader::AssetTask.new(:Texture, "ship", "gfx/ship.png"),
         GSDL::Loader::AssetTask.new(:Texture, "coin", "gfx/coin.png"),
         GSDL::Loader::AssetTask.new(:Audio, "ding", "sfx/ding.wav")
       ]
+
+      500.times do |i|
+        tasks << GSDL::Loader::AssetTask.new(:Texture, "ship_#{i}", "gfx/ship.png")
+      end
+
+      tasks
     end
 
     # Override the default loading scene for this specific scene

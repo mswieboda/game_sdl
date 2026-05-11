@@ -97,7 +97,7 @@ module GSDL
       # Rotate the second point relative to draw position
       p2 = rotate_point(render_x + dx, render_y + dy)
 
-      draw.line(p1[0], p1[1], p2[0], p2[1], color: color, z_index: z_index)
+      draw.line(p1, p2, color: color, z_index: z_index)
     end
   end
 end

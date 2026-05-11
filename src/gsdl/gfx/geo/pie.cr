@@ -56,13 +56,14 @@ module GSDL
         # TODO: calculate this, like resolution in Oval
         segments = [12, (Math.sqrt(render_radius_x) * 4).to_i].max
         angle_step = (end_angle - start_angle) / segments
+        fcolor = color.to_fcolor
 
         points = [] of Point
 
         # Center vertex (rotated)
         cp = rotate_point(render_center_x, render_center_y)
-        @fill_vertices << Vertex.new(cp, color)
-        center_point = Point.new(cp)
+        @fill_vertices << Vertex.new(cp, fcolor)
+        center_point = cp
         points << center_point
 
 
@@ -73,8 +74,8 @@ module GSDL
           arc_y = render_center_y + (render_radius_y / 2) * Math.sin(angle)
 
           rv = rotate_point(arc_x, arc_y)
-          @fill_vertices << Vertex.new(rv, color)
-          points << Point.new(rv)
+          @fill_vertices << Vertex.new(rv, fcolor)
+          points << rv
         end
 
         points << center_point

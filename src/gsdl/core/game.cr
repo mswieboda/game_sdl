@@ -264,12 +264,10 @@ module GSDL
     end
 
     def switch_async(scene_class : T.class, data : SwitchData? = nil) forall T
-      # We instantiate the scene to get its manifest from Loadable
-      target_scene = T.new
-      tasks = target_scene.manifest
+      tasks = T.manifest
 
       if tasks.empty?
-        switch(target_scene, data)
+        switch(T.new, data)
       else
         loader.add_tasks(tasks)
         loader.start_async

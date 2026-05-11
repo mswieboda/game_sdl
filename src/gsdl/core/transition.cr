@@ -82,7 +82,7 @@ module GSDL
       c = @color
       c.a = alpha.to_u8
 
-      draw.rect_fill(FRect.new(w: w, h: h), color: c, z_index: 1000)
+      draw.rect_fill(FRect.new(w: w, h: h), color: c, z_index: 9999)
     end
   end
 
@@ -130,7 +130,7 @@ module GSDL
             h: @grid_size
           ),
           color: @color,
-          z_index: 1000
+          z_index: 9999
         )
       end
     end
@@ -163,7 +163,7 @@ module GSDL
           direction.in? ? 0 : w - rect_w
         end
 
-        draw.rect_fill(FRect.new(x: x, y: current_y, w: rect_w, h: line_height), color: @color, z_index: 1000)
+        draw.rect_fill(FRect.new(x: x, y: current_y, w: rect_w, h: line_height), color: @color, z_index: 9999)
       end
     end
   end
@@ -190,6 +190,7 @@ module GSDL
       segments = 32
       vertices = [] of Vertex
       indices = [] of Int32
+      fcolor = @color.to_fcolor
 
       segments.times do |i|
         angle1 = (i.to_f32 / segments) * 2.0_f32 * Math::PI
@@ -203,16 +204,16 @@ module GSDL
         fx2, fy2 = {center_x + Math.cos(angle2).to_f32 * max_radius * 2, center_y + Math.sin(angle2).to_f32 * max_radius * 2}
 
         base_idx = vertices.size
-        vertices << Vertex.new(Point.new(x1, y1), @color)
-        vertices << Vertex.new(Point.new(x2, y2), @color)
-        vertices << Vertex.new(Point.new(fx1, fy1), @color)
-        vertices << Vertex.new(Point.new(fx2, fy2), @color)
+        vertices << Vertex.new(Point.new(x1, y1), fcolor)
+        vertices << Vertex.new(Point.new(x2, y2), fcolor)
+        vertices << Vertex.new(Point.new(fx1, fy1), fcolor)
+        vertices << Vertex.new(Point.new(fx2, fy2), fcolor)
 
         indices << base_idx << base_idx + 1 << base_idx + 2
         indices << base_idx + 1 << base_idx + 3 << base_idx + 2
       end
 
-      draw.geometry(vertices: vertices, indices: indices, z_index: 1000)
+      draw.geometry(vertices: vertices, indices: indices, z_index: 9999)
     end
   end
 
@@ -253,7 +254,7 @@ module GSDL
               h: size
             ),
             color: @color,
-            z_index: 1000
+            z_index: 9999
           )
         end
       end

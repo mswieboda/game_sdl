@@ -33,16 +33,6 @@ module GSDL
       @render_font_size = @font_size.to_f32 * @oversample
       @render_outline = @outline * @oversample
 
-      if @outline > 0
-        puts ">>> FontAtlas:"
-        puts ">>>   total_scale: #{total_scale}"
-        puts ">>>   @font_size: #{@font_size}"
-        puts ">>>   @outline: #{@outline}"
-        puts ">>>   @oversample: #{@oversample}"
-        puts ">>>   @render_font_size: #{@render_font_size}"
-        puts ">>>   @render_outline: #{@render_outline}"
-      end
-
       font_data = File.read(path).to_slice
       @chars = Pointer(LibSTBTrueType::PackedChar).malloc(@char_count)
 
@@ -339,6 +329,7 @@ module GSDL
       scale_y : Num = 1,
       z_index : Int32 = 0
     )
+      fcolor = color.to_fcolor
       radians = rotation * (Math::PI / 180.0)
       cos_theta = Math.cos(radians)
       sin_theta = Math.sin(radians)
@@ -367,26 +358,16 @@ module GSDL
         v1 = (glyph.y0 - @render_outline) / tex_h
         u2 = (glyph.x1 + @render_outline) / tex_w
         v2 = (glyph.y1 + @render_outline) / tex_h
-        # u1 = glyph.x0 / tex_w
-        # v1 = glyph.y0 / tex_h
-        # u2 = glyph.x1 / tex_w
-        # v2 = glyph.y1 / tex_h
 
         # Calculate expanded logical dimensions and undo oversample
         # This width/height now includes the outline area
         gw = (((glyph.x1 - glyph.x0) + (@render_outline * 2)) / @oversample) * scale_x
         gh = (((glyph.y1 - glyph.y0) + (@render_outline * 2)) / @oversample) * scale_y
 
-        # # Calculate logical dimensions and offsets, undo oversample
-        # gw = ((glyph.x1 - glyph.x0) / @oversample) * scale_x
-        # gh = ((glyph.y1 - glyph.y0) / @oversample) * scale_y
-
         # Position the Quad and undo oversample
         # Subtract logical_outline so the "core" glyph stays aligned with current_x/y
         char_x = current_x + ((glyph.xoff / @oversample) - logical_outline) * scale_x
         char_y = current_y + ((glyph.yoff / @oversample) - logical_outline) * scale_y
-        # char_x = current_x + ((glyph.xoff / @oversample) * scale_x)
-        # char_y = current_y + ((glyph.yoff / @oversample) * scale_y)
 
         # Vertex Rotation Math
         # Define local quad corners relative to current_x/y
@@ -408,12 +389,7 @@ module GSDL
           ry = pivot_y + (p[:px] * sin_theta + p[:py] * cos_theta)
 
           # Build the Vertex with texture coordinates (texture_point)
-          GSDL::Vertex.new(
-            x: rx.to_f32,
-            y: ry.to_f32,
-            color: color,
-            texture_point: GSDL::Point.new(p[:u], p[:v])
-          )
+          Vertex.new(FPoint.new(rx, ry), fcolor, FPoint.new(p[:u], p[:v]))
         end
 
         # Standard quad indices for two triangles

@@ -110,8 +110,8 @@ module GSDL
       rotation.to_f64 * (Math::PI / 180.0)
     end
 
-    def rotate_point(px : Num, py : Num) : Tuple(Float32, Float32)
-      return {px.to_f32, py.to_f32} if rotation == 0
+    def rotate_point(px : Num, py : Num) : FPoint
+      return FPoint.new(px, py) if rotation == 0
 
       # Rotation around the logical (x, y) point (our pivot)
       cx = x.to_f32
@@ -127,7 +127,7 @@ module GSDL
       nx = cx + dx * cos_a - dy * sin_a
       ny = cy + dx * sin_a + dy * cos_a
 
-      {nx.to_f32, ny.to_f32}
+      FPoint.new(nx, ny)
     end
 
     def scale=(val : Tuple(Num, Num))

@@ -17,23 +17,23 @@ module WindowOptionsEx
       end
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_screen_overlay(draw : GSDL::Draw)
       draw.color = GSDL::Color::White
 
       title_font = GSDL::Font.default.copy
       title_font.size = 24
-      draw.text(GSDL::Text.new(text: "Window Options Demo", x: 40, y: 40, font: title_font))
+      GSDL::Text.new(text: "Window Options Demo", x: 40, y: 40, font: title_font).draw(draw)
 
       info_font = GSDL::Font.default.copy
       info_font.size = 16
-      draw.text(GSDL::Text.new(text: "Current Test: #{@current_test}", x: 40, y: 100, color: GSDL::Color::Cyan, font: info_font))
+      GSDL::Text.new(text: "Current Test: #{@current_test}", x: 40, y: 100, color: GSDL::Color::Cyan, font: info_font).draw(draw)
 
-      draw.text(GSDL::Text.new(text: "Press SPACE to cycle to the next mode", x: 40, y: 160))
-      draw.text(GSDL::Text.new(text: "Press ESC to exit completely", x: 40, y: 190))
+      GSDL::Text.new(text: "Press SPACE to cycle to the next mode", x: 40, y: 160).draw(draw)
+      GSDL::Text.new(text: "Press ESC to exit completely", x: 40, y: 190).draw(draw)
 
       # Display current window status
       win = GSDL::Game.instance.window
-      draw.text(GSDL::Text.new(text: "Window Size: #{win.size[0]}x#{win.size[1]}", x: 40, y: 250, color: GSDL::Color::Gray))
+      GSDL::Text.new(text: "Window Size: #{win.size[0]}x#{win.size[1]}", x: 40, y: 250, color: GSDL::Color::Gray).draw(draw)
     end
   end
 

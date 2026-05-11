@@ -109,9 +109,10 @@ module GSDL
       elsif val.includes?(",")
         parts = val.split(',').map(&.strip.to_i)
         if parts.size == 3
-          Color.new(parts[0], parts[1], parts[2])
+          # Color.new(red: parts[0], green: parts[1], blue: parts[2])
+          Color.new(red: parts[0], green: parts[1])
         elsif parts.size == 4
-          Color.new(parts[0], parts[1], parts[2], parts[3])
+          Color.new(red: parts[0], green: parts[1], blue: parts[2], alpha: parts[3])
         else
           self.color
         end

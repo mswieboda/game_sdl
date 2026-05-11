@@ -26,6 +26,7 @@ module PlatformerAdvancedEx
     end
   end
 
+  # TODO: wall slide jump is a bit broken
   class Player < GSDL::AnimatedSprite
     include GSDL::PlatformerController
 

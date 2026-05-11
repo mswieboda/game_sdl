@@ -491,38 +491,38 @@ module GSDL
         # Two pass batching
         # Pass 1: Base (White)
         base_idx = @vertex_buffer.size
-        fcolor = command.color.to_fcolor.to_sdl
-        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, fcolor, LibSDL3::FPoint.new(x: u1, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, fcolor, LibSDL3::FPoint.new(x: u2, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, fcolor, LibSDL3::FPoint.new(x: u2, y: v2))
-        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, fcolor, LibSDL3::FPoint.new(x: u1, y: v2))
+        fcolor = command.color.to_fcolor
+        @vertex_buffer << Vertex.new(FPoint.new(x: v0x, y: v0y), fcolor, FPoint.new(x: u1, y: v1))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v1x, y: v1y), fcolor, FPoint.new(x: u2, y: v1))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v2x, y: v2y), fcolor, FPoint.new(x: u2, y: v2))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v3x, y: v3y), fcolor, FPoint.new(x: u1, y: v2))
         @index_buffer.concat([base_idx, base_idx + 1, base_idx + 2, base_idx, base_idx + 2, base_idx + 3])
 
         # Pass 2: Tint (Color)
-        tint_color = LibSDL3::FColor.new(
+        tint_color = FColor.new(
           r: command.tint_r / 255_f32,
           g: command.tint_g / 255_f32,
           b: command.tint_b / 255_f32,
           a: command.tint_a / 255_f32
         )
         tint_idx = @vertex_buffer.size
-        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, tint_color, LibSDL3::FPoint.new(x: u1, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, tint_color, LibSDL3::FPoint.new(x: u2, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, tint_color, LibSDL3::FPoint.new(x: u2, y: v2))
-        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, tint_color, LibSDL3::FPoint.new(x: u1, y: v2))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v0x, y: v0y), tint_color, FPoint.new(x: u1, y: v1))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v1x, y: v1y), tint_color, FPoint.new(x: u2, y: v1))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v2x, y: v2y), tint_color, FPoint.new(x: u2, y: v2))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v3x, y: v3y), tint_color, FPoint.new(x: u1, y: v2))
         @index_buffer.concat([tint_idx, tint_idx + 1, tint_idx + 2, tint_idx, tint_idx + 2, tint_idx + 3])
       else
         # Single pass (maybe with alpha)
-        fcolor = command.color.to_fcolor.to_sdl
+        fcolor = command.color.to_fcolor
         alpha = command.has_tint? ? command.tint_a / 255_f32 : fcolor.a
         fcolor.a = alpha
         final_color = fcolor
 
         base_idx = @vertex_buffer.size
-        @vertex_buffer << SDL3::Vertex.new(v0x, v0y, final_color, LibSDL3::FPoint.new(x: u1, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v1x, v1y, final_color, LibSDL3::FPoint.new(x: u2, y: v1))
-        @vertex_buffer << SDL3::Vertex.new(v2x, v2y, final_color, LibSDL3::FPoint.new(x: u2, y: v2))
-        @vertex_buffer << SDL3::Vertex.new(v3x, v3y, final_color, LibSDL3::FPoint.new(x: u1, y: v2))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v0x, y: v0y), final_color, FPoint.new(x: u1, y: v1))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v1x, y: v1y), final_color, FPoint.new(x: u2, y: v1))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v2x, y: v2y), final_color, FPoint.new(x: u2, y: v2))
+        @vertex_buffer << Vertex.new(FPoint.new(x: v3x, y: v3y), final_color, FPoint.new(x: u1, y: v2))
         @index_buffer.concat([base_idx, base_idx + 1, base_idx + 2, base_idx, base_idx + 2, base_idx + 3])
       end
     end
@@ -547,7 +547,7 @@ module GSDL
           new_u = (a_rect.x + v.texture_fpoint.x * a_rect.w) / tw
           new_v = (a_rect.y + v.texture_fpoint.y * a_rect.h) / th
 
-          @vertex_buffer << SDL3::Vertex.new(v.fpoint.x, v.fpoint.y, v.fcolor, LibSDL3::FPoint.new(x: new_u, y: new_v))
+          @vertex_buffer << Vertex.new(v.fpoint, v.fcolor, FPoint.new(x: new_u, y: new_v))
         end
       else
         @vertex_buffer.concat(command.vertices)
@@ -824,7 +824,7 @@ module GSDL
 
       if (t = tint) && !t.white?
         # Pass 1: Base texture (Full original alpha)
-        texture.tint = color.to_sdl
+        texture.tint = color
         _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
 
         # Pass 2: Tint overlay (Target color and alpha)
@@ -836,7 +836,7 @@ module GSDL
           color.a = tint_val.a
         end
 
-        texture.tint = color.to_sdl
+        texture.tint = color
 
         _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
       end
@@ -861,13 +861,13 @@ module GSDL
         sx *= proj.zoom_x
         sy *= proj.zoom_y
         vertices.map do |v|
-          sdl_v = v.to_sdl
+          sdl_v = v
           sdl_v.fpoint.x -= proj.x
           sdl_v.fpoint.y -= proj.y
           sdl_v
         end
       else
-        vertices.map(&.to_sdl)
+        vertices
       end
 
       push_cmd(DrawGeometryCommand.new(
@@ -923,13 +923,13 @@ module GSDL
         sx *= proj.zoom_x
         sy *= proj.zoom_y
         points.map do |p|
-          sdl_p = p.to_sdl
+          sdl_p = p
           sdl_p.x -= proj.x
           sdl_p.y -= proj.y
           sdl_p
         end
       else
-        points.map(&.to_sdl)
+        points
       end
 
       push_cmd(DrawPointsCommand.new(
@@ -984,6 +984,10 @@ module GSDL
       ))
     end
 
+    def line(p1 : FPoint, p2 : FPoint, color = Color::White, z_index = 0)
+      line(x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, color: color, z_index: z_index)
+    end
+
     def line(line : Line)
       line(
         x1: line.x1.to_f32,
@@ -1004,13 +1008,13 @@ module GSDL
         sx *= proj.zoom_x
         sy *= proj.zoom_y
         points.map do |p|
-          sdl_p = p.to_sdl
+          sdl_p = p
           sdl_p.x -= proj.x
           sdl_p.y -= proj.y
           sdl_p
         end
       else
-        points.map(&.to_sdl)
+        points
       end
 
       push_cmd(DrawLinesCommand.new(
@@ -1232,7 +1236,7 @@ module GSDL
       sort_y : Float32? = nil
     )
       actual_dest_rect = (dest_rect.try(&.dup) || FRect.new(x: x, y: y, w: texture.size[0].to_f32, h: texture.size[1].to_f32)).to_sdl
-      actual_center = center.to_sdl
+      actual_center = center
       cs = effective_content_scale
       sx = @current_scale_x * cs
       sy = @current_scale_y * cs

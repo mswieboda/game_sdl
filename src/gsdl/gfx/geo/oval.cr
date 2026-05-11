@@ -131,10 +131,11 @@ module GSDL
       corner_radius_y = render_radius_y / 2
       max_radius = [corner_radius_x, corner_radius_y].max
       segments = [12, (Math.sqrt(max_radius) * 4).to_i].max
+      fcolor = color.to_fcolor
 
       # Center vertex (rotated)
       cp = rotate_point(render_center_x, render_center_y)
-      @fill_vertices << Vertex.new(cp, color)
+      @fill_vertices << Vertex.new(cp, fcolor)
 
       start_v = @fill_vertices.size
 
@@ -147,8 +148,8 @@ module GSDL
         vy = render_center_y + y_dir * corner_radius_y * Math.sin(angle)
 
         rv = rotate_point(vx, vy)
-        @fill_vertices << Vertex.new(rv, color)
-        points << Point.new(rv)
+        @fill_vertices << Vertex.new(rv, fcolor)
+        points << rv
       end
 
       @outline_arc_points << points

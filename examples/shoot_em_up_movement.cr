@@ -83,9 +83,12 @@ module ShootEmUpEx
       camera.update(dt)
     end
 
-    def draw(draw : GSDL::Draw)
-      draw_stars(draw)
+    def draw_camera_view(draw : GSDL::Draw)
       @player.draw(draw)
+    end
+
+    def draw_screen_overlay(draw : GSDL::Draw)
+      draw_stars(draw)
     end
 
     def draw_stars(draw : GSDL::Draw)

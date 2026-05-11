@@ -1,5 +1,6 @@
 require "../src/game_sdl"
 
+# TODO: collision bounding boxes are off, i think it's just the example
 module GameEx
   WIDTH = 800
   HEIGHT = 600

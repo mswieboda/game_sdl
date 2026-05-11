@@ -1,3 +1,4 @@
+# TODO: refactor to not wrap
 module GSDL
   alias Rects = Array(Rect)
   alias IntType = UInt8 | UInt16 | UInt32 | Int8 | Int16 | Int32 | Int64

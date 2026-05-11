@@ -1,3 +1,4 @@
+# TODO: refactor to not wrap
 module GSDL
   alias FRects = Array(FRect)
 

@@ -163,9 +163,12 @@ module TopDownRPGEx
       @mode_text.text = text
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       draw_floor(draw)
       @player.draw(draw)
+    end
+
+    def draw_screen_overlay(draw : GSDL::Draw)
       @info_text.draw(draw)
       @mode_text.draw(draw)
     end

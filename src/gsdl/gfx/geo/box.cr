@@ -64,26 +64,22 @@ module GSDL
 
       # For rotated box with sharp corners, we need to generate vertices
       if rotation != 0 && render_border_radius <= 0
+        fcolor = color.to_fcolor
+
         # Define 4 corners relative to render_x, render_y
         p1 = rotate_point(render_x, render_y)
         p2 = rotate_point(render_x + render_width, render_y)
         p3 = rotate_point(render_x + render_width, render_y + render_height)
         p4 = rotate_point(render_x, render_y + render_height)
 
-        @fill_vertices << Vertex.new(point: p1, color: color)
-        @fill_vertices << Vertex.new(point: p2, color: color)
-        @fill_vertices << Vertex.new(point: p3, color: color)
-        @fill_vertices << Vertex.new(point: p4, color: color)
+        @fill_vertices << Vertex.new(p1, fcolor)
+        @fill_vertices << Vertex.new(p2, fcolor)
+        @fill_vertices << Vertex.new(p3, fcolor)
+        @fill_vertices << Vertex.new(p4, fcolor)
 
         @fill_indices = [0, 1, 2, 0, 2, 3]
 
-        @outline_arc_points << [
-          Point.new(p1),
-          Point.new(p2),
-          Point.new(p3),
-          Point.new(p4),
-          Point.new(p1)
-        ]
+        @outline_arc_points << [p1 ,p2 ,p3 ,p4 ,p1]
       elsif render_border_radius > 0
         # top left, top right, bottom left, bottom right
         [
@@ -103,10 +99,11 @@ module GSDL
       center_x, center_y = center
       x_dir, y_dir = dir
       segments = [12, (Math.sqrt(radius) * 4).to_i].max
+      fcolor = color.to_fcolor
 
       # Center vertex (rotated)
       cp = rotate_point(center_x, center_y)
-      @fill_vertices << Vertex.new(cp, color)
+      @fill_vertices << Vertex.new(cp, fcolor)
 
       start_v = @fill_vertices.size
 
@@ -119,8 +116,8 @@ module GSDL
         vy = center_y + y_dir * radius * Math.sin(angle)
 
         rv = rotate_point(vx, vy)
-        @fill_vertices << Vertex.new(rv, color)
-        points << Point.new(rv)
+        @fill_vertices << Vertex.new(rv, fcolor)
+        points << rv
       end
 
       @outline_arc_points << points
@@ -175,10 +172,10 @@ module GSDL
 
     def collision_polygon_vertices : Points
       [
-        Point.new(rotate_point(render_x, render_y)),
-        Point.new(rotate_point(render_x + render_width, render_y)),
-        Point.new(rotate_point(render_x + render_width, render_y + render_height)),
-        Point.new(rotate_point(render_x, render_y + render_height))
+        rotate_point(render_x, render_y),
+        rotate_point(render_x + render_width, render_y),
+        rotate_point(render_x + render_width, render_y + render_height),
+        rotate_point(render_x, render_y + render_height)
       ]
     end
 
@@ -259,13 +256,14 @@ module GSDL
       p2 = rotate_point(rx + rw, ry)
       p3 = rotate_point(rx + rw, ry + rh)
       p4 = rotate_point(rx, ry + rh)
+      fcolor = color.to_fcolor
 
       draw.geometry(
         vertices: [
-          Vertex.new(p1, color),
-          Vertex.new(p2, color),
-          Vertex.new(p3, color),
-          Vertex.new(p4, color)
+          Vertex.new(p1, fcolor),
+          Vertex.new(p2, fcolor),
+          Vertex.new(p3, fcolor),
+          Vertex.new(p4, fcolor)
         ],
         indices: [0, 1, 2, 0, 2, 3],
         z_index: z_index
@@ -292,22 +290,22 @@ module GSDL
       # top
       p1 = rotate_point(render_x + render_border_radius, render_y)
       p2 = rotate_point(render_x + render_width - render_border_radius, render_y)
-      draw.line(p1[0], p1[1], p2[0], p2[1], color: color, z_index: z_index)
+      draw.line(p1, p2, color: color, z_index: z_index)
 
       # bottom
       p3 = rotate_point(render_x + render_border_radius, render_y + render_height)
       p4 = rotate_point(render_x + render_width - render_border_radius, render_y + render_height)
-      draw.line(p3[0], p3[1], p4[0], p4[1], color: color, z_index: z_index)
+      draw.line(p3, p4, color: color, z_index: z_index)
 
       # left
       p5 = rotate_point(render_x, render_y + render_border_radius)
       p6 = rotate_point(render_x, render_y + render_height - render_border_radius)
-      draw.line(p5[0], p5[1], p6[0], p6[1], color: color, z_index: z_index)
+      draw.line(p5, p6, color: color, z_index: z_index)
 
       # right
       p7 = rotate_point(render_x + render_width, render_y + render_border_radius)
       p8 = rotate_point(render_x + render_width, render_y + render_height - render_border_radius)
-      draw.line(p7[0], p7[1], p8[0], p8[1], color: color, z_index: z_index)
+      draw.line(p7, p8, color: color, z_index: z_index)
     end
 
     private def draw_outline_border_radius(draw : Draw)

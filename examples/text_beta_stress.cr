@@ -37,6 +37,7 @@ module FontStressEx
       font_atlas = GSDL::FontAtlas.new(font_path, font_size)
       @text << GSDL::TextBeta.new(
         font_atlas: font_atlas,
+        font_atlas_outline: font_atlas, # TODO: temporary until TextStyle impl
         text: "hello! from the dark recesses of evil!\nYOU WON'T CATCH ME\nTHIS TIME FIEND,\nnot now, not ever.\nHear that, punk?",
         x: Game.width // 2,
         y: Game.height // 2,
@@ -52,6 +53,7 @@ module FontStressEx
         text = if rng.rand > 0.5
           GSDL::TextBeta.new(
             font_atlas: font_atlas,
+            font_atlas_outline: font_atlas, # TODO: temporary until TextStyle impl
             text: "This is a testing string, blah!",
             x: x,
             y: y,
@@ -61,6 +63,7 @@ module FontStressEx
         else
           GSDL::TextBeta.new(
             font_atlas: font_atlas,
+            font_atlas_outline: font_atlas, # TODO: temporary until TextStyle impl
             text: "hello! from the dark recesses of evil!",
             x: x,
             y: y,

@@ -54,6 +54,7 @@ module GSDL
     getter? typed : Bool
 
     # TODO: make a setter to change font atlas
+    @vertices : Array(Vertex)
     @font_atlas : FontAtlas
     @font_atlas_outline : FontAtlas
     @full_text : String
@@ -87,6 +88,7 @@ module GSDL
       @height = nil,
       @z_index : Int32 = 0,
     )
+      @vertices = [] of Vertex
       @full_text = text
       @lines = [] of String
 

@@ -89,14 +89,15 @@ module TileMapStress
       end
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       @tile_map.draw(draw)
+    end
 
+    def draw_screen_overlay(draw : GSDL::Draw)
       # debug info
       culling_active = draw.culling_enabled
       status_text = culling_active ? "ENABLED" : "DISABLED"
       color = culling_active ? GSDL::Color::Lime : GSDL::Color::Red
-
       text = GSDL::HUDText.new(
         text: "Culling: #{status_text} (PRESS 'C' TO TOGGLE)\nCamera: #{camera.x.to_i}, #{camera.y.to_i}\nMap Size: 500x500",
         offset_x: 10,
@@ -104,7 +105,7 @@ module TileMapStress
         color: color
       )
       text.z_index = 100
-      text.draw(draw)
+      text.hud_draw(draw)
     end
   end
 

@@ -36,7 +36,10 @@ module GSDL
     getter tweens : Array(Tween) = [] of Tween
 
     def initialize(
-      @x = 0, @y = 0, @width = 200, @height = 20,
+      @x = 0,
+      @y = 0,
+      @width = 200,
+      @height = 20,
       @min_value = 0.0_f32, @max_value = 1.0_f32, @value = 0.5_f32,
       @handle_size = 24,
       @orientation = Orientation::Horizontal,
@@ -48,21 +51,42 @@ module GSDL
     )
     end
 
+    @[AlwaysInline]
     def render_x : Num
       global_x - (render_width * origin_x)
     end
 
+    @[AlwaysInline]
     def render_y : Num
       global_y - (render_height * origin_y)
     end
 
-    def global_x; x; end
-    def global_y; y; end
+    @[AlwaysInline]
+    def render_width : Num
+      width * scale_x
+    end
 
+    @[AlwaysInline]
+    def render_height : Num
+      height * scale_y
+    end
+
+    @[AlwaysInline]
+    def global_x : Num
+      x
+    end
+
+    @[AlwaysInline]
+    def global_y : Num
+      y
+    end
+
+    @[AlwaysInline]
     def origin_x : Float32
       origin[0]
     end
 
+    @[AlwaysInline]
     def origin_y : Float32
       origin[1]
     end

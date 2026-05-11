@@ -32,9 +32,9 @@ module GameEx
     getter index : Int32
 
     @name_str : String
-    @title_text : GSDL::Text
-    @instruction_text : GSDL::Text
-    @toggle_text : GSDL::Text
+    # @title_text : GSDL::Text
+    # @instruction_text : GSDL::Text
+    # @toggle_text : GSDL::Text
 
     def initialize(@index : Int32)
       duration = 1.0_f32
@@ -73,35 +73,37 @@ module GameEx
 
       super(name: :transition_scene, transition_in: t_in, transition_out: t_out)
 
-      @title_text = GSDL::Text.new(
+      hud = GSDL::HUD.new
+      hud << GSDL::HUDText.new(
         text: "Transition: #{@name_str}",
-        x: 10,
-        y: 10,
+        offset_x: 10,
+        offset_y: 10,
         color: GSDL::Color::White
       )
-      @instruction_text = GSDL::Text.new(
+      hud << GSDL::HUDText.new(
         text: "Press SPACE to switch",
-        x: 10,
-        y: 30,
+        offset_x: 10,
+        offset_y: 30,
         color: GSDL::Color::White
       )
-      @toggle_text = GSDL::Text.new(
+      hud << GSDL::HUDText.new(
         text: "press SPACE to toggle transition",
-        x: 400,
-        y: 300,
+        anchor: GSDL::Anchor::Center,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Lime
       )
+
+      self.hud = hud
     end
 
     def update(dt : Float32)
       transition_out.start if Keys.just_pressed?(Keys::Space)
-      @title_text.update(dt)
-      @instruction_text.update(dt)
-      @toggle_text.update(dt)
+      # @title_text.update(dt)
+      # @instruction_text.update(dt)
+      # @toggle_text.update(dt)
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_screen_overlay(draw : GSDL::Draw)
       # Draw some background pattern
       8.times do |i|
         8.times do |j|
@@ -110,9 +112,8 @@ module GameEx
         end
       end
 
-      @title_text.draw(draw)
-      @instruction_text.draw(draw)
-      @toggle_text.draw(draw)
+      # draws HUD
+      super(draw)
     end
   end
 

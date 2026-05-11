@@ -91,51 +91,51 @@ module GSDL
     end
 
     def render_glyph_blended(char : UInt32, color : Color) : Surface
-      Surface.new(@internal.render_glyph_blended(char, color.to_sdl))
+      Surface.new(@internal.render_glyph_blended(char, color))
     end
 
     def render_glyph_lcd(char : UInt32, fg_color : Color, bg_color : Color) : Surface
-      Surface.new(@internal.render_glyph_lcd(char, fg_color.to_sdl, bg_color.to_sdl))
+      Surface.new(@internal.render_glyph_lcd(char, fg_color, bg_color))
     end
 
     def render_glyph_shaded(char : UInt32, fg_color : Color, bg_color : Color) : Surface
-      Surface.new(@internal.render_glyph_shaded(char, fg_color.to_sdl, bg_color.to_sdl))
+      Surface.new(@internal.render_glyph_shaded(char, fg_color, bg_color))
     end
 
     def render_glyph_solid(char : UInt32, color : Color) : Surface
-      Surface.new(@internal.render_glyph_solid(char, color.to_sdl))
+      Surface.new(@internal.render_glyph_solid(char, color))
     end
 
     def render_text_blended(text : String, color : Color) : Surface
-      Surface.new(@internal.render_text_blended(text, color.to_sdl))
+      Surface.new(@internal.render_text_blended(text, color))
     end
 
     def render_text_blended_wrapped(text : String, color : Color, wrap_length : Int32) : Surface
-      Surface.new(@internal.render_text_blended_wrapped(text, color.to_sdl, wrap_length))
+      Surface.new(@internal.render_text_blended_wrapped(text, color, wrap_length))
     end
 
     def render_text_lcd(text : String, fg_color : Color, bg_color : Color) : Surface
-      Surface.new(@internal.render_text_lcd(text, fg_color.to_sdl, bg_color.to_sdl))
+      Surface.new(@internal.render_text_lcd(text, fg_color, bg_color))
     end
 
     def render_text_lcd_wrapped(text : String, fg_color : Color, bg_color : Color, wrap_length : Int32) : Surface
-      Surface.new(@internal.render_text_lcd_wrapped(text, fg_color.to_sdl, bg_color.to_sdl, wrap_length))
+      Surface.new(@internal.render_text_lcd_wrapped(text, fg_color, bg_color, wrap_length))
     end
 
     def render_text_shaded(text : String, fg_color : Color, bg_color : Color) : Surface
-      Surface.new(@internal.render_text_shaded(text, fg_color.to_sdl, bg_color.to_sdl))
+      Surface.new(@internal.render_text_shaded(text, fg_color, bg_color))
     end
 
     def render_text_shaded_wrapped(text : String, fg_color : Color, bg_color : Color, wrap_length : Int32) : Surface
-      Surface.new(@internal.render_text_shaded_wrapped(text, fg_color.to_sdl, bg_color.to_sdl, wrap_length))
+      Surface.new(@internal.render_text_shaded_wrapped(text, fg_color, bg_color, wrap_length))
     end
 
     def render_text_solid(text : String, color : Color) : Surface
-      Surface.new(@internal.render_text_solid(text, color.to_sdl))
+      Surface.new(@internal.render_text_solid(text, color))
     end
 
     def render_text_solid_wrapped(text : String, color : Color, wrap_length : Int32) : Surface
-      Surface.new(@internal.render_text_solid_wrapped(text, color.to_sdl, wrap_length))
+      Surface.new(@internal.render_text_solid_wrapped(text, color, wrap_length))
     end
 
     def set_dpi(point_size : Float32, hdpi : Int32, vdpi : Int32) : Bool
