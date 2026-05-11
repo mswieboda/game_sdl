@@ -315,8 +315,7 @@ module GSDL
       end
     end
 
-    def draw_text_rotated(
-      draw : Draw,
+    def generate_vertices(
       text : String,
       pivot_x : Num,
       pivot_y : Num,
@@ -326,13 +325,23 @@ module GSDL
       character_spacing : Num = 0,
       color : Color = Color::White,
       scale_x : Num = 1,
-      scale_y : Num = 1,
-      z_index : Int32 = 0
-    )
+      scale_y : Num = 1
+    ) : Array(Vertex)
+      # Pre-allocate: 4 vertices per character
+      vertices = Array(GSDL::Vertex).new(initial_capacity: text.size * 4)
+
       fcolor = color.to_fcolor
-      radians = rotation * (Math::PI / 180.0)
-      cos_theta = Math.cos(radians)
-      sin_theta = Math.sin(radians)
+      is_rotated = rotation % 360 != 0
+
+      cos_theta = 0_f32
+      sin_theta = 0_f32
+
+      # Optimization: Only calculate trig if actually rotating
+      if is_rotated
+        radians = rotation * (Math::PI / 180.0)
+        cos_theta = Math.cos(radians).to_f32
+        sin_theta = Math.sin(radians).to_f32
+      end
 
       tex_w = @texture.width.to_f32
       tex_h = @texture.height.to_f32
@@ -351,6 +360,7 @@ module GSDL
 
         glyph = @chars[glyph_idx]
 
+        # UV mapping
         # Normalize atlas coordinates to 0.0-1.0 range
         # Expand the Atlas Coordinates (reaching into the padded space)
         # We subtract render_outline from the start and add 2 * render_outline to the end
@@ -359,6 +369,7 @@ module GSDL
         u2 = (glyph.x1 + @render_outline) / tex_w
         v2 = (glyph.y1 + @render_outline) / tex_h
 
+        # Quad dimensions
         # Calculate expanded logical dimensions and undo oversample
         # This width/height now includes the outline area
         gw = (((glyph.x1 - glyph.x0) + (@render_outline * 2)) / @oversample) * scale_x
@@ -368,6 +379,9 @@ module GSDL
         # Subtract logical_outline so the "core" glyph stays aligned with current_x/y
         char_x = current_x + ((glyph.xoff / @oversample) - logical_outline) * scale_x
         char_y = current_y + ((glyph.yoff / @oversample) - logical_outline) * scale_y
+
+        # Corner definition helper
+        # We use a simple 4-iteration loop to build the quad
 
         # Vertex Rotation Math
         # Define local quad corners relative to current_x/y
@@ -383,28 +397,24 @@ module GSDL
         ]
 
         # Rotate each corner and create vertex objects
-        vertices = corners.map do |p|
-          # Rotate
-          rx = pivot_x + (p[:px] * cos_theta - p[:py] * sin_theta)
-          ry = pivot_y + (p[:px] * sin_theta + p[:py] * cos_theta)
+        corners.each do |c|
+          if is_rotated
+            # Rotate relative to pivot
+            rx = pivot_x + (c[:px] * cos_theta - c[:py] * sin_theta)
+            ry = pivot_y + (c[:px] * sin_theta + c[:py] * cos_theta)
 
-          # Build the Vertex with texture coordinates (texture_point)
-          Vertex.new(FPoint.new(rx, ry), fcolor, FPoint.new(p[:u], p[:v]))
+            # Build the Vertex with texture coordinates (texture_point)
+            vertices << Vertex.new(FPoint.new(rx, ry), fcolor, FPoint.new(c[:u], c[:v]))
+          else
+            vertices << Vertex.new(FPoint.new(c[:px], c[:py]), fcolor, FPoint.new(c[:u], c[:v]))
+          end
         end
-
-        # Standard quad indices for two triangles
-        indices = [0, 1, 2, 2, 3, 0]
-
-        draw.geometry(
-          vertices: vertices,
-          indices: indices,
-          z_index: z_index,
-          texture: @texture # The FontAtlas texture
-        )
 
         # Advance horizontal position and undo oversample
         current_x += ((glyph.xadvance / @oversample) + character_spacing) * scale_x
       end
+
+      vertices
     end
 
     def destroy

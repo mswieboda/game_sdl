@@ -42,7 +42,6 @@ module GSDL
     property v_align : VerticalAlign
     property line_spacing : Num
     property character_spacing : Num
-    property rotation : Num
     property shadow : {Num, Num}
     property shadow_color : Color
     property outline : Num
@@ -53,8 +52,13 @@ module GSDL
     getter typing : Typing
     getter? typed : Bool
 
+    @vertices_main = Array(GSDL::Vertex).new
+    @vertices_outline = Array(GSDL::Vertex).new
+    @vertices_shadow = Array(GSDL::Vertex).new
+    @indices = Array(Int32).new(initial_capacity: 600) # Space for 100 chars
+    @dirty = true
+
     # TODO: make a setter to change font atlas
-    @vertices : Array(Vertex)
     @font_atlas : FontAtlas
     @font_atlas_outline : FontAtlas
     @full_text : String
@@ -63,6 +67,7 @@ module GSDL
     @lines : Array(String)
     @text_width : Float32?
     @typing_timer : Timer?
+    @rotation : Num
 
     def initialize(
       @font_atlas : FontAtlas,
@@ -88,7 +93,6 @@ module GSDL
       @height = nil,
       @z_index : Int32 = 0,
     )
-      @vertices = [] of Vertex
       @full_text = text
       @lines = [] of String
 
@@ -134,6 +138,7 @@ module GSDL
     end
 
     def text=(text : String)
+      @dirty = true
       @full_text = text
       update_lines
     end
@@ -168,6 +173,7 @@ module GSDL
 
     def width=(width : Num?)
       if width != @width
+        @dirty = true
         @width = width
 
         @width_fixed = !@width.nil?
@@ -202,12 +208,22 @@ module GSDL
 
     def height=(height : Num?)
       if height != @height
+        @dirty = true
         @height = height
 
         @height_fixed = !@height.nil?
 
         update_lines
       end
+    end
+
+    def rotation : Num
+      @rotation
+    end
+
+    def rotation=(rotation : Num)
+      @dirty = true
+      @rotation = rotation
     end
 
     @[AlwaysInline]
@@ -236,7 +252,7 @@ module GSDL
       end
     end
 
-    def update_lines
+    private def update_lines
       if width = @width
         max_lines = Int32::MAX
 
@@ -386,153 +402,173 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      limit = calculate_visible_limit
+      if @dirty
+        rebuild_vertex_caches
+        @dirty = false
+      end
 
       z_index = @z_index
 
       # shadow
+      if !@vertices_shadow.empty?
+        draw.geometry(@vertices_shadow, get_indices(@vertices_shadow.size), z_index, @font_atlas.texture)
+        z_index += 1
+      end
+
+      # outline
+      if !@vertices_outline.empty?
+        draw.geometry(@vertices_outline, get_indices(@vertices_outline.size), z_index, @font_atlas_outline.texture)
+        z_index += 1
+      end
+
+      # Draw the Main Text
+      draw.geometry(@vertices_main, get_indices(@vertices_main.size), z_index, @font_atlas.texture)
+    end
+
+    private def get_indices(vertex_count : Int) : Array(Int32)
+      required_indices = (vertex_count // 4) * 6
+
+      # If we don't have enough, generate only the missing ones
+      if @indices.size < required_indices
+        current_quads = @indices.size // 6
+        target_quads = vertex_count // 4
+
+        (current_quads...target_quads).each do |i|
+          v = i * 4
+          @indices << v << v + 1 << v + 2
+          @indices << v + 2 << v + 3 << v + 0
+        end
+      end
+
+      # Return a slice of the buffer
+      @indices[0...required_indices]
+    end
+
+    private def rebuild_vertex_caches
+      limit = calculate_visible_limit
+
+      # Shadow - only if used
       if !@shadow.all?(&.zero?)
         offset = {
           @shadow[0] + ( @shadow[0] > 0 ? @outline : -@outline ),
           @shadow[1] + ( @shadow[1] > 0 ? @outline : -@outline )
         }
-
-        _draw(draw: draw, font_atlas: @font_atlas, limit: limit, color: @shadow_color, offset: offset, z_index: z_index)
-
-        z_index += 1
+        @vertices_shadow = generate_vertices(@font_atlas, limit, @shadow_color, offset)
+      else
+        @vertices_shadow.clear
       end
 
-      # outline
-      if !@outline.zero?
-        _draw(draw: draw, font_atlas: @font_atlas_outline, limit: limit, color: @outline_color, z_index: z_index)
-        z_index += 1
+      # Outline - only if used
+      if @outline > 0
+        @vertices_outline = generate_vertices(@font_atlas_outline, limit, @outline_color)
+      else
+        @vertices_outline.clear
       end
 
-      # Draw the Main Text
-      _draw(draw: draw, font_atlas: @font_atlas, limit: limit, color: @color, z_index: z_index)
+      # Main
+      @vertices_main = generate_vertices(@font_atlas, limit, @color)
     end
 
-    private def _draw(
-      draw : Draw,
+    private def generate_vertices(
       font_atlas : FontAtlas,
       limit : Int32,
       color : Color,
-      offset : {Num, Num} = {0, 0},
-      z_index : Int32 = 0
-    )
+      offset : {Num, Num} = {0, 0}
+    ) : Array(GSDL::Vertex)
+      vertices = Array(GSDL::Vertex).new(initial_capacity: limit * 4)
       chars_processed = 0
-      offset_x, offset_y = offset
+      off_x, off_y = offset
 
-      # Vertical Alignment
-      offset_y += case @v_align
-      when .center?
-        [(self.height - text_height) / 2_f32, 0].max
-      when .bottom?
-        [self.height - text_height, 0].max
-      else
-        0
+      # Apply Vertical Alignment
+      off_y += case @v_align
+        when .center?
+          [(self.height - text_height) / 2_f32, 0].max
+        when .bottom?
+          [self.height - text_height, 0].max
+        else 0
       end
 
       @lines.each_with_index do |line_text, line_index|
-        # Determine visibility for this specific line
-        # We account for the \n that existed in @full_text but isn't in line_text
         line_limit = [limit - chars_processed, 0].max
         shown_text = line_text[0..[line_limit, line_text.size].min]
 
-        if shown_text.size > 0 || line_text.empty?
-          _draw_line(
-            draw: draw,
-            font_atlas: font_atlas,
-            text: shown_text,
-            color: color,
-            line_index: line_index,
-            offset_x: offset_x,
-            offset_y: offset_y,
-            z_index: z_index
+        unless shown_text.empty?
+          vertices.concat(
+            generate_line_vertices(
+              font_atlas: font_atlas,
+              text: shown_text,
+              color: color,
+              line_index: line_index,
+              offset_x: off_x,
+              offset_y: off_y
+            )
           )
         end
 
-        # Update progress (+1 accounts for the stripped newline character)
         chars_processed += line_text.size + 1
-
-        # Early exit if we've reached the typing limit
-        if chars_processed > limit && !typed?
-          # Check if we literally just finished the last character
-          if line_index == @lines.size - 1 && shown_text.size == line_text.size
-            @typed = true
-          end
-
-          return
-        end
+        break if chars_processed > limit
       end
+
+      vertices
     end
 
-    private def _draw_line(
-      draw : Draw,
+    private def generate_line_vertices(
       font_atlas : FontAtlas,
       text : String,
       color : Color,
       line_index : Int32,
       offset_x : Num,
-      offset_y : Num,
-      z_index : Int32
-    )
-      # Horizontal Alignment (full text for width)
-      line_width = @font_atlas.calculate_width(text, @character_spacing)
+      offset_y : Num
+    ) : Array(GSDL::Vertex)
+      line_width = font_atlas.calculate_width(text, @character_spacing)
 
+      # Horizontal Alignment
       offset_x += case @h_align
-      when .center?
-        (self.width - line_width) / 2
-      when .right?
-        self.width - line_width
-      else
-        0
+        when .center?
+          (self.width - line_width) / 2
+        when .right?
+          self.width - line_width
+        else 0
       end
 
       offset_y += line_index * line_height
 
-      if @rotation % 360 == 0
-        # draw not rotated
-        draw_x = @x + offset_x * scale_x - self.width * scale_x * origin_x
-        draw_y = @y + offset_y * scale_y - self.height * scale_y * origin_y
+      # Calculate start positions
+      base_offset_x = -(self.width * origin_x)
+      base_offset_y = -(self.height * origin_y)
+      local_start_x = (base_offset_x + offset_x) * scale_x
+      local_start_y = (base_offset_y + offset_y) * scale_y
 
-        font_atlas.draw_text(
-          draw: draw,
+      if @rotation % 360 == 0
+        # FAST PATH
+        font_atlas.generate_vertices(
           text: text,
-          x: draw_x.to_f32,
-          y: draw_y.to_f32,
+          pivot_x: 0,
+          pivot_y: 0,
+          start_x: @x + local_start_x,
+          start_y: @y + local_start_y,
+          rotation: 0,
           character_spacing: @character_spacing,
           color: color,
           scale_x: scale_x,
-          scale_y: scale_y,
-          z_index: z_index
+          scale_y: scale_y
         )
       else
-        # draw rotated
-        anchor_x = @x
-        anchor_y = @y
-
-        base_offset_x = -(self.width * origin_x)
-        base_offset_y = -(self.height * origin_y)
-
-        # Combine base origin offset with alignment and line height
-        # These are purely LOCAL to the pivot point.
+        # ROTATED PATH
         local_start_x = (base_offset_x + offset_x) * scale_x
         local_start_y = (base_offset_y + offset_y) * scale_y
 
-        font_atlas.draw_text_rotated(
-          draw: draw,
+        font_atlas.generate_vertices(
           text: text,
-          pivot_x: anchor_x,
-          pivot_y: anchor_y,
+          pivot_x: @x,
+          pivot_y: @y,
           start_x: local_start_x,
           start_y: local_start_y,
           rotation: @rotation,
           character_spacing: @character_spacing,
           color: color,
           scale_x: scale_x,
-          scale_y: scale_y,
-          z_index: z_index
+          scale_y: scale_y
         )
       end
     end
