@@ -89,16 +89,16 @@ module FontStressEx
         @text << text
       end
 
-      # Add Performance HUD
-      h = GSDL::HUD.new
-      h << GSDL::HUDPerformance.new(
-        anchor: GSDL::Anchor::TopLeft,
-        offset_x: 32,
-        offset_y: 32,
-        color: GSDL::Color::Yellow,
-        align: GSDL::Font::Align::Left
-      )
-      self.hud = h
+      # # Add Performance HUD
+      # h = GSDL::HUD.new
+      # h << GSDL::HUDPerformance.new(
+      #   anchor: GSDL::Anchor::TopLeft,
+      #   offset_x: 32,
+      #   offset_y: 32,
+      #   color: GSDL::Color::Yellow,
+      #   align: GSDL::Font::Align::Left
+      # )
+      # self.hud = h
     end
 
     def update(dt : Float32)
@@ -110,15 +110,12 @@ module FontStressEx
       super(dt)
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_camera_view(draw : GSDL::Draw)
       # draw.color = GSDL::Color::Blue
       # draw.clear
       GSDL::Box.new(x: 300, y: 300, width: 300, height: 300, color: GSDL::Color::Blue, z_index: -100).draw(draw)
 
       @text.each(&.draw(draw))
-
-      # HUD is drawn automatically by super(draw)
-      super(draw)
     end
   end
 

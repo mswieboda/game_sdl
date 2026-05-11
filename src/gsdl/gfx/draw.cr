@@ -95,7 +95,7 @@ module GSDL
     end
 
     class DrawGeometryCommand < DrawCommand
-      property vertices : Array(SDL3::Vertex)
+      property vertices : Array(Vertex)
       property indices : Array(Int32)
       property texture : SDL3::Texture? = nil
       property atlas_rect : FRect? = nil
@@ -103,7 +103,7 @@ module GSDL
 
       def initialize(
         z_index : Int32,
-        @vertices : Array(SDL3::Vertex),
+        @vertices : Array(Vertex),
         @indices : Array(Int32),
         scale_x : Float32,
         scale_y : Float32,
@@ -163,9 +163,9 @@ module GSDL
     end
 
     abstract class DrawPointsCommandBase < DrawColorCommand
-      property points : Array(SDL3::FPoint)
+      property points : Array(FPoint)
 
-      def initialize(z_index : Int32, color : Color, @points : Array(SDL3::FPoint), scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
+      def initialize(z_index : Int32, color : Color, @points : Array(FPoint), scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
         super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
     end
@@ -250,7 +250,7 @@ module GSDL
     end
 
     # Batching buffers
-    @vertex_buffer = [] of SDL3::Vertex
+    @vertex_buffer = [] of Vertex
     @index_buffer = [] of Int32
     @active_batch_texture : SDL3::Texture? = nil
     @active_batch_scale_x : Float32 = 0.0_f32
@@ -395,9 +395,6 @@ module GSDL
       # Sync renderer state (Scale, Clip)
       @r.scale = {@active_batch_scale_x, @active_batch_scale_y}
       @r.clip_rect = @active_batch_clip_rect
-      @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-      texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-      texture.tint = SDL3::Color.new(r: 255, g: 255, b: 255, a: 255)
 
       if !@vertex_buffer.empty?
         @r.render_geometry(texture: texture, vertices: @vertex_buffer, indices: @index_buffer)
@@ -409,10 +406,31 @@ module GSDL
       @active_batch_texture = nil
     end
 
+    # TODO: PERFORMANCE REFACTOR - SPRITE GEOMETRY PRE-CALCULATION
+    # -----------------------------------------------------------------------------
+    # Currently, add_texture_to_batch performs trig (sin/cos), vertex rotation,
+    # and UV mapping every single frame for every sprite.
+    #
+    # GOAL: Move Sprite logic to match TextBeta's "Dirty Flag" architecture.
+    #
+    # 1. Update SpriteBase/AnimatedSprite to maintain a `@vertices : Array(Vertex)`
+    #    and a `@dirty : Bool` flag.
+    # 2. Re-calculate vertices (rotation, scaling, UV mapping) ONLY when x, y,
+    #    rotation, scale, or frame changes.
+    # 3. Handle the "Two-Pass Tinting" by generating 8 vertices (4 base, 4 tint)
+    #    internally in the sprite's vertex cache.
+    # 4. Refactor Draw:
+    #    - Deprecate `add_texture_to_batch`.
+    #    - Both Text and Sprites should now call `add_geometry_to_batch`.
+    #    - `add_geometry_to_batch` will become a high-speed memory copy (.concat)
+    #       with index offsetting, removing all per-frame math from the Draw loop.
+    #
+    # Impact: This will eliminate ~200 trig calls and thousands of float operations
+    # per frame in scenes with heavy sprite counts.
+    # -----------------------------------------------------------------------------
     private def add_texture_to_batch(command : DrawTextureCommand)
       texture = command.atlas_handle || command.texture
-      tw, th = 0_f32, 0_f32
-      LibSDL3.get_texture_size(texture, pointerof(tw), pointerof(th))
+      tw, th = texture.size
 
       # Corner vectors relative to center of rotation
       w, h = command.dest_rect.w, command.dest_rect.h
@@ -528,30 +546,9 @@ module GSDL
     end
 
     private def add_geometry_to_batch(command : DrawGeometryCommand)
-      texture = command.atlas_handle || command.texture
-      return unless texture
-
-      tw, th = 0_f32, 0_f32
-      LibSDL3.get_texture_size(texture, pointerof(tw), pointerof(th))
-
       base_idx = @vertex_buffer.size
 
-      if a_rect = command.atlas_rect
-        # Offset UVs in vertices to match atlas position
-        command.vertices.each do |v|
-          # Original UVs were likely 0..1 relative to original texture
-          # We need to transform them to be relative to the atlas
-
-          # Note: v.texture_fpoint.x is typically 0..1
-          # We multiply by original size then add atlas offset, then divide by atlas size
-          new_u = (a_rect.x + v.texture_fpoint.x * a_rect.w) / tw
-          new_v = (a_rect.y + v.texture_fpoint.y * a_rect.h) / th
-
-          @vertex_buffer << Vertex.new(v.fpoint, v.fcolor, FPoint.new(x: new_u, y: new_v))
-        end
-      else
-        @vertex_buffer.concat(command.vertices)
-      end
+      @vertex_buffer.concat(command.vertices)
 
       # Add indices with offset
       command.indices.each do |idx|
@@ -591,44 +588,53 @@ module GSDL
         while cursor < commands.size
           command = commands[cursor]
 
-          # Batching Check
-          if command.is_a?(DrawTextureCommand)
-            cmd = command.as(DrawTextureCommand)
+          current_tex_handle = case command
+          when DrawTextureCommand
+            command.atlas_handle || command.texture
+          when DrawGeometryCommand
+            command.atlas_handle || command.texture
+          else
+            nil
+          end
 
-            # Ensure the main loop's tracking variables match the texture's scale
-            # so that subsequent non-texture commands (like Text) know the current renderer state.
-            active_scale_x = cmd.scale_x
-            active_scale_y = cmd.scale_y
-            active_clip_rect = cmd.clip_rect
-
-            # Check if this command can continue the current batch
-            current_tex_handle = command.atlas_handle || command.texture
+          if current_tex_handle
             can_batch = @active_batch_texture &&
-                        @active_batch_texture.not_nil!.to_unsafe == current_tex_handle.to_unsafe &&
+                        @active_batch_texture.not_nil!.to_unsafe == current_tex_handle.not_nil!.to_unsafe &&
                         @active_batch_scale_x == command.scale_x &&
                         @active_batch_scale_y == command.scale_y &&
                         @active_batch_clip_rect == command.clip_rect
 
             if can_batch
-              add_texture_to_batch(command)
+              if command.is_a?(DrawTextureCommand)
+                add_texture_to_batch(command)
+              elsif command.is_a?(DrawGeometryCommand)
+                add_geometry_to_batch(command)
+              end
+
               cursor += 1
+
               next
             else
-              # Flush previous batch if it exists
               flush_batch if @active_batch_texture
 
-              # Start new batch
               @active_batch_texture = current_tex_handle
               @active_batch_scale_x = command.scale_x
               @active_batch_scale_y = command.scale_y
               @active_batch_clip_rect = command.clip_rect
-              add_texture_to_batch(command)
+
+              if command.is_a?(DrawTextureCommand)
+                add_texture_to_batch(command)
+              elsif command.is_a?(DrawGeometryCommand)
+                add_geometry_to_batch(command)
+              end
+
               cursor += 1
+
               next
             end
           end
 
-          # Not a texture command, flush any active batch before proceeding
+          # ONLY flush here if the current command is truly untextured (like DrawFRectCommand)
           flush_batch if @active_batch_texture
 
           # Sync Renderer Scale
@@ -659,69 +665,13 @@ module GSDL
             end
           end
 
+          # NOTE: there are NO fallbacks for DrawTextureCommand and DrawGeometryCommand
+          #       they SHOULD be handled from the batching logic, if they don't draw
+          #       there is a bug in the batching logic, it should NOT be drawn here
           case command
           when DrawFRectCommand
             command.outline? ? @r.draw_rect(command.rect) : @r.fill_rect(command.rect)
             @current_flush_count += 1
-
-          when DrawTextureCommand
-            # This case should theoretically be unreachable due to batching logic above,
-            # but we keep it for safety/completeness.
-            active_color = nil
-            active_blend_mode = nil
-            @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-            command.texture.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-
-            _draw_texture_rotated(
-              texture: command.texture,
-              source_rect: command.source_rect,
-              dest_rect: command.dest_rect,
-              angle: command.angle,
-              center: command.center,
-              flip: command.flip,
-              color: command.color,
-              tint: command.tint,
-              destroy: command.destroy?
-            )
-
-          when DrawGeometryCommand
-            # Check if this command can continue the current batch
-            current_tex_handle = command.atlas_handle || command.texture
-
-            if current_tex_handle
-              can_batch = @active_batch_texture &&
-                          @active_batch_texture.not_nil!.to_unsafe == current_tex_handle.to_unsafe &&
-                          @active_batch_scale_x == command.scale_x &&
-                          @active_batch_scale_y == command.scale_y &&
-                          @active_batch_clip_rect == command.clip_rect
-
-              if can_batch
-                add_geometry_to_batch(command)
-                cursor += 1
-                next
-              else
-                # Flush previous batch if it exists
-                flush_batch if @active_batch_texture
-
-                # Start new batch
-                @active_batch_texture = current_tex_handle
-                @active_batch_scale_x = command.scale_x
-                @active_batch_scale_y = command.scale_y
-                @active_batch_clip_rect = command.clip_rect
-                add_geometry_to_batch(command)
-                cursor += 1
-                next
-              end
-            else
-              # No texture, flush batch and draw geometry normally (unbatched for now)
-              flush_batch if @active_batch_texture
-
-              active_color = nil
-              active_blend_mode = nil
-              @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-              @r.render_geometry(vertices: command.vertices, indices: command.indices)
-              @current_flush_count += 1
-            end
 
           when DrawFRectsCommand
             slice = Slice.new(command.rects.to_unsafe, command.rects.size)
@@ -776,7 +726,7 @@ module GSDL
       source_rect : SDL3::FRect?,
       dest_rect : SDL3::FRect,
       angle : Float64 = 0.0,
-      center : SDL3::FPoint = SDL3::FPoint.new,
+      center : FPoint = FPoint.new,
       flip : Int32 = 0
     )
       @r.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
@@ -808,7 +758,7 @@ module GSDL
       source_rect : SDL3::FRect?,
       dest_rect : SDL3::FRect,
       angle : Float64 = 0.0,
-      center : SDL3::FPoint = SDL3::FPoint.new,
+      center : FPoint = FPoint.new,
       flip : Int32 = 0,
       color : Color = Color::White,
       tint : Color? = nil,
@@ -828,7 +778,7 @@ module GSDL
         _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
 
         # Pass 2: Tint overlay (Target color and alpha)
-        texture.tint = SDL3::Color.new(r: t.r, g: t.g, b: t.b, a: t.a)
+        texture.tint = Color.new(r: t.r, g: t.g, b: t.b, a: t.a)
         _render_texture_rotated(texture, source_rect, dest_rect, angle, center, flip)
       else
         # Single pass: No tint or Alpha-only tint

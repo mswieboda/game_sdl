@@ -102,16 +102,16 @@ module StressEx
       camera.speed = 1000 # High speed for flying around
       camera.type = GSDL::Camera::Type::Manual
 
-      # Add Performance HUD
-      h = GSDL::HUD.new
-      h << GSDL::HUDPerformance.new(
-        anchor: GSDL::Anchor::TopLeft,
-        offset_x: 20,
-        offset_y: 20,
-        color: GSDL::Color::Yellow,
-        align: GSDL::Font::Align::Left
-      )
-      self.hud = h
+      # # Add Performance HUD
+      # h = GSDL::HUD.new
+      # h << GSDL::HUDPerformance.new(
+      #   anchor: GSDL::Anchor::TopLeft,
+      #   offset_x: 20,
+      #   offset_y: 20,
+      #   color: GSDL::Color::Yellow,
+      #   align: GSDL::Font::Align::Left
+      # )
+      # self.hud = h
     end
 
     def update(dt : Float32)
@@ -129,18 +129,6 @@ module StressEx
 
       @entities.each(&.update(dt))
       camera.update(dt)
-    end
-
-    def draw(draw : GSDL::Draw)
-      # Draw world bounds for reference
-      draw.rect_outline(
-        rect: GSDL::FRect.new(-camera.x, -camera.y, WORLD_SIZE, WORLD_SIZE),
-        color: GSDL::Color::Red
-      )
-
-      # entities are drawn automatically by super(draw)
-      # HUD is drawn automatically by super(draw)
-      super(draw)
     end
   end
 
