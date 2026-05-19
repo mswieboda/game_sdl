@@ -46,6 +46,10 @@ module GSDL
     property shadow_color : Color
     property outline : Int32
     property outline_color : Color
+    property? draw_relative_to_camera : Bool
+
+    # TODO: implement opacity within here, FontAtlas or Draw
+    property opacity : UInt8
 
     getter? width_fixed : Bool
     getter? height_fixed : Bool
@@ -65,14 +69,16 @@ module GSDL
     @full_text : String
     @width : Num?
     @height : Num?
+    @original_width : Num?
+    @original_height : Num?
     @lines : Array(String)
     @text_width : Float32?
     @typing_timer : Timer?
     @rotation : Num
 
     def initialize(
-      font : String = "", # FontAtlasManager.default,
-      font_size : Num = 16, # FontAtlasManager.default_size,
+      font : String = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
       text : String = "foo",
       @x : Num = 0,
       @y : Num = 0,
@@ -84,7 +90,7 @@ module GSDL
       typing_speed : Time::Span? = nil,
       @shadow = {0, 0},
       @shadow_color : Color = Color::Black,
-      @outline : Int32 = 0, # FontAtlasManager.default_outline,
+      @outline : Int32 = FontAtlasManager.default_outline,
       @outline_color : Color = Color::Black,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
@@ -93,6 +99,8 @@ module GSDL
       @width = nil,
       @height = nil,
       @z_index : Int32 = 0,
+      @opacity : UInt8 = 255_u8,
+      @draw_relative_to_camera : Bool = true,
     )
       @font_atlas = FontAtlasManager.get(font, font_size, 0)
       @outline_atlas = nil
@@ -102,6 +110,9 @@ module GSDL
 
       @width_fixed = !@width.nil?
       @height_fixed = !@height.nil?
+
+      @original_width = @width
+      @original_height = @height
 
       unless typing_speed
         @typed = false
@@ -143,12 +154,14 @@ module GSDL
 
     def text=(text : String)
       @dirty = true
+      @width = @original_width
+      @height = @original_height
       @full_text = text
       update_lines
     end
 
     def text_width : Float32
-      if text_width = @text_width
+      if !@dirty && (text_width = @text_width)
         return text_width
       end
 
@@ -179,6 +192,7 @@ module GSDL
       if width != @width
         @dirty = true
         @width = width
+        @original_width = @width
 
         @width_fixed = !@width.nil?
 
@@ -214,6 +228,7 @@ module GSDL
       if height != @height
         @dirty = true
         @height = height
+        @original_height = @height
 
         @height_fixed = !@height.nil?
 
@@ -299,7 +314,7 @@ module GSDL
       lines = [] of String
       current_line = [] of String
       current_width = 0.0_f32
-      space_width = @font_atlas.calculate_width(" ")
+      space_width = @font_atlas.calculate_width(" ") + @character_spacing * 2
 
       words.each_with_index do |word, index|
         word_width = @font_atlas.calculate_width(word, @character_spacing)
@@ -406,6 +421,16 @@ module GSDL
     end
 
     def draw(draw : Draw)
+      if draw_relative_to_camera?
+        _draw(draw)
+      else
+        draw.with_camera(nil) do
+          _draw(draw)
+        end
+      end
+    end
+
+    def _draw(draw : Draw)
       limit = calculate_visible_limit
 
       if @dirty || limit != @last_visible_limit
@@ -415,6 +440,8 @@ module GSDL
       end
 
       z_index = @z_index
+
+      # TODO: implement opacity within here, FontAtlas or Draw
 
       # shadow
       if !@vertices_shadow.empty?
