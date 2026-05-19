@@ -44,7 +44,7 @@ module GSDL
     property character_spacing : Num
     property shadow : {Num, Num}
     property shadow_color : Color
-    property outline : Num
+    property outline : Int32
     property outline_color : Color
 
     getter? width_fixed : Bool
@@ -70,8 +70,8 @@ module GSDL
     @rotation : Num
 
     def initialize(
-      @font_atlas : FontAtlas,
-      @font_atlas_outline : FontAtlas,
+      font : String = "", # FontAtlasManager.default,
+      font_size : Float32 = 16_f32, # FontAtlasManager.default_size,
       text : String = "foo",
       @x : Num = 0,
       @y : Num = 0,
@@ -83,7 +83,7 @@ module GSDL
       typing_speed : Time::Span? = nil,
       @shadow = {0, 0},
       @shadow_color : Color = Color::Black,
-      @outline = 0,
+      @outline : Int32 = 0, # FontAtlasManager.default_outline,
       @outline_color : Color = Color::Black,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
@@ -93,6 +93,9 @@ module GSDL
       @height = nil,
       @z_index : Int32 = 0,
     )
+      @font_atlas = FontAtlasManager.get(font, font_size, 0)
+      @font_atlas_outline = FontAtlasManager.get(font, font_size, @outline)
+
       @full_text = text
       @lines = [] of String
 

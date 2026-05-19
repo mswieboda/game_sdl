@@ -8,20 +8,22 @@ module GSDL
         FontManager.load_default(path: default_font_path_key)
       end
 
-      font_data = load_fonts
-      font_data.each do |key, path_key, size|
+      load_fonts.each do |key, path_key, size|
         FontManager.load(key: key, path_key: path_key, size: size)
       end
 
+      # font atlases
+      load_font_atlases.each do |key, path_key, size, outline|
+        FontAtlasManager.load(key: key, path_key: path_key, size: size, outline: outline)
+      end
+
       # textures
-      texture_load_data = load_textures
-      texture_load_data.each do |key, path_key|
+      load_textures.each do |key, path_key|
         TextureManager.load(key: key, path_key: path_key)
       end
 
       # audio
-      audio_load_data = load_audio
-      audio_load_data.each do |audio_tuple|
+      load_audio.each do |audio_tuple|
         case audio_tuple
         when Tuple(String, String)
           AudioManager.load(key: audio_tuple[0], path_key: audio_tuple[1])
@@ -31,14 +33,12 @@ module GSDL
       end
 
       # tile maps
-      tile_map_load_data = load_tile_maps
-      tile_map_load_data.each do |key, path_key|
+      load_tile_maps.each do |key, path_key|
         TileMapManager.load(key: key, path_key: path_key)
       end
 
       # dialogs
-      dialog_load_data = load_dialogs
-      dialog_load_data.each do |path_key|
+      load_dialogs.each do |path_key|
         DialogManager.load(path_key: path_key)
       end
     end
@@ -47,29 +47,33 @@ module GSDL
       tasks = [] of Loader::AssetTask
 
       load_fonts.each do |key, path_key, size|
-        tasks << Loader::AssetTask.new(:Font, key, path_key, size)
+        tasks << Loader::AssetTask.new(AssetType::Font, key, path_key, size)
+      end
+
+      load_font_atlases.each do |key, path_key, size, outline|
+        tasks << Loader::AssetTask.new(AssetType::FontAtlas, key, path_key, size, outline)
       end
 
       load_textures.each do |key, path_key|
-        tasks << Loader::AssetTask.new(:Texture, key, path_key)
+        tasks << Loader::AssetTask.new(AssetType::Texture, key, path_key)
       end
 
       load_audio.each do |audio_tuple|
         case audio_tuple
         when Tuple(String, String)
-          tasks << Loader::AssetTask.new(:Audio, audio_tuple[0], audio_tuple[1])
+          tasks << Loader::AssetTask.new(AssetType::Audio, audio_tuple[0], audio_tuple[1])
         when Tuple(String, String, String)
           # Note: Loader::AssetTask would need an update for categories in async mode
-          tasks << Loader::AssetTask.new(:Audio, audio_tuple[0], audio_tuple[1])
+          tasks << Loader::AssetTask.new(AssetType::Audio, audio_tuple[0], audio_tuple[1])
         end
       end
 
       load_tile_maps.each do |key, path_key|
-        tasks << Loader::AssetTask.new(:TileMap, key, path_key)
+        tasks << Loader::AssetTask.new(AssetType::TileMap, key, path_key)
       end
 
       load_dialogs.each do |path_key|
-        tasks << Loader::AssetTask.new(:Dialog, "", path_key)
+        tasks << Loader::AssetTask.new(AssetType::Dialog, "", path_key)
       end
 
       tasks
@@ -81,6 +85,12 @@ module GSDL
 
     def load_fonts : Array(Tuple(String, String, Float32))
       [] of Tuple(String, String, Float32)
+    end
+
+    # TODO: make a default_font_atlas with Tuple(String, Float32, Int32)
+
+    def load_font_atlases : Array(Tuple(String, String, Float32, Int32))
+      [] of Tuple(String, String, Float32, Int32)
     end
 
     def load_textures : Array(Tuple(String, String))

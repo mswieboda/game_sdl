@@ -42,11 +42,12 @@ module GSDL
       Texture
       Audio
       Font
+      FontAtlas
       Dialog
       TileMap
     end
 
-    record AssetTask, type : AssetType, key : String, path_key : String, size : Float32 = 0_f32
+    record AssetTask, type : AssetType, key : String, path_key : String, size : Float32 = 0_f32, outline : Int32 = 0
     record AssetResult, task : AssetTask, bytes : Bytes
 
     @tasks = Array(AssetTask).new
@@ -69,23 +70,27 @@ module GSDL
     end
 
     def add_texture(key : String, path_key : String)
-      @tasks << AssetTask.new(:Texture, key, path_key)
+      @tasks << AssetTask.new(AtlasType::Texture, key, path_key)
     end
 
     def add_audio(key : String, path_key : String)
-      @tasks << AssetTask.new(:Audio, key, path_key)
+      @tasks << AssetTask.new(AtlasType::Audio, key, path_key)
     end
 
     def add_font(key : String, path_key : String, size : Float32)
-      @tasks << AssetTask.new(:Font, key, path_key, size)
+      @tasks << AssetTask.new(AtlasType::Font, key, path_key, size)
+    end
+
+    def add_font_atlas(key : String, path_key : String, size : Float32, outline : Int32)
+      @tasks << AssetTask.new(AtlasType::FontAtlas, key, path_key, size, outline)
     end
 
     def add_dialog(path_key : String)
-      @tasks << AssetTask.new(:Dialog, "", path_key)
+      @tasks << AssetTask.new(AtlasType::Dialog, "", path_key)
     end
 
     def add_tile_map(key : String, path_key : String)
-      @tasks << AssetTask.new(:TileMap, key, path_key)
+      @tasks << AssetTask.new(AtlasType::TileMap, key, path_key)
     end
 
     def add_tasks(tasks : Array(AssetTask))
@@ -136,6 +141,8 @@ module GSDL
           when AssetType::Font
             io = SDL3::IOStream.from_memory(bytes, bytes.size)
             FontManager.load_from_memory(task.key, io, task.size)
+          when AssetType::FontAtlas
+            FontAtlasManager.load_from_memory(task.key, bytes, task.size, task.outline)
           when AssetType::Dialog
             DialogManager.load(task.path_key)
           when AssetType::TileMap
@@ -146,6 +153,7 @@ module GSDL
         ensure
           @progress.increment_loaded
         end
+
         count += 1
       end
     end
@@ -193,14 +201,14 @@ module GSDL
       # We must ensure the bytes are copied into a stable buffer because
       # File.read(path).to_slice returns a pointer to a temporary string that can be GC'd
       bytes = if AssetManager.initialized?
-                AssetManager.load_raw_data(path)
-              else
-                full_path = GSDL::AssetManager.asset_path + path
-                data = File.read(full_path)
-                stable_bytes = Bytes.new(data.bytesize)
-                data.to_slice.copy_to(stable_bytes)
-                stable_bytes
-              end
+        AssetManager.load_raw_data(path)
+      else
+        File.open(AssetManager.asset_path + path) do |file|
+          slice = Bytes.new(file.size.to_i)
+          file.read_fully(slice)
+          slice
+        end
+      end
 
       @result_mutex.synchronize do
         @result_queue.push(AssetResult.new(task, bytes))

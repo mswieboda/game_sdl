@@ -4,7 +4,6 @@ module GSDL
     getter outline : Int32
     getter texture : Texture
 
-    DefaultAtlasSize = 1024
     DefaultFontSize = 16
 
     @chars : Pointer(LibSTBTrueType::PackedChar)
@@ -18,29 +17,20 @@ module GSDL
     getter outline : Int32 = 0
 
     def initialize(
-      path : String,
+      data : Bytes,
       size : Num = DefaultFontSize,
       @outline : Int32 = 0,
-      atlas_size : Int32 = DefaultAtlasSize,
     )
-      unless File.exists?(path)
-        raise "Font file not found: #{path}"
-      end
-
       total_scale = calculate_total_scale
       @font_size = size * total_scale
       @oversample = calculate_oversample(@font_size, total_scale)
       @render_font_size = @font_size.to_f32 * @oversample
       @render_outline = @outline * @oversample
-
-      font_data = File.read(path).to_slice
       @chars = Pointer(LibSTBTrueType::PackedChar).malloc(@char_count)
-
       pixels = Bytes.new(0)
-      atlas_size = calculate_initial_size(@char_count, @render_font_size, @render_outline)
-      success = false
-
       pack_context = LibSTBTrueType::PackContext.new
+      atlas_size = calculate_initial_atlas_size(@char_count, @render_font_size, @render_outline)
+      success = false
 
       until success
         # Setup the packing context for current atlas_size
@@ -60,7 +50,7 @@ module GSDL
         # Try to pack the range
         res = LibSTBTrueType.pack_font_range(
           pointerof(pack_context),
-          font_data,
+          data,
           0, # font index
           @render_font_size,
           @first_char,
@@ -116,7 +106,7 @@ module GSDL
 
       # Get ascent data
       font_info = LibSTBTrueType::FontInfo.new
-      LibSTBTrueType.init_font(pointerof(font_info), font_data.to_unsafe, 0)
+      LibSTBTrueType.init_font(pointerof(font_info), data.to_unsafe, 0)
 
       scale = LibSTBTrueType.scale_for_pixel_height(pointerof(font_info), @font_size)
 
@@ -177,7 +167,7 @@ module GSDL
       (total_scale * quality_multiplier).ceil.to_i.clamp(1, 8)
     end
 
-    def calculate_initial_size(char_count : Int32, font_size : Float32, outline : Int32) : Int32
+    def calculate_initial_atlas_size(char_count : Int32, font_size : Float32, outline : Int32) : Int32
       # Add padding for the outline on all sides of the glyph
       glyph_box = font_size + (outline * 2)
       total_area = char_count * (glyph_box ** 2) * 1.2

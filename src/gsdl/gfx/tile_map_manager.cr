@@ -1,14 +1,14 @@
 require "json"
 
 module GSDL
-  class TileMapManager
-    @@instance : TileMapManager = new
+  module TileMapManager
+    @@tile_maps = Hash(String, TileMap).new
+    @@mutex = Mutex.new
 
-    @tile_maps : Hash(String, TileMap)
-    @mutex = Mutex.new
-
-    private def initialize
-      @tile_maps = Hash(String, TileMap).new
+    # Sets up the TileMapManager.
+    # Note: TileMapManager is now initialized automatically, but this method
+    # is kept for consistency with other managers.
+    def self.setup
     end
 
     # Loads a tile map based on the mode (release/debug).
@@ -16,86 +16,60 @@ module GSDL
     # In debug mode, it loads from the loose asset filesystem path,
     # prepending GSDL::AssetManager.asset_path.
     def self.load(key : String, path_key : String) : TileMap
-      # see TextureManager.load comments for more details on path_key
-      # which is a key based on the path like 'gfx/map.json'
-      # and will either load from the asset.pack file in release mode
-      # or from the 'assets/gfx/map.json' file directly in debug mode
+      @@mutex.synchronize do
+        if @@tile_maps.has_key?(key)
+          return @@tile_maps[key]
+        end
 
-      # Using flag?(:release) for compile-time conditional compilation.
-      # When compiling with `crystal build --release`, the :release flag is set.
-      {% if flag?(:release) %}
-        # In release mode, defer to AssetManager which handles packfile loading
-        data = AssetManager.load_raw_data(path_key)
-        load_from_memory(key, data)
-      {% else %}
-        # In debug mode, load from loose files
-        full_path = GSDL::AssetManager.asset_path + path_key
-        @@instance.load(key, full_path)
-      {% end %}
+        data = {% if flag?(:release) %}
+          # In release mode, defer to AssetManager which handles packfile loading
+          AssetManager.load_raw_data(path_key)
+        {% else %}
+          # In debug mode, load from loose files
+          full_path = GSDL::AssetManager.asset_path + path_key
+          File.open(full_path) do |file|
+            slice = Bytes.new(file.size.to_i)
+            file.read_fully(slice)
+            slice
+          end
+        {% end %}
+
+        tile_map = TileMap.from_tiled_data(data)
+        @@tile_maps[key] = tile_map
+        tile_map
+      end
     end
 
     # Loads tile map from raw byte data and associates it with a key
-    # This method is primarily intended to be called by load if in release mode
     def self.load_from_memory(key : String, data : Bytes) : TileMap
-      @@instance.load_from_memory(key, data)
+      @@mutex.synchronize do
+        if @@tile_maps.has_key?(key)
+          return @@tile_maps[key]
+        end
+        tile_map = TileMap.from_tiled_data(data)
+        @@tile_maps[key] = tile_map
+        tile_map
+      end
     end
 
     # Retrieves a loaded tile map by its key.
     def self.get(key : String) : TileMap
-      @@instance.get(key) # Delegate to the internal instance
+      @@mutex.synchronize do
+        @@tile_maps[key]? || raise "TileMap with key '#{key}' not found in TileMapManager. Was it loaded?"
+      end
     end
 
     # Unloads a specific tile map from memory.
     def self.unload(key : String) : Nil
-      @@instance.unload(key) # Delegate to the internal instance
+      @@mutex.synchronize do
+        @@tile_maps.delete(key)
+      end
     end
 
     # Unloads all managed tile map assets from memory.
     def self.clear_all : Nil
-      @@instance.clear_all # Delegate to the internal instance
-    end
-
-    # --- Instance methods (called by class methods via the singleton instance) ---
-
-    def load(key : String, path : String) : TileMap
-      @mutex.synchronize do
-        if @tile_maps.has_key?(key)
-          return @tile_maps[key]
-        end
-        tile_map = TileMap.from_tiled_file(path)
-        @tile_maps[key] = tile_map
-        tile_map
-      end
-    end
-
-    def load_from_memory(key : String, data : Bytes) : TileMap
-      @mutex.synchronize do
-        if @tile_maps.has_key?(key)
-          return @tile_maps[key]
-        end
-        tile_map = TileMap.from_tiled_data(data)
-        @tile_maps[key] = tile_map
-        tile_map
-      end
-    end
-
-    def get(key : String) : TileMap
-      @mutex.synchronize do
-        @tile_maps.fetch(key) do
-          raise "TileMap with key '#{key}' not found in TileMapManager. Was it loaded?"
-        end
-      end
-    end
-
-    def unload(key : String) : Nil
-      @mutex.synchronize do
-        @tile_maps.delete(key)
-      end
-    end
-
-    def clear_all : Nil
-      @mutex.synchronize do
-        @tile_maps.clear
+      @@mutex.synchronize do
+        @@tile_maps.clear
       end
     end
   end

@@ -17,37 +17,40 @@ module GSDL
     getter choices : Array(DialogChoice)?
   end
 
-  class DialogManager
-    @@instance : DialogManager = new
+  module DialogManager
+    @@dialogs = Hash(String, DialogNode).new
+    @@mutex = Mutex.new
 
-    @dialogs : Hash(String, DialogNode) = {} of String => DialogNode
-    @mutex = Mutex.new
+    # Sets up the DialogManager.
+    def self.setup
+    end
 
     def self.load(path_key : String)
-      @@instance.load(path_key)
-    end
-
-    def self.get_node(id : String) : DialogNode?
-      @@instance.get_node(id)
-    end
-
-    def load(path_key : String)
-      @mutex.synchronize do
-        {% if flag?(:release) %}
-          data = GSDL::AssetManager.load_raw_data(path_key)
-          @dialogs = Hash(String, DialogNode).from_yaml(String.new(data))
+      @@mutex.synchronize do
+        data = {% if flag?(:release) %}
+          GSDL::AssetManager.load_raw_data(path_key)
         {% else %}
           full_path = GSDL::AssetManager.asset_path + path_key
           File.open(full_path) do |file|
-            @dialogs = Hash(String, DialogNode).from_yaml(file)
+            slice = Bytes.new(file.size.to_i)
+            file.read_fully(slice)
+            slice
           end
         {% end %}
+        
+        @@dialogs = Hash(String, DialogNode).from_yaml(String.new(data))
       end
     end
 
-    def get_node(id : String) : DialogNode?
-      @mutex.synchronize do
-        @dialogs[id]?
+    def self.get_node(id : String) : DialogNode?
+      @@mutex.synchronize do
+        @@dialogs[id]?
+      end
+    end
+
+    def self.clear_all : Nil
+      @@mutex.synchronize do
+        @@dialogs.clear
       end
     end
   end

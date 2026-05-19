@@ -21,6 +21,12 @@ module FontStressEx
     def load_default_font
       "fonts/PressStart2P.ttf"
     end
+
+    def load_font_atlases
+      [
+        {"PressStart2P", "fonts/PressStart2P.ttf", 16_f32, 0}
+      ]
+    end
   end
 
   class StressScene < GSDL::Scene
@@ -31,13 +37,9 @@ module FontStressEx
       super(:stress)
       @timer = GSDL::Timer.new(3.seconds)
       @timer.start
-
-      font_path = "./assets/fonts/PressStart2P.ttf"
-      font_size : Float32 = 16_f32
-      font_atlas = GSDL::FontAtlas.new(font_path, font_size)
       @text << GSDL::TextBeta.new(
-        font_atlas: font_atlas,
-        font_atlas_outline: font_atlas, # TODO: temporary until TextStyle impl
+        font: "PressStart2P",
+        font_size: 16_f32,
         text: "hello! from the dark recesses of evil!\nYOU WON'T CATCH ME\nTHIS TIME FIEND,\nnot now, not ever.\nHear that, punk?",
         x: Game.width // 2,
         y: Game.height // 2,
@@ -52,8 +54,8 @@ module FontStressEx
 
         text = if rng.rand > 0.5
           GSDL::TextBeta.new(
-            font_atlas: font_atlas,
-            font_atlas_outline: font_atlas, # TODO: temporary until TextStyle impl
+            font: "PressStart2P",
+            font_size: 16_f32,
             text: "This is a testing string, blah!",
             x: x,
             y: y,
@@ -62,8 +64,8 @@ module FontStressEx
           )
         else
           GSDL::TextBeta.new(
-            font_atlas: font_atlas,
-            font_atlas_outline: font_atlas, # TODO: temporary until TextStyle impl
+            font: "PressStart2P",
+            font_size: 16_f32,
             text: "hello! from the dark recesses of evil!",
             x: x,
             y: y,
