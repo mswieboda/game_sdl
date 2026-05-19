@@ -9,7 +9,7 @@ module GSDL
 
     def self.master_volume=(value : Float32)
       @@master_volume = value.clamp(0.0_f32, 2.0_f32) # Allow up to 2x boost if SDL3 allows
-      LibSDL3Mixer.set_mixer_gain(AudioManager.instance.mixer, @@master_volume)
+      LibSDL3Mixer.set_mixer_gain(AudioManager.mixer, @@master_volume)
     end
 
     def self.get_volume(category : String) : Float32
@@ -19,7 +19,7 @@ module GSDL
     def self.set_volume(category : String, value : Float32)
       val = value.clamp(0.0_f32, 2.0_f32)
       @@category_volumes[category] = val
-      LibSDL3Mixer.set_tag_gain(AudioManager.instance.mixer, category.to_unsafe, val)
+      LibSDL3Mixer.set_tag_gain(AudioManager.mixer, category.to_unsafe, val)
     end
   end
 end

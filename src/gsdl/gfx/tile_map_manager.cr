@@ -5,12 +5,6 @@ module GSDL
     @@tile_maps = Hash(String, TileMap).new
     @@mutex = Mutex.new
 
-    # Sets up the TileMapManager.
-    # Note: TileMapManager is now initialized automatically, but this method
-    # is kept for consistency with other managers.
-    def self.setup
-    end
-
     # Loads a tile map based on the mode (release/debug).
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,

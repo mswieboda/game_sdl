@@ -7,12 +7,6 @@ module GSDL
     @@base_fonts = Hash(String, Font).new
     @@mutex = Mutex.new
 
-    # Sets up the FontManager.
-    # Note: FontManager is now initialized automatically, but this method
-    # is kept for consistency with other managers.
-    def self.setup
-    end
-
     # Loads a font based on the mode (release/debug).
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,

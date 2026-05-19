@@ -21,10 +21,6 @@ module GSDL
     @@dialogs = Hash(String, DialogNode).new
     @@mutex = Mutex.new
 
-    # Sets up the DialogManager.
-    def self.setup
-    end
-
     def self.load(path_key : String)
       @@mutex.synchronize do
         data = {% if flag?(:release) %}

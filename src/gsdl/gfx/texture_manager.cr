@@ -1,19 +1,8 @@
 module GSDL
   module TextureManager
-    @@draw : Draw? = nil
     @@textures = Hash(String, Texture).new
     @@atlases = [] of Texture
     @@mutex = Mutex.new
-
-    # Sets up the TextureManager with the given Draw.
-    # This should be called once at the start of the application.
-    def self.setup(draw : Draw)
-      @@draw = draw
-    end
-
-    private def self.draw : Draw
-      @@draw || raise "TextureManager not setup with a Draw instance!"
-    end
 
     def self.finalize_atlas
       @@mutex.synchronize do
@@ -23,7 +12,7 @@ module GSDL
         to_pack = @@textures.values.select { |t| t.atlas_handle.nil? }.sort_by { |t| -t.height }
         return if to_pack.empty?
 
-        max_size = draw.to_sdl.properties.get_number(LibSDL3::SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER).to_i
+        max_size = Game.draw.to_sdl.properties.get_number(LibSDL3::SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER).to_i
         padding = 2
 
         current_atlas_w = 512
@@ -92,14 +81,14 @@ module GSDL
         # Render atlases
         pages.each do |page|
           atlas_tex = Texture.new(current_atlas_w, current_atlas_h, access: TextureAccess::Target)
-          draw.with_target(atlas_tex) do
-            draw.color = Color::Transparent
-            draw.clear
+          Game.draw.with_target(atlas_tex) do
+            Game.draw.color = Color::Transparent
+            Game.draw.clear
             
             page.each do |(tex, x, y)|
               # Draw sub-texture into atlas
               # We use draw_immediately to avoid recursive push_cmd issues
-              draw.texture(tex, x: x.to_f32, y: y.to_f32, draw_immediately: true)
+              Game.draw.texture(tex, x: x.to_f32, y: y.to_f32, draw_immediately: true)
               
               # Set atlas metadata
               tex.atlas_handle = atlas_tex.to_sdl
@@ -127,13 +116,13 @@ module GSDL
         texture = {% if flag?(:release) %}
           # In release mode, use AssetManager to load from the packfile.
           AssetManager.with_io_stream(path_key) do |io_stream|
-            texture_sdl = SDL3::Image.load_texture_io(draw.to_sdl, io_stream, close_io: true)
+            texture_sdl = SDL3::Image.load_texture_io(Game.draw.to_sdl, io_stream, close_io: true)
             Texture.new(texture_sdl)
           end
         {% else %}
           # In debug mode, load from loose files
           full_path = GSDL::AssetManager.asset_path + path_key
-          texture_sdl = SDL3::Image.load_texture(draw.to_sdl, full_path)
+          texture_sdl = SDL3::Image.load_texture(Game.draw.to_sdl, full_path)
           Texture.new(texture_sdl)
         {% end %}
 
@@ -148,7 +137,7 @@ module GSDL
         if @@textures.has_key?(key)
           return @@textures[key]
         end
-        texture_sdl = SDL3::Image.load_texture_io(draw.to_sdl, io, close_io: true)
+        texture_sdl = SDL3::Image.load_texture_io(Game.draw.to_sdl, io, close_io: true)
         texture = Texture.new(texture_sdl)
         @@textures[key] = texture
         texture
@@ -161,7 +150,7 @@ module GSDL
         if @@textures.has_key?(key)
           return @@textures[key]
         end
-        texture_sdl = SDL3::Texture.from_surface(draw.to_sdl, surface.to_sdl)
+        texture_sdl = SDL3::Texture.from_surface(Game.draw.to_sdl, surface.to_sdl)
         texture = Texture.new(texture_sdl)
         @@textures[key] = texture
         texture

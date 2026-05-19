@@ -18,7 +18,7 @@ module GSDL
       end
     end
 
-    private def self.mixer : LibSDL3Mixer::Mixer*
+    def self.mixer : LibSDL3Mixer::Mixer*
       @@mixer.null? ? raise("AudioManager not setup with a mixer!") : @@mixer
     end
 
