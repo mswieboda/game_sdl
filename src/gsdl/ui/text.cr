@@ -1,308 +1,661 @@
-require "./text_beta"
-
 module GSDL
-  alias Text = TextBeta
+  enum HorizontalAlign
+    Left
+    Center
+    Right
+  end
 
-  class TextOld < Entity
-    include Centerable
+  enum VerticalAlign
+    Top
+    Center
+    Bottom
+  end
 
-    OversampleRatio = 8_f32
+  class Text < Entity
+    # include Centerable
 
-    record WordInfo, text : String, x : Int32, y : Int32, w : Int32, h : Int32
+    EllipsisMarker = "|^.~.^|"
+    Ellipsis = "..."
+    CharacterDefaultTypingSpeed = 0.075.seconds
+    WordDefaultTypingSpeed = 0.25.seconds
 
-    property text : String
-    property font : Font
-    property color : Color
-    property align : Font::Align
-    property wrap_width : Int32?
-    property oversample_ratio : Float32 = OversampleRatio
+    enum Typing
+      None
+      Character
+      Word
+
+      def typing_speed : Time::Span?
+        case self
+        when .character?
+          CharacterDefaultTypingSpeed
+        when .word?
+          WordDefaultTypingSpeed
+        else
+          nil
+        end
+      end
+    end
+
+    property z_index : Int32
+    property h_align : HorizontalAlign
+    property v_align : VerticalAlign
+    property line_spacing : Num
+    property character_spacing : Num
+    property shadow : {Num, Num}
+    property shadow_color : Color
+    property outline : Int32
+    property outline_color : Color
     property? draw_relative_to_camera : Bool
-    property rotation : Num = 0.0
-    property wrap_whitespace_visible : Bool
-    property visible_characters : Int32
-    property opacity : UInt8
 
-    @texture : Texture?
-    @layout_info = [] of WordInfo
-    @logical_width : Int32 = 0
-    @logical_height : Int32 = 0
+    getter color : Color
+    getter? width_fixed : Bool
+    getter? height_fixed : Bool
+    getter typing : Typing
+    getter? typed : Bool
+
+    @vertices_main = Array(GSDL::Vertex).new
+    @vertices_outline = Array(GSDL::Vertex).new
+    @vertices_shadow = Array(GSDL::Vertex).new
+    @indices = Array(Int32).new(initial_capacity: 600) # Space for 100 chars
+    @dirty = true
+    @last_visible_limit = -1
+
+    # TODO: make a setter to change font atlas
+    @font_atlas : FontAtlas
+    @outline_atlas : FontAtlas?
+    @full_text : String
+    @width : Num?
+    @height : Num?
+    @original_width : Num?
+    @original_height : Num?
+    @lines : Array(String)
+    @text_width : Float32?
+    @typing_timer : Timer?
+    @rotation : Num
 
     def initialize(
-      @font = Font.default,
-      @text : String = "",
-      x : Num = 0,
-      y : Num = 0,
-      origin : Tuple(Float32, Float32) = {0_f32, 0_f32},
-      scale : Tuple(Num, Num) = {1_f32, 1_f32},
-      @color = ColorScheme.get(:ui_text),
-      @align = Font::Align::Left,
-      @wrap_width : Int32? = nil,
+      font : String = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
+      text : String = "foo",
+      @x : Num = 0,
+      @y : Num = 0,
+      @h_align : HorizontalAlign = HorizontalAlign::Left,
+      @v_align : VerticalAlign = VerticalAlign::Top,
+      @line_spacing : Num = 1.2_f32,
+      @character_spacing : Num = 0,
+      @typing = Typing::None,
+      typing_speed : Time::Span? = nil,
+      @shadow = {0, 0},
+      @shadow_color : Color = Color::Black,
+      @outline : Int32 = FontAtlasManager.default_outline,
+      @outline_color : Color = Color::Black,
+      @origin = {0_f32, 0_f32},
+      @scale = {1_f32, 1_f32},
+      @rotation : Num = 0,
+      @color = GSDL::Color::White,
+      @width = nil,
+      @height = nil,
       @z_index : Int32 = 0,
-      @rotation : Num = 0.0,
-      @oversample_ratio : Float32 = OversampleRatio,
-      @visible_characters : Int32 = -1,
-      @opacity : UInt8 = 255_u8,
       @draw_relative_to_camera : Bool = true,
-      @wrap_whitespace_visible : Bool = false,
     )
-      @x = x.to_f32
-      @y = y.to_f32
-      @origin = origin
-      @scale = scale
+      @font_atlas = FontAtlasManager.get(font, font_size, 0)
+      @outline_atlas = nil
 
-      layout!
-      bake!
-    end
+      @full_text = text
+      @lines = [] of String
 
-    def text=(@text : String)
-      layout!
-      bake!
-    end
+      @width_fixed = !@width.nil?
+      @height_fixed = !@height.nil?
 
-    def font=(@font : Font)
-      layout!
-      bake!
-    end
+      @original_width = @width
+      @original_height = @height
 
-    def color=(@color : Color)
-      bake!
-    end
-
-    def align=(@align : Font::Align)
-      layout!
-      bake!
-    end
-
-    def wrap_width=(@wrap_width : Int32?)
-      layout!
-      bake!
-    end
-
-    def oversample_ratio=(@oversample_ratio : Float32)
-      layout!
-      bake!
-    end
-
-    def visible_characters=(@visible_characters : Int32)
-      bake!
-    end
-
-    def layout!
-      @layout_info.clear
-      @logical_width = 0
-      @logical_height = 0
-      return if @text.empty?
-
-      lines = @text.split("\n")
-      
-      # Use line_skip if available, otherwise font height
-      logical_line_height = @font.line_skip > 0 ? @font.line_skip : @font.height
-      
-      raw_lines = [] of Array(WordInfo)
-      current_y = 0
-      max_w = 0
-
-      lines.each do |line|
-        if line.empty?
-          current_y += logical_line_height
-          next
+      unless typing_speed
+        @typed = false
+        typing_speed = @typing.typing_speed
+        if speed = typing_speed
+          @typing_timer = Timer.new(speed)
+          @typing_timer.not_nil!.start
         end
-
-        line_words = [] of WordInfo
-        cursor_x = 0
-
-        words = line.split(/([ \t]+)/)
-        words.each do |word|
-          next if word.empty?
-          
-          w, h = @font.text_size(word)
-          
-          if (ww = @wrap_width) && ww > 0 && cursor_x + w > ww && !word.strip.empty?
-            raw_lines << line_words
-            line_words = [] of WordInfo
-            cursor_x = 0
-            current_y += logical_line_height
-          end
-
-          line_words << WordInfo.new(text: word, x: cursor_x, y: current_y, w: w, h: h)
-          cursor_x += w
-          max_w = Math.max(max_w, cursor_x)
-        end
-        raw_lines << line_words unless line_words.empty?
-        current_y += logical_line_height
+      else
+        @typed = true
       end
 
-      ww = @wrap_width
-      @logical_width = (ww && ww > 0) ? ww : max_w
-      @logical_height = current_y
+      update_lines
+    end
 
-      # Apply alignment
-      raw_lines.each do |line_words|
-        next if line_words.empty?
-        
-        line_w = line_words.last.x + line_words.last.w
-        # ignore trailing whitespace for alignment
-        trailing_ws = 0
-        line_words.reverse_each do |w|
-          if w.text.strip.empty?
-            trailing_ws += w.w
-          else
-            break
-          end
+    def z_index_max
+      z_index = @z_index
+
+      if @outline > 0
+        z_index += 1
+      end
+
+      if !@shadow.all?(&.zero?)
+        z_index += 1
+      end
+
+      z_index
+    end
+
+    @[AlwaysInline]
+    def font_size : Num
+      @font_atlas.font_size
+    end
+
+    @[AlwaysInline]
+    def text : String
+      @lines.join("\n")
+    end
+
+    def text=(text : String)
+      @dirty = true
+      @width = @original_width
+      @height = @original_height
+      @full_text = text
+      update_lines
+    end
+
+    def text_width : Float32
+      if !@dirty && (text_width = @text_width)
+        return text_width
+      end
+
+      max_line_width = 0_f32
+
+      @lines.each do |line_text|
+        line_width = @font_atlas.calculate_width(line_text, @character_spacing)
+
+        if line_width > max_line_width
+          max_line_width = line_width
         end
-        visual_line_w = line_w - trailing_ws
+      end
 
-        offset_x = 0
-        case @align
-        when Font::Align::Center
-          offset_x = (@logical_width - visual_line_w) // 2
-        when Font::Align::Right
-          offset_x = @logical_width - visual_line_w
-        end
-        offset_x = Math.max(0, offset_x)
+      @text_width = max_line_width
+      @text_width.not_nil!
+    end
 
-        line_words.each do |w|
-          @layout_info << WordInfo.new(
-            text: w.text,
-            x: w.x + offset_x,
-            y: w.y,
-            w: w.w,
-            h: w.h
-          )
+    def width : Num
+      if width = @width
+        return width
+      end
+
+      @width = text_width
+      @width.not_nil!
+    end
+
+    def width=(width : Num?)
+      if width != @width
+        @dirty = true
+        @width = width
+        @original_width = @width
+
+        @width_fixed = !@width.nil?
+
+        update_lines
+
+        # reset height based on line changes, unless it's fixed
+        if !height_fixed?
+          self.height = nil
         end
       end
     end
 
-    def bake!
-      @texture.try(&.destroy)
-      @texture = nil
+    @[AlwaysInline]
+    def line_height : Num
+      font_size * @line_spacing
+    end
 
-      return if @layout_info.empty?
+    @[AlwaysInline]
+    def text_height : Num
+      font_size * @line_spacing * (@lines.size - 1) + font_size
+    end
 
-      original_size = @font.size
-      @font.size = original_size * @oversample_ratio
-      @font.align = @align
-
-      baked_w = (@logical_width * @oversample_ratio).to_i
-      baked_h = (@logical_height * @oversample_ratio).to_i
-      
-      master_surface = Surface.new(width: baked_w, height: baked_h)
-      master_surface.fill(Color.new(0, 0, 0, 0)) # Transparent
-
-      remaining_chars = @visible_characters
-      show_all = @visible_characters < 0
-
-      @layout_info.each do |info|
-        break if !show_all && remaining_chars <= 0
-
-        text_to_draw = info.text
-        if !show_all && text_to_draw.size > remaining_chars
-          text_to_draw = text_to_draw[0...remaining_chars]
-          remaining_chars = 0
-        elsif !show_all
-          remaining_chars -= text_to_draw.size
-        end
-
-        next if text_to_draw.empty?
-
-        surf = @font.render_text_blended(text_to_draw, @color)
-        if surf
-          dest_rect = Rect.new(
-            x: (info.x * @oversample_ratio).to_i,
-            y: (info.y * @oversample_ratio).to_i,
-            w: surf.width,
-            h: surf.height
-          )
-          surf.blit(nil, dest_rect, master_surface)
-          surf.destroy
-        end
+    def height : Num
+      if height = @height
+        return height
       end
 
-      # Restore font size
-      @font.size = original_size
-
-      @texture = Texture.from_surface(master_surface)
-      @texture.not_nil!.blend_mode = LibSDL3::SDL_BLENDMODE_BLEND
-      master_surface.destroy
+      @height = text_height
+      @height.not_nil!
     end
 
-    def width : Int32
-      @logical_width
+    def height=(height : Num?)
+      if height != @height
+        @dirty = true
+        @height = height
+        @original_height = @height
+
+        @height_fixed = !@height.nil?
+
+        update_lines
+      end
     end
 
-    def height : Int32
-      @logical_height
+    def rotation : Num
+      @rotation
     end
 
+    def rotation=(rotation : Num)
+      @dirty = true
+      @rotation = rotation
+    end
+
+    @[AlwaysInline]
     def render_width : Num
       width * scale_x
     end
 
+    @[AlwaysInline]
     def render_height : Num
       height * scale_y
     end
 
-    def render_x : Num
-      global_x - (render_width * origin_x)
+    def typing_speed : Time::Span?
+      if timer = @typing_timer.duration
+        timer.duration
+      else
+        nil
+      end
     end
 
-    def render_y : Num
-      global_y - (render_height * origin_y)
+    def typing_speed=(typing_speed : TimeSpan?)
+      if speed = typing_speed
+        @typing_timer.duration = speed
+      else
+        @typing = Typing::None
+      end
+    end
+
+    def color=(color : Color)
+      @dirty = true
+      @color = color
+    end
+
+    def opacity=(opacity : UInt8)
+      @dirty = true
+      @color = Color.new(
+        r: @color.r,
+        g: @color.g,
+        b: @color.b,
+        a: opacity
+      )
+    end
+
+    def opacity : UInt8
+      @color.a
+    end
+
+    def scale=(scale : Tuple(Num, Num))
+      @dirty = true
+      super.scale = scale
+    end
+
+    def scale=(scale : Tuple(Num, Num))
+      @dirty = true
+      @scale = scale
+    end
+
+    def scale_x=(scale_x : Num)
+      @dirty = true
+      @scale = {scale_x, scale_y}
+    end
+
+    def scale_y=(scale_y : Num)
+      @dirty = true
+      @scale = {scale_x, scale_y}
+    end
+
+    def scale=(scale : Num)
+      @dirty = true
+      @scale = {scale, scale}
+    end
+
+    def x=(x : Num)
+      @dirty = true
+      @x = x
+    end
+
+    def y=(y : Num)
+      @dirty = true
+      @y = y
+    end
+
+    private def update_lines
+      if width = @width
+        max_lines = Int32::MAX
+
+        if height = @height
+          max_lines = (height / line_height).to_i
+        end
+
+        @lines = [] of String
+        all_lines = @full_text.lines
+
+        all_lines.each_with_index do |text, index|
+          # Check budget before even trying a new segment
+          lines_left = max_lines - @lines.size
+          break if lines_left <= 0
+
+          # Check if this is the final piece of the entire string
+          is_last_segment = (index == all_lines.size - 1)
+
+          wrapped = wrap(text, width, lines_left, is_last_segment)
+
+          # If we truncated, we stop immediately
+          if wrapped.any?(&.ends_with?(EllipsisMarker))
+            wrapped[-1] = wrapped[-1][0..-(EllipsisMarker.size + 1)] + Ellipsis
+            @lines.concat(wrapped)
+            break
+          end
+
+          @lines.concat(wrapped)
+        end
+      else
+        @lines = @full_text.lines
+      end
+    end
+
+    private def wrap(text : String, max_width : Num, remaining_lines : Int32, is_last_segment : Bool)
+      words = text.split(' ')
+
+      return [""] if words.all?(&.empty?)
+
+      lines = [] of String
+      current_line = [] of String
+      current_width = 0.0_f32
+      space_width = @font_atlas.calculate_width(" ") + @character_spacing * 2
+
+      words.each_with_index do |word, index|
+        word_width = @font_atlas.calculate_width(word, @character_spacing)
+        is_last_word = (index == words.size - 1)
+
+        # If single word is wider than max width
+        if word_width > max_width
+          lines << current_line.join(" ") unless current_line.empty?
+          if lines.size >= remaining_lines
+            lines[-1] = truncate(lines[-1] + EllipsisMarker, max_width)
+          else
+            lines << truncate(word, max_width)
+          end
+
+          return lines
+        end
+
+        # If word forces a wrap
+        if !current_line.empty? && (current_width + word_width > max_width)
+          # If no more lines are allowed, truncate the current content + this word
+          if lines.size + 1 >= remaining_lines
+            lines << truncate(current_line.join(" ") + " " + word, max_width)
+            return lines
+          end
+
+          # Wrap
+          lines << current_line.join(" ")
+          current_line = [word]
+          current_width = word_width + space_width
+        else
+          # Append
+          current_line << word
+          current_width += word_width + space_width
+        end
+
+        # Handle the end of the words
+        if is_last_word
+          line_text = current_line.join(" ")
+
+          # If this is the last available line, but NOT the last segment
+          # of the full text, we must truncate to show there is more content
+          if lines.size + 1 >= remaining_lines && !is_last_segment
+            lines << truncate(line_text, max_width)
+          else
+            lines << line_text
+          end
+        end
+      end
+
+      lines
+    end
+
+    private def truncate(text, max_width)
+      return EllipsisMarker if @font_atlas.calculate_width(Ellipsis) > max_width
+
+      # Binary search approach for better performance with long words
+      low = 0
+      high = text.size
+      best_fit = ""
+
+      while low <= high
+        mid = (low + high) // 2
+        candidate = text[0...mid]
+
+        if @font_atlas.calculate_width(candidate + Ellipsis, @character_spacing) <= max_width
+          best_fit = candidate
+          low = mid + 1
+        else
+          high = mid - 1
+        end
+      end
+
+      (best_fit.empty? ? "" : best_fit) + EllipsisMarker
+    end
+
+    private def calculate_visible_limit : Int32
+      return @full_text.size if typed? || @typing.none?
+
+      # How many "units" (chars or words) have been revealed
+      elapsed_units = @full_text.size
+      if timer = @typing_timer
+        elapsed_units = timer.percent_infinite.to_i
+      end
+
+      case @typing
+      when .character?
+        elapsed_units
+      when .word?
+        # Find the character index where the Nth word ends
+        count = 0
+
+        @full_text.each_char_with_index do |char, i|
+          if char.whitespace? || i >= @full_text.size - 1
+            return i if count >= elapsed_units
+
+            count += 1
+          end
+        end
+
+        @full_text.size
+      else
+        @full_text.size
+      end
     end
 
     def draw(draw : Draw)
       if draw_relative_to_camera?
-        perform_draw(draw)
+        _draw(draw)
       else
         draw.with_camera(nil) do
-          perform_draw(draw)
+          _draw(draw)
         end
       end
     end
 
-    private def perform_draw(draw : Draw)
-      return unless tex = @texture
+    def _draw(draw : Draw)
+      limit = calculate_visible_limit
 
-      dest_rect = FRect.new(
-        x: render_x.to_f32,
-        y: render_y.to_f32,
-        w: render_width.to_f32,
-        h: render_height.to_f32
-      )
-
-      tex.alpha_mod = opacity
-      draw.texture_rotated(
-        texture: tex,
-        dest_rect: dest_rect,
-        angle: rotation.to_f32,
-        center: center_point_from_origin,
-        z_index: z_index
-      )
-      tex.alpha_mod = 255_u8
-    end
-
-    def destroy
-      @texture.try(&.destroy)
-    end
-
-    def cursor_pos(char_index : Int32) : Point
-      return Point.new(0, 0) if @layout_info.empty? || char_index <= 0
-      
-      count = 0
-      @layout_info.each do |info|
-        if count + info.text.size >= char_index
-          # Found the word containing the character
-          remaining = char_index - count
-          prefix = info.text[0...remaining]
-          offset_x, _ = @font.text_size(prefix)
-          return Point.new(info.x + offset_x, info.y)
-        end
-        count += info.text.size
+      if @dirty || limit != @last_visible_limit
+        rebuild_vertex_caches(limit)
+        @dirty = false
+        @last_visible_limit = limit
       end
-      
-      # If index is beyond total text, return end of last word
-      last = @layout_info.last
-      return Point.new(last.x + last.w, last.y)
+
+      z_index = @z_index
+
+      # TODO: implement opacity within here, FontAtlas or Draw
+
+      # shadow
+      if !@vertices_shadow.empty?
+        draw.geometry(@vertices_shadow, get_indices(@vertices_shadow.size), z_index, @font_atlas.texture)
+        z_index += 1
+      end
+
+      # outline
+      if (outline_atlas = @outline_atlas) && !@vertices_outline.empty?
+        draw.geometry(@vertices_outline, get_indices(@vertices_outline.size), z_index, outline_atlas.texture)
+        z_index += 1
+      end
+
+      # Draw the Main Text
+      draw.geometry(@vertices_main, get_indices(@vertices_main.size), z_index, @font_atlas.texture)
+    end
+
+    private def get_indices(vertex_count : Int) : Array(Int32)
+      required_indices = (vertex_count // 4) * 6
+
+      # If we don't have enough, generate only the missing ones
+      if @indices.size < required_indices
+        current_quads = @indices.size // 6
+        target_quads = vertex_count // 4
+
+        (current_quads...target_quads).each do |i|
+          v = i * 4
+          @indices << v << v + 1 << v + 2
+          @indices << v + 2 << v + 3 << v + 0
+        end
+      end
+
+      # Return a slice of the buffer
+      @indices[0...required_indices]
+    end
+
+    private def rebuild_vertex_caches(limit : Int32)
+      # Shadow - only if used
+      if !@shadow.all?(&.zero?)
+        offset = {
+          @shadow[0] + ( @shadow[0] > 0 ? @outline : -@outline ),
+          @shadow[1] + ( @shadow[1] > 0 ? @outline : -@outline )
+        }
+        @vertices_shadow = generate_vertices(@font_atlas, limit, @shadow_color, offset)
+      else
+        @vertices_shadow.clear
+      end
+
+      # Outline - only if used
+      if @outline > 0
+        outline_atlas = FontAtlasManager.get(@font_atlas.name, font_size, @outline)
+        @vertices_outline = generate_vertices(outline_atlas, limit, @outline_color)
+        @outline_atlas = outline_atlas
+      else
+        @vertices_outline.clear
+        @outline_atlas = nil
+      end
+
+      # Main
+      @vertices_main = generate_vertices(@font_atlas, limit, @color)
+    end
+
+    private def generate_vertices(
+      font_atlas : FontAtlas,
+      limit : Int32,
+      color : Color,
+      offset : {Num, Num} = {0, 0}
+    ) : Array(GSDL::Vertex)
+      vertices = Array(GSDL::Vertex).new(initial_capacity: limit * 4)
+      chars_processed = 0
+      off_x, off_y = offset
+
+      # Apply Vertical Alignment
+      off_y += case @v_align
+        when .center?
+          [(self.height - text_height) / 2_f32, 0].max
+        when .bottom?
+          [self.height - text_height, 0].max
+        else 0
+      end
+
+      @lines.each_with_index do |line_text, line_index|
+        line_limit = [limit - chars_processed, 0].max
+        shown_text = line_text[0..[line_limit, line_text.size].min]
+
+        unless shown_text.empty?
+          vertices.concat(
+            generate_line_vertices(
+              font_atlas: font_atlas,
+              text: shown_text,
+              color: color,
+              line_index: line_index,
+              offset_x: off_x,
+              offset_y: off_y
+            )
+          )
+        end
+
+        chars_processed += line_text.size + 1
+        break if chars_processed > limit
+      end
+
+      vertices
+    end
+
+    private def generate_line_vertices(
+      font_atlas : FontAtlas,
+      text : String,
+      color : Color,
+      line_index : Int32,
+      offset_x : Num,
+      offset_y : Num
+    ) : Array(GSDL::Vertex)
+      line_width = font_atlas.calculate_width(text, @character_spacing)
+
+      # Horizontal Alignment
+      offset_x += case @h_align
+        when .center?
+          (self.width - line_width) / 2
+        when .right?
+          self.width - line_width
+        else 0
+      end
+
+      offset_y += line_index * line_height
+
+      # Calculate start positions
+      base_offset_x = -(self.width * origin_x)
+      base_offset_y = -(self.height * origin_y)
+      local_start_x = (base_offset_x + offset_x) * scale_x
+      local_start_y = (base_offset_y + offset_y) * scale_y
+
+      if @rotation % 360 == 0
+        # FAST PATH
+        font_atlas.generate_vertices(
+          text: text,
+          pivot_x: 0,
+          pivot_y: 0,
+          start_x: @x + local_start_x,
+          start_y: @y + local_start_y,
+          rotation: 0,
+          character_spacing: @character_spacing,
+          color: color,
+          scale_x: scale_x,
+          scale_y: scale_y
+        )
+      else
+        # ROTATED PATH
+        local_start_x = (base_offset_x + offset_x) * scale_x
+        local_start_y = (base_offset_y + offset_y) * scale_y
+
+        font_atlas.generate_vertices(
+          text: text,
+          pivot_x: @x,
+          pivot_y: @y,
+          start_x: local_start_x,
+          start_y: local_start_y,
+          rotation: @rotation,
+          character_spacing: @character_spacing,
+          color: color,
+          scale_x: scale_x,
+          scale_y: scale_y
+        )
+      end
     end
   end
 end

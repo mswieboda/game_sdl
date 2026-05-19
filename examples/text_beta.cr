@@ -20,12 +20,12 @@ module GameEx
   end
 
   class MainScene < GSDL::Scene
-    @text : GSDL::TextBeta
+    @text : GSDL::Text
 
     def initialize
       super(:main)
 
-      @text = GSDL::TextBeta.new(
+      @text = GSDL::Text.new(
         font: "Roboto-Regular",
         font_size: 32,
         # text: "blah blah blah one two three four",
@@ -36,7 +36,7 @@ module GameEx
         h_align: GSDL::HorizontalAlign::Center,
         v_align: GSDL::VerticalAlign::Center,
         line_spacing: 2,
-        # typing: GSDL::TextBeta::Typing::Word,
+        # typing: GSDL::Text::Typing::Word,
         shadow: {2, 2},
         shadow_color: GSDL::Color::Magenta,
         # outline: 4,

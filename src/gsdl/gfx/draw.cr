@@ -411,7 +411,7 @@ module GSDL
     # Currently, add_texture_to_batch performs trig (sin/cos), vertex rotation,
     # and UV mapping every single frame for every sprite.
     #
-    # GOAL: Move Sprite logic to match TextBeta's "Dirty Flag" architecture.
+    # GOAL: Move Sprite logic to match Text's "Dirty Flag" architecture.
     #
     # 1. Update SpriteBase/AnimatedSprite to maintain a `@vertices : Array(Vertex)`
     #    and a `@dirty : Bool` flag.

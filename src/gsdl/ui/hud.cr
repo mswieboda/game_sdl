@@ -92,7 +92,7 @@ module GSDL
     @last_template_values = {} of String => String
     @force_template_update = true
 
-    getter text_element : TextBeta
+    getter text_element : Text
 
     def text_data_template; @text_data_template; end
 

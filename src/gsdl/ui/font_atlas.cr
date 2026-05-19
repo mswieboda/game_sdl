@@ -340,7 +340,7 @@ module GSDL
       logical_outline = @render_outline / @oversample
 
       # Calculate where the "start" of the text is relative to the pivot
-      # This depends on your alignment math passed down from TextBeta
+      # This depends on your alignment math passed down from Text
       current_x = start_x
       current_y = start_y + @ascent * scale_y
 

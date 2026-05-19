@@ -1,3 +1,5 @@
+require "./text_old"
+
 module GSDL
   class RichText < TextOld
     record RichTextSegment, text : String, color : Color, style : Font::Style

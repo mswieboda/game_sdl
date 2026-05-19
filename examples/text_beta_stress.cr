@@ -30,14 +30,14 @@ module FontStressEx
   end
 
   class StressScene < GSDL::Scene
-    @text = [] of GSDL::TextBeta
+    @text = [] of GSDL::Text
     @timer : GSDL::Timer
 
     def initialize
       super(:stress)
       @timer = GSDL::Timer.new(3.seconds)
       @timer.start
-      @text << GSDL::TextBeta.new(
+      @text << GSDL::Text.new(
         font: "PressStart2P",
         font_size: 16_f32,
         text: "hello! from the dark recesses of evil!\nYOU WON'T CATCH ME\nTHIS TIME FIEND,\nnot now, not ever.\nHear that, punk?",
@@ -53,7 +53,7 @@ module FontStressEx
         y = rng.rand(Game.height).to_f32
 
         text = if rng.rand > 0.5
-          GSDL::TextBeta.new(
+          GSDL::Text.new(
             font: "PressStart2P",
             font_size: 16_f32,
             text: "This is a testing string, blah!",
@@ -63,7 +63,7 @@ module FontStressEx
             color: GSDL::Color::DarkRed
           )
         else
-          GSDL::TextBeta.new(
+          GSDL::Text.new(
             font: "PressStart2P",
             font_size: 16_f32,
             text: "hello! from the dark recesses of evil!",

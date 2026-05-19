@@ -32,7 +32,7 @@ module GSDL
       t = tween
       prop = _tween_color_prop
       orig_color = prop == :tint ? (tint || Color::White) : color
-
+      puts ">>> flash orig_color: #{orig_color} flash_color: #{flash_color}"
       seq = [] of Hash(Symbol, Tween::SequenceValue)
       count.times do
         seq << {:duration => duration, prop => flash_color.as(Tween::SequenceValue)}

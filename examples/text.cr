@@ -42,7 +42,7 @@ module GameEx
         text: "word typed hello world!",
         origin: origin,
         color: color,
-        typing: GSDL::TextBeta::Typing::Word,
+        typing: GSDL::Text::Typing::Word,
       )
 
       color = GSDL.gray(160)
@@ -57,7 +57,7 @@ module GameEx
         text: "char typed hello world, aligned center!",
         origin: origin,
         color: color,
-        typing: GSDL::TextBeta::Typing::Character,
+        typing: GSDL::Text::Typing::Character,
         h_align: GSDL::HorizontalAlign::Center,
       )
 
@@ -66,7 +66,7 @@ module GameEx
         text: "hello world!",
         origin: origin,
         color: color,
-        typing: GSDL::TextBeta::Typing::Word,
+        typing: GSDL::Text::Typing::Word,
       )
 
       color = GSDL::Color::White
@@ -74,14 +74,14 @@ module GameEx
         text: "typed multiple lines\nof text\nwith newlines\naligned center",
         origin: {0.5_f32, 0_f32},
         color: color,
-        typing: GSDL::TextBeta::Typing::Word,
+        typing: GSDL::Text::Typing::Word,
         h_align: GSDL::HorizontalAlign::Center
       )
 
       @text_wrapped = GSDL::Text.new(
         text: "multiple lines\nof text\nwith newlines\nwrapped to a width too",
         color: color,
-        typing: GSDL::TextBeta::Typing::Word,
+        typing: GSDL::Text::Typing::Word,
         width: 256
       )
     end

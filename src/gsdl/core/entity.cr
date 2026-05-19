@@ -97,16 +97,16 @@ module GSDL
       scale[1]
     end
 
-    def scale_x=(val : Num)
-      @scale = {val, scale_y}
+    def scale_x=(scale_x : Num)
+      @scale = {scale_x, scale_y}
     end
 
-    def scale_y=(val : Num)
-      @scale = {scale_x, val}
+    def scale_y=(scale_y : Num)
+      @scale = {scale_x, scale_y}
     end
 
-    def scale=(val : Num)
-      @scale = {val, val}
+    def scale=(scale : Num)
+      @scale = {scale, scale}
     end
   end
 end
