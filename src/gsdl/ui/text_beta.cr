@@ -57,6 +57,7 @@ module GSDL
     @vertices_shadow = Array(GSDL::Vertex).new
     @indices = Array(Int32).new(initial_capacity: 600) # Space for 100 chars
     @dirty = true
+    @last_visible_limit = -1
 
     # TODO: make a setter to change font atlas
     @font_atlas : FontAtlas
@@ -405,9 +406,12 @@ module GSDL
     end
 
     def draw(draw : Draw)
-      if @dirty
-        rebuild_vertex_caches
+      limit = calculate_visible_limit
+
+      if @dirty || limit != @last_visible_limit
+        rebuild_vertex_caches(limit)
         @dirty = false
+        @last_visible_limit = limit
       end
 
       z_index = @z_index
@@ -447,9 +451,7 @@ module GSDL
       @indices[0...required_indices]
     end
 
-    private def rebuild_vertex_caches
-      limit = calculate_visible_limit
-
+    private def rebuild_vertex_caches(limit : Int32)
       # Shadow - only if used
       if !@shadow.all?(&.zero?)
         offset = {
