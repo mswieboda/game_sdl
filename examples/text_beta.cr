@@ -13,8 +13,8 @@ module GameEx
 
     def load_font_atlases
       [
-        {"Roboto", "fonts/Roboto-Regular.ttf", 32_f32, 0},
-        {"Roboto", "fonts/Roboto-Regular.ttf", 32_f32, 4}
+        {"fonts/Roboto-Regular.ttf", 32, 0},
+        {"fonts/Roboto-Regular.ttf", 32, 4}
       ]
     end
   end
@@ -26,8 +26,8 @@ module GameEx
       super(:main)
 
       @text = GSDL::TextBeta.new(
-        font: "Roboto",
-        font_size: 32_f32,
+        font: "Roboto-Regular",
+        font_size: 32,
         text: "jumping quickly over lazy dogs\nis good exercise!\nbatty1 batty2 batty3",
         x: Game.width // 2,
         y: Game.height // 2,

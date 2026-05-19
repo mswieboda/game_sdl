@@ -60,7 +60,7 @@ module GSDL
 
     # TODO: make a setter to change font atlas
     @font_atlas : FontAtlas
-    @font_atlas_outline : FontAtlas
+    @outline_atlas : FontAtlas?
     @full_text : String
     @width : Num?
     @height : Num?
@@ -71,7 +71,7 @@ module GSDL
 
     def initialize(
       font : String = "", # FontAtlasManager.default,
-      font_size : Float32 = 16_f32, # FontAtlasManager.default_size,
+      font_size : Num = 16, # FontAtlasManager.default_size,
       text : String = "foo",
       @x : Num = 0,
       @y : Num = 0,
@@ -94,7 +94,7 @@ module GSDL
       @z_index : Int32 = 0,
     )
       @font_atlas = FontAtlasManager.get(font, font_size, 0)
-      @font_atlas_outline = FontAtlasManager.get(font, font_size, @outline)
+      @outline_atlas = nil
 
       @full_text = text
       @lines = [] of String
@@ -119,7 +119,7 @@ module GSDL
     def z_index_max
       z_index = @z_index
 
-      if outline
+      if @outline > 0
         z_index += 1
       end
 
@@ -419,8 +419,8 @@ module GSDL
       end
 
       # outline
-      if !@vertices_outline.empty?
-        draw.geometry(@vertices_outline, get_indices(@vertices_outline.size), z_index, @font_atlas_outline.texture)
+      if (outline_atlas = @outline_atlas) && !@vertices_outline.empty?
+        draw.geometry(@vertices_outline, get_indices(@vertices_outline.size), z_index, outline_atlas.texture)
         z_index += 1
       end
 
@@ -463,9 +463,12 @@ module GSDL
 
       # Outline - only if used
       if @outline > 0
-        @vertices_outline = generate_vertices(@font_atlas_outline, limit, @outline_color)
+        outline_atlas = FontAtlasManager.get(@font_atlas.name, font_size, @outline)
+        @vertices_outline = generate_vertices(outline_atlas, limit, @outline_color)
+        @outline_atlas = outline_atlas
       else
         @vertices_outline.clear
+        @outline_atlas = nil
       end
 
       # Main

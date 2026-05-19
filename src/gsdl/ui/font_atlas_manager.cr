@@ -24,9 +24,9 @@ module GSDL
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,
     # prepending AssetManager.asset_path.
-    def self.load(key : String, path_key : String, size : Float32, outline : Int32) : FontAtlas
+    def self.load(path_key : String, size : Num, outline : Int32) : FontAtlas
       @@mutex.synchronize do
-        font_key = full_key(key, size, outline)
+        font_key = get_key(get_name(path_key), size, outline)
 
         if @@fonts.has_key?(font_key)
           return @@fonts[font_key]
@@ -54,29 +54,29 @@ module GSDL
           end
         {% end %}
 
-        font = FontAtlas.new(data: data, size: size, outline: outline)
+        font = FontAtlas.new(name: name, data: data, size: size, outline: outline)
         @@fonts[font_key] = font
         font
       end
     end
 
-    def self.load_from_memory(key : String, data : Bytes, size : Float32, outline : Int32) : FontAtlas
+    def self.load_from_memory(name : String, data : Bytes, size : Num, outline : Int32) : FontAtlas
       @@mutex.synchronize do
-        font_key = full_key(key, size, outline)
+        font_key = get_key(name, size, outline)
         if @@fonts.has_key?(font_key)
           return @@fonts[font_key]
         end
 
-        font = FontAtlas.new(data: data, size: size, outline: outline)
+        font = FontAtlas.new(name: name, data: data, size: size, outline: outline)
         @@fonts[font_key] = font
         font
       end
     end
 
-    def self.get(key : String, size : Float32, outline : Int32) : FontAtlas
+    def self.get(name : String, size : Num, outline : Int32) : FontAtlas
       @@mutex.synchronize do
-        font_key = full_key(key, size, outline)
-        @@fonts[font_key]? || raise "FontAlas with key '#{key}' (and size #{size}, outline #{outline}) not found in FontAtlasManager. Was it loaded?"
+        font_key = get_key(name, size, outline)
+        @@fonts[font_key]? || raise "FontAlas with name '#{name}' (and size #{size}, outline #{outline}) not found in FontAtlasManager. Was it loaded?"
       end
     end
 
@@ -114,8 +114,13 @@ module GSDL
     end
 
     @[AlwaysInline]
-    private def self.full_key(key : String, size : Float32, outline : Int32) : String
-      "#{key}-#{size}-#{outline}"
+    private def self.get_key(name : String, size : Num, outline : Int32) : String
+      "#{name}-#{size}-#{outline}"
+    end
+
+    private def self.get_name(path : String)
+      ext = File.extname(path)
+      File.basename(path, ext)
     end
   end
 end

@@ -13,8 +13,8 @@ module GSDL
       end
 
       # font atlases
-      load_font_atlases.each do |key, path_key, size, outline|
-        FontAtlasManager.load(key: key, path_key: path_key, size: size, outline: outline)
+      load_font_atlases.each do |path_key, size, outline|
+        FontAtlasManager.load(path_key: path_key, size: size, outline: outline)
       end
 
       # textures
@@ -50,7 +50,11 @@ module GSDL
         tasks << Loader::AssetTask.new(AssetType::Font, key, path_key, size)
       end
 
-      load_font_atlases.each do |key, path_key, size, outline|
+      load_font_atlases.each do |path_key, size, outline|
+        ext = File.extname(path)
+        name = File.basename(path, ext)
+
+        # NOTE: path_key isn't used later, but might as well include it, instead of ""
         tasks << Loader::AssetTask.new(AssetType::FontAtlas, key, path_key, size, outline)
       end
 
@@ -87,10 +91,10 @@ module GSDL
       [] of Tuple(String, String, Float32)
     end
 
-    # TODO: make a default_font_atlas with Tuple(String, Float32, Int32)
+    # TODO: make a default_font_atlas with Tuple(String, Num, Int32)
 
-    def load_font_atlases : Array(Tuple(String, String, Float32, Int32))
-      [] of Tuple(String, String, Float32, Int32)
+    def load_font_atlases : Array(Tuple(String, Num, Int32))
+      [] of Tuple(String, Num, Int32)
     end
 
     def load_textures : Array(Tuple(String, String))

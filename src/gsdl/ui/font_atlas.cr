@@ -1,5 +1,6 @@
 module GSDL
   class FontAtlas
+    getter name : String
     getter font_size : Num
     getter outline : Int32
     getter texture : Texture
@@ -14,9 +15,8 @@ module GSDL
     @render_font_size : Float32
     @render_outline : Int32
 
-    getter outline : Int32 = 0
-
     def initialize(
+      @name : String,
       data : Bytes,
       size : Num = DefaultFontSize,
       @outline : Int32 = 0,

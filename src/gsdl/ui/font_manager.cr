@@ -13,9 +13,9 @@ module GSDL
     # prepending GSDL::AssetManager.asset_path.
     def self.load(key : String, path_key : String, size : Float32) : Font
       @@mutex.synchronize do
-        f_key = full_key(key, size)
-        if @@fonts.has_key?(f_key)
-          return @@fonts[f_key]
+        font_key = get_key(key, size)
+        if @@fonts.has_key?(font_key)
+          return @@fonts[font_key]
         end
 
         # Using flag?(:release) for compile-time conditional compilation.
@@ -34,7 +34,7 @@ module GSDL
           Font.new(font_sdl)
         {% end %}
 
-        @@fonts[f_key] = font
+        @@fonts[font_key] = font
         @@base_fonts[key] = font unless @@base_fonts.has_key?(key)
         font
       end
@@ -43,14 +43,14 @@ module GSDL
     # Loads a font from raw byte data and associates it with a key.
     def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : Font
       @@mutex.synchronize do
-        f_key = full_key(key, size)
-        if @@fonts.has_key?(f_key)
-          return @@fonts[f_key]
+        font_key = get_key(key, size)
+        if @@fonts.has_key?(font_key)
+          return @@fonts[font_key]
         end
 
         font_sdl = SDL3::TTF::Font.open_io(io, size, close_io: true)
         font = Font.new(font_sdl)
-        @@fonts[f_key] = font
+        @@fonts[font_key] = font
         @@base_fonts[key] = font unless @@base_fonts.has_key?(key)
         font
       end
@@ -62,13 +62,13 @@ module GSDL
 
     def self.get(key : String, size : Float32) : Font
       @@mutex.synchronize do
-        f_key = full_key(key, size)
-        @@fonts[f_key]? || begin
+        font_key = get_key(key, size)
+        @@fonts[font_key]? || begin
           # If we don't have the sized font, try to copy it from a base font
           if base_font = @@base_fonts[key]?
             new_font = base_font.copy
             new_font.size = size
-            @@fonts[f_key] = new_font
+            @@fonts[font_key] = new_font
             new_font
           else
             raise "Font with key '#{key}' (and size #{size}) not found in FontManager. Was it loaded?"
@@ -124,7 +124,7 @@ module GSDL
     end
 
     @[AlwaysInline]
-    private def self.full_key(key : String, size : Float32) : String
+    private def self.get_key(key : String, size : Float32) : String
       "#{key}-#{size}"
     end
   end

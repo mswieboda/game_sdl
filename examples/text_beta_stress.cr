@@ -24,7 +24,7 @@ module FontStressEx
 
     def load_font_atlases
       [
-        {"PressStart2P", "fonts/PressStart2P.ttf", 16_f32, 0}
+        {"fonts/PressStart2P.ttf", 16_f32, 0}
       ]
     end
   end

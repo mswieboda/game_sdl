@@ -81,8 +81,12 @@ module GSDL
       @tasks << AssetTask.new(AtlasType::Font, key, path_key, size)
     end
 
-    def add_font_atlas(key : String, path_key : String, size : Float32, outline : Int32)
-      @tasks << AssetTask.new(AtlasType::FontAtlas, key, path_key, size, outline)
+    def add_font_atlas(path_key : String, size : Num, outline : Int32)
+      ext = File.extname(path)
+      name = File.basename(path, ext)
+
+      # NOTE: path_key isn't used later, but might as well include it, instead of ""
+      @tasks << AssetTask.new(AtlasType::FontAtlas, name, path_key, size, outline)
     end
 
     def add_dialog(path_key : String)
