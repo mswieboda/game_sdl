@@ -372,20 +372,15 @@ module GSDL
         AssetManager.load_pack
       {% end %}
 
-      TextureManager.setup(Game.draw)
-      FontManager.setup
-      AudioManager.setup
-      TileMapManager.setup
-
       if @logical_width > 0 && @logical_height > 0
         Game.draw.logical_presentation = {@logical_width, @logical_height, SDL3::LogicalPresentation::Letterbox}
       end
 
       load_assets
+
       TextureManager.finalize_atlas
 
       {% if flag?(:release) %}
-
         AssetManager.close_pack
       {% end %}
     end

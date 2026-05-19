@@ -2,25 +2,13 @@ require "json"
 
 module GSDL
   class TileMapManager
-    @@instance : TileMapManager? = nil
+    @@instance : TileMapManager = new
 
     @tile_maps : Hash(String, TileMap)
     @mutex = Mutex.new
 
     private def initialize
       @tile_maps = Hash(String, TileMap).new
-    end
-
-    # Sets up the singleton instance of TileMapManager.
-    # This should be called once at the start of the application,
-    def self.setup
-      @@instance = new
-    end
-
-    # Retrieves the singleton instance of TileMapManager.
-    # Raises an error if setup has not been called.
-    def self.instance : TileMapManager
-      @@instance || raise("TileMapManager has not been set up. Call GSDL::TileMapManager.setup first.")
     end
 
     # Loads a tile map based on the mode (release/debug).
@@ -42,29 +30,29 @@ module GSDL
       {% else %}
         # In debug mode, load from loose files
         full_path = GSDL::AssetManager.asset_path + path_key
-        instance.load(key, full_path)
+        @@instance.load(key, full_path)
       {% end %}
     end
 
     # Loads tile map from raw byte data and associates it with a key
     # This method is primarily intended to be called by load if in release mode
     def self.load_from_memory(key : String, data : Bytes) : TileMap
-      instance.load_from_memory(key, data)
+      @@instance.load_from_memory(key, data)
     end
 
     # Retrieves a loaded tile map by its key.
     def self.get(key : String) : TileMap
-      instance.get(key) # Delegate to the internal instance method
+      @@instance.get(key) # Delegate to the internal instance
     end
 
     # Unloads a specific tile map from memory.
     def self.unload(key : String) : Nil
-      instance.unload(key) # Delegate to the internal instance method
+      @@instance.unload(key) # Delegate to the internal instance
     end
 
     # Unloads all managed tile map assets from memory.
     def self.clear_all : Nil
-      instance.clear_all # Delegate to the internal instance method
+      @@instance.clear_all # Delegate to the internal instance
     end
 
     # --- Instance methods (called by class methods via the singleton instance) ---

@@ -129,17 +129,17 @@ module GSDL
           when AssetType::Texture
             io = SDL3::IOStream.from_memory(bytes, bytes.size)
             sdl_surface = SDL3::Image.load_io(io, close_io: true)
-            TextureManager.instance.load_from_surface(task.key, Surface.new(sdl_surface))
+            TextureManager.load_from_surface(task.key, Surface.new(sdl_surface))
           when AssetType::Audio
             io = SDL3::IOStream.from_memory(bytes, bytes.size)
-            AudioManager.instance.load_from_memory(task.key, io)
+            AudioManager.load_from_memory(task.key, io)
           when AssetType::Font
             io = SDL3::IOStream.from_memory(bytes, bytes.size)
-            FontManager.instance.load_from_memory(task.key, io, task.size)
+            FontManager.load_from_memory(task.key, io, task.size)
           when AssetType::Dialog
-            DialogManager.instance.load(task.path_key)
+            DialogManager.load(task.path_key)
           when AssetType::TileMap
-            TileMapManager.instance.load_from_memory(task.key, bytes)
+            TileMapManager.load_from_memory(task.key, bytes)
           end
         rescue ex
           puts "GSDL::Loader: Error registering asset '#{task.path_key}': #{ex.message}"

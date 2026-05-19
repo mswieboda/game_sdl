@@ -1,24 +1,16 @@
 module GSDL
   class TextureManager
-    @@instance : TextureManager? = nil
-
-    @draw : Draw
+    @@instance : TextureManager = new
     @textures : Hash(String, Texture)
     @atlases = [] of Texture
     @mutex = Mutex.new
 
-    private def initialize(@draw : Draw)
+    private def initialize
       @textures = Hash(String, Texture).new
     end
 
-    # Sets up the singleton instance of TextureManager with the given Draw.
-    # This should be called once at the start of the application.
-    def self.setup(draw : Draw)
-      @@instance = new(draw)
-    end
-
     def self.finalize_atlas
-      instance.finalize_atlas
+      @@instance.finalize_atlas
     end
 
     def finalize_atlas
@@ -29,7 +21,7 @@ module GSDL
         to_pack = @textures.values.select { |t| t.atlas_handle.nil? }.sort_by { |t| -t.height }
         return if to_pack.empty?
 
-        max_size = @draw.to_sdl.properties.get_number(LibSDL3::SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER).to_i
+        max_size = Game.draw.to_sdl.properties.get_number(LibSDL3::SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER).to_i
         padding = 2
 
         current_atlas_w = 512
@@ -98,14 +90,14 @@ module GSDL
         # Render atlases
         pages.each do |page|
           atlas_tex = Texture.new(current_atlas_w, current_atlas_h, access: TextureAccess::Target)
-          @draw.with_target(atlas_tex) do
-            @draw.color = Color::Transparent
-            @draw.clear
+          Game.draw.with_target(atlas_tex) do
+            Game.draw.color = Color::Transparent
+            Game.draw.clear
             
             page.each do |(tex, x, y)|
               # Draw sub-texture into atlas
               # We use draw_immediately to avoid recursive push_cmd issues
-              @draw.texture(tex, x: x.to_f32, y: y.to_f32, draw_immediately: true)
+              Game.draw.texture(tex, x: x.to_f32, y: y.to_f32, draw_immediately: true)
               
               # Set atlas metadata
               tex.atlas_handle = atlas_tex.to_sdl
@@ -116,12 +108,6 @@ module GSDL
           @atlases << atlas_tex
         end
       end
-    end
-
-    # Retrieves the singleton instance of TextureManager.
-    # Raises an error if setup has not been called.
-    def self.instance : TextureManager
-      @@instance || raise("TextureManager has not been set up. Call GSDL::TextureManager.setup(draw) first.")
     end
 
     # Loads a texture based on the mode (release/debug).
@@ -149,35 +135,35 @@ module GSDL
         # In debug mode, load from loose files
         # The `asset_path` is used to resolve the full path in debug mode
         full_path = GSDL::AssetManager.asset_path + path_key
-        instance.load(key, full_path) # Delegate to the internal instance method
+        @@instance.load(key, full_path) # Delegate to the internal instance
       {% end %}
     end
 
     # Loads a texture from raw byte data and associates it with a key.
     # This method is primarily intended to be called by load if in release mode
     def self.load_from_memory(key : String, io : SDL3::IOStream) : Texture
-      instance.load_from_memory(key, io)
+      @@instance.load_from_memory(key, io)
     end
 
     # Loads a texture from an SDL surface and associates it with a key.
     def self.load_from_surface(key : String, surface : Surface) : Texture
-      instance.load_from_surface(key, surface)
+      @@instance.load_from_surface(key, surface)
     end
 
     # Retrieves a loaded texture by its key.
     # Returns nil if the texture is not found.
     def self.get(key : String) : Texture
-      instance.get(key) # Delegate to the internal instance method
+      @@instance.get(key) # Delegate to the internal instance
     end
 
     # Unloads a specific texture from memory.
     def self.unload(key : String) : Nil
-      instance.unload(key) # Delegate to the internal instance method
+      @@instance.unload(key) # Delegate to the internal instance
     end
 
     # Unloads all managed textures from memory.
     def self.clear_all : Nil
-      instance.clear_all # Delegate to the internal instance method
+      @@instance.clear_all # Delegate to the internal instance
     end
 
     # --- Instance methods (called by class methods via the singleton instance) ---
@@ -187,7 +173,7 @@ module GSDL
         if @textures.has_key?(key)
           return @textures[key]
         end
-        texture_sdl = SDL3::Image.load_texture(@draw.to_sdl, path)
+        texture_sdl = SDL3::Image.load_texture(Game.draw.to_sdl, path)
         texture = Texture.new(texture_sdl)
         @textures[key] = texture
         texture
@@ -199,7 +185,7 @@ module GSDL
         if @textures.has_key?(key)
           return @textures[key]
         end
-        texture_sdl = SDL3::Image.load_texture_io(@draw.to_sdl, io, close_io: true)
+        texture_sdl = SDL3::Image.load_texture_io(Game.draw.to_sdl, io, close_io: true)
         texture = Texture.new(texture_sdl)
         @textures[key] = texture
         texture
@@ -211,7 +197,7 @@ module GSDL
         if @textures.has_key?(key)
           return @textures[key]
         end
-        texture_sdl = SDL3::Texture.from_surface(@draw.to_sdl, surface.to_sdl)
+        texture_sdl = SDL3::Texture.from_surface(Game.draw.to_sdl, surface.to_sdl)
         texture = Texture.new(texture_sdl)
         @textures[key] = texture
         texture

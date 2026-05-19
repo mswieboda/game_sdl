@@ -1,9 +1,10 @@
 module GSDL
   class AudioManager
-    @@instance : AudioManager? = nil
+    @@instance : AudioManager = new
+
+    getter mixer
 
     @mixer : LibSDL3Mixer::Mixer*
-    getter mixer
     @audio_assets : Hash(String, GSDL::Audio)
     @mutex = Mutex.new
 
@@ -21,16 +22,8 @@ module GSDL
       @audio_assets = Hash(String, GSDL::Audio).new
     end
 
-    # Sets up the singleton instance of AudioManager.
-    # This should be called once at the start of the application.
-    def self.setup
-      @@instance = new
-    end
-
-    # Retrieves the singleton instance of AudioManager.
-    # Raises an error if setup has not been called.
     def self.instance : AudioManager
-      @@instance || raise("AudioManager has not been set up. Call GSDL::AudioManager.setup() first.")
+      @@instance
     end
 
     # Loads an audio file based on the mode (release/debug).
@@ -55,29 +48,29 @@ module GSDL
       {% else %}
         # In debug mode, load from loose files
         full_path = GSDL::AssetManager.asset_path + path_key
-        instance.load(key, full_path, category) # Delegate to the internal instance method
+        @@instance.load(key, full_path, category) # Delegate to the internal instance
       {% end %}
     end
 
     # Loads audio from raw byte data and associates it with a key
     # This method is primarily intended to be called by load if in release mode
     def self.load_from_memory(key : String, io : SDL3::IOStream, category : String? = nil) : GSDL::Audio
-      instance.load_from_memory(key, io, category)
+      @@instance.load_from_memory(key, io, category)
     end
 
     # Retrieves a loaded audio by its key.
     def self.get(key : String) : GSDL::Audio
-      instance.get(key) # Delegate to the internal instance method
+      @@instance.get(key) # Delegate to the internal instance
     end
 
     # Unloads a specific audio from memory.
     def self.unload(key : String) : Nil
-      instance.unload(key) # Delegate to the internal instance method
+      @@instance.unload(key) # Delegate to the internal instance
     end
 
     # Unloads all managed audio assets from memory and destroys the mixer.
     def self.clear_all : Nil
-      instance.clear_all # Delegate to the internal instance method
+      @@instance.clear_all # Delegate to the internal instance
     end
 
     # --- Instance methods (called by class methods via the singleton instance) ---

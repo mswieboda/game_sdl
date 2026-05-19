@@ -3,7 +3,7 @@ module GSDL
     DefaultFontKey = "default"
     DefaultFontSize = 16_f32
 
-    @@instance : FontManager? = nil
+    @@instance : FontManager = new
 
     @fonts : Hash(String, Font)
     @base_fonts : Hash(String, Font)
@@ -12,19 +12,6 @@ module GSDL
     private def initialize
       @fonts = Hash(String, Font).new
       @base_fonts = Hash(String, Font).new
-    end
-
-    # Sets up the singleton instance of FontManager.
-    # This should be called once at the start of the application,
-    # after `SDL3::TTF.init` has been called.
-    def self.setup
-      @@instance = new
-    end
-
-    # Retrieves the singleton instance of FontManager.
-    # Raises an error if setup has not been called.
-    def self.instance : FontManager
-      @@instance || raise("FontManager has not been set up. Call GSDL::FontManager.setup first.")
     end
 
     # Loads a font based on the mode (release/debug).
@@ -49,14 +36,14 @@ module GSDL
       {% else %}
         # In debug mode, load from loose files
         full_path = GSDL::AssetManager.asset_path + path_key
-        instance.load(key, full_path, size)
+        @@instance.load(key, full_path, size)
       {% end %}
     end
 
     # Loads a font from raw byte data and associates it with a key.
     # This method is primarily intended to be called by load if in release mode
     def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : Font
-      instance.load_from_memory(key, io, size)
+      @@instance.load_from_memory(key, io, size)
     end
 
     def self.load_default(path : String, size : Float32 = DefaultFontSize)
@@ -64,12 +51,12 @@ module GSDL
     end
 
     def self.get(key : String, size : Float32) : Font
-      instance.get(key, size)
+      @@instance.get(key, size)
     end
 
     # Retrieves a loaded font by its key.
     def self.get(key : String) : Font
-      instance.get(key)
+      @@instance.get(key)
     end
 
     def self.get_default(size : Float32 = DefaultFontSize)
@@ -78,12 +65,12 @@ module GSDL
 
     # Unloads a specific font from memory.
     def self.unload(key : String) : Nil
-      instance.unload(key)
+      @@instance.unload(key)
     end
 
     # Unloads all managed fonts from memory.
     def self.clear_all : Nil
-      instance.clear_all
+      @@instance.clear_all
     end
 
     # --- Instance methods (called by class methods via the singleton instance) ---

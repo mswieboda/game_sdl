@@ -18,21 +18,17 @@ module GSDL
   end
 
   class DialogManager
-    @@instance : DialogManager? = nil
+    @@instance : DialogManager = new
 
     @dialogs : Hash(String, DialogNode) = {} of String => DialogNode
     @mutex = Mutex.new
 
-    def self.instance : DialogManager
-      @@instance ||= new
-    end
-
     def self.load(path_key : String)
-      instance.load(path_key)
+      @@instance.load(path_key)
     end
 
     def self.get_node(id : String) : DialogNode?
-      instance.get_node(id)
+      @@instance.get_node(id)
     end
 
     def load(path_key : String)
