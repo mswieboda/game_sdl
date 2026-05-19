@@ -548,7 +548,16 @@ module GSDL
     private def add_geometry_to_batch(command : DrawGeometryCommand)
       base_idx = @vertex_buffer.size
 
-      @vertex_buffer.concat(command.vertices)
+      command.vertices.each do |v|
+        p = v.fpoint
+
+        if proj = @projection
+          p.x -= proj.x
+          p.y -= proj.y
+        end
+
+        @vertex_buffer << Vertex.new(p, v.fcolor, v.texture_fpoint)
+      end
 
       # Add indices with offset
       command.indices.each do |idx|
@@ -695,6 +704,10 @@ module GSDL
             slice = Slice.new(command.points.to_unsafe, command.points.size)
             @r.draw_lines(slice)
             @current_flush_count += 1
+
+          when DrawGeometryCommand
+            @r.render_geometry(vertices: command.vertices, indices: command.indices)
+            @current_flush_count += 1
           end
 
           cursor += 1
@@ -807,22 +820,14 @@ module GSDL
       sx = @current_scale_x * cs
       sy = @current_scale_y * cs
 
-      v_sdl = if proj = @projection
+      if proj = @projection
         sx *= proj.zoom_x
         sy *= proj.zoom_y
-        vertices.map do |v|
-          sdl_v = v
-          sdl_v.fpoint.x -= proj.x
-          sdl_v.fpoint.y -= proj.y
-          sdl_v
-        end
-      else
-        vertices
       end
 
       push_cmd(DrawGeometryCommand.new(
         z_index: z_index,
-        vertices: v_sdl,
+        vertices: vertices,
         indices: indices,
         texture: texture.try(&.to_sdl),
         atlas_rect: texture.try(&.atlas_rect),
@@ -873,10 +878,9 @@ module GSDL
         sx *= proj.zoom_x
         sy *= proj.zoom_y
         points.map do |p|
-          sdl_p = p
-          sdl_p.x -= proj.x
-          sdl_p.y -= proj.y
-          sdl_p
+          p.x -= proj.x
+          p.y -= proj.y
+          p
         end
       else
         points
@@ -958,10 +962,9 @@ module GSDL
         sx *= proj.zoom_x
         sy *= proj.zoom_y
         points.map do |p|
-          sdl_p = p
-          sdl_p.x -= proj.x
-          sdl_p.y -= proj.y
-          sdl_p
+          p.x -= proj.x
+          p.y -= proj.y
+          p
         end
       else
         points

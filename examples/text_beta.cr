@@ -127,5 +127,5 @@ module GameEx
     end
   end
 
-  GameEx.new.run
+  Game.new.run
 end
