@@ -1,5 +1,5 @@
 module GSDL
-  class TextTyped < Text
+  class TextTyped < TextOld
     alias Callback = Proc(Nil)
 
     enum Type

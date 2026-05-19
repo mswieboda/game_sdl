@@ -1,5 +1,9 @@
+require "./text_beta"
+
 module GSDL
-  class Text < Entity
+  alias Text = TextBeta
+
+  class TextOld < Entity
     include Centerable
 
     OversampleRatio = 8_f32

@@ -14,7 +14,7 @@ module GameEx
       GSDL::Game.push(StartScene.new)
     end
 
-    def load_default_font
+    def load_default_font_atlas
       "fonts/PressStart2P.ttf"
     end
   end
@@ -30,7 +30,7 @@ module GameEx
 
       origin = {0.5_f32, 0.5_f32}
 
-      color = GSDL.color(r: 255, g: 160, b: 224)
+      color = GSDL.color(r: 0, g: 255, b: 224)
       @text << GSDL::Text.new(
         text: "hello world!",
         origin: origin,
@@ -38,11 +38,11 @@ module GameEx
       )
 
       color = GSDL.color(r: 255)
-      @text << GSDL::TextTyped.new(
+      @text << GSDL::Text.new(
         text: "word typed hello world!",
         origin: origin,
         color: color,
-        types_per_second: 4_u8
+        typing: GSDL::TextBeta::Typing::Word,
       )
 
       color = GSDL.gray(160)
@@ -53,33 +53,36 @@ module GameEx
       )
 
       color = GSDL::Color.from_hex("#0000aa")
-      @text << GSDL::TextTyped.new(
-        text: "char typed hello world!",
+      @text << GSDL::Text.new(
+        text: "char typed hello world, aligned center!",
         origin: origin,
         color: color,
-        type: GSDL::TextTyped::Type::Char, types_per_second: 16_u8
+        typing: GSDL::TextBeta::Typing::Character,
+        h_align: GSDL::HorizontalAlign::Center,
       )
 
       color = GSDL::Color.random_chunks(16)
-      @text << GSDL::TextTyped.new(
+      @text << GSDL::Text.new(
         text: "hello world!",
         origin: origin,
         color: color,
-        types_per_second: 8_u8
+        typing: GSDL::TextBeta::Typing::Word,
       )
 
       color = GSDL::Color::White
-      @text << GSDL::TextTyped.new(
+      @text << GSDL::Text.new(
         text: "typed multiple lines\nof text\nwith newlines\naligned center",
         origin: {0.5_f32, 0_f32},
         color: color,
-        align: GSDL::Font::Align::Center
+        typing: GSDL::TextBeta::Typing::Word,
+        h_align: GSDL::HorizontalAlign::Center
       )
 
-      @text_wrapped = GSDL::TextTyped.new(
+      @text_wrapped = GSDL::Text.new(
         text: "multiple lines\nof text\nwith newlines\nwrapped to a width too",
         color: color,
-        wrap_width: 256
+        typing: GSDL::TextBeta::Typing::Word,
+        width: 256
       )
     end
 

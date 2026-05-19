@@ -28,6 +28,7 @@ module GameEx
       @text = GSDL::TextBeta.new(
         font: "Roboto-Regular",
         font_size: 32,
+        # text: "blah blah blah one two three four",
         text: "jumping quickly over lazy dogs\nis good exercise!\nbatty1 batty2 batty3",
         x: Game.width // 2,
         y: Game.height // 2,
@@ -35,7 +36,7 @@ module GameEx
         h_align: GSDL::HorizontalAlign::Center,
         v_align: GSDL::VerticalAlign::Center,
         line_spacing: 2,
-        typing: GSDL::TextBeta::Typing::Word,
+        # typing: GSDL::TextBeta::Typing::Word,
         shadow: {2, 2},
         shadow_color: GSDL::Color::Magenta,
         # outline: 4,
@@ -123,6 +124,11 @@ module GameEx
       # rotation increase
       if GSDL::Keys.pressed?(GSDL::Keys::E)
         @text.rotation += 1
+      end
+
+      # modify text
+      if GSDL::Keys.pressed?(GSDL::Keys::T)
+        @text.text = "blah blah blah one two three four"
       end
     end
   end

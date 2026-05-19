@@ -92,7 +92,7 @@ module GSDL
     @last_template_values = {} of String => String
     @force_template_update = true
 
-    getter text_element : Text
+    getter text_element : TextBeta
 
     def text_data_template; @text_data_template; end
 
@@ -102,8 +102,8 @@ module GSDL
     end
 
     def initialize(
-      font = Font.default,
-      text : String | Text = "",
+      font = FontAtlasManager.default,
+      text : String = "",
       text_data_template = nil,
       @anchor = Anchor::TopLeft,
       @offset_x = 0,
@@ -111,51 +111,28 @@ module GSDL
       origin = {0_f32, 0_f32},
       scale : Num | Tuple(Num, Num) = {1_f32, 1_f32},
       color = ColorScheme.get(:ui_text),
+      h_align = HorizontalAlign::Left,
+      # TODO: used for deprecated TextOld / RichText
       align = Font::Align::Left,
       z_index = 1000,
+      width = nil,
+      # TODO: used for deprecated TextOld / RichText
       wrap_width = 0
     )
       actual_scale = scale.is_a?(Tuple) ? scale : {scale, scale}
 
-      # Robust check for rich text tags in both source strings
-      is_rich = false
-      rich_tags = ["<b>", "</b>", "<i>", "</i>", "<c:", "</c>"]
+      @text_element = Text.new(
+        font: font,
+        text: text.is_a?(String) ? text : "",
+        origin: origin,
+        scale: actual_scale,
+        color: color,
+        h_align: h_align,
+        z_index: z_index,
+        width: width,
+        draw_relative_to_camera: false,
+      )
 
-      if text.is_a?(String)
-        is_rich ||= rich_tags.any? { |t| text.includes?(t) }
-      end
-
-      if text_data_template.is_a?(String)
-        is_rich ||= rich_tags.any? { |t| text_data_template.includes?(t) }
-      end
-
-      if text.is_a?(Text)
-        @text_element = text
-      elsif is_rich
-        @text_element = RichText.new(
-          font: font,
-          text: text.is_a?(String) ? text : "",
-          origin: origin,
-          scale: actual_scale,
-          color: color,
-          align: align,
-          z_index: z_index,
-          wrap_width: wrap_width
-        )
-      else
-        @text_element = Text.new(
-          font: font,
-          text: text.is_a?(String) ? text : "",
-          origin: origin,
-          scale: actual_scale,
-          color: color,
-          align: align,
-          z_index: z_index,
-          wrap_width: wrap_width > 0 ? wrap_width : nil
-        )
-      end
-
-      @text_element.draw_relative_to_camera = false
       self.text_data_template = text_data_template
     end
 
@@ -245,6 +222,7 @@ module GSDL
               end
             end
           end
+          puts ">>> new_text: #{new_text}"
           self.text = new_text if self.text != new_text
         end
       end

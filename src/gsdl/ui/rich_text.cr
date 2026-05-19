@@ -1,5 +1,5 @@
 module GSDL
-  class RichText < Text
+  class RichText < TextOld
     record RichTextSegment, text : String, color : Color, style : Font::Style
 
     @baked_texture : Texture?
@@ -17,7 +17,8 @@ module GSDL
       wrap_width : Int32 = 0,
       visible_characters : Int32 = -1,
       @z_index : Int32 = 0,
-      oversample_ratio : Float32 = Text::OversampleRatio
+      oversample_ratio : Float32 = TextOld::OversampleRatio,
+      draw_relative_to_camera : Bool = true,
     )
       # We don't want the Text constructor to bake anything yet because segments aren't parsed
       super(
@@ -32,7 +33,8 @@ module GSDL
         wrap_width: wrap_width,
         z_index: z_index,
         oversample_ratio: oversample_ratio,
-        visible_characters: visible_characters
+        visible_characters: visible_characters,
+        draw_relative_to_camera: draw_relative_to_camera,
       )
       self.text = text
     end

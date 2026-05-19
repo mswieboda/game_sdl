@@ -28,7 +28,7 @@ module GSDL
       @type : Type = Type::Char,
       @on_type : Callback | Nil = nil,
       @on_complete : Callback | Nil = nil,
-      oversample_ratio : Float32 = Text::OversampleRatio
+      oversample_ratio : Float32 = TextOld::OversampleRatio
     )
       super(
         font: font,

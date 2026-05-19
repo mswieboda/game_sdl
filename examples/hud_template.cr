@@ -14,6 +14,10 @@ module HUDTemplateEx
     def load_default_font
       "fonts/PressStart2P.ttf"
     end
+
+    def load_default_font_atlas
+      "fonts/PressStart2P.ttf"
+    end
   end
 
   class MainScene < GSDL::Scene

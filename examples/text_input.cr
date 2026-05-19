@@ -22,14 +22,14 @@ module GameEx
   class StartScene < GSDL::Scene
     @name_input : GSDL::TextInput
     @age_input : GSDL::TextInput
-    @label_name : GSDL::Text
-    @label_age : GSDL::Text
-    @instructions : GSDL::Text
+    @label_name : GSDL::TextOld
+    @label_age : GSDL::TextOld
+    @instructions : GSDL::TextOld
 
     def initialize
       super(:start)
 
-      @instructions = GSDL::Text.new(
+      @instructions = GSDL::TextOld.new(
         text: "Click a box to type!",
         x: (WIDTH / 2).to_f32,
         y: 50,
@@ -37,7 +37,7 @@ module GameEx
         color: GSDL::Color::White
       )
 
-      @label_name = GSDL::Text.new(
+      @label_name = GSDL::TextOld.new(
         text: "Name:",
         x: 200,
         y: 200,
@@ -60,7 +60,7 @@ module GameEx
         max_length: 20
       )
 
-      @label_age = GSDL::Text.new(
+      @label_age = GSDL::TextOld.new(
         text: "Age:",
         x: 200,
         y: 300,

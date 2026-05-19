@@ -16,6 +16,10 @@ module GameEx
       "fonts/PressStart2P.ttf"
     end
 
+    def load_default_font_atlas
+      "fonts/PressStart2P.ttf"
+    end
+
     def load_textures
       [
         {"ship", "gfx/ship.png"},
@@ -56,7 +60,7 @@ module GameEx
         text: "Full Example\nPress SPACE for SFX",
         origin: {0.5_f32, 0.0_f32},
         color: GSDL::Color::White,
-        align: GSDL::Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
       @text.x = GSDL::Game.width / 2_f32
       @text.y = 50

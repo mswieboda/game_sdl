@@ -26,7 +26,7 @@ class MainScene < GSDL::Scene
   def draw(draw : GSDL::Draw)
     @rich_text.try &.draw(draw)
 
-    instr = GSDL::Text.new(
+    instr = GSDL::TextOld.new(
       text: "GSDL RichText Demo",
       x: Game.width // 2,
       y: 50,

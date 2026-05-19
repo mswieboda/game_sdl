@@ -12,6 +12,12 @@ module GSDL
         FontManager.load(key: key, path_key: path_key, size: size)
       end
 
+      default_font_atlas_path_key = load_default_font_atlas
+
+      unless default_font_atlas_path_key.empty?
+        FontAtlasManager.load_default(path_key: default_font_atlas_path_key)
+      end
+
       # font atlases
       load_font_atlases.each do |path_key, size, outline|
         FontAtlasManager.load(path_key: path_key, size: size, outline: outline)
@@ -84,6 +90,10 @@ module GSDL
     end
 
     def load_default_font : String
+      ""
+    end
+
+    def load_default_font_atlas : String
       ""
     end
 

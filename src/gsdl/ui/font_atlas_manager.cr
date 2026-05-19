@@ -7,9 +7,10 @@ module GSDL
     # key: #{name}-#{font_size}-#{outline}
     @@fonts = Hash(String, FontAtlas).new
     @@mutex = Mutex.new
+    @@default = DefaultFontKey
 
     def self.default
-      DefaultFontKey
+      @@default
     end
 
     def self.default_size
@@ -18,6 +19,11 @@ module GSDL
 
     def self.default_outline
       DefaultOutline
+    end
+
+    def self.load_default(path_key : String, size : Float32 = DefaultFontSize, outline = DefaultOutline)
+      @@default = get_name(path_key)
+      load(path_key, size, outline)
     end
 
     # Loads a font atlas based on the mode (release/debug).
