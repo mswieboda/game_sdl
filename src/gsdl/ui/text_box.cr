@@ -11,7 +11,7 @@ module GSDL
     getter padding_y : Int32
     getter tweens : Array(Tween) = [] of Tween
 
-    @text : TextOld
+    @text : GSDL::Text
     @x : Num = 0_f32
     @y : Num = 0_f32
     @origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
@@ -27,8 +27,9 @@ module GSDL
     delegate z_index, to: @text
 
     def initialize(
-      font = Font.default,
-      text : String | TextOld = "",
+      font : String | Font = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
+      text : String | GSDL::Text = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
       width : Int32? = nil,
@@ -47,24 +48,45 @@ module GSDL
       @padding_y = padding_y || padding || Padding
 
       if text.is_a?(String)
-        @text = TextOld.new(
-          font: font,
+        h_align = case align
+        when Font::Align::Center
+          HorizontalAlign::Center
+        when Font::Align::Right
+          HorizontalAlign::Right
+        else
+          HorizontalAlign::Left
+        end
+
+        font_name = font.is_a?(Font) ? FontAtlasManager.default : font
+        resolved_size = font.is_a?(Font) ? font.size : font_size
+
+        @text = Text.new(
+          font: font_name,
+          font_size: resolved_size,
           text: text,
-          origin: origin,
-          scale: scale,
+          h_align: h_align,
           color: color,
-          align: align,
-          wrap_width: width ? width - @padding_x * 2 : 0,
+          width: width ? width - @padding_x * 2 : nil,
           z_index: z_index
         )
       else
         @text = text
         # Override properties to match the box if they were provided (or rely on the custom text's own layout)
-        @text.wrap_width = width - @padding_x * 2 if width
-        @text.z_index = z_index
+        if t = @text
+          if t.is_a?(Text)
+            t.width = width - @padding_x * 2 if width
+          elsif t.is_a?(TextOld)
+            t.wrap_width = width - @padding_x * 2 if width
+          end
+          t.z_index = z_index
+        end
       end
 
-      @text.wrap_whitespace_visible = true
+      if t = @text
+        if t.is_a?(TextOld)
+          t.wrap_whitespace_visible = true
+        end
+      end
 
       @x = x
       @y = y
@@ -75,14 +97,14 @@ module GSDL
         @width = w
         @width_fixed = true
       else
-        @width = (@text.width + @padding_x * 2).to_i
+        @width = (text_width + @padding_x * 2).to_i
       end
 
       if h = height
         @height = h
         @height_fixed = true
       else
-        @height = (@text.height + @padding_y * 2).to_i
+        @height = (text_height + @padding_y * 2).to_i
       end
 
       update_text_position
@@ -96,7 +118,11 @@ module GSDL
       @text.origin = @origin
       @text.scale = @scale
       @text.z_index = @z_index
-      @text.draw_relative_to_camera = self.draw_relative_to_camera?
+      if (t = @text).is_a?(Text)
+        t.draw_relative_to_camera = self.draw_relative_to_camera?
+      elsif t.is_a?(TextOld)
+        t.draw_relative_to_camera = self.draw_relative_to_camera?
+      end
     end
 
     def x=(x : Num)
@@ -144,17 +170,41 @@ module GSDL
       self.scale = {scale, scale}
     end
 
+    def text : String
+      if (t = @text).is_a?(Text)
+        t.text
+      elsif t.is_a?(TextOld)
+        t.text
+      else
+        ""
+      end
+    end
+
     def text=(text : String)
-      @text.text = text
+      if (t = @text).is_a?(Text)
+        t.text = text
+      elsif t.is_a?(TextOld)
+        t.text = text
+      end
       on_content_changed
     end
 
     def color : Color
-      @text.color
+      if (t = @text).is_a?(Text)
+        t.color
+      elsif t.is_a?(TextOld)
+        t.color
+      else
+        ColorScheme.get(:ui_text)
+      end
     end
 
     def color=(value : Color)
-      @text.color = value
+      if (t = @text).is_a?(Text)
+        t.color = value
+      elsif t.is_a?(TextOld)
+        t.color = value
+      end
     end
 
     def padding=(val : Int32)
@@ -220,10 +270,10 @@ module GSDL
 
     private def on_content_changed
       unless @width_fixed
-        @width = (@text.width + @padding_x * 2).to_i
+        @width = (text_width + @padding_x * 2).to_i
       end
       unless @height_fixed
-        @height = (@text.height + @padding_y * 2).to_i
+        @height = (text_height + @padding_y * 2).to_i
       end
       update_text_position
     end
@@ -232,14 +282,34 @@ module GSDL
       update_tweens(dt)
 
       # Track text dimensions to detect changes (like in TextTyped)
-      old_w = @text.width
-      old_h = @text.height
+      old_w = text_width
+      old_h = text_height
 
       @text.update(dt)
 
       # If text changed size, we need to update our box dimensions and text position
-      if @text.width != old_w || @text.height != old_h
+      if text_width != old_w || text_height != old_h
         on_content_changed
+      end
+    end
+
+    private def text_width : Num
+      if (t = @text).is_a?(Text)
+        t.width
+      elsif t.is_a?(TextOld)
+        t.width
+      else
+        0
+      end
+    end
+
+    private def text_height : Num
+      if (t = @text).is_a?(Text)
+        t.height
+      elsif t.is_a?(TextOld)
+        t.height
+      else
+        0
       end
     end
 
@@ -252,6 +322,19 @@ module GSDL
     def draw(draw : Draw)
       draw_background(draw)
       draw_border(draw)
+
+      if self.text.includes?("automatically wrapped") || self.text.includes?("OK!")
+        puts "DEBUG TextBox text: #{self.text.inspect}"
+        puts "  x: #{x}, y: #{y}, width: #{width}, height: #{height}"
+        puts "  @text x: #{@text.x}, y: #{@text.y}"
+        puts "  self.z_index: #{self.z_index}, @text.z_index: #{@text.z_index}"
+        if (t = @text).is_a?(Text)
+          puts "  @text: width: #{t.width}, height: #{t.height}"
+          puts "  @text: value: #{t.text.inspect}"
+        elsif (t = @text).is_a?(TextOld)
+          puts "  @text: width: #{t.width}, height: #{t.height}"
+        end
+      end
 
       @text.draw(draw)
     end

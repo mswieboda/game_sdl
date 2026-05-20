@@ -1,25 +1,24 @@
 require "../src/game_sdl"
 
 module GameEx
-  WIDTH = 800
-  HEIGHT = 600
-
   class Game < GSDL::Game
     def initialize
       super(title: "Text Example")
-        end
+    end
 
     def init
-      GSDL::ColorScheme.configure(
-        ui_bg: "rgb(33, 33, 33)"
-      )
+      GSDL::ColorScheme.configure(ui_bg: "rgb(33, 33, 33)")
 
       GSDL::Events.esc_exits = true
       GSDL::Game.push(StartScene.new)
     end
 
-    def load_default_font_old
+    def load_default_font
       "fonts/PressStart2P.ttf"
+    end
+
+    def load_fonts
+      [{"fonts/PressStart2P.ttf", 12, 0}]
     end
   end
 
@@ -34,6 +33,7 @@ module GameEx
           width: (width - padding / 2).to_f32,
           height: (height - padding / 2).to_f32,
           color: @text.color,
+          z_index: z_index - 1,
           draw_mode: GSDL::Shape::DrawMode::Outline
         )
         box.draw(draw)
@@ -48,15 +48,14 @@ module GameEx
     def initialize
       super(:start)
 
-      font = GSDL::Font.default.copy
-      font.size = 12
+      font_size = 12
       color = GSDL::Color::Red
 
       @messages = [] of GSDL::Message
       @buttons = [] of GSDL::Button
 
       @messages << GSDL::Message.new(
-        font: font,
+        font_size: font_size,
         text: "multiple lines\nof some text inside\na message box!",
         x: 64,
         y: 256,
@@ -65,7 +64,7 @@ module GameEx
       )
 
       @messages << GSDL::Message.new(
-        font: font,
+        font_size: font_size,
         text: "multiple lines\nof some text inside\na message box!",
         x: 512,
         y: 320,
@@ -74,12 +73,11 @@ module GameEx
         border_radius: 32
       )
 
-      typed_text = GSDL::TextTyped.new(
-        font: font,
+      typed_text = GSDL::Text.new(
+        font_size: font_size,
         text: "typing out some\nwords slowly!",
         color: GSDL::Color::Blue,
-        types_per_second: 5_u8,
-        type: GSDL::TextTyped::Type::Word
+        typing: GSDL::Text::Typing::Word
       )
       @messages << GSDL::Message.new(
         text: typed_text,
@@ -92,11 +90,11 @@ module GameEx
       height = 36 + GSDL::TextBox::Padding * 2
 
       @messages << BorderedMessage.new(
-        font: font,
+        font_size: font_size,
         text: "automatically wrapped, with a set width. This could be a dialog box for character dialog, TBD a GSD::Dialog class to come later!",
-        x: margin.to_f32,
-        y: ((HEIGHT - height) - margin).to_f32,
-        width: ((WIDTH - margin * 2).to_f32).to_i,
+        x: margin,
+        y: Game.height - height - margin,
+        width: Game.width - margin * 2,
         height: height.to_i,
         color: color
       )
@@ -104,15 +102,15 @@ module GameEx
       @buttons << GSDL::Button.new(
         on_click: -> on_click(String),
         text: "OK!",
-        x: 64.to_f32,
-        y: 32.to_f32
+        x: 64,
+        y: 32
       )
       @buttons << GSDL::Button.new(
         on_click: -> on_click(String),
-        font: font,
+        font_size: font_size,
         text: "OK! a large button",
-        x: 512.to_f32,
-        y: 128.to_f32,
+        x: 512,
+        y: 128,
         origin: {0.5_f32, 0.5_f32},
         scale: {2_f32, 3_f32},
         width: 128,
@@ -120,31 +118,31 @@ module GameEx
         border_radius: 16
       )
 
-      rotated_text = GSDL::TextOld.new(
-        font: font,
+      rotated_text = GSDL::Text.new(
+        font_size: font_size,
         text: "Rotated\nmessage\nwow!",
         color: GSDL::Color::Green,
         rotation: 15.0_f32
       )
       @messages << GSDL::Message.new(
         text: rotated_text,
-        x: 400.to_f32,
-        y: 400.to_f32,
+        x: 400,
+        y: 400,
         origin: {0.5_f32, 0.5_f32},
         border_radius: 16
       )
 
-      rotated_btn_text = GSDL::TextOld.new(
-        font: font,
-        text: "Rotated OK!",
+      rotated_btn_text = GSDL::Text.new(
+        font_size: font_size,
+        text: "Rotated YES!",
         color: GSDL::Color::Cyan,
         rotation: -25.0_f32
       )
       @buttons << GSDL::Button.new(
         on_click: -> on_click(String),
         text: rotated_btn_text,
-        x: 600.to_f32,
-        y: 450.to_f32,
+        x: 600,
+        y: 450,
         origin: {0.5_f32, 0.5_f32},
         border_radius: 16
       )

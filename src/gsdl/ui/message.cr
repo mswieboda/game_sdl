@@ -6,8 +6,9 @@ module GSDL
     getter bg_color : Color
 
     def initialize(
-      font = Font.default,
-      text : String | TextOld = "",
+      font : String | Font = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
+      text : String | GSDL::Text | GSDL::TextOld = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
       width : Int32? = nil,
@@ -26,6 +27,7 @@ module GSDL
     )
       super(
         font: font,
+        font_size: font_size,
         text: text,
         origin: origin,
         scale: scale,
@@ -53,7 +55,7 @@ module GSDL
         height: height,
         color: bg_color,
         border_radius: border_radius,
-        z_index: z_index
+        z_index: z_index - 1
       )
       box.draw_relative_to_camera = self.draw_relative_to_camera?
       box.draw(draw)

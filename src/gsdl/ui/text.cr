@@ -52,6 +52,8 @@ module GSDL
     getter? height_fixed : Bool
     getter typing : Typing
     getter? typed : Bool
+    getter font_atlas : FontAtlas
+    property on_complete : Proc(Nil) | Nil = nil
 
     @vertices_main = Array(GSDL::Vertex).new
     @vertices_outline = Array(GSDL::Vertex).new
@@ -154,6 +156,49 @@ module GSDL
       @height = @original_height
       @full_text = text
       update_lines
+      restart if !@typing.none?
+    end
+
+    def wrap_width=(val : Num?)
+      self.width = val
+    end
+
+    def complete? : Bool
+      return true if typed? || @typing.none?
+
+      if timer = @typing_timer
+        elapsed_units = timer.percent_infinite.to_i
+        if @typing.character?
+          return elapsed_units >= @full_text.size
+        elsif @typing.word?
+          total_words = @full_text.split(/\s+/).size
+          return elapsed_units >= total_words
+        end
+      end
+
+      true
+    end
+
+    def complete
+      @typed = true
+      @typing_timer.try(&.stop)
+      @on_complete.try(&.call)
+    end
+
+    def restart
+      @typed = false
+      @typing_timer.try(&.restart)
+    end
+
+    def update(dt : Float32) : Bool
+      return false unless super(dt)
+
+      if !typed? && !@typing.none? && complete?
+        @typed = true
+        @on_complete.try(&.call)
+      end
+
+      true
     end
 
     def text_width : Float32

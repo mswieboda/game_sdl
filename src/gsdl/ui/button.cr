@@ -7,8 +7,9 @@ module GSDL
     getter on_click : Callback
 
     def initialize(
-      font = Font.default,
-      text : String | TextOld = "",
+      font : String | Font = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
+      text : String | GSDL::Text = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
       width : Int32? = nil,
@@ -27,6 +28,7 @@ module GSDL
     )
       super(
         font: font,
+        font_size: font_size,
         text: text,
         origin: origin,
         scale: scale,
@@ -45,12 +47,15 @@ module GSDL
       )
     end
 
+    def on_click(text : String)
+    end
+
     def update(dt : Float32)
       super
 
       # Use screen-space helpers for accurate mouse interaction under zoom
       if Mouse.clicked_in?(screen_x, screen_y, screen_width, screen_height)
-        @on_click.call(@text.text)
+        @on_click.call(self.text)
       end
     end
 
@@ -63,7 +68,7 @@ module GSDL
         width: width,
         height: height,
         color: ColorScheme.get(:ui_bg),
-        z_index: z_index,
+        z_index: z_index - 1,
         border_radius: border_radius
       )
       box.draw_relative_to_camera = self.draw_relative_to_camera?
@@ -84,7 +89,7 @@ module GSDL
         height: height - margin * 2,
         color: @text.color,
         border_radius: border_radius - margin,
-        z_index: z_index,
+        z_index: z_index - 1,
         draw_mode: Shape::DrawMode::Outline
       )
       box.draw_relative_to_camera = self.draw_relative_to_camera?

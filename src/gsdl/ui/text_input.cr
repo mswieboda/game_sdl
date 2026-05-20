@@ -13,12 +13,11 @@ module GSDL
     property border_radius : Num = 0
     property border_width : Num = 1
 
-    delegate text, to: @text
-
     @blink_timer : Float32 = 0_f32
 
     def initialize(
-      font = Font.default,
+      font : String | Font = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
       text : String = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
@@ -41,6 +40,7 @@ module GSDL
     )
       super(
         font: font,
+        font_size: font_size,
         text: text,
         origin: origin,
         scale: scale,
@@ -152,8 +152,11 @@ module GSDL
       if active && cursor_visible
         # Calculate cursor X position
         before_cursor = text[0...@cursor_position]
-        font = @text.font
-        offset_x, _ = font.text_size(before_cursor)
+        offset_x = if (t = @text).is_a?(Text)
+          t.font_atlas.calculate_width(before_cursor, t.character_spacing)
+        else
+          t.font.text_size(before_cursor)[0]
+        end
 
         cursor_x = @text.render_x + (offset_x * @text.scale_x)
         cursor_y_top = @text.render_y

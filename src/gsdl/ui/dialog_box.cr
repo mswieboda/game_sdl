@@ -8,7 +8,7 @@ module GSDL
 
     # UI Elements
     @main_box : Message
-    @main_text : TextOld
+    @main_text : GSDL::Text
     @choices_boxes : Array(Message) = [] of Message
     @valid_choices : Array(DialogChoice) = [] of DialogChoice
     @show_choices : Bool = false
@@ -30,12 +30,13 @@ module GSDL
       @on_action = on_action
       @on_condition = on_condition
 
-      @main_text = TextTyped.new(
+      main_t = Text.new(
         text: "",
         color: @style.color,
-        type: TextTyped::Type::Word,
-        on_complete: -> { @show_choices = true }
+        typing: Text::Typing::Word
       )
+      main_t.on_complete = -> { @show_choices = true }
+      @main_text = main_t
 
       @main_box = Message.new(
         text: @main_text,
@@ -103,7 +104,9 @@ module GSDL
       @current_node = node
       @selected_choice = 0
       @show_choices = false
-      if main_t = @main_text.as?(TextTyped)
+      if main_t = @main_text.as?(Text)
+        main_t.text = node.text
+      elsif main_t = @main_text.as?(TextTyped)
         main_t.full_text = node.text
       elsif main_t = @main_text.as?(RichTextTyped)
         main_t.text = node.text
