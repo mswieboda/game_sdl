@@ -38,7 +38,7 @@ class MainScene < GSDL::Scene
 end
 
 class MyGame < GSDL::Game
-  def load_default_font
+  def load_default_font_old
     "fonts/PressStart2P.ttf"
   end
 

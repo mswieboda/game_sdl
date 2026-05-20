@@ -8,7 +8,7 @@ module GSDL
 
     def initialize(
       font = Font.default,
-      text : String | Text = "",
+      text : String | TextOld = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
       width : Int32? = nil,
@@ -43,10 +43,6 @@ module GSDL
         draw_relative_to_camera: draw_relative_to_camera,
         border_radius: border_radius
       )
-    end
-
-    def on_click(text : String)
-      puts ">>> Button on_click: text: #{text}"
     end
 
     def update(dt : Float32)

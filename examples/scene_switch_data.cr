@@ -40,7 +40,7 @@ module SceneDataEx
         y: GSDL::Game.height / 2_f32,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::White,
-        align: GSDL::Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
     end
 
@@ -87,7 +87,7 @@ module SceneDataEx
         y: GSDL::Game.height / 2_f32,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Lime,
-        align: GSDL::Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
     end
 

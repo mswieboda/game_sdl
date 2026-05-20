@@ -17,6 +17,10 @@ module GameEx
       "fonts/PressStart2P.ttf"
     end
 
+    def load_fonts
+      [{"fonts/PressStart2P.ttf", 8, 0}]
+    end
+
     def load_textures
       [
         {"player", "gfx/top_down_player.png"},
@@ -27,10 +31,21 @@ module GameEx
 
   class Player < GSDL::Sprite
     property move_speed : Float32 = 200_f32
-    @dir_text : GSDL::Text?
+
+    @dir_text : GSDL::Text
 
     def initialize(x : GSDL::Num, y : GSDL::Num)
       super("player", x, y, origin: {0.5_f32, 0.5_f32}, source_rect: GSDL::FRect.new(x: 0, y: 0, w: 24, h: 40))
+
+      @dir_text = GSDL::Text.new(
+        x: x,
+        y: y,
+        text: "dir: #{direction}",
+        origin: {0.5_f32, 1.0_f32},
+        color: GSDL::Color::White,
+        z_index: 1000
+      )
+      @dir_text.y = y - render_height / 2 - 4
     end
 
     def update(dt : Float32)
@@ -72,29 +87,17 @@ module GameEx
         elsif right
           self.direction = GSDL::Direction::Right
         end
+
+        @dir_text.text = "dir: #{direction}"
       end
     end
 
     def draw(draw : GSDL::Draw)
       super
-      draw_direction(draw)
-    end
 
-    def draw_direction(draw : GSDL::Draw)
-      font = GSDL::Font.default.copy
-      font.size = 8
-
-      text = @dir_text ||= GSDL::Text.new(
-        font: font,
-        text: "dir: #{direction}",
-        origin: {0.5_f32, 1.0_f32},
-        color: GSDL::Color::White,
-        z_index: 1000
-      )
-      text.text = "dir: #{direction}"
-      text.x = x
-      text.y = y - render_height / 2 - 4
-      text.draw(draw)
+      # text.x = x
+      # text.y = y - render_height / 2 - 4
+      @dir_text.draw(draw)
     end
 
     # Custom area bounding box that acts as an "interaction reach"
@@ -110,11 +113,22 @@ module GameEx
   end
 
   class NPC < GSDL::Sprite
-    @dir_text : GSDL::Text?
+    @dir_text : GSDL::Text
 
     def initialize(x : GSDL::Num, y : GSDL::Num)
       super("npc", x, y, origin: {0.5_f32, 0.5_f32}, source_rect: GSDL::FRect.new(x: 0, y: 0, w: 32, h: 64))
+
       @tint = GSDL::Color::White
+      @dir_text = GSDL::Text.new(
+        font_size: 8,
+        x: x,
+        y: y,
+        text: "dir: #{direction}",
+        origin: {0.5_f32, 1.0_f32},
+        color: GSDL::Color::White,
+        z_index: 1000
+      )
+      @dir_text.y = y - render_height / 2
     end
 
     def update(dt : Float32)
@@ -123,24 +137,8 @@ module GameEx
 
     def draw(draw : GSDL::Draw)
       super
-      draw_direction(draw)
-    end
 
-    def draw_direction(draw : GSDL::Draw)
-      font = GSDL::Font.default.copy
-      font.size = 8
-
-      text = @dir_text ||= GSDL::Text.new(
-        font: font,
-        text: "dir: #{direction}",
-        origin: {0.5_f32, 1.0_f32},
-        color: GSDL::Color::White,
-        z_index: 1000
-      )
-      text.text = "dir: #{direction}"
-      text.x = x
-      text.y = y - render_height / 2 - 4
-      text.draw(draw)
+      @dir_text.draw(draw)
     end
   end
 

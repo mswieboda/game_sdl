@@ -41,9 +41,9 @@ module TweenEx
       origin = {0.5_f32, 0.5_f32}
 
       text = GSDL::Text.new(
-        text: "SPACE randomly tweens once\n\nS starts a complex tween looped\n\nTAB toggles sprite / shapes",
+        text: "SPACE: tweens once\nS: complex tween looped\nTAB: toggles sprite / shapes",
         origin: text_origin,
-        align: GSDL::Font::Align::Center,
+        # h_align: GSDL::HorizontalAlign::Center,
         color: GSDL::Color::Lime
       )
       text.x = WIDTH / 2_f32

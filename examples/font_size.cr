@@ -4,15 +4,23 @@ module GameEx
   class Game < GSDL::Game
     def initialize
       super(title: "Font Management Example")
-        end
+    end
 
     def init
       GSDL::Events.esc_exits = true
       GSDL::Game.push(FontScene.new)
-        end
+    end
 
     def load_default_font
       "fonts/PressStart2P.ttf"
+    end
+
+    def load_fonts
+      [
+        {"fonts/PressStart2P.ttf", 24, 0},
+        {"fonts/PressStart2P.ttf", 32, 0},
+        {"fonts/PressStart2P.ttf", 48, 0},
+      ]
     end
   end
 
@@ -27,19 +35,16 @@ module GameEx
       origin = {0.5_f32, 0.5_f32}
 
       # Font 16 is default
-      @texts << GSDL::Text.new(text: "Font size 16.0 (default)", y: 50, x: x, origin: origin)
+      @texts << GSDL::Text.new(text: "Font size 16 (default)", y: 50, x: x, origin: origin)
 
-      # Font size 24.0 (automatically loaded from base 'default')
-      font24 = GSDL::Font.get("default", 24.0_f32)
-      @texts << GSDL::Text.new(text: "Font size 24.0 (dynamic)", y: 150, x: x, font: font24, origin: origin)
+      # Font size 24
+      @texts << GSDL::Text.new(font_size: 24, text: "Font size 24", y: 150, x: x, origin: origin)
 
-      # Font size 32.0 (automatically loaded from base 'default')
-      font32 = GSDL::Font.get("default", 32.0_f32)
-      @texts << GSDL::Text.new(text: "Font size 32.0 (dynamic)", y: 250, x: x, font: font32, origin: origin)
+      # Font size 32
+      @texts << GSDL::Text.new(font_size: 32, text: "Font size 32", y: 250, x: x, origin: origin)
 
-      # Font size 48.0
-      font48 = GSDL::Font.get("default", 48.0_f32)
-      @texts << GSDL::Text.new(text: "Font size 48.0 (dynamic)", y: 400, x: x, font: font48, origin: origin)
+      # Font size 48
+      @texts << GSDL::Text.new(font_size: 48, text: "Font size 48", y: 400, x: x, origin: origin)
     end
 
     def draw(draw : GSDL::Draw)

@@ -17,19 +17,23 @@ module GameEx
     def load_default_font
       "fonts/PressStart2P.ttf"
     end
+
+    def load_default_font_old
+      "fonts/PressStart2P.ttf"
+    end
   end
 
   class StartScene < GSDL::Scene
     @name_input : GSDL::TextInput
     @age_input : GSDL::TextInput
-    @label_name : GSDL::TextOld
-    @label_age : GSDL::TextOld
-    @instructions : GSDL::TextOld
+    @label_name : GSDL::Text
+    @label_age : GSDL::Text
+    @instructions : GSDL::Text
 
     def initialize
       super(:start)
 
-      @instructions = GSDL::TextOld.new(
+      @instructions = GSDL::Text.new(
         text: "Click a box to type!",
         x: (WIDTH / 2).to_f32,
         y: 50,
@@ -37,7 +41,7 @@ module GameEx
         color: GSDL::Color::White
       )
 
-      @label_name = GSDL::TextOld.new(
+      @label_name = GSDL::Text.new(
         text: "Name:",
         x: 200,
         y: 200,
@@ -60,7 +64,7 @@ module GameEx
         max_length: 20
       )
 
-      @label_age = GSDL::TextOld.new(
+      @label_age = GSDL::Text.new(
         text: "Age:",
         x: 200,
         y: 300,

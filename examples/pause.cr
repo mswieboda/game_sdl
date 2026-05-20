@@ -68,7 +68,7 @@ module PauseEx
         height: Game.height / 1.5_f32,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color.new(64, 64, 64, 192),
-        z_index: @z_index
+        z_index: @z_index - 1
       )
       @background.draw_relative_to_camera = false
     end
@@ -100,7 +100,7 @@ module PauseEx
         y: GSDL::Game.height / 2_f32,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Lime,
-        align: GSDL::Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
       self.pause_scene = CustomPauseScene.new
     end

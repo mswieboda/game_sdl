@@ -54,7 +54,7 @@ module GameEx
         x: Game.width // 2,
         y: 8,
         origin: {0.5_f32, 0_f32},
-        align: GSDL::Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
       
       label_names = ["Volume", "Pitch", "Pan", "Loop (Off/Inf)"]

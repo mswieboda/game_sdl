@@ -20,9 +20,12 @@
 # pi AI agent specfic project settings, context, skills, extensions
 .pi/
 
-# Gemini CLI AI agent specfic project settings, context, skills, extensions
+# Gemini CLI AI agent specific project settings, context, skills, extensions
 .gemini/
 /GEMINI.md
+
+# Antigravity CLI agent specific
+.antigravitycli
 
 # AI info, but doesn't need to be committed (too annoying when refining tickets)
 /GAME_CONTEXT.md

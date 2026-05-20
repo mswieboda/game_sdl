@@ -70,31 +70,31 @@ module GSDL
     end
 
     def add_texture(key : String, path_key : String)
-      @tasks << AssetTask.new(AtlasType::Texture, key, path_key)
+      @tasks << AssetTask.new(AssetType::Texture, key, path_key)
     end
 
     def add_audio(key : String, path_key : String)
-      @tasks << AssetTask.new(AtlasType::Audio, key, path_key)
+      @tasks << AssetTask.new(AssetType::Audio, key, path_key)
     end
 
-    def add_font(key : String, path_key : String, size : Float32)
-      @tasks << AssetTask.new(AtlasType::Font, key, path_key, size)
+    def add_font_old(key : String, path_key : String, size : Float32)
+      @tasks << AssetTask.new(AssetType::Font, key, path_key, size)
     end
 
-    def add_font_atlas(path_key : String, size : Num, outline : Int32)
+    def add_font(path_key : String, size : Num, outline : Int32)
       ext = File.extname(path)
       name = File.basename(path, ext)
 
       # NOTE: path_key isn't used later, but might as well include it, instead of ""
-      @tasks << AssetTask.new(AtlasType::FontAtlas, name, path_key, size, outline)
+      @tasks << AssetTask.new(AssetType::FontAtlas, name, path_key, size, outline)
     end
 
     def add_dialog(path_key : String)
-      @tasks << AssetTask.new(AtlasType::Dialog, "", path_key)
+      @tasks << AssetTask.new(AssetType::Dialog, "", path_key)
     end
 
     def add_tile_map(key : String, path_key : String)
-      @tasks << AssetTask.new(AtlasType::TileMap, key, path_key)
+      @tasks << AssetTask.new(AssetType::TileMap, key, path_key)
     end
 
     def add_tasks(tasks : Array(AssetTask))

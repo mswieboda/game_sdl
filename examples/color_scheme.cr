@@ -24,6 +24,10 @@ module ColorSchemeEx
       GSDL::Game.push(MainScene.new)
     end
 
+    def load_default_font_old
+      "fonts/PressStart2P.ttf"
+    end
+
     def load_default_font
       "fonts/PressStart2P.ttf"
     end

@@ -7,17 +7,19 @@ module GSDL
     property elapsed : Float32 = 0.0_f32
 
     def initialize(
-      text : String,
+      font : String = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
+      text : String = "",
       x : Num = 0,
       y : Num = 0,
       color = ColorScheme.get(:ui_text),
-      font = Font.default,
       @velocity = Point.new(0, -100),
       @lifetime = 1.0_f32,
       z_index : Int32 = 100
     )
       super(
         font: font,
+        font_size: font_size,
         text: text,
         x: x,
         y: y,

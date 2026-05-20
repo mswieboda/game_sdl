@@ -12,7 +12,7 @@ module GSDL
   end
 
   class Text < Entity
-    # include Centerable
+    include Centerable
 
     EllipsisMarker = "|^.~.^|"
     Ellipsis = "..."
@@ -76,7 +76,7 @@ module GSDL
     def initialize(
       font : String = FontAtlasManager.default,
       font_size : Num = FontAtlasManager.default_size,
-      text : String = "foo",
+      text : String = "",
       @x : Num = 0,
       @y : Num = 0,
       @h_align : HorizontalAlign = HorizontalAlign::Left,
@@ -319,6 +319,16 @@ module GSDL
     def y=(y : Num)
       @dirty = true
       @y = y
+    end
+
+    @[AlwaysInline]
+    def render_x : Num
+      global_x - (render_width * origin_x)
+    end
+
+    @[AlwaysInline]
+    def render_y : Num
+      global_y - (render_height * origin_y)
     end
 
     private def update_lines
@@ -619,10 +629,8 @@ module GSDL
       offset_y += line_index * line_height
 
       # Calculate start positions
-      base_offset_x = -(self.width * origin_x)
-      base_offset_y = -(self.height * origin_y)
-      local_start_x = (base_offset_x + offset_x) * scale_x
-      local_start_y = (base_offset_y + offset_y) * scale_y
+      local_start_x = offset_x * scale_x
+      local_start_y = offset_y * scale_y
 
       if @rotation % 360 == 0
         # FAST PATH
@@ -630,8 +638,8 @@ module GSDL
           text: text,
           pivot_x: 0,
           pivot_y: 0,
-          start_x: @x + local_start_x,
-          start_y: @y + local_start_y,
+          start_x: render_x + local_start_x,
+          start_y: render_y + local_start_y,
           rotation: 0,
           character_spacing: @character_spacing,
           color: color,
@@ -640,15 +648,17 @@ module GSDL
         )
       else
         # ROTATED PATH
-        local_start_x = (base_offset_x + offset_x) * scale_x
-        local_start_y = (base_offset_y + offset_y) * scale_y
+        # The pivot should be the entity's global center (global_x, global_y).
+        # We start by positioning text relative to that center using origin offsets.
+        base_offset_x = -(self.width * origin_x)
+        base_offset_y = -(self.height * origin_y)
 
         font_atlas.generate_vertices(
           text: text,
-          pivot_x: @x,
-          pivot_y: @y,
-          start_x: local_start_x,
-          start_y: local_start_y,
+          pivot_x: global_x,
+          pivot_y: global_y,
+          start_x: (base_offset_x + offset_x) * scale_x,
+          start_y: (base_offset_y + offset_y) * scale_y,
           rotation: @rotation,
           character_spacing: @character_spacing,
           color: color,

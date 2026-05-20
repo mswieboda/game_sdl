@@ -27,6 +27,10 @@ module GameEx
       "fonts/PressStart2P.ttf"
     end
 
+    def load_default_font_old
+      "fonts/PressStart2P.ttf"
+    end
+
     def load_textures
       [{"tiles", "gfx/tiles.png"}]
     end

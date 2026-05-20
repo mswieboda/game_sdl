@@ -6,34 +6,28 @@ require "../src/game_sdl"
 
 module WindowOptionsEx
   class OptionsScene < GSDL::Scene
-    def initialize(@current_test : String)
+    def initialize(current_test : String)
       super(:options)
+
+      hud = GSDL::HUD.new
+      hud << GSDL::HUDText.new(text: "Window Options Demo", offset_x: 32, offset_y: 32)
+      hud << GSDL::HUDText.new(text: "Current Test: #{current_test}", offset_x: 32, offset_y: 128, color: GSDL::Color::Cyan)
+      hud << GSDL::HUDText.new(
+        text: "Window Options Demo\n" \
+          "Press SPACE to cycle to the next mode\n" \
+          "Press ESC to exit completely",
+        offset_x: 32,
+        offset_y: 160
+      )
+      hud << GSDL::HUDText.new(text: "Window Size: #{WindowGame.window_width}x#{WindowGame.window_height}", offset_x: 32, offset_y: 256, color: GSDL::Color::Gray)
+      self.hud = hud
     end
 
     def update(dt : Float32)
-      super
+      super(dt)
       if GSDL::Input.action?(:toggle)
         GSDL::Game.quit!
       end
-    end
-
-    def draw_screen_overlay(draw : GSDL::Draw)
-      draw.color = GSDL::Color::White
-
-      title_font = GSDL::Font.default.copy
-      title_font.size = 24
-      GSDL::Text.new(text: "Window Options Demo", x: 40, y: 40, font: title_font).draw(draw)
-
-      info_font = GSDL::Font.default.copy
-      info_font.size = 16
-      GSDL::Text.new(text: "Current Test: #{@current_test}", x: 40, y: 100, color: GSDL::Color::Cyan, font: info_font).draw(draw)
-
-      GSDL::Text.new(text: "Press SPACE to cycle to the next mode", x: 40, y: 160).draw(draw)
-      GSDL::Text.new(text: "Press ESC to exit completely", x: 40, y: 190).draw(draw)
-
-      # Display current window status
-      win = GSDL::Game.instance.window
-      GSDL::Text.new(text: "Window Size: #{win.size[0]}x#{win.size[1]}", x: 40, y: 250, color: GSDL::Color::Gray).draw(draw)
     end
   end
 

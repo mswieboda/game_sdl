@@ -143,15 +143,11 @@ module PlatformerAdvancedEx
       @bounds = GSDL::FRect.new(0, 0, Game.width, Game.height)
 
       @info_text = GSDL::Text.new(
-        text: "ARROWS/WASD: Move/Jump/Crouch
-SHIFT: Dash
-Space: Double Jump
-Walls: Wall Slide/Jump",
+        text: "ARROWS/WASD: Move/Jump/Crouch\nSHIFT: Dash\nSpace: Double Jump\nWalls: Wall Slide/Jump",
         x: Game.width / 2_f32,
-        y: 20,
+        y: 8,
         origin: {0.5_f32, 0_f32},
-        color: GSDL::Color::White,
-        font: GSDL::Font.default.copy.tap { |f| f.size = 12 }
+        color: GSDL::Color::White
       )
     end
 

@@ -14,7 +14,7 @@ module GameEx
       GSDL::Game.push(StartScene.new)
     end
 
-    def load_default_font_atlas
+    def load_default_font
       "fonts/PressStart2P.ttf"
     end
   end

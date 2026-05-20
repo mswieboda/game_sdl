@@ -55,12 +55,20 @@ module GSDL
       instance.height
     end
 
+    def self.size : Tuple(Int32, Int32)
+      instance.size
+    end
+
     def self.window_width : Int32
       instance.window_width
     end
 
     def self.window_height : Int32
       instance.window_height
+    end
+
+    def self.window_size : Tuple(Int32, Int32)
+      instance.window_size
     end
 
     def self.center_x : Int32
@@ -183,6 +191,10 @@ module GSDL
       end
     end
 
+    def size : Tuple(Int32, Int32)
+      {width, height}
+    end
+
     def window_width : Int32
       if wnd = @window
         wnd.size[0]
@@ -197,6 +209,10 @@ module GSDL
       else
         @height || 0
       end
+    end
+
+    def window_size : Tuple(Int32, Int32)
+      {window_width, window_height}
     end
 
     def center_x; width / 2; end
@@ -536,6 +552,7 @@ module GSDL
       Performance.instance.report if performance_monitoring_enabled
       TextureManager.clear_all
       FontManager.clear_all
+      FontAtlasManager.clear_all
       AudioManager.clear_all
       TileMapManager.clear_all
 

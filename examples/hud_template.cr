@@ -15,8 +15,8 @@ module HUDTemplateEx
       "fonts/PressStart2P.ttf"
     end
 
-    def load_default_font_atlas
-      "fonts/PressStart2P.ttf"
+    def load_fonts
+      [{"fonts/PressStart2P.ttf", 12, 0}]
     end
   end
 
@@ -27,6 +27,14 @@ module HUDTemplateEx
       GSDL::Data.set("score", 0)
       GSDL::Data.set("health", 100)
       GSDL::Data.set("status", "Exploring")
+
+      @text = GSDL::Text.new(
+        text: "blah\nfoo bar\nbaz andallthat",
+        x: Game.width // 2,
+        y: 300,
+        origin: {0.5_f32, 0.5_f32},
+        h_align: GSDL::HorizontalAlign::Center
+      )
 
       h = GSDL::HUD.new
 
@@ -41,12 +49,12 @@ module HUDTemplateEx
 
       # Another template for status
       h << GSDL::HUDText.new(
-        text_data_template: "Status:\n[<c:cyan>{status}</c>]",
+        text_data_template: "Status:\n[{status}]",
         anchor: GSDL::Anchor::TopCenter,
         offset_y: 8,
         origin: {0.5_f32, 0.0_f32},
         color: GSDL::Color::White,
-        align: GSDL::Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
 
       # Template with calculation/prefix/suffix
@@ -57,21 +65,27 @@ module HUDTemplateEx
         offset_y: 8,
         origin: {1.0_f32, 0.0_f32},
         color: GSDL::Color::Red,
-        align: GSDL::Font::Align::Right
+        h_align: GSDL::HorizontalAlign::Right
       )
       GSDL::Data.set("lives", 3)
 
       # Instructions
       h << GSDL::HUDText.new(
+        font_size: 12,
         text: "SPACE: Increase Score | H: Decrease Health | S: Change Status",
         anchor: GSDL::Anchor::BottomCenter,
         offset_y: 32,
         origin: {0.5_f32, 1.0_f32},
         color: GSDL::Color::White,
-        scale: 0.75_f32
+        # scale: 0.75_f32
       )
 
       self.hud = h
+    end
+
+    def draw(draw : GSDL::Draw)
+      super(draw)
+      @text.draw(draw)
     end
 
     def update(dt : Float32)

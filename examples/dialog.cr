@@ -15,6 +15,10 @@ module GameEx
       "fonts/PressStart2P.ttf"
     end
 
+    def load_default_font_old
+      "fonts/PressStart2P.ttf"
+    end
+
     def load_dialogs
       ["data/dialog.yml"]
     end
@@ -84,16 +88,13 @@ module GameEx
       @active_box.draw(draw)
 
       unless @active_box.is_active
-        font = GSDL::Font.default
         text1 = GSDL::Text.new(
-          font: font,
           text: "Press 1 for Classic RPG Style",
           x: 400,
           y: 280,
           origin: {0.5_f32, 0.5_f32}
         )
         text2 = GSDL::Text.new(
-          font: font,
           text: "Press 2 for Side Panel Style",
           x: 400,
           y: 320,

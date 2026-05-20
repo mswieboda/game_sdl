@@ -31,7 +31,8 @@ module GSDL
     @text : Text
 
     def initialize(
-      font = Font.default,
+      font : String = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
       text : String = "",
       @width = 200,
       @height = 200,
@@ -45,9 +46,10 @@ module GSDL
     )
       @text = Text.new(
         font: font,
+        font_size: font_size,
         text: text,
         color: color,
-        wrap_width: @width - @padding * 2,
+        width: @width - @padding * 2,
         z_index: @z_index
       )
     end

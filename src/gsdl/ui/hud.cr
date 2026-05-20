@@ -102,7 +102,8 @@ module GSDL
     end
 
     def initialize(
-      font = FontAtlasManager.default,
+      font : String = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
       text : String = "",
       text_data_template = nil,
       @anchor = Anchor::TopLeft,
@@ -112,17 +113,14 @@ module GSDL
       scale : Num | Tuple(Num, Num) = {1_f32, 1_f32},
       color = ColorScheme.get(:ui_text),
       h_align = HorizontalAlign::Left,
-      # TODO: used for deprecated TextOld / RichText
-      align = Font::Align::Left,
       z_index = 1000,
       width = nil,
-      # TODO: used for deprecated TextOld / RichText
-      wrap_width = 0
     )
       actual_scale = scale.is_a?(Tuple) ? scale : {scale, scale}
 
       @text_element = Text.new(
         font: font,
+        font_size: font_size,
         text: text.is_a?(String) ? text : "",
         origin: origin,
         scale: actual_scale,
@@ -222,7 +220,7 @@ module GSDL
               end
             end
           end
-          puts ">>> new_text: #{new_text}"
+
           self.text = new_text if self.text != new_text
         end
       end
@@ -307,22 +305,24 @@ module GSDL
     @hud_text : HUDText
 
     def initialize(
-      font = Font.default,
+      font = FontAtlasManager.default,
+      font_size = FontAtlasManager.default_size,
       @anchor = Anchor::TopLeft,
       @offset_x = 20,
       @offset_y = 20,
       color = ColorScheme.get(:ui_text),
       scale = 1_f32,
-      align = Font::Align::Left
+      h_align = HorizontalAlign::Left
     )
       @hud_text = HUDText.new(
         font: font,
+        font_size: font_size,
         anchor: anchor,
         offset_x: offset_x,
         offset_y: offset_y,
         color: color,
         scale: scale,
-        align: align
+        h_align: h_align
       )
     end
 

@@ -21,7 +21,7 @@ module MultiPressEx
 
   class MultiPressScene < GSDL::Scene
     @box : GSDL::Box
-    @text : GSDL::TextBox
+    @text : GSDL::Text
 
     def initialize
       super(:main)
@@ -30,12 +30,12 @@ module MultiPressEx
       @box.x = 400
       @box.y = 300
 
-      @text = GSDL::TextBox.new(
-        text: "Double-tap Arrow Keys to dash.\nDouble-click Mouse Left to teleport and turn red.",
+      @text = GSDL::Text.new(
+        text: "Double-tap Arrow Keys to dash.\nDouble-click Mouse Left\nto teleport and turn red.",
+        x: 16,
+        y: 16,
         color: GSDL::Color::White
       )
-      @text.x = 10
-      @text.y = 10
     end
 
     def update(dt : Float32)

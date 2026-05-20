@@ -18,7 +18,7 @@ module GameEx
       GSDL::Game.push(StartScene.new)
     end
 
-    def load_default_font
+    def load_default_font_old
       "fonts/PressStart2P.ttf"
     end
   end
@@ -120,7 +120,7 @@ module GameEx
         border_radius: 16
       )
 
-      rotated_text = GSDL::Text.new(
+      rotated_text = GSDL::TextOld.new(
         font: font,
         text: "Rotated\nmessage\nwow!",
         color: GSDL::Color::Green,
@@ -134,7 +134,7 @@ module GameEx
         border_radius: 16
       )
 
-      rotated_btn_text = GSDL::Text.new(
+      rotated_btn_text = GSDL::TextOld.new(
         font: font,
         text: "Rotated OK!",
         color: GSDL::Color::Cyan,
@@ -151,7 +151,7 @@ module GameEx
     end
 
     def on_click(text : String)
-      puts ">>> on_click: text: #{text}"
+      puts "StartScene button on_click: text: #{text}"
     end
 
     def update(dt : Float32)

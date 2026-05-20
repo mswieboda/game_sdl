@@ -16,7 +16,7 @@ module GSDL
     property origin : Tuple(Float32, Float32) = {0_f32, 0_f32}
     property scale : Tuple(Num, Num) = {1_f32, 1_f32}
     property vertical : Bool = true
-    property text_align : Font::Align = Font::Align::Center
+    property text_align : HorizontalAlign = HorizontalAlign::Center
     property padding : Num = 0
     property item_padding : Num = 0
     property separation : Num = 0
@@ -59,7 +59,8 @@ module GSDL
       @is_selected : (Num, Num, Num, Num -> Bool),
       @is_next : (-> Bool),
       @is_previous : (-> Bool),
-      font : Font = Font.default,
+      font : String = FontAtlasManager.default,
+      font_size : Num = FontAtlasManager.default_size,
       @items = [] of Tuple(Symbol, String),
       @x : Num = 0,
       @y : Num = 0,
@@ -67,7 +68,7 @@ module GSDL
       @scale = {1_f32, 1_f32},
       @selected_index : Int32 = 0,
       @vertical : Bool = true,
-      @text_align : Font::Align = Font::Align::Center,
+      @text_align : HorizontalAlign = HorizontalAlign::Center,
       @background_box = nil,
       @item_box = nil,
       @selected_box = nil,
@@ -97,8 +98,9 @@ module GSDL
       @items.each do |(id, text)|
         text_obj = Text.new(
           font: font,
+          font_size: font_size,
           text: text,
-          align: @text_align
+          h_align: @text_align
         )
         @items_text << text_obj
 
@@ -148,12 +150,12 @@ module GSDL
         # Align text within its item slot
         # Text object's internal x, y should be relative to its slot
         case @text_align
-        when Font::Align::Left
+        when HorizontalAlign::Left
           item.x = current_pos_x + @item_padding * scale_x
-        when Font::Align::Center
+        when HorizontalAlign::Center
           item.x = current_pos_x + (w / 2)
           item.origin = {0.5_f32, item.origin_y}
-        when Font::Align::Right
+        when HorizontalAlign::Right
           item.x = current_pos_x + w - @item_padding * scale_x
           item.origin = {1.0_f32, item.origin_y}
         end

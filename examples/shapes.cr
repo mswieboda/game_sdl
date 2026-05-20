@@ -21,7 +21,7 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @text_box : GSDL::TextBox
+    @text : GSDL::Text
     @circle : GSDL::Circle
     @shapes = [] of GSDL::Shape
     @shape_index : Int32 = 0
@@ -33,13 +33,13 @@ module GameEx
       color = GSDL::Color::LimeGreen
 
       text = "LEFT/RIGHT or A/D toggles shapes\n\nTAB toggles draw mode"
-      @text_box = GSDL::TextBox.new(
+      @text = GSDL::Text.new(
         text: text,
         origin: {0.5_f32, 0.5_f32},
         color: color,
-        align: GSDL::Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
-      @text_box.center(width: WIDTH, height: HEIGHT - HEIGHT + 128)
+      @text.center(width: WIDTH, height: HEIGHT - HEIGHT + 128)
 
       @circle = GSDL::Circle.new(color: GSDL::Color::Magenta, radius: 6, z_index: 9)
       @circle.origin = {0.5_f32, 0.5_f32}
@@ -91,7 +91,7 @@ module GameEx
     end
 
     def draw(draw : GSDL::Draw)
-      @text_box.draw(draw)
+      @text.draw(draw)
       @circle.draw(draw) unless @shape_index == @shapes.size - 1
       @shapes[@shape_index].draw(draw)
     end

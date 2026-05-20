@@ -29,6 +29,13 @@ module PlatformerEx
       "fonts/PressStart2P.ttf"
     end
 
+    def load_fonts
+      [
+        {"fonts/PressStart2P.ttf", 12, 0},
+        {"fonts/PressStart2P.ttf", 6, 0}
+      ]
+    end
+
     def load_audio
       [{"coin_audio", "sfx/ding.wav"}]
     end
@@ -178,14 +185,10 @@ module PlatformerEx
 
       # HUD
       hud = GSDL::HUD.new
-      small_font = GSDL::Font.default.copy
-      small_font.size = 12
-      tiny_font = GSDL::Font.default.copy
-      tiny_font.size = 6
 
       GSDL::Data.set("coins_collected", 0)
       hud << GSDL::HUDText.new(
-        font: small_font,
+        font_size: 12,
         text_data_template: "Coins: {coins_collected}",
         anchor: GSDL::Anchor::TopLeft,
         offset_x: 8,
@@ -194,10 +197,10 @@ module PlatformerEx
       )
 
       hud << GSDL::HUDText.new(
-        font: tiny_font,
+        font_size: 6,
         text: "TAB\nto debug",
         anchor: GSDL::Anchor::TopCenter,
-        align: GSDL::Font::Align::Center,
+        h_align: GSDL::HorizontalAlign::Center,
         origin: {0.5_f32, 0_f32},
         offset_y: 8,
         color: GSDL::Color::Lime
@@ -205,7 +208,7 @@ module PlatformerEx
 
       GSDL::Data.set("fps", 0)
       hud << GSDL::HUDText.new(
-        font: tiny_font,
+        font_size: 6,
         text_data_template: "FPS: {fps}",
         anchor: GSDL::Anchor::TopRight,
         origin: {1_f32, 0_f32},

@@ -3,7 +3,6 @@ require "../src/game_sdl"
 module GameEx
   alias Keys = GSDL::Keys
   alias Mouse = GSDL::Mouse
-  alias Font = GSDL::Font
   alias Color = GSDL::Color
   alias Num = GSDL::Num
 
@@ -50,7 +49,7 @@ module GameEx
         x: Game.width / 2_f32,
         y: 32,
         origin: {0.5_f32, 0_f32},
-        align: Font::Align::Center
+        h_align: GSDL::HorizontalAlign::Center
       )
 
       # this helper outputs (since the strings are same as the symbols):

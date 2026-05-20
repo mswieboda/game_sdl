@@ -11,7 +11,7 @@ module GameEx
       push(MainScene.new)
     end
 
-    def load_font_atlases
+    def load_fonts
       [
         {"fonts/Roboto-Regular.ttf", 32, 0},
         {"fonts/Roboto-Regular.ttf", 32, 4}

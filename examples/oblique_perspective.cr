@@ -123,12 +123,12 @@ module ObliquePerspectiveEx
     def draw(draw : GSDL::Draw)
       self.flip_h = direction.left? || direction.up_left? || direction.down_left?
 
-      # TODO: this is broken, maybe global_x is the cause, in Entity?
+      # TODO: this is broken, maybe global_x/y is the cause, in Entity?
       # Draw shadow at ground position (ignoring render_offset_y by using ground_y)
       shadow_w = 20_f32
       shadow_h = 8_f32
       draw.circle_fill(
-        x: render_x - shadow_w / 2, + (render_width * origin_x),
+        x: render_x - shadow_w / 2, # + (render_width * origin_x),
         y: ground_y.to_f32 - shadow_h * 2,
         radius: shadow_w / 2,
         color: GSDL::Color.new(0, 0, 0, 100),

@@ -8,7 +8,7 @@ module GSDL
 
     # UI Elements
     @main_box : Message
-    @main_text : Text
+    @main_text : TextOld
     @choices_boxes : Array(Message) = [] of Message
     @valid_choices : Array(DialogChoice) = [] of DialogChoice
     @show_choices : Bool = false

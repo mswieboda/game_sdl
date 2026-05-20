@@ -18,7 +18,7 @@ module TweenPresetsEx
       GSDL::Game.push(TweenScene.new)
         end
 
-    def load_default_font_atlas
+    def load_default_font
       "fonts/PressStart2P.ttf"
     end
 
@@ -66,73 +66,73 @@ module TweenPresetsEx
       @active_text.x = WIDTH / 2_f32
       @active_text.y = @info_text.y + @info_text.height + 16
 
-      # # Create a sprite to tween
-      # sprite = GSDL::Sprite.new(
-      #   key: "ship",
-      #   origin: origin,
-      #   source_rect: GSDL::FRect.new(w: 128)
-      # )
-      # sprite.center(width: WIDTH, height: HEIGHT)
-      # @objects << sprite
+      # Create a sprite to tween
+      sprite = GSDL::Sprite.new(
+        key: "ship",
+        origin: origin,
+        source_rect: GSDL::FRect.new(w: 128)
+      )
+      sprite.center(width: WIDTH, height: HEIGHT)
+      @objects << sprite
 
-      # @objects << GSDL::Box.new(
-      #   width: 100,
-      #   height: 100,
-      #   x: WIDTH / 4_f32,
-      #   y: HEIGHT / 2_f32,
-      #   color: GSDL::Color::Crimson,
-      #   origin: origin,
-      #   border_radius: 10
-      # )
+      @objects << GSDL::Box.new(
+        width: 100,
+        height: 100,
+        x: WIDTH / 4_f32,
+        y: HEIGHT / 2_f32,
+        color: GSDL::Color::Crimson,
+        origin: origin,
+        border_radius: 10
+      )
 
-      # @objects << GSDL::Oval.new(
-      #   x: (WIDTH * 3) / 4_f32,
-      #   y: HEIGHT / 2_f32,
-      #   radius_x: 64,
-      #   radius_y: 96,
-      #   color: GSDL::Color::Cyan,
-      #   origin: origin
-      # )
+      @objects << GSDL::Oval.new(
+        x: (WIDTH * 3) / 4_f32,
+        y: HEIGHT / 2_f32,
+        radius_x: 64,
+        radius_y: 96,
+        color: GSDL::Color::Cyan,
+        origin: origin
+      )
 
-      # @objects << GSDL::Pie.new(
-      #   x: (WIDTH * 3) / 4_f32,
-      #   y: HEIGHT / 2_f32 + 128,
-      #   radius: 96,
-      #   color: GSDL::Color::Indigo,
-      #   draw_mode: GSDL::Shape::DrawMode::Outline,
-      #   origin: origin
-      # )
+      @objects << GSDL::Pie.new(
+        x: (WIDTH * 3) / 4_f32,
+        y: HEIGHT / 2_f32 + 128,
+        radius: 96,
+        color: GSDL::Color::Indigo,
+        draw_mode: GSDL::Shape::DrawMode::Outline,
+        origin: origin
+      )
 
-      # triangle = GSDL::Triangle.new(
-      #   x1: WIDTH / 2_f32 - 96,
-      #   y1: HEIGHT / 2_f32,
-      #   x2: WIDTH / 2_f32,
-      #   y2: HEIGHT / 2_f32 + 32,
-      #   x3: HEIGHT / 2_f32 + 32,
-      #   y3: HEIGHT / 2_f32 + 64,
-      #   color: GSDL::Color::White,
-      #   origin: origin
-      # )
-      # triangle.center(width: WIDTH, height: HEIGHT)
-      # triangle.x -= 192
-      # triangle.y += 128
-      # @objects << triangle
+      triangle = GSDL::Triangle.new(
+        x1: WIDTH / 2_f32 - 96,
+        y1: HEIGHT / 2_f32,
+        x2: WIDTH / 2_f32,
+        y2: HEIGHT / 2_f32 + 32,
+        x3: HEIGHT / 2_f32 + 32,
+        y3: HEIGHT / 2_f32 + 64,
+        color: GSDL::Color::White,
+        origin: origin
+      )
+      triangle.center(width: WIDTH, height: HEIGHT)
+      triangle.x -= 192
+      triangle.y += 128
+      @objects << triangle
 
-      # line = GSDL::Line.new(
-      #   x1: WIDTH / 2_f32 - 96,
-      #   y1: HEIGHT / 2_f32 + 96,
-      #   x2: WIDTH / 2_f32 + 96,
-      #   y2: HEIGHT / 2_f32 + 96,
-      # )
-      # line.origin = {0.5_f32, 0.5_f32}
-      # line.center(width: WIDTH, height: HEIGHT)
-      # line.y += 96
-      # @objects << line
+      line = GSDL::Line.new(
+        x1: WIDTH / 2_f32 - 96,
+        y1: HEIGHT / 2_f32 + 96,
+        x2: WIDTH / 2_f32 + 96,
+        y2: HEIGHT / 2_f32 + 96,
+      )
+      line.origin = {0.5_f32, 0.5_f32}
+      line.center(width: WIDTH, height: HEIGHT)
+      line.y += 96
+      @objects << line
 
-      # @objects << GSDL::Pixel.new(
-      #   x: WIDTH / 2_f32,
-      #   y: HEIGHT / 2_f32 + 128
-      # )
+      @objects << GSDL::Pixel.new(
+        x: WIDTH / 2_f32,
+        y: HEIGHT / 2_f32 + 128
+      )
 
       # add these last, so sprite is first, then shapes, then text
       @objects << text_rotated

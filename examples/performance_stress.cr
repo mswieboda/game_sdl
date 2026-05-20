@@ -108,8 +108,7 @@ module StressEx
       #   anchor: GSDL::Anchor::TopLeft,
       #   offset_x: 20,
       #   offset_y: 20,
-      #   color: GSDL::Color::Yellow,
-      #   align: GSDL::Font::Align::Left
+      #   color: GSDL::Color::Yellow
       # )
       # self.hud = h
     end

@@ -44,7 +44,6 @@ module MultiLayerMapEx
       @tile_map = GSDL::TileMapManager.get("map")
 
       hud = GSDL::HUD.new
-      font = GSDL::Font.default(16_f32)
       text = "Press 'B' to toggle Background\nPress 'F' to toggle Foreground\nPress 'O' to toggle Objects"
       hud << GSDL::HUDText.new(text: text, offset_x: 16, offset_y: 16)
       self.hud = hud

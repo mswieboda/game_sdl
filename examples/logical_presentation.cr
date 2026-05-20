@@ -8,7 +8,7 @@ module GameEx
     @current_mode_index = 0
 
     def initialize
-      super(title: "Logical Presentation Example", width: 800, height: 800, logical_width: 320, logical_height: 240)
+      super(title: "Logical Presentation Example", width: 800, height: 800, logical_width: 640, logical_height: 480)
     end
 
     def init
@@ -25,10 +25,6 @@ module GameEx
   end
 
   class StartScene < GSDL::Scene
-    @instruction_text : GSDL::Text
-    @mode_text : GSDL::Text
-    @logical_size_text : GSDL::Text
-    @window_size_text : GSDL::Text
     @bg_texture : GSDL::Texture
     @current_mode_index = 0
 
@@ -53,24 +49,7 @@ module GameEx
 
       mode = @presentation_modes[@current_mode_index]
       GSDL::Game.draw.logical_presentation = {GSDL::Game.width, GSDL::Game.height, mode}
-
-      color = GSDL::Color.new(r: 255, g: 255, b: 255, a: 255)
-
-      @instruction_text = GSDL::Text.new(text: "Press SPACE to change presentation mode", color: color)
-      @instruction_text.x = 10
-      @instruction_text.y = 10
-
-      @mode_text = GSDL::Text.new(text: "Mode: #{@presentation_mode_names[@current_mode_index]}", color: color)
-      @mode_text.x = 10
-      @mode_text.y = 40
-
-      @logical_size_text = GSDL::Text.new(text: "Logical Size: #{GSDL::Game.width}x#{GSDL::Game.height}", color: color)
-      @logical_size_text.x = 10
-      @logical_size_text.y = 70
-
-      @window_size_text = GSDL::Text.new(text: "Window Size: #{GSDL::Game.instance.window.size[0]}x#{GSDL::Game.instance.window.size[1]}", color: color)
-      @window_size_text.x = 10
-      @window_size_text.y = 100
+      GSDL::Data.set("mode", "#{mode}")
 
       # Create a checkerboard background surface (fills logical area)
       surface = GSDL::Surface.new(GSDL::Game.width, GSDL::Game.height)
@@ -92,6 +71,17 @@ module GameEx
       end
 
       @bg_texture = Game.draw.create_texture(surface)
+
+      hud = GSDL::HUD.new
+      hud << GSDL::HUDText.new(
+        offset_x: 16,
+        offset_y: 16,
+        text_data_template: "SPACE to change mode\n" \
+          "Mode: {mode}\n" \
+          "Logical Size: #{Game.width}x#{Game.height}\n" \
+          "Window Size: #{Game.window_width}x#{Game.window_height}"
+      )
+      self.hud = hud
     end
 
     def update(dt : Float32)
@@ -104,12 +94,14 @@ module GameEx
         @current_mode_index = (@current_mode_index + 1) % @presentation_modes.size
         mode = @presentation_modes[@current_mode_index]
         GSDL::Game.draw.logical_presentation = {GSDL::Game.width, GSDL::Game.height, mode}
-        @mode_text.text = "Mode: #{@presentation_mode_names[@current_mode_index]}"
-        puts "Switched logical presentation to: #{@presentation_mode_names[@current_mode_index]}"
+        GSDL::Data.set("mode", "#{mode}")
+        puts "Switched logical presentation to: #{mode}"
       end
+
+      super(dt)
     end
 
-    def draw(draw : GSDL::Draw)
+    def draw_screen_overlay(draw : GSDL::Draw)
       # Clear with a distinct color to show letterboxing/overscan areas
       draw.color = GSDL::Color::Magenta
       draw.clear
@@ -118,18 +110,11 @@ module GameEx
       bg_dest_rect = GSDL::FRect.new(w: GSDL::Game.width, h: GSDL::Game.height)
       draw.texture(texture: @bg_texture, dest_rect: bg_dest_rect, draw_immediately: true)
 
-      # Render text
-      @instruction_text.draw(draw)
-      @mode_text.draw(draw)
-      @logical_size_text.draw(draw)
-      @window_size_text.draw(draw)
+      # Render HUD
+      super(draw)
     end
 
     def destroy
-      @instruction_text.destroy
-      @mode_text.destroy
-      @logical_size_text.destroy
-      @window_size_text.destroy
       @bg_texture.destroy
       super
     end

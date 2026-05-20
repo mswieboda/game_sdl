@@ -29,7 +29,7 @@ module GameEx
         text: "Press SPACE to switch\n\nto Per-Scene Asset Loading (Sync)",
         x: Game.width // 2,
         y: Game.height - 64,
-        align: GSDL::Font::Align::Center,
+        h_align: GSDL::HorizontalAlign::Center,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Cyan
       )
@@ -65,7 +65,7 @@ module GameEx
         text: "Scene-specific asset\n\n(palm tree) loaded synchronously",
         x: Game.width // 2,
         y: 32,
-        align: GSDL::Font::Align::Center,
+        h_align: GSDL::HorizontalAlign::Center,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::White
       )
@@ -75,7 +75,7 @@ module GameEx
         text: "Press SPACE to switch\n\nback to Main Scene",
         x: Game.width // 2,
         y: Game.height - 64,
-        align: GSDL::Font::Align::Center,
+        h_align: GSDL::HorizontalAlign::Center,
         origin: {0.5_f32, 0.5_f32},
         color: GSDL::Color::Yellow
       )

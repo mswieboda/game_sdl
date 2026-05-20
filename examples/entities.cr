@@ -4,7 +4,7 @@ alias Game = GSDL::Game
 
 class Player < GSDL::Entity
   @sprite : GSDL::AnimatedSprite
-  @label : GSDL::RichText
+  @label : GSDL::Text
 
   def initialize(x, y)
     @x = x.to_f32
@@ -16,9 +16,11 @@ class Player < GSDL::Entity
     @sprite.play("walk")
 
     # Child label at relative {0, -40} (above head)
-    @label = GSDL::RichText.new(
-      text: "<c:red>HP: 100/100</c>",
-      y: -40,
+    @label = GSDL::Text.new(
+      text: "HP: 100/100",
+      color: GSDL::Color::Red,
+      # y: -40,
+      # rotation: 45,
       origin: {0.5_f32, 0.5_f32}
     )
 
@@ -36,6 +38,16 @@ class Player < GSDL::Entity
     elsif GSDL::Keys.pressed?(GSDL::Keys::Right)
       @x += 200 * dt
       @sprite.flip_h = false
+    end
+
+    # rotation decrease
+    if GSDL::Keys.pressed?(GSDL::Keys::Q)
+      @label.rotation -= 1
+    end
+
+    # rotation increase
+    if GSDL::Keys.pressed?(GSDL::Keys::E)
+      @label.rotation += 1
     end
 
     true
