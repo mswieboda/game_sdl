@@ -1,5 +1,5 @@
 module GSDL
-  module FontManager
+  module FontOldManager
     DefaultFontKey = "default"
     DefaultFontSize = 16_f32
 
@@ -71,7 +71,7 @@ module GSDL
             @@fonts[font_key] = new_font
             new_font
           else
-            raise "Font with key '#{key}' (and size #{size}) not found in FontManager. Was it loaded?"
+            raise "Font with key '#{key}' (and size #{size}) not found in FontOldManager. Was it loaded?"
           end
         end
       end
@@ -80,7 +80,7 @@ module GSDL
     # Retrieves a loaded font by its key.
     def self.get(key : String) : FontOld
       @@mutex.synchronize do
-        @@fonts[key]? || @@base_fonts[key]? || raise "Font with key '#{key}' not found in FontManager. Was it loaded?"
+        @@fonts[key]? || @@base_fonts[key]? || raise "Font with key '#{key}' not found in FontOldManager. Was it loaded?"
       end
     end
 

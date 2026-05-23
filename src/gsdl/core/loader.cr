@@ -144,7 +144,7 @@ module GSDL
             AudioManager.load_from_memory(task.key, io)
           when AssetType::Font
             io = SDL3::IOStream.from_memory(bytes, bytes.size)
-            FontManager.load_from_memory(task.key, io, task.size)
+            FontOldManager.load_from_memory(task.key, io, task.size)
           when AssetType::FontAtlas
             FontAtlasManager.load_from_memory(task.key, bytes, task.size, task.outline)
           when AssetType::Dialog

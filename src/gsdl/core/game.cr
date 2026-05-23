@@ -551,7 +551,7 @@ module GSDL
     def destroy
       Performance.instance.report if performance_monitoring_enabled
       TextureManager.clear_all
-      FontManager.clear_all
+      FontOldManager.clear_all
       FontAtlasManager.clear_all
       AudioManager.clear_all
       TileMapManager.clear_all

@@ -5,11 +5,11 @@ module GSDL
       default_font_old_path_key = load_default_font_old
 
       unless default_font_old_path_key.empty?
-        FontManager.load_default(path: default_font_old_path_key)
+        FontOldManager.load_default(path: default_font_old_path_key)
       end
 
       load_fonts_old.each do |key, path_key, size|
-        FontManager.load(key: key, path_key: path_key, size: size)
+        FontOldManager.load(key: key, path_key: path_key, size: size)
       end
 
       default_font_path_key = load_default_font

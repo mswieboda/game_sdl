@@ -1,4 +1,4 @@
-require "./font_manager"
+require "./font_old_manager"
 
 module GSDL
   class FontOld
@@ -9,22 +9,22 @@ module GSDL
 
     # Gets the default font.
     def self.default : FontOld
-      FontManager.get_default
+      FontOldManager.get_default
     end
 
     # Creates a new font with the default path and a specific size.
     def self.default(size : Float32) : FontOld
-      FontManager.get_default(size)
+      FontOldManager.get_default(size)
     end
 
-    # Loads and retrieves a font using the FontManager.
+    # Loads and retrieves a font using the FontOldManager.
     # The key for the font manager will be "#{path}-#{size}".
     def self.get(key : String, size : Float32) : FontOld
-      FontManager.get(key, size)
+      FontOldManager.get(key, size)
     end
 
     # TODO: for now not exposing these, so that GSDL consumers
-    # use AssetManager and FontManager to load font assets
+    # use AssetManager and FontOldManager to load font assets
     # def self.open(file : String, ptsize : Float32)
     # def self.open_io(io_stream : IOStream, ptsize : Float32, close_io : Bool = false)
 
