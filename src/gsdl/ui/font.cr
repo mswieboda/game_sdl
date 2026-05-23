@@ -339,37 +339,38 @@ module GSDL
 
       text.each_char_with_index do |char, i|
         metric = touch_glyph(char)
-        next if metric.width == 0 || metric.height == 0
 
-        src = FRect.new(
-          x: (metric.x - @render_outline).to_f32,
-          y: (metric.y - @render_outline).to_f32,
-          w: (metric.width + (@render_outline * 2)).to_f32,
-          h: (metric.height + (@render_outline * 2)).to_f32
-        )
+        if metric.width > 0 && metric.height > 0
+          src = FRect.new(
+            x: (metric.x - @render_outline).to_f32,
+            y: (metric.y - @render_outline).to_f32,
+            w: (metric.width + (@render_outline * 2)).to_f32,
+            h: (metric.height + (@render_outline * 2)).to_f32
+          )
 
-        w = (src.w / @oversample) * scale_x
-        h = (src.h / @oversample) * scale_y
+          w = (src.w / @oversample) * scale_x
+          h = (src.h / @oversample) * scale_y
 
-        logical_outline = @render_outline / @oversample
+          logical_outline = @render_outline / @oversample
 
-        gx = current_x + ((metric.bearing_x / @oversample) - logical_outline) * scale_x
-        gy = current_y + ((metric.bearing_y / @oversample) - logical_outline) * scale_y
+          gx = current_x + ((metric.bearing_x / @oversample) - logical_outline) * scale_x
+          gy = current_y + ((metric.bearing_y / @oversample) - logical_outline) * scale_y
 
-        dest = FRect.new(
-          x: gx,
-          y: gy,
-          w: w,
-          h: h
-        )
+          dest = FRect.new(
+            x: gx,
+            y: gy,
+            w: w,
+            h: h
+          )
 
-        draw.texture(
-          texture: @texture,
-          source_rect: src,
-          dest_rect: dest,
-          color: color,
-          z_index: z_index
-        )
+          draw.texture(
+            texture: @texture,
+            source_rect: src,
+            dest_rect: dest,
+            color: color,
+            z_index: z_index
+          )
+        end
 
         current_x += ((metric.advance_x / @oversample) + character_spacing) * scale_x
       end
@@ -411,33 +412,34 @@ module GSDL
 
       text.each_char do |char|
         metric = touch_glyph(char)
-        next if metric.width == 0 || metric.height == 0
 
-        u1 = (metric.x - @render_outline) / tex_w
-        v1 = (metric.y - @render_outline) / tex_h
-        u2 = (metric.x + metric.width + @render_outline) / tex_w
-        v2 = (metric.y + metric.height + @render_outline) / tex_h
+        if metric.width > 0 && metric.height > 0
+          u1 = (metric.x - @render_outline) / tex_w
+          v1 = (metric.y - @render_outline) / tex_h
+          u2 = (metric.x + metric.width + @render_outline) / tex_w
+          v2 = (metric.y + metric.height + @render_outline) / tex_h
 
-        gw = ((metric.width + (@render_outline * 2)) / @oversample) * scale_x
-        gh = ((metric.height + (@render_outline * 2)) / @oversample) * scale_y
+          gw = ((metric.width + (@render_outline * 2)) / @oversample) * scale_x
+          gh = ((metric.height + (@render_outline * 2)) / @oversample) * scale_y
 
-        char_x = current_x + ((metric.bearing_x / @oversample) - logical_outline) * scale_x
-        char_y = current_y + ((metric.bearing_y / @oversample) - logical_outline) * scale_y
+          char_x = current_x + ((metric.bearing_x / @oversample) - logical_outline) * scale_x
+          char_y = current_y + ((metric.bearing_y / @oversample) - logical_outline) * scale_y
 
-        corners = [
-          {px: char_x, py: char_y, u: u1, v: v1},
-          {px: char_x + gw, py: char_y, u: u2, v: v1},
-          {px: char_x + gw, py: char_y + gh, u: u2, v: v2},
-          {px: char_x, py: char_y + gh, u: u1, v: v2}
-        ]
+          corners = [
+            {px: char_x, py: char_y, u: u1, v: v1},
+            {px: char_x + gw, py: char_y, u: u2, v: v1},
+            {px: char_x + gw, py: char_y + gh, u: u2, v: v2},
+            {px: char_x, py: char_y + gh, u: u1, v: v2}
+          ]
 
-        corners.each do |c|
-          if is_rotated
-            rx = pivot_x + (c[:px] * cos_theta - c[:py] * sin_theta)
-            ry = pivot_y + (c[:px] * sin_theta + c[:py] * cos_theta)
-            vertices << Vertex.new(FPoint.new(rx, ry), fcolor, FPoint.new(c[:u], c[:v]))
-          else
-            vertices << Vertex.new(FPoint.new(c[:px], c[:py]), fcolor, FPoint.new(c[:u], c[:v]))
+          corners.each do |c|
+            if is_rotated
+              rx = pivot_x + (c[:px] * cos_theta - c[:py] * sin_theta)
+              ry = pivot_y + (c[:px] * sin_theta + c[:py] * cos_theta)
+              vertices << Vertex.new(FPoint.new(rx, ry), fcolor, FPoint.new(c[:u], c[:v]))
+            else
+              vertices << Vertex.new(FPoint.new(c[:px], c[:py]), fcolor, FPoint.new(c[:u], c[:v]))
+            end
           end
         end
 
