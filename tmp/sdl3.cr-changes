@@ -1,0 +1,63 @@
+Proposed changes to `../sdl3/src/sdl3/gfx/texture.cr`:
+
+```diff
+diff --git a/src/sdl3/gfx/texture.cr b/src/sdl3/gfx/texture.cr
+index d53a290..f34be10 100644
+--- a/src/sdl3/gfx/texture.cr
++++ b/src/sdl3/gfx/texture.cr
+@@ -37,7 +37,7 @@ module SDL3
+       h : Int32 = 1
+     )
+       ptr = LibSDL3.create_texture(renderer.to_unsafe, format, access, w, h)
+-      raise "Failed to create texture" if ptr.null?
++      raise "Failed to create texture: #{SDL3.get_error} (format: #{format}, access: #{access}, dimensions: #{w}x#{h})" if ptr.null?
+       new(ptr)
+     end
+ 
+@@ -111,13 +111,21 @@ module SDL3
+     end
+ 
+     def update(rect : LibSDL3::Rect?, pixels : Pointer(Void), pitch : Int32) : Bool
+-      LibSDL3.update_texture(@ptr, rect.try(&.pointerof), pixels, pitch)
++      if r = rect
++        LibSDL3.update_texture(@ptr, pointerof(r), pixels, pitch)
++      else
++        LibSDL3.update_texture(@ptr, nil, pixels, pitch)
++      end
+     end
+ 
+     def lock(rect : LibSDL3::Rect?) : Tuple(Pointer(Void), Int32)
+       pixels_ptr = uninitialized Pointer(Void)
+       pitch = uninitialized Int32
+-      success = LibSDL3.lock_texture(@ptr, rect.try(&.pointerof), pointerof(pixels_ptr), pointerof(pitch))
++      success = if r = rect
++        LibSDL3.lock_texture(@ptr, pointerof(r), pointerof(pixels_ptr), pointerof(pitch))
++      else
++        LibSDL3.lock_texture(@ptr, nil, pointerof(pixels_ptr), pointerof(pitch))
++      end
+       raise "Failed to lock texture" unless success
+       {pixels_ptr, pitch}
+     end
+```
+
+Proposed changes to `../sdl3/src/sdl3/gfx/renderer.cr`:
+
+```diff
+diff --git a/src/sdl3/gfx/renderer.cr b/src/sdl3/gfx/renderer.cr
+index 729b19c..d2642bf 100644
+--- a/src/sdl3/gfx/renderer.cr
++++ b/src/sdl3/gfx/renderer.cr
+@@ -108,8 +108,11 @@ lib LibSDL3
+ end
+ 
+ struct LibSDL3::Vertex
+-  def initialize(@fpoint : LibSDL3::FPoint, @fcolor : LibSDL3::FColor)
+-    @texture_fpoint = LibSDL3::FPoint.new
++  def initialize(@fpoint : LibSDL3::FPoint, @fcolor : LibSDL3::FColor, @texture_fpoint : LibSDL3::FPoint)
++  end
++
++  def initialize(@fpoint : LibSDL3::FPoint, @fcolor : LibSDL3::FColor)
++    @texture_fpoint = LibSDL3::FPoint.new(0_f32, 0_f32)
+   end
+ end
+```

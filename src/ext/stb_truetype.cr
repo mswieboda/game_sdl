@@ -6,6 +6,12 @@
 {% end %}
 
 lib LibSTBTrueType
+  struct Buf
+    data : UInt8*
+    cursor : Int32
+    size : Int32
+  end
+
   # This matches the stbtt_fontinfo struct in C
   struct FontInfo
     userdata : Void*
@@ -22,6 +28,12 @@ lib LibSTBTrueType
     svg : Int32
     index_map : Int32
     index_to_loc_format : Int32
+    cff : Buf
+    charstrings : Buf
+    gsubrs : Buf
+    subrs : Buf
+    fontdicts : Buf
+    fdselect : Buf
   end
 
   # This struct holds the output for each character

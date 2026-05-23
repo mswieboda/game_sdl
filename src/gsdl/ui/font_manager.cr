@@ -6,6 +6,7 @@ module GSDL
 
     # key: #{name}-#{font_size}-#{outline}
     @@fonts = Hash(String, Font).new
+    @@font_data = Hash(String, Bytes).new
     @@mutex = Mutex.new
     @@default = DefaultFontKey
 
@@ -60,7 +61,10 @@ module GSDL
           end
         {% end %}
 
-        font = Font.new(name: get_name(path_key), data: data, size: size, outline: outline)
+        name = get_name(path_key)
+        @@font_data[name] = data
+
+        font = Font.new(name: name, data: data, size: size, outline: outline)
         @@fonts[font_key] = font
         font
       end
@@ -73,6 +77,8 @@ module GSDL
           return @@fonts[font_key]
         end
 
+        @@font_data[name] = data
+
         font = Font.new(name: name, data: data, size: size, outline: outline)
         @@fonts[font_key] = font
         font
@@ -82,7 +88,17 @@ module GSDL
     def self.get(name : String, size : Num, outline : Int32) : Font
       @@mutex.synchronize do
         font_key = get_key(name, size, outline)
-        @@fonts[font_key]? || raise "Font with name '#{name}' (and size #{size}, outline #{outline}) not found in FontManager. Was it loaded?"
+        if font = @@fonts[font_key]?
+          return font
+        end
+
+        if data = @@font_data[name]?
+          font = Font.new(name: name, data: data, size: size, outline: outline)
+          @@fonts[font_key] = font
+          return font
+        end
+
+        raise "Font with name '#{name}' (and size #{size}, outline #{outline}) not found in FontManager and raw font data is unavailable."
       end
     end
 
@@ -105,6 +121,10 @@ module GSDL
             end
           end
         end
+
+        if @@font_data.has_key?(key)
+          @@font_data.delete(key)
+        end
       end
     end
 
@@ -116,6 +136,13 @@ module GSDL
         end
 
         @@fonts.clear
+        @@font_data.clear
+      end
+    end
+
+    def self.begin_frame : Nil
+      @@mutex.synchronize do
+        @@fonts.each_value &.begin_frame
       end
     end
 

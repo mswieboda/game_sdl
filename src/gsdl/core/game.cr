@@ -515,6 +515,8 @@ module GSDL
     end
 
     def draw
+      FontManager.begin_frame
+
       # Find the index of the first non-transparent scene from the top
       start_index = 0
       (@scenes.size - 1).downto(0) do |i|
