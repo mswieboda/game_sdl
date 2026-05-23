@@ -18,7 +18,6 @@ module GSDL
       format : PixelFormat = PixelFormat::RGBA8888,
       access : TextureAccess = TextureAccess::Static
     )
-      puts ">>> GSDL::Texture initialize width: #{width} height: #{height}"
       @internal = SDL3::Texture.create(
         renderer: Game.draw.to_sdl,
         format: format,
