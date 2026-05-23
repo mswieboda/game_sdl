@@ -45,6 +45,7 @@ module GSDL
     @current_shelf_h : Int32 = 0
     @next_slot_x : Int32 = 0
     @glyph_cache = {} of Char => GlyphMetric
+    @kerning_cache = {} of Tuple(Char, Char) => Float32
 
     def initialize(
       @name : String,
@@ -65,7 +66,6 @@ module GSDL
       @font_info = Pointer(LibSTBTrueType::FontInfo).malloc(1)
       LibSTBTrueType.init_font(@font_info, data.to_unsafe, 0)
       @font_scale = LibSTBTrueType.scale_for_pixel_height(@font_info, @render_font_size)
-
       # Initialize Empty Texture
       @texture = Texture.new(
         width: @texture_width,
@@ -90,6 +90,7 @@ module GSDL
 
       # Glyph Cache
       @glyph_cache = {} of Char => GlyphMetric
+      @kerning_cache = {} of Tuple(Char, Char) => Float32
     end
 
     def begin_frame : Nil
@@ -312,12 +313,38 @@ module GSDL
       dilated
     end
 
+    def get_kerning(prev_char : Char, curr_char : Char) : Float32
+      pair = {prev_char, curr_char}
+      if val = @kerning_cache[pair]?
+        return val
+      end
+
+      glyph_prev = LibSTBTrueType.find_glyph_index(@font_info, prev_char.ord)
+      glyph_curr = LibSTBTrueType.find_glyph_index(@font_info, curr_char.ord)
+
+      if glyph_prev == 0 || glyph_curr == 0
+        @kerning_cache[pair] = 0_f32
+        return 0_f32
+      end
+
+      raw_kerning = LibSTBTrueType.get_glyph_kern_advance(@font_info, glyph_prev, glyph_curr)
+      val = (raw_kerning.to_f32 * @font_scale) / @oversample
+      @kerning_cache[pair] = val
+      val
+    end
+
     def calculate_width(text : String, character_spacing : Num = 0) : Float32
       total_width = 0_f32
+      prev_char : Char? = nil
 
       text.each_char do |char|
         metric = touch_glyph(char)
         total_width += (metric.advance_x / @oversample) + character_spacing
+
+        if p_char = prev_char
+          total_width += get_kerning(p_char, char)
+        end
+        prev_char = char
       end
 
       total_width - character_spacing
@@ -336,9 +363,14 @@ module GSDL
     )
       current_x = x
       current_y = y + @ascent * scale_y
+      prev_char : Char? = nil
 
       text.each_char_with_index do |char, i|
         metric = touch_glyph(char)
+
+        if p_char = prev_char
+          current_x += get_kerning(p_char, char) * scale_x
+        end
 
         if metric.width > 0 && metric.height > 0
           src = FRect.new(
@@ -373,6 +405,7 @@ module GSDL
         end
 
         current_x += ((metric.advance_x / @oversample) + character_spacing) * scale_x
+        prev_char = char
       end
     end
 
@@ -409,9 +442,14 @@ module GSDL
 
       current_x = start_x
       current_y = start_y + @ascent * scale_y
+      prev_char : Char? = nil
 
       text.each_char do |char|
         metric = touch_glyph(char)
+
+        if p_char = prev_char
+          current_x += get_kerning(p_char, char) * scale_x
+        end
 
         if metric.width > 0 && metric.height > 0
           u1 = (metric.x - @render_outline) / tex_w
@@ -444,6 +482,7 @@ module GSDL
         end
 
         current_x += ((metric.advance_x / @oversample) + character_spacing) * scale_x
+        prev_char = char
       end
 
       vertices

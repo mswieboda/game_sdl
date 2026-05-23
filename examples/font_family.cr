@@ -60,7 +60,7 @@ module GameEx
       @texts << GSDL::Text.new(
         font: "CustomFamily",
         font_size: 20,
-        text: "CustomFamily - Normal / Regular (Resolves to Roboto)",
+        text: "AVALANCHE - Normal / Regular (Resolves to Roboto)",
         y: 160,
         x: x,
         origin: origin,
@@ -72,7 +72,7 @@ module GameEx
       @texts << GSDL::Text.new(
         font: "CustomFamily",
         font_size: 20,
-        text: "CustomFamily - Bold / Regular (Resolves to Electrolize)",
+        text: "AVALANCHE - Bold / Regular (Resolves to Electrolize)",
         y: 230,
         x: x,
         origin: origin,
@@ -84,7 +84,7 @@ module GameEx
       @texts << GSDL::Text.new(
         font: "CustomFamily",
         font_size: 20,
-        text: "CustomFamily - Normal / Italic (Resolves to PressStart)",
+        text: "AVALANCHE - Normal / Italic (Resolves to PressStart)",
         y: 300,
         x: x,
         origin: origin,

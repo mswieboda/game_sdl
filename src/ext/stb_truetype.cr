@@ -84,25 +84,32 @@ lib LibSTBTrueType
   # Gets horizontal metrics (advance width, left side bearing) for a character
   fun get_codepoint_h_metrics = stbtt_GetCodepointHMetrics(info : FontInfo*, codepoint : Int32, advance_width : Int32*, left_side_bearing : Int32*)
 
+  # --- Kerning ---
+  # Converts a Unicode codepoint to a glyph index
+  fun find_glyph_index = stbtt_FindGlyphIndex(info : FontInfo*, unicode_codepoint : Int32) : Int32
+
+  # Retrieves the unscaled kerning advance between two glyph indices
+  fun get_glyph_kern_advance = stbtt_GetGlyphKernAdvance(info : FontInfo*, glyph1 : Int32, glyph2 : Int32) : Int32
+
   # Calculates the bounding box of a character's bitmap at a specific scale
   fun get_codepoint_bitmap_box = stbtt_GetCodepointBitmapBox(
-    info : FontInfo*, 
-    codepoint : Int32, 
-    scale_x : Float32, 
-    scale_y : Float32, 
+    info : FontInfo*,
+    codepoint : Int32,
+    scale_x : Float32,
+    scale_y : Float32,
     ix0 : Int32*, iy0 : Int32*, ix1 : Int32*, iy1 : Int32*
   )
 
   # --- Rasterization ---
   # The "Workhorse": Renders the character into a pre-allocated pixel buffer
   fun make_codepoint_bitmap = stbtt_MakeCodepointBitmap(
-    info : FontInfo*, 
-    output : UInt8*, 
-    out_w : Int32, 
-    out_h : Int32, 
-    out_stride : Int32, 
-    scale_x : Float32, 
-    scale_y : Float32, 
+    info : FontInfo*,
+    output : UInt8*,
+    out_w : Int32,
+    out_h : Int32,
+    out_stride : Int32,
+    scale_x : Float32,
+    scale_y : Float32,
     codepoint : Int32
   )
 
