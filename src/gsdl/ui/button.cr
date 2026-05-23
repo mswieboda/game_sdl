@@ -7,8 +7,8 @@ module GSDL
     getter on_click : Callback
 
     def initialize(
-      font : String | FontOld = FontAtlasManager.default,
-      font_size : Num = FontAtlasManager.default_size,
+      font : String | FontOld = FontManager.default,
+      font_size : Num = FontManager.default_size,
       text : String | GSDL::Text = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},

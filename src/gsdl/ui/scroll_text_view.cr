@@ -31,8 +31,8 @@ module GSDL
     @text : Text
 
     def initialize(
-      font : String = FontAtlasManager.default,
-      font_size : Num = FontAtlasManager.default_size,
+      font : String = FontManager.default,
+      font_size : Num = FontManager.default_size,
       text : String = "",
       @width = 200,
       @height = 200,

@@ -52,7 +52,7 @@ module GSDL
     getter? height_fixed : Bool
     getter typing : Typing
     getter? typed : Bool
-    getter font_atlas : FontAtlas
+    getter font_atlas : Font
     property on_complete : Proc(Nil) | Nil = nil
 
     @vertices_main = Array(GSDL::Vertex).new
@@ -63,8 +63,8 @@ module GSDL
     @last_visible_limit = -1
 
     # TODO: make a setter to change font atlas
-    @font_atlas : FontAtlas
-    @outline_atlas : FontAtlas?
+    @font_atlas : Font
+    @outline_atlas : Font?
     @full_text : String
     @width : Num?
     @height : Num?
@@ -76,8 +76,8 @@ module GSDL
     @rotation : Num
 
     def initialize(
-      font : String = FontAtlasManager.default,
-      font_size : Num = FontAtlasManager.default_size,
+      font : String = FontManager.default,
+      font_size : Num = FontManager.default_size,
       text : String = "",
       @x : Num = 0,
       @y : Num = 0,
@@ -89,7 +89,7 @@ module GSDL
       typing_speed : Time::Span? = nil,
       @shadow = {0, 0},
       @shadow_color : Color = Color::Black,
-      @outline : Int32 = FontAtlasManager.default_outline,
+      @outline : Int32 = FontManager.default_outline,
       @outline_color : Color = Color::Black,
       @origin = {0_f32, 0_f32},
       @scale = {1_f32, 1_f32},
@@ -100,7 +100,7 @@ module GSDL
       @z_index : Int32 = 0,
       @draw_relative_to_camera : Bool = true,
     )
-      @font_atlas = FontAtlasManager.get(font, font_size, 0)
+      @font_atlas = FontManager.get(font, font_size, 0)
       @outline_atlas = nil
 
       @full_text = text
@@ -546,7 +546,7 @@ module GSDL
 
       z_index = @z_index
 
-      # TODO: implement opacity within here, FontAtlas or Draw
+      # TODO: implement opacity within here, Font or Draw
 
       # shadow
       if !@vertices_shadow.empty?
@@ -597,7 +597,7 @@ module GSDL
 
       # Outline - only if used
       if @outline > 0
-        outline_atlas = FontAtlasManager.get(@font_atlas.name, font_size, @outline)
+        outline_atlas = FontManager.get(@font_atlas.name, font_size, @outline)
         @vertices_outline = generate_vertices(outline_atlas, limit, @outline_color)
         @outline_atlas = outline_atlas
       else
@@ -610,7 +610,7 @@ module GSDL
     end
 
     private def generate_vertices(
-      font_atlas : FontAtlas,
+      font_atlas : Font,
       limit : Int32,
       color : Color,
       offset : {Num, Num} = {0, 0}
@@ -653,7 +653,7 @@ module GSDL
     end
 
     private def generate_line_vertices(
-      font_atlas : FontAtlas,
+      font_atlas : Font,
       text : String,
       color : Color,
       line_index : Int32,

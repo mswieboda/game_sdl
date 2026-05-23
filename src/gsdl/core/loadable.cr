@@ -15,12 +15,12 @@ module GSDL
       default_font_path_key = load_default_font
 
       unless default_font_path_key.empty?
-        FontAtlasManager.load_default(path_key: default_font_path_key)
+        FontManager.load_default(path_key: default_font_path_key)
       end
 
-      # font atlases
+      # fonts
       load_fonts.each do |path_key, size, outline|
-        FontAtlasManager.load(path_key: path_key, size: size, outline: outline)
+        FontManager.load(path_key: path_key, size: size, outline: outline)
       end
 
       # textures
@@ -53,15 +53,15 @@ module GSDL
       tasks = [] of Loader::AssetTask
 
       load_fonts_old.each do |key, path_key, size|
-        tasks << Loader::AssetTask.new(AssetType::Font, key, path_key, size)
+        tasks << Loader::AssetTask.new(AssetType::FontOld, key, path_key, size)
       end
 
-      load_font.each do |path_key, size, outline|
-        ext = File.extname(path)
-        name = File.basename(path, ext)
+      load_fonts.each do |path_key, size, outline|
+        ext = File.extname(path_key)
+        name = File.basename(path_key, ext)
 
         # NOTE: path_key isn't used later, but might as well include it, instead of ""
-        tasks << Loader::AssetTask.new(AssetType::FontAtlas, key, path_key, size, outline)
+        tasks << Loader::AssetTask.new(AssetType::Font, name, path_key, size, outline)
       end
 
       load_textures.each do |key, path_key|

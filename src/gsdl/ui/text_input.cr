@@ -16,8 +16,8 @@ module GSDL
     @blink_timer : Float32 = 0_f32
 
     def initialize(
-      font : String | Font = FontAtlasManager.default,
-      font_size : Num = FontAtlasManager.default_size,
+      font : String | Font = FontManager.default,
+      font_size : Num = FontManager.default_size,
       text : String = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},

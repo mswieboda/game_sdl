@@ -102,8 +102,8 @@ module GSDL
     end
 
     def initialize(
-      font : String = FontAtlasManager.default,
-      font_size : Num = FontAtlasManager.default_size,
+      font : String = FontManager.default,
+      font_size : Num = FontManager.default_size,
       text : String = "",
       text_data_template = nil,
       @anchor = Anchor::TopLeft,
@@ -305,8 +305,8 @@ module GSDL
     @hud_text : HUDText
 
     def initialize(
-      font = FontAtlasManager.default,
-      font_size = FontAtlasManager.default_size,
+      font = FontManager.default,
+      font_size = FontManager.default_size,
       @anchor = Anchor::TopLeft,
       @offset_x = 20,
       @offset_y = 20,

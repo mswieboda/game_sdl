@@ -1,11 +1,11 @@
 module GSDL
-  module FontAtlasManager
+  module FontManager
     DefaultFontKey = "default"
     DefaultFontSize = 16_f32
     DefaultOutline = 0
 
     # key: #{name}-#{font_size}-#{outline}
-    @@fonts = Hash(String, FontAtlas).new
+    @@fonts = Hash(String, Font).new
     @@mutex = Mutex.new
     @@default = DefaultFontKey
 
@@ -26,11 +26,11 @@ module GSDL
       load(path_key, size, outline)
     end
 
-    # Loads a font atlas based on the mode (release/debug).
+    # Loads a font based on the mode (release/debug).
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,
     # prepending AssetManager.asset_path.
-    def self.load(path_key : String, size : Num, outline : Int32) : FontAtlas
+    def self.load(path_key : String, size : Num, outline : Int32) : Font
       @@mutex.synchronize do
         font_key = get_key(get_name(path_key), size, outline)
 
@@ -60,29 +60,29 @@ module GSDL
           end
         {% end %}
 
-        font = FontAtlas.new(name: name, data: data, size: size, outline: outline)
+        font = Font.new(name: get_name(path_key), data: data, size: size, outline: outline)
         @@fonts[font_key] = font
         font
       end
     end
 
-    def self.load_from_memory(name : String, data : Bytes, size : Num, outline : Int32) : FontAtlas
+    def self.load_from_memory(name : String, data : Bytes, size : Num, outline : Int32) : Font
       @@mutex.synchronize do
         font_key = get_key(name, size, outline)
         if @@fonts.has_key?(font_key)
           return @@fonts[font_key]
         end
 
-        font = FontAtlas.new(name: name, data: data, size: size, outline: outline)
+        font = Font.new(name: name, data: data, size: size, outline: outline)
         @@fonts[font_key] = font
         font
       end
     end
 
-    def self.get(name : String, size : Num, outline : Int32) : FontAtlas
+    def self.get(name : String, size : Num, outline : Int32) : Font
       @@mutex.synchronize do
         font_key = get_key(name, size, outline)
-        @@fonts[font_key]? || raise "FontAlas with name '#{name}' (and size #{size}, outline #{outline}) not found in FontAtlasManager. Was it loaded?"
+        @@fonts[font_key]? || raise "Font with name '#{name}' (and size #{size}, outline #{outline}) not found in FontManager. Was it loaded?"
       end
     end
 

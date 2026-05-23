@@ -27,8 +27,8 @@ module GSDL
     delegate z_index, to: @text
 
     def initialize(
-      font : String | FontOld = FontAtlasManager.default,
-      font_size : Num = FontAtlasManager.default_size,
+      font : String | FontOld = FontManager.default,
+      font_size : Num = FontManager.default_size,
       text : String | GSDL::Text = "",
       origin = {0_f32, 0_f32},
       scale = {1_f32, 1_f32},
@@ -57,7 +57,7 @@ module GSDL
           HorizontalAlign::Left
         end
 
-        font_name = font.is_a?(FontOld) ? FontAtlasManager.default : font
+        font_name = font.is_a?(FontOld) ? FontManager.default : font
         resolved_size = font.is_a?(FontOld) ? font.size : font_size
 
         @text = Text.new(

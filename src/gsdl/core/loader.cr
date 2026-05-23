@@ -41,8 +41,8 @@ module GSDL
     enum AssetType
       Texture
       Audio
+      FontOld
       Font
-      FontAtlas
       Dialog
       TileMap
     end
@@ -78,15 +78,15 @@ module GSDL
     end
 
     def add_font_old(key : String, path_key : String, size : Float32)
-      @tasks << AssetTask.new(AssetType::Font, key, path_key, size)
+      @tasks << AssetTask.new(AssetType::FontOld, key, path_key, size)
     end
 
     def add_font(path_key : String, size : Num, outline : Int32)
-      ext = File.extname(path)
-      name = File.basename(path, ext)
+      ext = File.extname(path_key)
+      name = File.basename(path_key, ext)
 
       # NOTE: path_key isn't used later, but might as well include it, instead of ""
-      @tasks << AssetTask.new(AssetType::FontAtlas, name, path_key, size, outline)
+      @tasks << AssetTask.new(AssetType::Font, name, path_key, size, outline)
     end
 
     def add_dialog(path_key : String)
@@ -142,11 +142,11 @@ module GSDL
           when AssetType::Audio
             io = SDL3::IOStream.from_memory(bytes, bytes.size)
             AudioManager.load_from_memory(task.key, io)
-          when AssetType::Font
+          when AssetType::FontOld
             io = SDL3::IOStream.from_memory(bytes, bytes.size)
             FontOldManager.load_from_memory(task.key, io, task.size)
-          when AssetType::FontAtlas
-            FontAtlasManager.load_from_memory(task.key, bytes, task.size, task.outline)
+          when AssetType::Font
+            FontManager.load_from_memory(task.key, bytes, task.size, task.outline)
           when AssetType::Dialog
             DialogManager.load(task.path_key)
           when AssetType::TileMap

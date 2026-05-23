@@ -1,5 +1,5 @@
 module GSDL
-  class FontAtlas
+  class Font
     getter name : String
     getter font_size : Num
     getter outline : Int32
