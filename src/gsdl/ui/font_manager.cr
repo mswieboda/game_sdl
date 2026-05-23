@@ -7,6 +7,7 @@ module GSDL
     # key: #{name}-#{font_size}-#{outline}
     @@fonts = Hash(String, Font).new
     @@font_data = Hash(String, Bytes).new
+    @@families = Hash(String, FontFamily).new
     @@mutex = Mutex.new
     @@default = DefaultFontKey
 
@@ -20,6 +21,14 @@ module GSDL
 
     def self.default_outline
       DefaultOutline
+    end
+
+    def self.register_family(name : String) : Nil
+      family = FontFamily.new(name)
+      yield family
+      @@mutex.synchronize do
+        @@families[name] = family
+      end
     end
 
     def self.load_default(path_key : String, size : Float32 = DefaultFontSize, outline = DefaultOutline)
@@ -85,20 +94,38 @@ module GSDL
       end
     end
 
-    def self.get(name : String, size : Num, outline : Int32) : Font
+    def self.get(
+      name : String,
+      size : Num,
+      outline : Int32,
+      weight : FontWeight = FontWeight::Normal,
+      style : FontStyle = FontStyle::Regular
+    ) : Font
       @@mutex.synchronize do
-        font_key = get_key(name, size, outline)
+        if family = @@families[name]?
+          path_key = family.resolve(weight, style)
+        else
+          path_key = name
+        end
+
+        resolved_name = get_name(path_key)
+        font_key = get_key(resolved_name, size, outline)
+
         if font = @@fonts[font_key]?
           return font
         end
 
-        if data = @@font_data[name]?
-          font = Font.new(name: name, data: data, size: size, outline: outline)
+        unless @@font_data.has_key?(resolved_name)
+          load_font_data_unlocked(path_key)
+        end
+
+        if data = @@font_data[resolved_name]?
+          font = Font.new(name: resolved_name, data: data, size: size, outline: outline)
           @@fonts[font_key] = font
           return font
         end
 
-        raise "Font with name '#{name}' (and size #{size}, outline #{outline}) not found in FontManager and raw font data is unavailable."
+        raise "Font with name '#{resolved_name}' (derived from '#{name}' with weight: #{weight}, style: #{style}) not found and dynamic loading failed."
       end
     end
 
@@ -137,6 +164,7 @@ module GSDL
 
         @@fonts.clear
         @@font_data.clear
+        @@families.clear
       end
     end
 
@@ -154,6 +182,27 @@ module GSDL
     private def self.get_name(path : String)
       ext = File.extname(path)
       File.basename(path, ext)
+    end
+
+    private def self.load_font_data_unlocked(path_key : String) : Nil
+      resolved_name = get_name(path_key)
+      return if @@font_data.has_key?(resolved_name)
+
+      begin
+        data = {% if flag?(:release) %}
+          AssetManager.load_raw_data(path_key)
+        {% else %}
+          full_path = AssetManager.asset_path + path_key
+          File.open(full_path) do |file|
+            slice = Bytes.new(file.size.to_i)
+            file.read_fully(slice)
+            slice
+          end
+        {% end %}
+        @@font_data[resolved_name] = data
+      rescue ex
+        raise "Failed to dynamically load font file at '#{path_key}': #{ex.message}"
+      end
     end
   end
 end

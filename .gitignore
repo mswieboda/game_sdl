@@ -12,7 +12,6 @@
 /.vfox/
 *.vfox*
 
-
 # Libraries don't need dependency lock
 # Dependencies will be locked in applications that use them
 /shard.lock
@@ -32,3 +31,6 @@
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# ignore tmp directory, used by AI, and for temp throwaway scripts, etc
+/tmp/

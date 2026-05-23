@@ -99,8 +99,11 @@ module GSDL
       @height = nil,
       @z_index : Int32 = 0,
       @draw_relative_to_camera : Bool = true,
+      @weight : FontWeight = FontWeight::Normal,
+      @style : FontStyle = FontStyle::Regular,
     )
-      @font_atlas = FontManager.get(font, font_size, 0)
+      @font = font
+      @font_atlas = FontManager.get(@font, font_size, 0, @weight, @style)
       @outline_atlas = nil
 
       @full_text = text
@@ -143,6 +146,42 @@ module GSDL
     @[AlwaysInline]
     def font_size : Num
       @font_atlas.font_size
+    end
+
+    def font : String
+      @font
+    end
+
+    def font=(font : String)
+      if font != @font
+        @font = font
+        @font_atlas = FontManager.get(@font, font_size, 0, @weight, @style)
+        @dirty = true
+      end
+    end
+
+    def weight : FontWeight
+      @weight
+    end
+
+    def weight=(weight : FontWeight)
+      if weight != @weight
+        @weight = weight
+        @font_atlas = FontManager.get(@font, font_size, 0, @weight, @style)
+        @dirty = true
+      end
+    end
+
+    def style : FontStyle
+      @style
+    end
+
+    def style=(style : FontStyle)
+      if style != @style
+        @style = style
+        @font_atlas = FontManager.get(@font, font_size, 0, @weight, @style)
+        @dirty = true
+      end
     end
 
     @[AlwaysInline]
@@ -597,7 +636,7 @@ module GSDL
 
       # Outline - only if used
       if @outline > 0
-        outline_atlas = FontManager.get(@font_atlas.name, font_size, @outline)
+        outline_atlas = FontManager.get(@font, font_size, @outline, @weight, @style)
         @vertices_outline = generate_vertices(outline_atlas, limit, @outline_color)
         @outline_atlas = outline_atlas
       else
