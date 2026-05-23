@@ -158,7 +158,7 @@ module BenchmarkEx
         offset_x: 20,
         offset_y: 20,
         color: GSDL::Color::Yellow,
-        align: GSDL::Font::Align::Left
+        align: GSDL::FontOld::Align::Left
       )
       self.hud = h
     end

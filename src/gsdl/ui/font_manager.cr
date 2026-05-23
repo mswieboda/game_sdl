@@ -3,15 +3,15 @@ module GSDL
     DefaultFontKey = "default"
     DefaultFontSize = 16_f32
 
-    @@fonts = Hash(String, Font).new
-    @@base_fonts = Hash(String, Font).new
+    @@fonts = Hash(String, FontOld).new
+    @@base_fonts = Hash(String, FontOld).new
     @@mutex = Mutex.new
 
     # Loads a font based on the mode (release/debug).
     # In release mode, it uses AssetManager to load from the packfile.
     # In debug mode, it loads from the loose asset filesystem path,
     # prepending GSDL::AssetManager.asset_path.
-    def self.load(key : String, path_key : String, size : Float32) : Font
+    def self.load(key : String, path_key : String, size : Float32) : FontOld
       @@mutex.synchronize do
         font_key = get_key(key, size)
         if @@fonts.has_key?(font_key)
@@ -25,13 +25,13 @@ module GSDL
           # with fonts, the io_stream needs to stay open, hence `close_io: false`
           AssetManager.with_io_stream(path_key, close_io: false) do |io_stream|
             font_sdl = SDL3::TTF::Font.open_io(io_stream, size, close_io: true)
-            Font.new(font_sdl)
+            FontOld.new(font_sdl)
           end
         {% else %}
           # In debug mode, load from loose files
           full_path = GSDL::AssetManager.asset_path + path_key
           font_sdl = SDL3::TTF::Font.open(full_path, size)
-          Font.new(font_sdl)
+          FontOld.new(font_sdl)
         {% end %}
 
         @@fonts[font_key] = font
@@ -41,7 +41,7 @@ module GSDL
     end
 
     # Loads a font from raw byte data and associates it with a key.
-    def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : Font
+    def self.load_from_memory(key : String, io : SDL3::IOStream, size : Float32) : FontOld
       @@mutex.synchronize do
         font_key = get_key(key, size)
         if @@fonts.has_key?(font_key)
@@ -49,7 +49,7 @@ module GSDL
         end
 
         font_sdl = SDL3::TTF::Font.open_io(io, size, close_io: true)
-        font = Font.new(font_sdl)
+        font = FontOld.new(font_sdl)
         @@fonts[font_key] = font
         @@base_fonts[key] = font unless @@base_fonts.has_key?(key)
         font
@@ -60,7 +60,7 @@ module GSDL
       load(DefaultFontKey, path, size)
     end
 
-    def self.get(key : String, size : Float32) : Font
+    def self.get(key : String, size : Float32) : FontOld
       @@mutex.synchronize do
         font_key = get_key(key, size)
         @@fonts[font_key]? || begin
@@ -78,7 +78,7 @@ module GSDL
     end
 
     # Retrieves a loaded font by its key.
-    def self.get(key : String) : Font
+    def self.get(key : String) : FontOld
       @@mutex.synchronize do
         @@fonts[key]? || @@base_fonts[key]? || raise "Font with key '#{key}' not found in FontManager. Was it loaded?"
       end

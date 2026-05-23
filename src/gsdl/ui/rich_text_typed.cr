@@ -15,13 +15,13 @@ module GSDL
     @timer : Timer
 
     def initialize(
-      font = Font.default,
+      font = FontOld.default,
       text : String = "",
       x : Num = 0,
       y : Num = 0,
       origin = {0_f32, 0_f32},
       color : Color = ColorScheme.get(:ui_text),
-      align = Font::Align::Left,
+      align = FontOld::Align::Left,
       wrap_width : Int32 = 0,
       z_index : Int32 = 0,
       @types_per_second : UInt8 = 20_u8,

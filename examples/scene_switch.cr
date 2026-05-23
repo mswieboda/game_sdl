@@ -116,7 +116,7 @@ module GameEx
         x: 256,
         y: 128,
         color: GSDL::Color::Magenta,
-        align: GSDL::Font::Align::Center,
+        align: GSDL::FontOld::Align::Center,
         border_radius: 32
       )
 

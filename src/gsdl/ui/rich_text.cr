@@ -2,20 +2,20 @@ require "./text_old"
 
 module GSDL
   class RichText < TextOld
-    record RichTextSegment, text : String, color : Color, style : Font::Style
+    record RichTextSegment, text : String, color : Color, style : FontOld::Style
 
     @baked_texture : Texture?
     @segments = Array(RichTextSegment).new
 
     def initialize(
-      font = Font.default,
+      font = FontOld.default,
       text : String = "",
       x : Num = 0,
       y : Num = 0,
       origin : Tuple(Float32, Float32) = {0_f32, 0_f32},
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
       color : Color = ColorScheme.get(:ui_text),
-      align : Font::Align = Font::Align::Left,
+      align : FontOld::Align = FontOld::Align::Left,
       wrap_width : Int32 = 0,
       visible_characters : Int32 = -1,
       @z_index : Int32 = 0,
@@ -73,7 +73,7 @@ module GSDL
     private def parse_segments
       @segments.clear
       current_color = self.color
-      current_style = Font::Style::Normal
+      current_style = FontOld::Style::Normal
 
       tag_regex = /<(\/?b|\/?i|c:[^>]+|\/c)>/
 
@@ -86,10 +86,10 @@ module GSDL
 
         tag_content = match[1]
         case tag_content
-        when "b"  then current_style |= Font::Style::Bold
-        when "/b" then current_style &= ~Font::Style::Bold
-        when "i"  then current_style |= Font::Style::Italic
-        when "/i" then current_style &= ~Font::Style::Italic
+        when "b"  then current_style |= FontOld::Style::Bold
+        when "/b" then current_style &= ~FontOld::Style::Bold
+        when "i"  then current_style |= FontOld::Style::Italic
+        when "/i" then current_style &= ~FontOld::Style::Italic
         when "/c" then current_color = self.color
         else
           if tag_content.starts_with?("c:")
@@ -195,9 +195,9 @@ module GSDL
         visual_line_w = line_w - trailing_ws
 
         offset_x = 0
-        if target_align == Font::Align::Center
+        if target_align == FontOld::Align::Center
           offset_x = (@logical_width - visual_line_w) // 2
-        elsif target_align == Font::Align::Right
+        elsif target_align == FontOld::Align::Right
           offset_x = @logical_width - visual_line_w
         end
         offset_x = Math.max(0, offset_x)
@@ -226,7 +226,7 @@ module GSDL
       master_surface.fill(Color.new(0, 0, 0, 0)) # Transparent
 
       old_align = font.align
-      font.align = Font::Align::Left
+      font.align = FontOld::Align::Left
       original_size = font.size
       font.size = original_size * oversample_ratio
 
@@ -285,7 +285,7 @@ module GSDL
       end
 
       font.size = original_size
-      font.style = Font::Style::Normal
+      font.style = FontOld::Style::Normal
       font.align = old_align
 
       @baked_texture = Texture.from_surface(master_surface)

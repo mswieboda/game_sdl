@@ -98,7 +98,7 @@ module FontStressEx
       #   offset_x: 32,
       #   offset_y: 32,
       #   color: GSDL::Color::Yellow,
-      #   align: GSDL::Font::Align::Left
+      #   align: GSDL::FontOld::Align::Left
       # )
       # self.hud = h
     end

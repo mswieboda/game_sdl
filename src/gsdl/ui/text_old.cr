@@ -7,9 +7,9 @@ module GSDL
     record WordInfo, text : String, x : Int32, y : Int32, w : Int32, h : Int32
 
     property text : String
-    property font : Font
+    property font : FontOld
     property color : Color
-    property align : Font::Align
+    property align : FontOld::Align
     property wrap_width : Int32?
     property oversample_ratio : Float32 = OversampleRatio
     property? draw_relative_to_camera : Bool
@@ -24,14 +24,14 @@ module GSDL
     @logical_height : Int32 = 0
 
     def initialize(
-      @font = Font.default,
+      @font = FontOld.default,
       @text : String = "",
       x : Num = 0,
       y : Num = 0,
       origin : Tuple(Float32, Float32) = {0_f32, 0_f32},
       scale : Tuple(Num, Num) = {1_f32, 1_f32},
       @color = ColorScheme.get(:ui_text),
-      @align = Font::Align::Left,
+      @align = FontOld::Align::Left,
       @wrap_width : Int32? = nil,
       @z_index : Int32 = 0,
       @rotation : Num = 0.0,
@@ -55,7 +55,7 @@ module GSDL
       bake!
     end
 
-    def font=(@font : Font)
+    def font=(@font : FontOld)
       layout!
       bake!
     end
@@ -64,7 +64,7 @@ module GSDL
       bake!
     end
 
-    def align=(@align : Font::Align)
+    def align=(@align : FontOld::Align)
       layout!
       bake!
     end
@@ -150,9 +150,9 @@ module GSDL
 
         offset_x = 0
         case @align
-        when Font::Align::Center
+        when FontOld::Align::Center
           offset_x = (@logical_width - visual_line_w) // 2
-        when Font::Align::Right
+        when FontOld::Align::Right
           offset_x = @logical_width - visual_line_w
         end
         offset_x = Math.max(0, offset_x)

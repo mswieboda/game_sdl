@@ -19,7 +19,7 @@ class MainScene < GSDL::Scene
       y: 64,
       color: GSDL::Color::White,
       wrap_width: 600,
-      align: GSDL::Font::Align::Center,
+      align: GSDL::FontOld::Align::Center,
       types_per_second: 5,
       type: GSDL::RichTextTyped::Type::Word
     )

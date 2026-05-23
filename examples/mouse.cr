@@ -2,7 +2,7 @@ require "../src/game_sdl"
 
 module GameEx
   alias Mouse = GSDL::Mouse
-  alias Font = GSDL::Font
+  alias FontOld = GSDL::FontOld
   alias Text = GSDL::Text
 
   WIDTH = 800
