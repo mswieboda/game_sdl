@@ -149,6 +149,14 @@ module GSDL
       @font_atlas.font_size
     end
 
+    def font_size=(font_size : Num)
+      if font_size != self.font_size
+        @font_atlas = FontManager.get(@font, font_size, 0, @weight, @style)
+        @dirty = true
+      end
+    end
+
+    @[AlwaysInline]
     def font : Symbol
       @font
     end
@@ -421,7 +429,7 @@ module GSDL
         max_lines = Int32::MAX
 
         if height = @height
-          max_lines = (height / line_height).to_i
+          max_lines = height < font_size ? 0 : ((height - font_size) / line_height).to_i + 1
         end
 
         @lines = [] of String
