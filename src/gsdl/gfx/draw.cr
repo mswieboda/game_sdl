@@ -1205,17 +1205,37 @@ module GSDL
         current_active_scale = @r.scale
         @r.scale = {sx, sy}
 
-        _draw_texture_rotated(
-          texture: texture.to_sdl,
-          source_rect: source_rect.try(&.to_sdl),
-          dest_rect: actual_dest_rect,
-          angle: angle.to_f64,
-          center: actual_center,
-          flip: flip,
-          color: color,
-          tint: tint,
-          destroy: destroy,
-        )
+        if (a_handle = texture.atlas_handle) && (a_rect = texture.atlas_rect)
+          actual_source_rect = if src = source_rect
+            FRect.new(x: a_rect.x + src.x, y: a_rect.y + src.y, w: src.w, h: src.h)
+          else
+            a_rect
+          end
+
+          _draw_texture_rotated(
+            texture: a_handle,
+            source_rect: actual_source_rect.to_sdl,
+            dest_rect: actual_dest_rect,
+            angle: angle.to_f64,
+            center: actual_center,
+            flip: flip,
+            color: color,
+            tint: tint,
+            destroy: destroy,
+          )
+        else
+          _draw_texture_rotated(
+            texture: texture.to_sdl,
+            source_rect: source_rect.try(&.to_sdl),
+            dest_rect: actual_dest_rect,
+            angle: angle.to_f64,
+            center: actual_center,
+            flip: flip,
+            color: color,
+            tint: tint,
+            destroy: destroy,
+          )
+        end
 
         @r.scale = current_active_scale
       else

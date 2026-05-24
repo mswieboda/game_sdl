@@ -8,19 +8,20 @@ module GSDL
 
     def self.finalize_atlas
       @@mutex.synchronize do
-        # Gather textures that aren't already part of an atlas
-        active_cached = [] of Texture
+        # Gather all active texture references held by the current scene from the WeakRef cache
+        to_pack = [] of Texture
         @@cache.each_value do |weak_ref|
-          if t = weak_ref.value
-            active_cached << t
+          if tex = weak_ref.value
+            # Only pack if it hasn't already been assigned to an atlas page
+            to_pack << tex if tex.atlas_handle.nil?
           end
         end
 
-        all_textures = @@textures.values + active_cached
-        return if all_textures.empty?
-
-        to_pack = all_textures.uniq.select { |t| t.atlas_handle.nil? }.sort_by { |t| -t.height }
+        to_pack.uniq!
         return if to_pack.empty?
+
+        # Sort by height descending (Preserve existing shelf-packing logic)
+        to_pack.sort_by! { |t| -t.height }
 
         max_size = Game.draw.to_sdl.properties.get_number(LibSDL3::SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER).to_i
         padding = 2
@@ -111,25 +112,37 @@ module GSDL
       end
     end
 
+    def self.preload(symbols : Array(Symbol)) : Nil
+      @@mutex.synchronize do
+        symbols.each do |sym|
+          get_internal(sym)
+        end
+      end
+    end
+
     # Safe, Lazy-Loading Fetch Pass for Symbol keys
     def self.get(id : Symbol) : Texture
       @@mutex.synchronize do
-        if weak_ref = @@cache[id]?
-          if texture = weak_ref.value
-            return texture
-          end
-        end
+        get_internal(id)
+      end
+    end
 
-        # Check legacy loaded textures
-        if texture = @@textures[id.to_s]?
+    private def self.get_internal(id : Symbol) : Texture
+      if weak_ref = @@cache[id]?
+        if texture = weak_ref.value
           return texture
         end
-
-        path = @@registry[id]? || raise "Asset Registry Error: Symbol :#{id} was never registered!"
-        texture = load_raw_texture(path)
-        @@cache[id] = WeakRef.new(texture)
-        texture
       end
+
+      # Check legacy loaded textures
+      if texture = @@textures[id.to_s]?
+        return texture
+      end
+
+      path = @@registry[id]? || raise "Asset Registry Error: Symbol :#{id} was never registered!"
+      texture = load_raw_texture(path)
+      @@cache[id] = WeakRef.new(texture)
+      texture
     end
 
     # Housekeeping Maintenance Pass (Call during scene transitions)
