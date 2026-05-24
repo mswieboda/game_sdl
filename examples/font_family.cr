@@ -58,7 +58,7 @@ module GameEx
 
       # Normal / Regular variant (Roboto-Regular)
       @texts << GSDL::Text.new(
-        font: "CustomFamily",
+        font: :CustomFamily,
         font_size: 20,
         text: "AVALANCHE - Normal / Regular (Resolves to Roboto)",
         y: 160,
@@ -70,7 +70,7 @@ module GameEx
 
       # Bold / Regular variant (Electrolize-Regular)
       @texts << GSDL::Text.new(
-        font: "CustomFamily",
+        font: :CustomFamily,
         font_size: 20,
         text: "AVALANCHE - Bold / Regular (Resolves to Electrolize)",
         y: 230,
@@ -82,7 +82,7 @@ module GameEx
 
       # Normal / Italic variant (PressStart2P)
       @texts << GSDL::Text.new(
-        font: "CustomFamily",
+        font: :CustomFamily,
         font_size: 20,
         text: "AVALANCHE - Normal / Italic (Resolves to PressStart)",
         y: 300,
@@ -94,7 +94,7 @@ module GameEx
 
       # Dynamic, interactive text entity
       @dynamic_text = GSDL::Text.new(
-        font: "CustomFamily",
+        font: :CustomFamily,
         font_size: 22,
         text: "This text changes styles dynamically every 1.5 seconds!",
         y: 420,

@@ -55,7 +55,7 @@ module GameEx
     end
 
     def init
-      @sprite = GSDL::Sprite.new("palm_tree", x: Game.width // 2, y: Game.height // 2, origin: {0.5_f32, 0.5_f32})
+      @sprite = GSDL::Sprite.new(:palm_tree, x: Game.width // 2, y: Game.height // 2, origin: {0.5_f32, 0.5_f32})
     end
 
     def draw(draw : GSDL::Draw)

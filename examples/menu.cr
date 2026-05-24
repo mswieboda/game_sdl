@@ -72,7 +72,7 @@ module GameEx
       }
 
       icon = GSDL::AnimatedSprite.new(
-        key: "coin",
+        key: :coin,
         width: 32,
         height: 32,
         scale: {0.5_f32, 0.5_f32}

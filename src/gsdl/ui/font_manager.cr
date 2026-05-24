@@ -1,6 +1,6 @@
 module GSDL
   module FontManager
-    DefaultFontKey = "default"
+    DefaultFontKey = :default
     DefaultFontSize = 16_f32
     DefaultOutline = 0
 
@@ -8,10 +8,12 @@ module GSDL
     @@fonts = Hash(String, Font).new
     @@font_data = Hash(String, Bytes).new
     @@families = Hash(String, FontFamily).new
+    @@registry = Hash(Symbol, String).new
+    @@cache = Hash(Tuple(Symbol, Float32, Int32, FontWeight, FontStyle), WeakRef(Font)).new
     @@mutex = Mutex.new
     @@default = DefaultFontKey
 
-    def self.default
+    def self.default : Symbol
       @@default
     end
 
@@ -32,14 +34,12 @@ module GSDL
     end
 
     def self.load_default(path_key : String, size : Float32 = DefaultFontSize, outline = DefaultOutline)
-      @@default = get_name(path_key)
+      @@default = :default
+      register_pair(:default, path_key)
       load(path_key, size, outline)
     end
 
     # Loads a font based on the mode (release/debug).
-    # In release mode, it uses AssetManager to load from the packfile.
-    # In debug mode, it loads from the loose asset filesystem path,
-    # prepending AssetManager.asset_path.
     def self.load(path_key : String, size : Num, outline : Int32) : Font
       @@mutex.synchronize do
         font_key = get_key(get_name(path_key), size, outline)
@@ -48,22 +48,16 @@ module GSDL
           return @@fonts[font_key]
         end
 
-        # see TextureManager.load comments for more details on path_key
-        # which is a key based on the path like 'fonts/PressStart2P.ttf'
-        # and will either load from the asset.pack file in release mode
-        # or from the 'assets/fonts/PressStart2P.ttf' file directly in debug mode
-
-        # Using flag?(:release) for compile-time conditional compilation.
-        # When compiling with `crystal build --release`, the :release flag is set.
         data = {% if flag?(:release) %}
-          # In release mode, defer to AssetManager which handles packfile loading
-          # NOTE: we use `load_raw_data` instead of usual `with_io_stream` because we do
-          # not need an SDL3::IOStream object that needs to stay "open" since we get raw Bytes
-          AssetManager.load_raw_data(path_key)
+          manifest_key = path_key.starts_with?("assets/") ? path_key.sub("assets/", "") : path_key
+          AssetManager.load_raw_data(manifest_key)
         {% else %}
-          # In debug mode, load from loose files, make sure we allocate a new slice via Bytes.new
-          # instead of reusing a File.read / File.read_all string pointer with String#to_slice
-          File.open(AssetManager.asset_path + path_key) do |file|
+          full_path = if path_key.starts_with?("assets/") || path_key.starts_with?(GSDL::AssetManager.asset_path)
+            path_key
+          else
+            GSDL::AssetManager.asset_path + path_key
+          end
+          File.open(full_path) do |file|
             slice = Bytes.new(file.size.to_i)
             file.read_fully(slice)
             slice
@@ -94,6 +88,83 @@ module GSDL
       end
     end
 
+
+    def self.get(
+      id : Symbol,
+      size : Num,
+      outline : Int32,
+      weight : FontWeight = FontWeight::Normal,
+      style : FontStyle = FontStyle::Regular
+    ) : Font
+      @@mutex.synchronize do
+        cache_key = {id, size.to_f32, outline, weight, style}
+        if weak_ref = @@cache[cache_key]?
+          if font = weak_ref.value
+            return font
+          end
+        end
+
+        path_key = @@registry[id]?
+        if path_key.nil?
+          if id == :default && (default_sym = @@default) != :default
+            path_key = @@registry[default_sym]?
+          elsif @@families.has_key?(id.to_s)
+            path_key = id.to_s
+          else
+            clean_sym = id.to_s.downcase.gsub('_', "").gsub('-', "")
+            if matched_family = @@families.keys.find { |fam| fam.downcase.gsub('_', "").gsub('-', "") == clean_sym }
+              path_key = matched_family
+            end
+          end
+        end
+
+        if path_key
+          resolved_name = get_name(path_key)
+          font_key = get_key(resolved_name, size, outline)
+          if font = @@fonts[font_key]?
+            return font
+          end
+        else
+          font_key = get_key(id.to_s, size, outline)
+          if font = @@fonts[font_key]?
+            return font
+          end
+
+          # Also check by name (without extension) if id.to_s matches
+          @@fonts.each_key do |fkey|
+            if fkey.starts_with?("#{id.to_s}-")
+              if font = @@fonts[fkey]?
+                return font
+              end
+            end
+          end
+
+          raise "Asset Registry Error: Symbol :#{id} was never registered!"
+        end
+
+        if family = @@families[path_key]?
+          resolved_path = family.resolve(weight, style)
+        else
+          resolved_path = path_key
+        end
+
+        resolved_name = get_name(resolved_path)
+
+        unless @@font_data.has_key?(resolved_name)
+          load_font_data_unlocked(resolved_path)
+        end
+
+        if data = @@font_data[resolved_name]?
+          font = Font.new(name: resolved_name, data: data, size: size, outline: outline)
+          @@cache[cache_key] = WeakRef.new(font)
+          return font
+        end
+
+        raise "Font data not found for path: #{resolved_path}"
+      end
+    end
+
+    # Retrieves a loaded font by its key.
     def self.get(
       name : String,
       size : Num,
@@ -129,19 +200,24 @@ module GSDL
       end
     end
 
+    # Housekeeping Maintenance Pass (Call during scene transitions)
+    def self.prune_dead_references : Nil
+      @@mutex.synchronize do
+        @@cache.select! do |key, weak_ref|
+          !weak_ref.value.nil?
+        end
+      end
+    end
+
     def self.unload(key : String) : Nil
       @@mutex.synchronize do
-        # This unloads ALL sizes for this key if it's a name key,
-        # or just the specific size if it's a compound key
         if font = @@fonts.delete(key)
           font.destroy
         else
-          # delete any size / outline variants
           prefix = "#{key}-"
           @@fonts.reject! do |k, font|
             if k.starts_with?(prefix)
               font.destroy
-
               true
             else
               false
@@ -163,6 +239,16 @@ module GSDL
         end
 
         @@fonts.clear
+
+        # Close all unique fonts from the weak cache
+        @@cache.each_value do |weak_ref|
+          if font = weak_ref.value
+            font.destroy
+          end
+        end
+        @@cache.clear
+        @@registry.clear
+
         @@font_data.clear
         @@families.clear
       end
@@ -171,6 +257,13 @@ module GSDL
     def self.begin_frame : Nil
       @@mutex.synchronize do
         @@fonts.each_value &.begin_frame
+
+        # Touch frames for all cached fonts as well
+        @@cache.each_value do |weak_ref|
+          if font = weak_ref.value
+            font.begin_frame
+          end
+        end
       end
     end
 
@@ -190,9 +283,14 @@ module GSDL
 
       begin
         data = {% if flag?(:release) %}
-          AssetManager.load_raw_data(path_key)
+          manifest_key = path_key.starts_with?("assets/") ? path_key.sub("assets/", "") : path_key
+          AssetManager.load_raw_data(manifest_key)
         {% else %}
-          full_path = AssetManager.asset_path + path_key
+          full_path = if path_key.starts_with?("assets/") || path_key.starts_with?(GSDL::AssetManager.asset_path)
+            path_key
+          else
+            GSDL::AssetManager.asset_path + path_key
+          end
           File.open(full_path) do |file|
             slice = Bytes.new(file.size.to_i)
             file.read_fully(slice)
@@ -203,6 +301,47 @@ module GSDL
       rescue ex
         raise "Failed to dynamically load font file at '#{path_key}': #{ex.message}"
       end
+    end
+
+    def self.find_symbol(name : String) : Symbol?
+      @@mutex.synchronize do
+        clean_name = name.downcase.gsub('-', '_').gsub('_', "")
+        @@registry.each_key do |sym|
+          if sym.to_s.downcase.gsub('_', "") == clean_name
+            return sym
+          end
+        end
+      end
+      nil
+    end
+
+    def self.register_pair(key : Symbol, val : String)
+      @@mutex.synchronize do
+        path = val.starts_with?("assets/fonts/") ? val : "assets/fonts/#{val}"
+        @@registry[key] = path
+      end
+    end
+
+    def self.register_runtime(mappings : Hash(Symbol, String))
+      mappings.each do |key, val|
+        register_pair(key, val)
+      end
+    end
+
+    def self.register_runtime(mappings : NamedTuple)
+      mappings.each do |key, val|
+        register_pair(key, val.to_s)
+      end
+    end
+
+    macro register(mappings)
+      {% if mappings.is_a?(HashLiteral) || mappings.is_a?(NamedTupleLiteral) %}
+        {% for key, val in mappings %}
+          ::GSDL::FontManager.register_pair(:{{key.id}}, {{val}})
+        {% end %}
+      {% else %}
+        ::GSDL::FontManager.register_runtime({{mappings}})
+      {% end %}
     end
   end
 end

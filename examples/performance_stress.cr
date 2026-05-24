@@ -33,7 +33,7 @@ module StressEx
 
   class Skeleton < GSDL::AnimatedSprite
     def initialize(x, y)
-      super(key: "player", width: 32, height: 64, x: x, y: y, origin: {0.5_f32, 0.5_f32})
+      super(key: :player, width: 32, height: 64, x: x, y: y, origin: {0.5_f32, 0.5_f32})
       add("walk", (1..6).to_a, 8)
       play("walk")
       self.z_index = 1
@@ -48,7 +48,7 @@ module StressEx
 
   class Ship < GSDL::Sprite
     def initialize(x, y)
-      super(key: "ship", x: x, y: y, origin: {0.5_f32, 0.5_f32})
+      super(key: :ship, x: x, y: y, origin: {0.5_f32, 0.5_f32})
       self.z_index = 0
       self.rotation += 45.0_f32
     end

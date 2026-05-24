@@ -17,7 +17,7 @@ module GSDL
     delegate :"frame_index=", to: @animation_player
 
     def initialize(
-      key : String,
+      key : Symbol,
       @width : Int32,
       @height : Int32,
       x : Num = 0,

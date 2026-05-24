@@ -3,7 +3,7 @@ require "../src/game_sdl"
 # Simple entity for testing
 class TestEntity < GSDL::Entity
   property health : Int32 = 10
-  
+
   def save_state : Hash(String, JSON::Any)
     state = super
     state["health"] = JSON::Any.new(health.to_i64)

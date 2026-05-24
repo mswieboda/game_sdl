@@ -67,7 +67,7 @@ module GameEx
 
       # --- Standard Sprite ---
       @ship = GSDL::Sprite.new(
-        key: "ship",
+        key: :ship,
         origin: {0.5_f32, 0.5_f32},
         x: 128,
         y: 448,
@@ -79,7 +79,7 @@ module GameEx
       # Assuming coin.png is a strip of frames.
       # Let's guess 16x16 frames for now.
       @coin = GSDL::AnimatedSprite.new(
-        key: "coin",
+        key: :coin,
         width: 32, height: 32,
         origin: {0.5_f32, 0.5_f32},
         x: 624,
@@ -93,7 +93,7 @@ module GameEx
       @coin.play("spin")
 
       # --- Audio ---
-      @audio = GSDL::AudioManager.get("race_car")
+      @audio = GSDL::AudioManager.get(:race_car)
 
       # --- Shape and Shape Transparency ---
       bg = GSDL::Box.new(
@@ -156,7 +156,7 @@ module GameEx
 
       # --- Tile Map ---
       tile_size = 32
-      texture = GSDL::TextureManager.get("tiles")
+      texture = GSDL::TextureManager.get(:tiles)
       tileset = GSDL::Tileset.new(texture, tile_size, tile_size)
 
       @tile_map = GSDL::TileMap.new(tile_size, tile_size)

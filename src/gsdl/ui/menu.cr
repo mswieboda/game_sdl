@@ -59,7 +59,7 @@ module GSDL
       @is_selected : (Num, Num, Num, Num -> Bool),
       @is_next : (-> Bool),
       @is_previous : (-> Bool),
-      font : String = FontManager.default,
+      font : Symbol = FontManager.default,
       font_size : Num = FontManager.default_size,
       @items = [] of Tuple(Symbol, String),
       @x : Num = 0,

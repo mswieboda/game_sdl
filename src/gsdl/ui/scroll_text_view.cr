@@ -31,7 +31,7 @@ module GSDL
     @text : Text
 
     def initialize(
-      font : String = FontManager.default,
+      font : Symbol = FontManager.default,
       font_size : Num = FontManager.default_size,
       text : String = "",
       @width = 200,

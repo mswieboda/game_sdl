@@ -267,7 +267,16 @@ module GSDL
     end
 
     def pop
-      @scenes.pop?
+      scene = @scenes.pop?
+      prune_all_dead_references
+      scene
+    end
+
+    private def prune_all_dead_references
+      TextureManager.prune_dead_references
+      FontManager.prune_dead_references
+      AudioManager.prune_dead_references
+      TileMapManager.prune_dead_references
     end
 
     def replace(scene : Scene, data : SwitchData? = nil)

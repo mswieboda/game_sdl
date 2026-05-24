@@ -236,14 +236,14 @@ module GSDL
       # Since we need segment info (style, color) for baking, we need to map layout_info back or store it.
       # Re-parsing during bake is not ideal. Let's adjust layout_info to include style/color if it's RichText.
       # Actually, let's just use the segment-based bake logic here.
-      
+
       # We need to know which segment each WordInfo came from.
       # Simplified: re-walk segments with the layout positions.
-      
+
       char_count = 0
       seg_idx = 0
       layout_idx = 0
-      
+
       @segments.each do |seg|
         words = seg.text.split(/([ \n\t]+)/)
         words.each do |word|
@@ -251,11 +251,11 @@ module GSDL
           if word == "\n"
             next
           end
-          
+
           # This should correspond to @layout_info[layout_idx]
           info = @layout_info[layout_idx]
           layout_idx += 1
-          
+
           break if !show_all && remaining_chars <= 0
 
           text_to_draw = word
@@ -270,7 +270,7 @@ module GSDL
 
           font.style = seg.style
           surface = font.render_text_blended(text_to_draw, seg.color)
-          
+
           if surface
             dest_rect = Rect.new(
               x: (info.x.to_f32 * oversample_ratio).to_i,

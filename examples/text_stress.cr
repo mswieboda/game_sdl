@@ -38,7 +38,7 @@ module FontStressEx
       @timer = GSDL::Timer.new(3.seconds)
       @timer.start
       @text << GSDL::Text.new(
-        font: "PressStart2P",
+        font: :PressStart2P,
         font_size: 16_f32,
         text: "hello! from the dark recesses of evil!\nYOU WON'T CATCH ME\nTHIS TIME FIEND,\nnot now, not ever.\nHear that, punk?",
         x: Game.width // 2,
@@ -54,7 +54,7 @@ module FontStressEx
 
         text = if rng.rand > 0.5
           GSDL::Text.new(
-            font: "PressStart2P",
+            font: :PressStart2P,
             font_size: 16_f32,
             text: "This is a testing string, blah!",
             x: x,
@@ -64,7 +64,7 @@ module FontStressEx
           )
         else
           GSDL::Text.new(
-            font: "PressStart2P",
+            font: :PressStart2P,
             font_size: 16_f32,
             text: "hello! from the dark recesses of evil!",
             x: x,

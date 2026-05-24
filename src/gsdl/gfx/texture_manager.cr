@@ -2,14 +2,24 @@ module GSDL
   module TextureManager
     @@textures = Hash(String, Texture).new
     @@atlases = [] of Texture
+    @@registry = Hash(Symbol, String).new
+    @@cache = Hash(Symbol, WeakRef(Texture)).new
     @@mutex = Mutex.new
 
     def self.finalize_atlas
       @@mutex.synchronize do
-        return if @@textures.empty?
-
         # Gather textures that aren't already part of an atlas
-        to_pack = @@textures.values.select { |t| t.atlas_handle.nil? }.sort_by { |t| -t.height }
+        active_cached = [] of Texture
+        @@cache.each_value do |weak_ref|
+          if t = weak_ref.value
+            active_cached << t
+          end
+        end
+
+        all_textures = @@textures.values + active_cached
+        return if all_textures.empty?
+
+        to_pack = all_textures.uniq.select { |t| t.atlas_handle.nil? }.sort_by { |t| -t.height }
         return if to_pack.empty?
 
         max_size = Game.draw.to_sdl.properties.get_number(LibSDL3::SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER).to_i
@@ -17,7 +27,7 @@ module GSDL
 
         current_atlas_w = 512
         current_atlas_h = 512
-        
+
         # Determine initial POT size that can fit the largest item
         while current_atlas_w < to_pack.first.width + padding * 2 || current_atlas_h < to_pack.first.height + padding * 2
           if current_atlas_w <= current_atlas_h
@@ -28,11 +38,11 @@ module GSDL
         end
 
         pages = [] of Array(Tuple(Texture, Int32, Int32))
-        
+
         loop do
           current_page = [] of Tuple(Texture, Int32, Int32)
           remaining = [] of Texture
-          
+
           shelf_x = padding
           shelf_y = padding
           shelf_h = 0
@@ -84,51 +94,125 @@ module GSDL
           Game.draw.with_target(atlas_tex) do
             Game.draw.color = Color::Transparent
             Game.draw.clear
-            
+
             page.each do |(tex, x, y)|
               # Draw sub-texture into atlas
               # We use draw_immediately to avoid recursive push_cmd issues
               Game.draw.texture(tex, x: x.to_f32, y: y.to_f32, draw_immediately: true)
-              
+
               # Set atlas metadata
               tex.atlas_handle = atlas_tex.to_sdl
               tex.atlas_rect = FRect.new(x: x.to_f32, y: y.to_f32, w: tex.width, h: tex.height)
             end
           end
-          
+
           @@atlases << atlas_tex
         end
       end
     end
 
+    # Safe, Lazy-Loading Fetch Pass for Symbol keys
+    def self.get(id : Symbol) : Texture
+      @@mutex.synchronize do
+        if weak_ref = @@cache[id]?
+          if texture = weak_ref.value
+            return texture
+          end
+        end
+
+        # Check legacy loaded textures
+        if texture = @@textures[id.to_s]?
+          return texture
+        end
+
+        path = @@registry[id]? || raise "Asset Registry Error: Symbol :#{id} was never registered!"
+        texture = load_raw_texture(path)
+        @@cache[id] = WeakRef.new(texture)
+        texture
+      end
+    end
+
+    # Housekeeping Maintenance Pass (Call during scene transitions)
+    def self.prune_dead_references : Nil
+      @@mutex.synchronize do
+        @@cache.select! do |key, weak_ref|
+          !weak_ref.value.nil?
+        end
+      end
+    end
+
     # Loads a texture based on the mode (release/debug).
-    # In release mode, it uses AssetManager to load from the packfile.
-    # In debug mode, it loads from the loose asset filesystem path,
-    # prepending GSDL::AssetManager.asset_path.
     def self.load(key : String, path_key : String) : Texture
       @@mutex.synchronize do
         if @@textures.has_key?(key)
           return @@textures[key]
         end
 
-        # Using flag?(:release) for compile-time conditional compilation.
-        #
-        texture = {% if flag?(:release) %}
-          # In release mode, use AssetManager to load from the packfile.
-          AssetManager.with_io_stream(path_key) do |io_stream|
-            texture_sdl = SDL3::Image.load_texture_io(Game.draw.to_sdl, io_stream, close_io: true)
-            Texture.new(texture_sdl)
-          end
-        {% else %}
-          # In debug mode, load from loose files
-          full_path = GSDL::AssetManager.asset_path + path_key
-          texture_sdl = SDL3::Image.load_texture(Game.draw.to_sdl, full_path)
-          Texture.new(texture_sdl)
-        {% end %}
-
+        texture = load_raw_texture(path_key)
         @@textures[key] = texture
         texture
       end
+    end
+
+    private def self.load_raw_texture(path_key : String) : Texture
+      {% if flag?(:release) %}
+        # In release mode, use AssetManager to load from the packfile.
+        manifest_key = path_key.starts_with?("assets/") ? path_key.sub("assets/", "") : path_key
+        AssetManager.with_io_stream(manifest_key) do |io_stream|
+          texture_sdl = SDL3::Image.load_texture_io(Game.draw.to_sdl, io_stream, close_io: true)
+          Texture.new(texture_sdl)
+        end
+      {% else %}
+        # In debug mode, load from loose files
+        full_path = if path_key.starts_with?("assets/") || path_key.starts_with?(GSDL::AssetManager.asset_path)
+          path_key
+        else
+          GSDL::AssetManager.asset_path + path_key
+        end
+        texture_sdl = SDL3::Image.load_texture(Game.draw.to_sdl, full_path)
+        Texture.new(texture_sdl)
+      {% end %}
+    end
+
+    def self.find_symbol(name : String) : Symbol?
+      @@mutex.synchronize do
+        clean_name = name.downcase.gsub('-', '_').gsub('_', "")
+        @@registry.each_key do |sym|
+          if sym.to_s.downcase.gsub('_', "") == clean_name
+            return sym
+          end
+        end
+      end
+      nil
+    end
+
+    def self.register_pair(key : Symbol, val : String)
+      @@mutex.synchronize do
+        path = val.starts_with?("assets/gfx/") ? val : "assets/gfx/#{val}"
+        @@registry[key] = path
+      end
+    end
+
+    def self.register_runtime(mappings : Hash(Symbol, String))
+      mappings.each do |key, val|
+        register_pair(key, val)
+      end
+    end
+
+    def self.register_runtime(mappings : NamedTuple)
+       mappings.each do |key, val|
+         register_pair(key, val.to_s)
+       end
+     end
+
+    macro register(mappings)
+      {% if mappings.is_a?(HashLiteral) || mappings.is_a?(NamedTupleLiteral) %}
+        {% for key, val in mappings %}
+          ::GSDL::TextureManager.register_pair(:{{key.id}}, {{val}})
+        {% end %}
+      {% else %}
+        ::GSDL::TextureManager.register_runtime({{mappings}})
+      {% end %}
     end
 
     # Loads a texture from raw byte data and associates it with a key.
@@ -160,8 +244,12 @@ module GSDL
     # Retrieves a loaded texture by its key.
     def self.get(key : String) : Texture
       @@mutex.synchronize do
-        @@textures[key]? || raise "Texture with key '#{key}' not found in TextureManager. Was it loaded?"
+        if @@textures.has_key?(key)
+          return @@textures[key]
+        end
       end
+
+      raise "Texture with key '#{key}' not found in TextureManager. Was it loaded?"
     end
 
     # Unloads a specific texture from memory.
@@ -178,6 +266,14 @@ module GSDL
       @@mutex.synchronize do
         @@textures.each_value &.destroy
         @@textures.clear
+
+        @@cache.each_value do |weak_ref|
+          if t = weak_ref.value
+            t.destroy
+          end
+        end
+        @@cache.clear
+        @@registry.clear
 
         @@atlases.each &.destroy
         @@atlases.clear

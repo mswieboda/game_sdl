@@ -32,7 +32,7 @@ module TopDownRPGEx
     property grid_size : GSDL::Num = 32_f32
 
     def initialize
-      super(key: "player", width: 24, height: 40, origin: {0.5_f32, 0.5_f32})
+      super(key: :player, width: 24, height: 40, origin: {0.5_f32, 0.5_f32})
 
       # Animations: idle_down, idle_up, idle_left, idle_right, walk_down, walk_up, walk_left, walk_right
       # Skeleton sheet has 7 frames per row.

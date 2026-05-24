@@ -27,7 +27,7 @@ module GSDL
     delegate z_index, to: @text
 
     def initialize(
-      font : String | FontOld = FontManager.default,
+      font : Symbol | FontOld = FontManager.default,
       font_size : Num = FontManager.default_size,
       text : String | GSDL::Text = "",
       origin = {0_f32, 0_f32},

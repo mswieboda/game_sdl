@@ -63,6 +63,7 @@ module GSDL
     @last_visible_limit = -1
 
     # TODO: make a setter to change font atlas
+    @font : Symbol
     @font_atlas : Font
     @outline_atlas : Font?
     @full_text : String
@@ -76,7 +77,7 @@ module GSDL
     @rotation : Num
 
     def initialize(
-      font : String = FontManager.default,
+      font : Symbol = FontManager.default,
       font_size : Num = FontManager.default_size,
       text : String = "",
       @x : Num = 0,
@@ -148,11 +149,11 @@ module GSDL
       @font_atlas.font_size
     end
 
-    def font : String
+    def font : Symbol
       @font
     end
 
-    def font=(font : String)
+    def font=(font : Symbol)
       if font != @font
         @font = font
         @font_atlas = FontManager.get(@font, font_size, 0, @weight, @style)

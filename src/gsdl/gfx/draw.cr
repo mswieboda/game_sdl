@@ -317,7 +317,7 @@ module GSDL
       # 1. If we are drawing to an off-screen target (like an atlas), we use 1:1 scaling.
       return 1.0_f32 if @r.render_target
 
-      # 2. If SDL3 Logical Presentation is active, SDL3 handles the scaling to the window size 
+      # 2. If SDL3 Logical Presentation is active, SDL3 handles the scaling to the window size
       # automatically. In this mode, we should not apply our own content_scale.
       w, h, mode = @r.logical_presentation
       return 1.0_f32 if w > 0 && h > 0

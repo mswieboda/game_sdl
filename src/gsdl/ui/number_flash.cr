@@ -7,7 +7,7 @@ module GSDL
     property elapsed : Float32 = 0.0_f32
 
     def initialize(
-      font : String = FontManager.default,
+      font : Symbol = FontManager.default,
       font_size : Num = FontManager.default_size,
       text : String = "",
       x : Num = 0,

@@ -5,7 +5,7 @@ module GSDL
     @source_rect : FRect | Nil
 
     def initialize(
-      key : String,
+      key : Symbol,
       x : Num = 0,
       y : Num = 0,
       origin = {0_f32, 0_f32},

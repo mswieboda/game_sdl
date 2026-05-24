@@ -26,7 +26,7 @@ module GameEx
       super(:main)
 
       @text = GSDL::Text.new(
-        font: "Roboto-Regular",
+        font: :"Roboto-Regular",
         font_size: 32,
         # text: "blah blah blah one two three four",
         text: "jumping quickly over lazy dogs\nis good exercise!\nbatty1 batty2 batty3",

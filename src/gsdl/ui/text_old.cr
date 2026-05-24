@@ -90,10 +90,10 @@ module GSDL
       return if @text.empty?
 
       lines = @text.split("\n")
-      
+
       # Use line_skip if available, otherwise font height
       logical_line_height = @font.line_skip > 0 ? @font.line_skip : @font.height
-      
+
       raw_lines = [] of Array(WordInfo)
       current_y = 0
       max_w = 0
@@ -110,9 +110,9 @@ module GSDL
         words = line.split(/([ \t]+)/)
         words.each do |word|
           next if word.empty?
-          
+
           w, h = @font.text_size(word)
-          
+
           if (ww = @wrap_width) && ww > 0 && cursor_x + w > ww && !word.strip.empty?
             raw_lines << line_words
             line_words = [] of WordInfo
@@ -135,7 +135,7 @@ module GSDL
       # Apply alignment
       raw_lines.each do |line_words|
         next if line_words.empty?
-        
+
         line_w = line_words.last.x + line_words.last.w
         # ignore trailing whitespace for alignment
         trailing_ws = 0
@@ -181,7 +181,7 @@ module GSDL
 
       baked_w = (@logical_width * @oversample_ratio).to_i
       baked_h = (@logical_height * @oversample_ratio).to_i
-      
+
       master_surface = Surface.new(width: baked_w, height: baked_h)
       master_surface.fill(Color.new(0, 0, 0, 0)) # Transparent
 
@@ -283,7 +283,7 @@ module GSDL
 
     def cursor_pos(char_index : Int32) : Point
       return Point.new(0, 0) if @layout_info.empty? || char_index <= 0
-      
+
       count = 0
       @layout_info.each do |info|
         if count + info.text.size >= char_index
@@ -295,7 +295,7 @@ module GSDL
         end
         count += info.text.size
       end
-      
+
       # If index is beyond total text, return end of last word
       last = @layout_info.last
       return Point.new(last.x + last.w, last.y)

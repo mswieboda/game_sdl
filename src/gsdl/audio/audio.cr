@@ -3,14 +3,24 @@ require "sdl3/audio/mixer"
 
 module GSDL
   class Audio
-    @file_path : String
-    @audio : LibSDL3Mixer::Audio*
-    @track : LibSDL3Mixer::Track*
+    getter file_path : String
+    getter audio : LibSDL3Mixer::Audio*
+    getter track : LibSDL3Mixer::Track*
     @category : String = "sfx"
+    @is_owner : Bool = true
 
     def initialize(@file_path : String, @audio : LibSDL3Mixer::Audio*, @track : LibSDL3Mixer::Track*)
       # Default to SFX category
       self.category = "sfx"
+    end
+
+    def initialize(id : Symbol)
+      referenced = AudioManager.get(id)
+      @file_path = referenced.file_path
+      @audio = referenced.audio
+      @track = referenced.track
+      @category = referenced.category
+      @is_owner = false
     end
 
     def play
@@ -100,6 +110,8 @@ module GSDL
     end
 
     def destroy
+      return unless @is_owner
+
       if @track
         LibSDL3Mixer.destroy_track(@track)
         @track = Pointer(Void).null

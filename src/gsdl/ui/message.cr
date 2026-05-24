@@ -6,7 +6,7 @@ module GSDL
     getter bg_color : Color
 
     def initialize(
-      font : String | FontOld = FontManager.default,
+      font : Symbol | FontOld = FontManager.default,
       font_size : Num = FontManager.default_size,
       text : String | GSDL::Text | GSDL::TextOld = "",
       origin = {0_f32, 0_f32},

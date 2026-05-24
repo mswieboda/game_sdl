@@ -35,7 +35,7 @@ module GameEx
       super(:start)
 
       @sprite = GSDL::Sprite.new(
-        key: "ship",
+        key: :ship,
         origin: {0.5_f32, 0.5_f32},
         source_rect: GSDL::FRect.new(w: 128)
       )

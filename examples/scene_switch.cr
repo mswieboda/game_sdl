@@ -120,7 +120,7 @@ module GameEx
         border_radius: 32
       )
 
-      @sprite = GSDL::Sprite.new("tiles")
+      @sprite = GSDL::Sprite.new(:tiles)
     end
 
     def update(dt : Float32)

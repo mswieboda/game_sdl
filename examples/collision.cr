@@ -28,7 +28,7 @@ module GameEx
       source_rect = GSDL::FRect.new(w: 128)
 
       super(
-        key: "ship",
+        key: :ship,
         x: x,
         y: y,
         origin: {0.5_f32, 0.5_f32},

@@ -121,7 +121,7 @@ module AsyncSceneLoadingEx
     def initialize
       super(:main)
 
-      @ship = GSDL::Sprite.new(key: "ship", origin: {0.5_f32, 0.5_f32})
+      @ship = GSDL::Sprite.new(key: :ship, origin: {0.5_f32, 0.5_f32})
       @ship.center(width: GSDL::Game.width, height: GSDL::Game.height)
 
       @text = GSDL::Text.new(
@@ -137,7 +137,7 @@ module AsyncSceneLoadingEx
       @ship.rotation += 100 * dt
 
       if GSDL::Keys.just_pressed?(GSDL::Keys::Space)
-        GSDL::AudioManager.get("ding").play
+        GSDL::AudioManager.get(:ding).play
       end
     end
 

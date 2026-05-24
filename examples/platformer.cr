@@ -102,7 +102,7 @@ module PlatformerEx
 
   class Coin < GSDL::AnimatedSprite
     def initialize(x, y)
-      super(key: "coin", width: 32, height: 32, x: x, y: y)
+      super(key: :coin, width: 32, height: 32, x: x, y: y)
 
       @z_index = 1
       self.solid = false
@@ -113,7 +113,7 @@ module PlatformerEx
 
   class CustomPlatform < GSDL::Sprite
     def initialize(x, y, w, h)
-      super(key: "tiles", x: x, y: y)
+      super(key: :tiles, x: x, y: y)
 
       @z_index = 1
 
@@ -144,7 +144,7 @@ module PlatformerEx
       Input.set(:right) { GSDL::Keys.pressed?([GSDL::Keys::D, GSDL::Keys::Right]) }
       Input.set(:debug) { GSDL::Keys.just_pressed?(GSDL::Keys::Tab) }
 
-      @tile_map = GSDL::TileMapManager.get("map")
+      @tile_map = GSDL::TileMapManager.get(:map)
       camera.type = GSDL::Camera::Type::CenterOnTarget
 
       # Register the tile map with the collision space
@@ -154,7 +154,7 @@ module PlatformerEx
       collision_space.space_bounds = GSDL::FRect.new(-16, -16, @tile_map.width + 32, @tile_map.height + 32)
 
       # player
-      @player = Player.new(key: "player", width: 32, height: 64)
+      @player = Player.new(key: :player, width: 32, height: 64)
       @tile_map.z_index = -1
       @player.z_index = 1
 
@@ -167,7 +167,7 @@ module PlatformerEx
       end
       add_child(@player) # Auto-registered as a Collidable
 
-      @coin_audio = GSDL::AudioManager.get("coin_audio")
+      @coin_audio = GSDL::AudioManager.get(:coin_audio)
       @coins = [] of GSDL::AnimatedSprite
 
       spots = [{64, 64}, {320, 320}, {640, 512}, {640, 256}, {256, 256}]

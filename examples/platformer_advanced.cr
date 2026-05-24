@@ -33,7 +33,7 @@ module PlatformerAdvancedEx
     JUMP_IMPULSE = -512_f32
     SPEED = 192_f32
 
-    def initialize(key, width, height)
+    def initialize(key : Symbol, width, height)
       super(key: key, width: width, height: height)
       @use_gravity = true
 
@@ -104,7 +104,7 @@ module PlatformerAdvancedEx
 
   class Block < GSDL::Sprite
     def initialize(x, y, w, h)
-      super(key: "tiles", x: x, y: y)
+      super(key: :tiles, x: x, y: y)
       # Use a solid tile from the tileset
       @source_rect = GSDL::FRect.new(x: 0, y: 0, w: 32, h: 32)
       self.scale = {w / 32.0_f32, h / 32.0_f32}
@@ -125,7 +125,7 @@ module PlatformerAdvancedEx
       Input.set(:crouch) { GSDL::Keys.pressed?([GSDL::Keys::S, GSDL::Keys::Down]) }
       Input.set(:dash) { GSDL::Keys.just_pressed?([GSDL::Keys::LShift, GSDL::Keys::RShift]) }
 
-      @player = Player.new(key: "player", width: 32, height: 64)
+      @player = Player.new(key: :player, width: 32, height: 64)
       @player.x = 100
       @player.y = 100
 

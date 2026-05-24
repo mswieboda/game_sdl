@@ -31,7 +31,7 @@ module BenchmarkEx
       # Using ship as a placeholder texture for walls
       # Ship frames are 128x128
       super(
-        key: "ship",
+        key: :ship,
         x: x,
         y: y,
         scale: {(w / SHIP_SIZE).to_f32, (h / SHIP_SIZE).to_f32},
@@ -45,7 +45,7 @@ module BenchmarkEx
     include GSDL::MoveController
     def initialize(x, y)
       super(
-        key: "ship",
+        key: :ship,
         x: x,
         y: y,
         origin: {0.5_f32, 0.5_f32},
@@ -88,7 +88,7 @@ module BenchmarkEx
     include GSDL::MoveController
     def initialize(x, y)
       super(
-        key: "ship",
+        key: :ship,
         x: x,
         y: y,
         origin: {0.5_f32, 0.5_f32},
@@ -158,7 +158,7 @@ module BenchmarkEx
         offset_x: 20,
         offset_y: 20,
         color: GSDL::Color::Yellow,
-        align: GSDL::FontOld::Align::Left
+        h_align: GSDL::HorizontalAlign::Left
       )
       self.hud = h
     end

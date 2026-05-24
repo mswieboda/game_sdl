@@ -26,7 +26,7 @@ module ShootEmUpEx
   class PlayerShip < GSDL::Sprite
     include GSDL::VerticalScrollController
 
-    def initialize(key)
+    def initialize(key : Symbol)
       super(
         key: key,
         origin: {0.5_f32, 0.5_f32},
@@ -56,7 +56,7 @@ module ShootEmUpEx
       # Match the camera scroll speed to the ship's base auto_scroll_speed
       camera.scroll_speed_y = -150_f32
 
-      @player = PlayerShip.new(key: "ship")
+      @player = PlayerShip.new(key: :ship)
       @player.x = Game.width / 2_f32
       @player.y = Game.height - 100_f32
     end

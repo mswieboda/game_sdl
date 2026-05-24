@@ -37,7 +37,7 @@ module GameEx
 
       origin = {0.5_f32, 0.5_f32}
 
-      @sprite = GSDL::AnimatedSprite.new("player", 32, 64, origin: origin)
+      @sprite = GSDL::AnimatedSprite.new(:player, 32, 64, origin: origin)
       @sprite.center(width: WIDTH, height: HEIGHT)
 
       @sprite.add("idle", [0], 8)

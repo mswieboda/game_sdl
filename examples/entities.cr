@@ -11,7 +11,7 @@ class Player < GSDL::Entity
     @y = y.to_f32
 
     # Child sprite at relative {0, 0}
-    @sprite = GSDL::AnimatedSprite.new("player", width: 32, height: 64, origin: {0.5_f32, 0.5_f32})
+    @sprite = GSDL::AnimatedSprite.new(:player, width: 32, height: 64, origin: {0.5_f32, 0.5_f32})
     @sprite.add("walk", (1..6).to_a, 8)
     @sprite.play("walk")
 
@@ -60,7 +60,7 @@ class MainScene < GSDL::Scene
     add_child(Player.new(Game.width // 2, Game.height // 2))
 
     # Add a standalone sprite to scene
-    barrel = GSDL::Sprite.new("barrel", x: 100, y: 100)
+    barrel = GSDL::Sprite.new(:barrel, x: 100, y: 100)
     add_child(barrel)
   end
 

@@ -57,7 +57,7 @@ module ObliquePerspectiveEx
     def initialize
       # We use 0.5, 1.0 (bottom center) as origin so 'y' is the ground contact point,
       # and player is kind of in middle of grid, with a shadow below
-      super(key: "player", width: 24, height: 40, origin: {0.5_f32, 1.0_f32})
+      super(key: :player, width: 24, height: 40, origin: {0.5_f32, 1.0_f32})
 
       # Row-based animations for 8-directional movement (mirrored for left)
       fps_walk = 8
@@ -171,10 +171,10 @@ module ObliquePerspectiveEx
       add_child(@player)
 
       # Add some static objects
-      @objects << WorldObject.new("barrel", 300, 250)
-      @objects << WorldObject.new("barrel", 340, 260)
-      @objects << WorldObject.new("palm_tree", 500, 200)
-      @objects << WorldObject.new("palm_tree", 200, 400)
+      @objects << WorldObject.new(:barrel, 300, 250)
+      @objects << WorldObject.new(:barrel, 340, 260)
+      @objects << WorldObject.new(:palm_tree, 500, 200)
+      @objects << WorldObject.new(:palm_tree, 200, 400)
 
       @objects.each { |obj| add_child(obj) }
     end

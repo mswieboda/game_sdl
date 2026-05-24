@@ -93,12 +93,12 @@ module GSDL
       compressed = IO::Memory.new
       Compress::Zlib::Writer.open(compressed) { |w| w.print json_data }
       payload = compressed.to_slice
-      
+
       # XOR Obfuscation
       payload.map! { |b| b ^ XOR_KEY }
-      
+
       checksum = Digest::CRC32.checksum(payload)
-      
+
       tmp_path = "#{path}.tmp"
       File.open(tmp_path, "wb") do |f|
         f.write "GSDL".to_slice    # Magic Number
@@ -124,7 +124,7 @@ module GSDL
           version = f.read_bytes(UInt32)
           checksum = f.read_bytes(UInt32)
           payload = f.gets_to_end.to_slice
-          
+
           # Verify Checksum
           if Digest::CRC32.checksum(payload) != checksum
             puts "Error: Binary save file checksum mismatch for #{path}"
@@ -134,7 +134,7 @@ module GSDL
           # Undo XOR
           writable_payload = payload.dup
           writable_payload.map! { |b| b ^ XOR_KEY }
-          
+
           # Decompress
           json_data = IO::Memory.new(writable_payload)
           decompressed = Compress::Zlib::Reader.open(json_data) { |r| r.gets_to_end }

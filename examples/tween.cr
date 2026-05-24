@@ -59,7 +59,7 @@ module TweenEx
 
       # Create a sprite to tween
       sprite = GSDL::Sprite.new(
-        key: "ship",
+        key: :ship,
         origin: origin,
         source_rect: GSDL::FRect.new(w: 128)
       )

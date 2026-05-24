@@ -102,7 +102,7 @@ module GSDL
     end
 
     def initialize(
-      font : String = FontManager.default,
+      font : Symbol = FontManager.default,
       font_size : Num = FontManager.default_size,
       text : String = "",
       text_data_template = nil,

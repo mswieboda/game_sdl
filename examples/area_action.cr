@@ -35,7 +35,7 @@ module GameEx
     @dir_text : GSDL::Text
 
     def initialize(x : GSDL::Num, y : GSDL::Num)
-      super("player", x, y, origin: {0.5_f32, 0.5_f32}, source_rect: GSDL::FRect.new(x: 0, y: 0, w: 24, h: 40))
+      super(:player, x, y, origin: {0.5_f32, 0.5_f32}, source_rect: GSDL::FRect.new(x: 0, y: 0, w: 24, h: 40))
 
       @dir_text = GSDL::Text.new(
         x: x,
@@ -116,7 +116,7 @@ module GameEx
     @dir_text : GSDL::Text
 
     def initialize(x : GSDL::Num, y : GSDL::Num)
-      super("npc", x, y, origin: {0.5_f32, 0.5_f32}, source_rect: GSDL::FRect.new(x: 0, y: 0, w: 32, h: 64))
+      super(:npc, x, y, origin: {0.5_f32, 0.5_f32}, source_rect: GSDL::FRect.new(x: 0, y: 0, w: 32, h: 64))
 
       @tint = GSDL::Color::White
       @dir_text = GSDL::Text.new(

@@ -60,7 +60,7 @@ module GameEx
         origin: {0.5_f32, 0_f32},
         h_align: GSDL::HorizontalAlign::Center
       )
-      
+
       label_names = ["Master Volume", "SFX Volume", "Music Volume"]
       @labels = label_names.map_with_index do |name, i|
         GSDL::Text.new(text: name, x: 32, y: 96 + i * 48)

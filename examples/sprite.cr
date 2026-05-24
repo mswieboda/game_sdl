@@ -36,7 +36,7 @@ module GameEx
       @text.y = @text.height + 32
 
       @sprite = GSDL::Sprite.new(
-        key: "ship",
+        key: :ship,
         origin: {0.5_f32, 0.5_f32},
         source_rect: GSDL::FRect.new(w: 128_f32)
       )

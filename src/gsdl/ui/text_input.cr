@@ -16,7 +16,7 @@ module GSDL
     @blink_timer : Float32 = 0_f32
 
     def initialize(
-      font : String | Font = FontManager.default,
+      font : Symbol | Font = FontManager.default,
       font_size : Num = FontManager.default_size,
       text : String = "",
       origin = {0_f32, 0_f32},
@@ -26,7 +26,7 @@ module GSDL
       padding = nil,
       padding_x = nil,
       padding_y = nil,
-      align = Font::Align::Left,
+      align = FontOld::Align::Left,
       x : Num = 0_f32,
       y : Num = 0_f32,
       color = ColorScheme.get(:ui_text),

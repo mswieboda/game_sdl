@@ -33,7 +33,7 @@ module GSDL
             slice
           end
         {% end %}
-        
+
         @@dialogs = Hash(String, DialogNode).from_yaml(String.new(data))
       end
     end
