@@ -8,6 +8,7 @@ module GSDL
       property scale_x : Float32
       property scale_y : Float32
       property clip_rect : SDL3::Rect?
+      property insertion_index : Int32 = 0
 
       def initialize(@z_index : Int32, @scale_x : Float32, @scale_y : Float32, @clip_rect : SDL3::Rect? = nil)
       end
@@ -100,6 +101,7 @@ module GSDL
       property texture : SDL3::Texture? = nil
       property atlas_rect : FRect? = nil
       property atlas_handle : SDL3::Texture? = nil
+      property sort_y : Float32? = nil
 
       def initialize(
         z_index : Int32,
@@ -110,9 +112,14 @@ module GSDL
         @texture : SDL3::Texture? = nil,
         @atlas_rect : FRect? = nil,
         @atlas_handle : SDL3::Texture? = nil,
-        clip_rect : SDL3::Rect? = nil
+        clip_rect : SDL3::Rect? = nil,
+        @sort_y : Float32? = nil
       )
         super(z_index: z_index, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
+      end
+
+      def y : Num?
+        @sort_y || (@vertices.empty? ? nil : @vertices.first.fpoint.y)
       end
     end
 
@@ -212,7 +219,11 @@ module GSDL
         @commands.sort! do |a, b|
           ay = a.y.try(&.to_f32) || 0.0_f32
           by = b.y.try(&.to_f32) || 0.0_f32
-          ay <=> by
+          if ay == by
+            a.insertion_index <=> b.insertion_index
+          else
+            ay <=> by
+          end
         end
         @dirty = false
       end
@@ -328,6 +339,7 @@ module GSDL
 
     private def push_cmd(cmd : Command)
       c = cmd
+      c.insertion_index = @current_command_count
 
       # Still cull if enabled, but use local variables to be safe
       if @culling_enabled
@@ -815,7 +827,7 @@ module GSDL
 
     # geometry
 
-    def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : Texture? = nil)
+    def geometry(vertices : Vertices, indices : Array(Int32), z_index : Int32 = 0, texture : Texture? = nil, sort_y : Float32? = nil)
       cs = effective_content_scale
       sx = @current_scale_x * cs
       sy = @current_scale_y * cs
@@ -834,7 +846,8 @@ module GSDL
         atlas_handle: texture.try(&.atlas_handle),
         scale_x: sx,
         scale_y: sy,
-        clip_rect: @current_clip_rect
+        clip_rect: @current_clip_rect,
+        sort_y: sort_y
       ))
     end
 
