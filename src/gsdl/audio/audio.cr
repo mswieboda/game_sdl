@@ -23,9 +23,68 @@ module GSDL
       @is_owner = false
     end
 
-    def play
-      unless LibSDL3Mixer.play_track(@track, 0_u32)
+    # Plays the audio.
+    # By default, it plays on its own dedicated track (best for persistent instances).
+    # If already playing, it restarts from the beginning.
+    #
+    # If `overlap` is true, it uses the AudioManager's track pool to play a new 
+    # instance of this sound on a fresh channel, allowing multiple instances to layer.
+    # Returns the channel ID used (or -1 for the dedicated channel).
+    def play(loops : Int32 = 0, overlap : Bool = false) : Int32
+      if overlap
+        return play_overlapping(loops)
+      end
+
+      # Reset position to start if it was playing/paused
+      LibSDL3Mixer.set_track_playback_position(@track, 0_i64)
+      LibSDL3Mixer.set_track_loops(@track, loops)
+      if LibSDL3Mixer.play_track(@track, 0_u32)
+        return -1
+      else
         raise "Failed to play track for '#{@file_path}': #{SDL3.get_error}"
+      end
+    end
+
+    private def play_overlapping(loops : Int32 = 0) : Int32
+      # Determine which range of tracks to search based on category
+      is_music = ["music", "ambient"].includes?(category)
+      range = is_music ? (24...32) : (0...24)
+
+      # Find an available track in the designated range
+      channel_id = -1
+      AudioManager.tracks.each_with_index do |track, i|
+        next unless range.includes?(i)
+        unless LibSDL3Mixer.track_playing(track) || LibSDL3Mixer.track_paused(track)
+          channel_id = i
+          break
+        end
+      end
+
+      if channel_id == -1
+        STDERR.puts "Audio pool range (#{"Music" if is_music}#{"SFX" unless is_music}) exhausted! Could not play sound: #{@file_path}"
+        return -1
+      end
+
+      track = AudioManager.tracks[channel_id]
+
+      # Assign the audio data to the selected track
+      unless LibSDL3Mixer.set_track_audio(track, @audio)
+        STDERR.puts "Failed to set audio for track #{channel_id}: #{SDL3.get_error}"
+        return -1
+      end
+
+      # Set properties
+      LibSDL3Mixer.set_track_loops(track, loops)
+      LibSDL3Mixer.tag_track(track, category.to_unsafe)
+
+      # Play the track
+      if LibSDL3Mixer.play_track(track, 0_u32)
+        # Hold a strong reference to the asset during playback to prevent GC
+        AudioManager.track_owners[channel_id] = self
+        return channel_id
+      else
+        STDERR.puts "Failed to play sound on channel #{channel_id}: #{SDL3.get_error}"
+        return -1
       end
     end
 

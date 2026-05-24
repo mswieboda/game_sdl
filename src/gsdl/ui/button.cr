@@ -59,22 +59,6 @@ module GSDL
       end
     end
 
-    def draw_background(draw : Draw)
-      box = Box.new(
-        x: x,
-        y: y,
-        origin: origin,
-        scale: scale,
-        width: width,
-        height: height,
-        color: ColorScheme.get(:ui_bg),
-        z_index: z_index - 1,
-        border_radius: border_radius
-      )
-      box.draw_relative_to_camera = self.draw_relative_to_camera?
-      box.draw(draw)
-    end
-
     def draw_border(draw : Draw)
       margin = 4
       margin_x = margin * scale_x * (1.0_f32 - 2.0_f32 * origin_x)

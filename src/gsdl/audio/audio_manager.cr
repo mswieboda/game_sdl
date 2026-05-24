@@ -7,6 +7,11 @@ module GSDL
     @@cache = Hash(Symbol, WeakRef(GSDL::Audio)).new
     @@mutex = Mutex.new
 
+    class_getter tracks = Array(LibSDL3Mixer::Track*).new
+    class_property track_owners = Array(GSDL::Audio?).new # To prevent GC of playing audio
+    @@sfx_group : LibSDL3Mixer::Group* = Pointer(LibSDL3Mixer::Group).null
+    @@music_group : LibSDL3Mixer::Group* = Pointer(LibSDL3Mixer::Group).null
+
     # Sets up the AudioManager.
     # This should be called once at the start of the application.
     def self.setup
@@ -19,10 +24,95 @@ module GSDL
       if @@mixer.null?
         raise "Failed to create SDL_mixer: #{SDL3.get_error}"
       end
+
+      # Create Groups for SFX and Music
+      @@sfx_group = LibSDL3Mixer.create_group(@@mixer)
+      @@music_group = LibSDL3Mixer.create_group(@@mixer)
+
+      # Allocate 32 simultaneous audio channels (tracks)
+      32.times do |i|
+        track = LibSDL3Mixer.create_track(@@mixer)
+        if track.null?
+          raise "Failed to create audio track: #{SDL3.get_error}"
+        end
+        @@tracks << track
+        @@track_owners << nil
+
+        # Reserve tracks 0-23 for SFX, 24-31 for Music
+        if i < 24
+          LibSDL3Mixer.set_track_group(track, @@sfx_group)
+        else
+          LibSDL3Mixer.set_track_group(track, @@music_group)
+        end
+      end
     end
 
     def self.mixer : LibSDL3Mixer::Mixer*
       @@mixer.null? ? raise("AudioManager not setup with a mixer!") : @@mixer
+    end
+
+    # Plays a sound effect on the first available channel (track from the pool)
+    def self.play_sound(id : Symbol, loops : Int32 = 0) : Int32
+      audio_asset = self.get(id)
+
+      # Determine which range of tracks to search based on category
+      is_music = ["music", "ambient"].includes?(audio_asset.category)
+      range = is_music ? (24...32) : (0...24)
+
+      # Find an available track in the designated range
+      channel_id = -1
+      range.each do |i|
+        track = @@tracks[i]
+        unless LibSDL3Mixer.track_playing(track) || LibSDL3Mixer.track_paused(track)
+          channel_id = i
+          break
+        end
+      end
+
+      if channel_id == -1
+        # If the preferred range is full, we could optionally overflow to the other,
+        # but for now we'll stick to the reservation.
+        STDERR.puts "Audio pool range (#{"Music" if is_music}#{"SFX" unless is_music}) exhausted! Could not play sound: #{id}"
+        return -1
+      end
+
+      track = @@tracks[channel_id]
+
+      # Assign the audio data to the selected track
+      unless LibSDL3Mixer.set_track_audio(track, audio_asset.audio)
+        STDERR.puts "Failed to set audio for track #{channel_id}: #{SDL3.get_error}"
+        return -1
+      end
+
+      # Set looping if requested
+      LibSDL3Mixer.set_track_loops(track, loops)
+
+      # Ensure the track has the correct category tag
+      LibSDL3Mixer.tag_track(track, audio_asset.category.to_unsafe)
+
+      # Play the track (0_u32 means use default properties)
+      if LibSDL3Mixer.play_track(track, 0_u32)
+        # Hold a strong reference to the asset during playback to prevent GC
+        @@track_owners[channel_id] = audio_asset
+        return channel_id
+      else
+        STDERR.puts "Failed to play sound #{id} on channel #{channel_id}: #{SDL3.get_error}"
+        return -1
+      end
+    end
+
+    def self.stop_channel(channel_id : Int32)
+      return if channel_id < 0 || channel_id >= @@tracks.size
+      track = @@tracks[channel_id]
+      LibSDL3Mixer.stop_track(track, 0)
+    end
+
+    def self.fade_out_channel(channel_id : Int32, duration_ms : Int32)
+      return if channel_id < 0 || channel_id >= @@tracks.size
+      track = @@tracks[channel_id]
+      # Convert ms to frames for SDL3 Mixer
+      fade_frames = LibSDL3Mixer.track_ms_to_frames(track, duration_ms.to_i64)
+      LibSDL3Mixer.stop_track(track, fade_frames)
     end
 
     def self.get(id : Symbol) : GSDL::Audio
@@ -51,6 +141,13 @@ module GSDL
       @@mutex.synchronize do
         @@cache.select! do |key, weak_ref|
           !weak_ref.value.nil?
+        end
+
+        # Clear owners for tracks that are no longer playing/paused to allow GC
+        @@tracks.each_with_index do |track, i|
+          unless LibSDL3Mixer.track_playing(track) || LibSDL3Mixer.track_paused(track)
+            @@track_owners[i] = nil
+          end
         end
       end
     end
@@ -207,6 +304,22 @@ module GSDL
         @@cache.clear
         @@registry.clear
         @@categories.clear
+
+        @@tracks.each do |track|
+          LibSDL3Mixer.destroy_track(track)
+        end
+        @@tracks.clear
+        @@track_owners.clear
+
+        unless @@sfx_group.null?
+          LibSDL3Mixer.destroy_group(@@sfx_group)
+          @@sfx_group = Pointer(LibSDL3Mixer::Group).null
+        end
+
+        unless @@music_group.null?
+          LibSDL3Mixer.destroy_group(@@music_group)
+          @@music_group = Pointer(LibSDL3Mixer::Group).null
+        end
 
         unless @@mixer.null?
           LibSDL3Mixer.destroy_mixer(@@mixer)
