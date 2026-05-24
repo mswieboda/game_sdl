@@ -4,7 +4,6 @@ default: run
 GSDL_ROOT := .
 
 include gsdl.mk
--include lib/stb_truetype/stb_truetype.mk
 
 CRYSTAL_COMPILER := crystal
 C_COMPILER := gcc
