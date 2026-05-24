@@ -135,5 +135,19 @@ module GSDL
       x >= self.x && x <= self.right &&
         y >= self.y && y <= self.bottom
     end
+
+    def intersect(other : Rect) : Rect?
+      # Compute overlapping bounds
+      left = Math.max(self.left, other.left)
+      right = Math.min(self.right, other.right)
+      top = Math.max(self.top, other.top)
+      bottom = Math.min(self.bottom, other.bottom)
+
+      if left < right && top < bottom
+        Rect.new(left, top, right - left, bottom - top)
+      else
+        nil
+      end
+    end
   end
 end

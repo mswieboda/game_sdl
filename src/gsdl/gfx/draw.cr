@@ -267,6 +267,7 @@ module GSDL
     @active_batch_scale_x : Float32 = 0.0_f32
     @active_batch_scale_y : Float32 = 0.0_f32
     @active_batch_clip_rect : SDL3::Rect? = nil
+    @clip_stack = [] of Rect
 
     def command_count : Int32
       @current_command_count > 0 ? @current_command_count : @last_command_count
@@ -322,6 +323,31 @@ module GSDL
 
     def clip_rect
       @current_clip_rect
+    end
+
+    def push_clip(rect : Rect)
+      if current = @clip_stack.last?
+        if intersected = current.intersect(rect)
+          @clip_stack << intersected
+          self.clip_rect = intersected
+        else
+          empty_rect = Rect.new(0, 0, 0, 0)
+          @clip_stack << empty_rect
+          self.clip_rect = empty_rect
+        end
+      else
+        @clip_stack << rect
+        self.clip_rect = rect
+      end
+    end
+
+    def pop_clip
+      @clip_stack.pop?
+      if last = @clip_stack.last?
+        self.clip_rect = last
+      else
+        self.clip_rect = nil
+      end
     end
 
     private def effective_content_scale : Float32
@@ -587,6 +613,7 @@ module GSDL
       @active_batch_scale_x = 0.0_f32
       @active_batch_scale_y = 0.0_f32
       @active_batch_clip_rect = nil
+      @clip_stack.clear
 
       active_scale_x = 1_f32
       active_scale_y = 1_f32
