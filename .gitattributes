@@ -7,6 +7,7 @@
 *.lock text eol=lf
 Makefile text eol=lf
 *.md text eol=lf
+*.json text eol=lf
 
 # Denotate binary files
 *.png binary
@@ -19,8 +20,3 @@ Makefile text eol=lf
 *.jpeg binary
 *.obj binary
 *.o binary
-*.json text eol=lf
-
-# Treat third-party C library code as vendored (excludes it from language stats and search)
-src/ext/stb_truetype.h linguist-vendored
-src/ext/stb_truetype.c linguist-vendored

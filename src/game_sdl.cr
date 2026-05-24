@@ -1,6 +1,6 @@
 require "sdl3"
 require "weak_ref"
-require "./ext/stb_truetype"
+require "stb_truetype"
 
 require "./gsdl/asset_manager"
 require "./gsdl/core/loadable"
