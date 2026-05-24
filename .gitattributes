@@ -12,4 +12,15 @@ Makefile text eol=lf
 *.png binary
 *.wav binary
 *.ttf binary
+*.ogg binary
+*.mp3 binary
+*.bmp binary
+*.jpg binary
+*.jpeg binary
+*.obj binary
+*.o binary
 *.json text eol=lf
+
+# Treat third-party C library code as vendored (excludes it from language stats and search)
+src/ext/stb_truetype.h linguist-vendored
+src/ext/stb_truetype.c linguist-vendored
