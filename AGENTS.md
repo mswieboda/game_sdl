@@ -72,7 +72,7 @@ br sync --status --json      # Check sync status
 
 ### Workflow Pattern
 
-1. **Start**: Run `bv --robot-triage` to find actionable work
+1. **Start**: When asked to start a new task, run `bv --robot-triage` to find actionable work
 2. **Claim**: Use `br update <id> --status=in_progress --json`
 3. **Work**: Implement the task
 4. **Complete**: Use `br close <id> --json`
@@ -87,7 +87,7 @@ br sync --status --json      # Check sync status
 
 ### Best Practices
 
-- Check `bv --robot-triage` at session start to find available work
+- Check `bv --robot-triage` when asked to find available work
 - Update status as you work (in_progress → closed)
 - Create new issues with `br create --json` when you discover tasks
 - Use descriptive titles and set appropriate priority/type
@@ -102,7 +102,6 @@ Always ask the user to confirm via their own manual testing. And then when the u
 3. **Sync to Disk:** Run `br sync --flush-only --json`.
 4. **Final Closure:** If the task is truly finished, run `br close <ID> --json`.
 5. **Summarize to User:** Summarize changes, and task updates to user, and suggest a commit message. DO NOT use any `git` write commands, the user will perform them manually.
-6. **Handoff:** End the session by stating the next unblocked task ID from `bv --robot-triage`.
 
 <!-- end-br-agent-instructions -->
 
@@ -122,9 +121,9 @@ bv is a graph-aware triage engine for Beads projects (.beads/beads.jsonl). Inste
 
 **CRITICAL: Use ONLY --robot-* flags. Bare bv launches an interactive TUI that blocks your session.**
 
-#### The Workflow: Start With Triage
+#### The Triage Workflow:
 
-**`bv --robot-triage` is your single entry point.** It returns everything you need in one call:
+When asked to start a new task **`bv --robot-triage` is your single entry point.** It returns everything you need in one call:
 - `quick_ref`: at-a-glance counts + top 3 picks
 - `recommendations`: ranked actionable items with scores, reasons, unblock info
 - `quick_wins`: low-effort high-impact items
@@ -133,7 +132,7 @@ bv is a graph-aware triage engine for Beads projects (.beads/beads.jsonl). Inste
 - `commands`: copy-paste shell commands for next steps
 
 ```bash
-bv --robot-triage        # THE MEGA-COMMAND: start here
+bv --robot-triage        # THE MEGA-COMMAND
 bv --robot-next          # Minimal: just the single top pick + claim command
 
 # Token-optimized output (TOON) for lower LLM context usage:
