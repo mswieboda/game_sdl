@@ -28,11 +28,35 @@ module GSDL
     end
 
     def self.x
-      @@x
+      window = GSDL::Game.instance.window
+      pts_w, _ = window.size
+      px_w, _ = window.pixel_size
+      scale = pts_w.to_f32 / px_w.to_f32
+      (@@x * scale).to_i
     end
 
     def self.y
-      @@y
+      window = GSDL::Game.instance.window
+      _, pts_h = window.size
+      _, px_h = window.pixel_size
+      scale = pts_h.to_f32 / px_h.to_f32
+      (@@y * scale).to_i
+    end
+
+    def self.dx
+      window = GSDL::Game.instance.window
+      pts_w, _ = window.size
+      px_w, _ = window.pixel_size
+      scale = pts_w.to_f32 / px_w.to_f32
+      ((@@x - @@prev_x) * scale).to_i
+    end
+
+    def self.dy
+      window = GSDL::Game.instance.window
+      _, pts_h = window.size
+      _, px_h = window.pixel_size
+      scale = pts_h.to_f32 / px_h.to_f32
+      ((@@y - @@prev_y) * scale).to_i
     end
 
     def self.wheel_x
@@ -43,16 +67,8 @@ module GSDL
       @@wheel_y
     end
 
-    def self.dx
-      @@x - @@prev_x
-    end
-
-    def self.dy
-      @@y - @@prev_y
-    end
-
     def self.position
-      {@@x, @@y}
+      {self.x, self.y}
     end
 
     def self.moved?

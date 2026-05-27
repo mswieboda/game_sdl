@@ -859,14 +859,23 @@ module GSDL
       sx = @current_scale_x * cs
       sy = @current_scale_y * cs
 
-      if proj = @projection
+      final_vertices = if proj = @projection
         sx *= proj.zoom_x
         sy *= proj.zoom_y
+
+        vertices.map do |v|
+          p = v.fpoint
+          p.x -= proj.x
+          p.y -= proj.y
+          Vertex.new(p, v.fcolor, v.texture_fpoint)
+        end
+      else
+        vertices
       end
 
       push_cmd(DrawGeometryCommand.new(
         z_index: z_index,
-        vertices: vertices,
+        vertices: final_vertices,
         indices: indices,
         texture: texture.try(&.to_sdl),
         atlas_rect: texture.try(&.atlas_rect),
