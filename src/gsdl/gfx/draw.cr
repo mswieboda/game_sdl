@@ -20,6 +20,10 @@ module GSDL
       def on_screen?(screen_w : Float32, screen_h : Float32) : Bool
         true
       end
+
+      def clipped_out? : Bool
+        false
+      end
     end
 
     abstract class DrawColorCommand < DrawCommand
@@ -93,6 +97,16 @@ module GSDL
 
         cx + radius >= 0_f32 && cx - radius <= screen_w && cy + radius >= 0_f32 && cy - radius <= screen_h
       end
+
+      def clipped_out? : Bool
+        if clip = @clip_rect
+          r = @dest_rect
+          r.x + r.w < clip.x || r.x > (clip.x + clip.w) ||
+          r.y + r.h < clip.y || r.y > (clip.y + clip.h)
+        else
+          false
+        end
+      end
     end
 
     class DrawGeometryCommand < DrawCommand
@@ -121,6 +135,31 @@ module GSDL
       def y : Num?
         @sort_y || (@vertices.empty? ? nil : @vertices.first.fpoint.y)
       end
+
+      def clipped_out? : Bool
+        if clip = @clip_rect
+          return true if @vertices.empty?
+
+          min_x = @vertices.first.fpoint.x
+          max_x = min_x
+          min_y = @vertices.first.fpoint.y
+          max_y = min_y
+
+          @vertices.each do |v|
+            x = v.fpoint.x
+            y = v.fpoint.y
+            min_x = x if x < min_x
+            max_x = x if x > max_x
+            min_y = y if y < min_y
+            max_y = y if y > max_y
+          end
+
+          max_x < clip.x || min_x > (clip.x + clip.w) ||
+          max_y < clip.y || min_y > (clip.y + clip.h)
+        else
+          false
+        end
+      end
     end
 
     class DrawFRectCommand < DrawColorCommand
@@ -142,6 +181,16 @@ module GSDL
         r_h = @rect.h * scale_y.abs
 
         r_x + r_w >= 0_f32 && r_x <= screen_w && r_y + r_h >= 0_f32 && r_y <= screen_h
+      end
+
+      def clipped_out? : Bool
+        if clip = @clip_rect
+          r = @rect
+          r.x + r.w < clip.x || r.x > (clip.x + clip.w) ||
+          r.y + r.h < clip.y || r.y > (clip.y + clip.h)
+        else
+          false
+        end
       end
     end
 
@@ -376,6 +425,9 @@ module GSDL
         sh = GSDL::Game.window_height.to_f32 * cs
         return if !c.on_screen?(sw, sh)
       end
+
+      # Clip culling (Option 2)
+      return if c.clipped_out?
 
       layer = @layers[c.z_index] ||= begin
         @sorted_z_indices << c.z_index
@@ -650,7 +702,7 @@ module GSDL
                         @active_batch_texture.not_nil!.to_unsafe == current_tex_handle.not_nil!.to_unsafe &&
                         @active_batch_scale_x == command.scale_x &&
                         @active_batch_scale_y == command.scale_y &&
-                        @active_batch_clip_rect == command.clip_rect
+                        clip_rect_equal?(@active_batch_clip_rect, command.clip_rect)
 
             if can_batch
               if command.is_a?(DrawTextureCommand)
@@ -771,6 +823,14 @@ module GSDL
 
     private def can_batch_texture?(next_cmd : Command, current_cmd : Command, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect?) : Bool
       false
+    end
+
+    private def clip_rect_equal?(a : SDL3::Rect?, b : SDL3::Rect?) : Bool
+      return true if a.nil? && b.nil?
+      return false if a.nil? || b.nil?
+      a_rect = a.not_nil!
+      b_rect = b.not_nil!
+      a_rect.x == b_rect.x && a_rect.y == b_rect.y && a_rect.w == b_rect.w && a_rect.h == b_rect.h
     end
 
     private def _render_texture_rotated(
