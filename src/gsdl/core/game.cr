@@ -406,10 +406,6 @@ module GSDL
       load_assets
 
       TextureManager.finalize_atlas
-
-      {% if flag?(:release) %}
-        AssetManager.close_pack
-      {% end %}
     end
 
     def vsync
@@ -566,6 +562,10 @@ module GSDL
       FontManager.clear_all
       AudioManager.clear_all
       TileMapManager.clear_all
+
+      {% if flag?(:release) %}
+        AssetManager.close_pack
+      {% end %}
 
       Input.clear
       Keys.clear
