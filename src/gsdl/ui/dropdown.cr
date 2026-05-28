@@ -237,6 +237,19 @@ module GSDL
           end
         end
       end
+
+      # Prevent external manipulation of children for Dropdown
+      private def add_child(child : Element)
+        super(child)
+      end
+
+      private def remove_child(child : Element)
+        super(child)
+      end
+
+      private def clear_children
+        super
+      end
     end
   end
 end
