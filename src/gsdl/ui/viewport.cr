@@ -48,9 +48,9 @@ module GSDL
 
         old_zoom = @zoom
 
-        # Formula: new_pan_x = pan_x + rx * (1 / old_zoom - 1 / target_zoom)
-        @pan_x += rx * (1.0_f32 / old_zoom - 1.0_f32 / target_zoom)
-        @pan_y += ry * (1.0_f32 / old_zoom - 1.0_f32 / target_zoom)
+        # Formula: new_pan_x = pan_x - rx * (1 / old_zoom - 1 / target_zoom)
+        @pan_x -= rx * (1.0_f32 / old_zoom - 1.0_f32 / target_zoom)
+        @pan_y -= ry * (1.0_f32 / old_zoom - 1.0_f32 / target_zoom)
         @zoom = target_zoom
       end
 
