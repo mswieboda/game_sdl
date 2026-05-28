@@ -65,8 +65,10 @@ module GSDL
           font_size: resolved_size,
           text: text,
           h_align: h_align,
+          v_align: height ? VerticalAlign::Center : VerticalAlign::Top,
           color: color,
           width: width ? width - @padding_x * 2 : nil,
+          height: height ? height - @padding_y * 2 : nil,
           z_index: z_index
         )
       else
@@ -75,6 +77,8 @@ module GSDL
         if t = @text
           if t.is_a?(Text)
             t.width = width - @padding_x * 2 if width
+            t.height = height - @padding_y * 2 if height
+            t.v_align = VerticalAlign::Center if height
           elsif t.is_a?(TextOld)
             t.wrap_width = width - @padding_x * 2 if width
           end

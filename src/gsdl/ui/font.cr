@@ -33,6 +33,8 @@ module GSDL
     DefaultFontSize = 16
 
     @ascent : Float32 = 0_f32
+    @ascent_logical : Float32 = 0_f32
+    @total_scale : Float32 = 1_f32
     @oversample : Int32
     @render_font_size : Float32
     @render_outline : Int32
@@ -56,10 +58,11 @@ module GSDL
       @texture_width = 1024
       @texture_height = 1024
 
-      total_scale = calculate_total_scale
-      @font_size = size * total_scale
-      @oversample = calculate_oversample(@font_size, total_scale)
-      @render_font_size = @font_size.to_f32 * @oversample
+      @total_scale = calculate_total_scale
+      @font_size = size.to_f32
+      physical_size = size.to_f32 * @total_scale
+      @oversample = calculate_oversample(physical_size, @total_scale)
+      @render_font_size = physical_size * @oversample
       @render_outline = @outline * @oversample
 
       # Initialize STB Font Info (heap-allocated to insulate Font class from struct size variations)
@@ -82,6 +85,7 @@ module GSDL
       line_gap = 0
       LibSTBTrueType.get_font_v_metrics(@font_info, pointerof(ascent), pointerof(descent), pointerof(line_gap))
       @ascent = ascent.to_f32 * @font_scale
+      @ascent_logical = (ascent.to_f32 * @font_scale) / (@total_scale * @oversample)
 
       # Shelf allocator variables
       @current_shelf_y = 0
@@ -347,7 +351,7 @@ module GSDL
         prev_char = char
       end
 
-      total_width - character_spacing
+      (total_width - character_spacing) / @total_scale
     end
 
     def draw_text(
@@ -362,14 +366,14 @@ module GSDL
       z_index : Int32 = 0
     )
       current_x = x
-      current_y = y + @ascent * scale_y
+      current_y = y + @ascent_logical * scale_y
       prev_char : Char? = nil
 
       text.each_char_with_index do |char, i|
         metric = touch_glyph(char)
 
         if p_char = prev_char
-          current_x += get_kerning(p_char, char) * scale_x
+          current_x += (get_kerning(p_char, char) / @total_scale) * scale_x
         end
 
         if metric.width > 0 && metric.height > 0
@@ -380,13 +384,13 @@ module GSDL
             h: (metric.height + (@render_outline * 2)).to_f32
           )
 
-          w = (src.w / @oversample) * scale_x
-          h = (src.h / @oversample) * scale_y
+          w = (((src.w / @oversample) / @total_scale)) * scale_x
+          h = (((src.h / @oversample) / @total_scale)) * scale_y
 
-          logical_outline = @render_outline / @oversample
+          logical_outline = (@render_outline / @oversample) / @total_scale
 
-          gx = current_x + ((metric.bearing_x / @oversample) - logical_outline) * scale_x
-          gy = current_y + ((metric.bearing_y / @oversample) - logical_outline) * scale_y
+          gx = current_x + (((metric.bearing_x / @oversample) / @total_scale) - logical_outline) * scale_x
+          gy = current_y + (((metric.bearing_y / @oversample) / @total_scale) - logical_outline) * scale_y
 
           dest = FRect.new(
             x: gx,
@@ -404,7 +408,7 @@ module GSDL
           )
         end
 
-        current_x += ((metric.advance_x / @oversample) + character_spacing) * scale_x
+        current_x += (((metric.advance_x / @oversample) / @total_scale) + character_spacing) * scale_x
         prev_char = char
       end
     end
@@ -438,17 +442,17 @@ module GSDL
       tex_w = @texture.width.to_f32
       tex_h = @texture.height.to_f32
 
-      logical_outline = @render_outline / @oversample
+      logical_outline = (@render_outline / @oversample) / @total_scale
 
       current_x = start_x
-      current_y = start_y + @ascent * scale_y
+      current_y = start_y + @ascent_logical * scale_y
       prev_char : Char? = nil
 
       text.each_char do |char|
         metric = touch_glyph(char)
 
         if p_char = prev_char
-          current_x += get_kerning(p_char, char) * scale_x
+          current_x += (get_kerning(p_char, char) / @total_scale) * scale_x
         end
 
         if metric.width > 0 && metric.height > 0
@@ -457,11 +461,11 @@ module GSDL
           u2 = (metric.x + metric.width + @render_outline) / tex_w
           v2 = (metric.y + metric.height + @render_outline) / tex_h
 
-          gw = ((metric.width + (@render_outline * 2)) / @oversample) * scale_x
-          gh = ((metric.height + (@render_outline * 2)) / @oversample) * scale_y
+          gw = (((metric.width + (@render_outline * 2)) / @oversample) / @total_scale) * scale_x
+          gh = (((metric.height + (@render_outline * 2)) / @oversample) / @total_scale) * scale_y
 
-          char_x = current_x + ((metric.bearing_x / @oversample) - logical_outline) * scale_x
-          char_y = current_y + ((metric.bearing_y / @oversample) - logical_outline) * scale_y
+          char_x = current_x + (((metric.bearing_x / @oversample) / @total_scale) - logical_outline) * scale_x
+          char_y = current_y + (((metric.bearing_y / @oversample) / @total_scale) - logical_outline) * scale_y
 
           corners = [
             {px: char_x, py: char_y, u: u1, v: v1},
@@ -481,7 +485,7 @@ module GSDL
           end
         end
 
-        current_x += ((metric.advance_x / @oversample) + character_spacing) * scale_x
+        current_x += (((metric.advance_x / @oversample) / @total_scale) + character_spacing) * scale_x
         prev_char = char
       end
 
