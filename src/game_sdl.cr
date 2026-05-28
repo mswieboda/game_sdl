@@ -16,6 +16,7 @@ require "./gsdl/physics/physics_controller"
 require "./gsdl/physics/*"
 require "./gsdl/gfx/*"
 require "./gsdl/gfx/geo/*"
+require "./gsdl/gfx/ui/*"
 require "./gsdl/ui/*"
 require "./gsdl/input/*"
 

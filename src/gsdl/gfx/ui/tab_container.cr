@@ -1,4 +1,4 @@
-require "../gfx/geo/box"
+require "../geo/box"
 require "./text"
 
 module GSDL

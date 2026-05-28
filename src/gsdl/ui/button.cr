@@ -1,83 +1,138 @@
-require "./message"
+require "./container"
+require "./text"
 
 module GSDL
-  class Button < Message
-    alias Callback = (String)->
+  module UI
+    class Button < Container
+      property on_click : Proc(Nil)? = nil
+      property on_hover : Proc(Bool, Nil)? = nil
 
-    getter on_click : Callback
+      property default_background_color : Color
+      property hover_background_color : Color
+      property default_text_color : Color
+      property hover_text_color : Color
 
-    def initialize(
-      font : Symbol | FontOld = FontManager.default,
-      font_size : Num = FontManager.default_size,
-      text : String | GSDL::Text = "",
-      origin = {0_f32, 0_f32},
-      scale = {1_f32, 1_f32},
-      width : Int32? = nil,
-      height : Int32? = nil,
-      padding = nil,
-      padding_x = nil,
-      padding_y = nil,
-      align = FontOld::Align::Center,
-      x : Num = 0_f32,
-      y : Num = 0_f32,
-      color = ColorScheme.get(:ui_text),
-      border_radius : Num = 0,
-      z_index : Int32 = 900,
-      draw_relative_to_camera : Bool = false,
-      @on_click : Callback = -> on_click(String),
-    )
-      super(
-        font: font,
-        font_size: font_size,
-        text: text,
-        origin: origin,
-        scale: scale,
-        width: width,
-        height: height,
-        padding: padding,
-        padding_x: padding_x,
-        padding_y: padding_y,
-        align: align,
-        x: x,
-        y: y,
-        color: color,
-        z_index: z_index + 1,
-        draw_relative_to_camera: draw_relative_to_camera,
-        border_radius: border_radius
+      @label : Text
+      getter label : Text
+
+      # Track internal hovered state to avoid firing on_hover repeatedly with the same value
+      @was_hovered : Bool = false
+
+      def initialize(
+        text : String = "",
+        @width : Int32 = FillParent,
+        @height : Int32 = FillParent,
+        @x : Int32 = 0,
+        @y : Int32 = 0,
+        @anchor : Anchor = Anchor::Center,
+        h_align : HorizontalAlign = HorizontalAlign::Center,
+        font_size : Num = 16,
+        default_background_color : Color | String = "#2e2e38",
+        hover_background_color : Color | String = "#4f46e5",
+        default_text_color : Color | String = "#f4f4f5",
+        hover_text_color : Color | String = "#f4f4f5",
+        padding : Spacing = Spacing.new(all: 0),
+        @on_click : Proc(Nil)? = nil
       )
-    end
+        @default_background_color = default_background_color.is_a?(String) ? Color.parse(default_background_color) : default_background_color
+        @hover_background_color = hover_background_color.is_a?(String) ? Color.parse(hover_background_color) : hover_background_color
+        @default_text_color = default_text_color.is_a?(String) ? Color.parse(default_text_color) : default_text_color
+        @hover_text_color = hover_text_color.is_a?(String) ? Color.parse(hover_text_color) : hover_text_color
 
-    def on_click(text : String)
-    end
+        @background_color = @default_background_color
+        @swallows_events = true
 
-    def update(dt : Float32)
-      super
+        # Create and add the text label
+        @label = Text.new(
+          text: text,
+          font_size: font_size,
+          color: @default_text_color,
+          width: FillParent,
+          height: FillParent,
+          h_align: h_align,
+          v_align: VerticalAlign::Center,
+        )
 
-      # Use screen-space helpers for accurate mouse interaction under zoom
-      if Mouse.clicked_in?(screen_x, screen_y, screen_width, screen_height)
-        @on_click.call(self.text)
+        self.padding = padding
+        add_child(@label)
       end
-    end
 
-    def draw_border(draw : Draw)
-      margin = 4
-      margin_x = margin * scale_x * (1.0_f32 - 2.0_f32 * origin_x)
-      margin_y = margin * scale_y * (1.0_f32 - 2.0_f32 * origin_y)
-
-      box = Box.new(
-        x: x + margin_x,
-        y: y + margin_y,
-        origin: origin,
-        scale: scale,
-        width: width - margin * 2,
-        height: height - margin * 2,
-        color: @text.color,
-        border_radius: border_radius - margin,
-        z_index: z_index - 1,
-        draw_mode: Shape::DrawMode::Outline
+      def initialize(
+        text : String = "",
+        width : Int32 = FillParent,
+        height : Int32 = FillParent,
+        x : Int32 = 0,
+        y : Int32 = 0,
+        anchor : Anchor = Anchor::Center,
+        h_align : HorizontalAlign = HorizontalAlign::Center,
+        font_size : Num = 16,
+        default_background_color : Color | String = "#2e2e38",
+        hover_background_color : Color | String = "#4f46e5",
+        default_text_color : Color | String = "#f4f4f5",
+        hover_text_color : Color | String = "#f4f4f5",
+        padding : Spacing = Spacing.new(all: 0),
+        &block : ->
       )
-      box.draw_relative_to_camera = self.draw_relative_to_camera?
-      box.draw(draw)
+        initialize(
+          text: text,
+          width: width,
+          height: height,
+          x: x,
+          y: y,
+          anchor: anchor,
+          h_align: h_align,
+          font_size: font_size,
+          default_background_color: default_background_color,
+          hover_background_color: hover_background_color,
+          default_text_color: default_text_color,
+          hover_text_color: hover_text_color,
+          padding: padding,
+          on_click: block
+        )
+      end
+
+      def text : String
+        @label.text
+      end
+
+      def text=(val : String)
+        @label.text = val
+      end
+
+      def update(dt : Float32)
+        super(dt)
+
+        # Determine if mouse is currently over this button, respecting z-ordering & hit-testing
+        hovered = false
+        if root = root_canvas
+          curr = root.find_element_at(GSDL::Mouse.x, GSDL::Mouse.y)
+          while curr
+            if curr == self
+              hovered = true
+              break
+            end
+            curr = curr.parent
+          end
+        end
+
+        # If hover state changed, trigger the callback
+        if hovered != @was_hovered
+          @was_hovered = hovered
+          @on_hover.try(&.call(hovered))
+        end
+
+        if hovered
+          self.background_color = @hover_background_color
+          @label.color = @hover_text_color
+
+          if GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
+            @on_click.try(&.call)
+          end
+        else
+          self.background_color = @default_background_color
+          @label.color = @default_text_color
+        end
+      end
     end
   end
 end
