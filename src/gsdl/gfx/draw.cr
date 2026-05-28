@@ -201,6 +201,18 @@ module GSDL
       def initialize(z_index : Int32, color : Color, @rects : Array(SDL3::FRect), @outline : Bool, scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
         super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
       end
+
+      def clipped_out? : Bool
+        if clip = @clip_rect
+          return true if @rects.empty?
+          @rects.all? do |r|
+            r.x + r.w < clip.x || r.x > (clip.x + clip.w) ||
+            r.y + r.h < clip.y || r.y > (clip.y + clip.h)
+          end
+        else
+          false
+        end
+      end
     end
 
     class DrawPointCommand < DrawColorCommand
@@ -216,6 +228,15 @@ module GSDL
         py = @y * scale_y.abs
         px >= 0_f32 && px <= screen_w && py >= 0_f32 && py <= screen_h
       end
+
+      def clipped_out? : Bool
+        if clip = @clip_rect
+          @x < clip.x || @x > (clip.x + clip.w) ||
+          @y < clip.y || @y > (clip.y + clip.h)
+        else
+          false
+        end
+      end
     end
 
     abstract class DrawPointsCommandBase < DrawColorCommand
@@ -223,6 +244,18 @@ module GSDL
 
       def initialize(z_index : Int32, color : Color, @points : Array(FPoint), scale_x : Float32, scale_y : Float32, clip_rect : SDL3::Rect? = nil)
         super(z_index: z_index, color: color, scale_x: scale_x, scale_y: scale_y, clip_rect: clip_rect)
+      end
+
+      def clipped_out? : Bool
+        if clip = @clip_rect
+          return true if @points.empty?
+          @points.all? do |p|
+            p.x < clip.x || p.x > (clip.x + clip.w) ||
+            p.y < clip.y || p.y > (clip.y + clip.h)
+          end
+        else
+          false
+        end
       end
     end
 
@@ -244,6 +277,19 @@ module GSDL
 
       def y : Num?
         @y1
+      end
+
+      def clipped_out? : Bool
+        if clip = @clip_rect
+          min_x = Math.min(@x1, @x2)
+          max_x = Math.max(@x1, @x2)
+          min_y = Math.min(@y1, @y2)
+          max_y = Math.max(@y1, @y2)
+          max_x < clip.x || min_x > (clip.x + clip.w) ||
+          max_y < clip.y || min_y > (clip.y + clip.h)
+        else
+          false
+        end
       end
     end
 
@@ -715,7 +761,12 @@ module GSDL
 
               next
             else
-              flush_batch if @active_batch_texture
+              if @active_batch_texture
+                flush_batch
+                active_scale_x = @active_batch_scale_x
+                active_scale_y = @active_batch_scale_y
+                active_clip_rect = @active_batch_clip_rect
+              end
 
               @active_batch_texture = current_tex_handle
               @active_batch_scale_x = command.scale_x
@@ -735,7 +786,12 @@ module GSDL
           end
 
           # ONLY flush here if the current command is truly untextured (like DrawFRectCommand)
-          flush_batch if @active_batch_texture
+          if @active_batch_texture
+            flush_batch
+            active_scale_x = @active_batch_scale_x
+            active_scale_y = @active_batch_scale_y
+            active_clip_rect = @active_batch_clip_rect
+          end
 
           # Sync Renderer Scale
           if command.scale_x != active_scale_x || command.scale_y != active_scale_y
@@ -805,7 +861,12 @@ module GSDL
         end
 
         # Flush any remaining batch for this layer
-        flush_batch if @active_batch_texture
+        if @active_batch_texture
+          flush_batch
+          active_scale_x = @active_batch_scale_x
+          active_scale_y = @active_batch_scale_y
+          active_clip_rect = @active_batch_clip_rect
+        end
         layer.clear
       end
 
