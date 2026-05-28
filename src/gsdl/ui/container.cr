@@ -5,6 +5,37 @@ module GSDL
     abstract class Container < Element
       property children = [] of Element
 
+      def self.new(*args, **kwargs)
+        obj = allocate
+        obj.initialize(*args, **kwargs)
+        obj
+      end
+
+      def self.new(*args, **kwargs, &)
+        obj = allocate
+        obj.initialize(*args, **kwargs)
+        scope = LayoutScope.new(obj)
+        with scope yield
+        obj
+      end
+
+      macro inherited
+        def self.new(*args, **kwargs)
+          obj = allocate
+          obj.initialize(*args, **kwargs)
+          obj
+        end
+
+        def self.new(*args, **kwargs, &)
+          obj = allocate
+          obj.initialize(*args, **kwargs)
+          scope = LayoutScope.new(obj)
+          with scope yield
+          obj
+        end
+      end
+
+
       @dirty_layout = true
 
       protected def dirty_layout!
@@ -19,6 +50,10 @@ module GSDL
         if p = parent
           p.dirty_layout! if p.is_a?(Container)
         end
+      end
+
+      def layout_add_child(child : Element)
+        add_child(child)
       end
 
       def add_child(child : Element)

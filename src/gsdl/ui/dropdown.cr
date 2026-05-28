@@ -243,12 +243,10 @@ module GSDL
         super(child)
       end
 
-      @[Deprecated("Directly removing children from a Dropdown is forbidden and will break layout.")]
       def remove_child(child : Element)
         super(child)
       end
 
-      @[Deprecated("Clearing children of a Dropdown is forbidden and will break layout.")]
       def clear_children
         super
       end

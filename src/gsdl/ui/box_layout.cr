@@ -6,7 +6,15 @@ module GSDL
       property spacing : Int32 = 0
       property? stretch : Bool = true
 
-      def initialize(@width = FillParent, @height = FillParent, @spacing = 0, @stretch = true)
+      def initialize(
+        @width = FillParent,
+        @height = FillParent,
+        @spacing = 0,
+        @stretch = true,
+        @x = 0,
+        @y = 0,
+        @anchor = Anchor::TopLeft
+      )
       end
 
       # Helper to distribute remaining space among flexible children
