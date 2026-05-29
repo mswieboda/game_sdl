@@ -176,6 +176,23 @@ module GSDL
         # 4. Escalate the child to the unclipped RootCanvas overlays
         if root = find_root_canvas
           root.push_overlay(@menu_list.not_nil!)
+        else
+          # Fallback when there's no RootCanvas
+          if fallback_root = find_highest_non_flow_container || find_highest_container
+            @menu_list.not_nil!.z_index = 1000 # High z-index to overlay on top
+            
+            local_x = gx - fallback_root.unscaled_content_x
+            local_y = menu_y - fallback_root.unscaled_content_y
+            @menu_list.not_nil!.x = local_x
+            @menu_list.not_nil!.y = local_y
+            
+            fallback_root.add_child(@menu_list.not_nil!)
+          else
+            # No parent container at all, add directly to self
+            @menu_list.not_nil!.x = 0
+            @menu_list.not_nil!.y = self.height
+            add_child(@menu_list.not_nil!)
+          end
         end
         dirty_layout!
       end
@@ -185,8 +202,16 @@ module GSDL
         @opened = false
         update_header_text
 
-        if (menu = @menu_list) && (root = find_root_canvas)
-          root.remove_overlay(menu)
+        if menu = @menu_list
+          if root = find_root_canvas
+            root.remove_overlay(menu)
+          else
+            if fallback_root = find_highest_non_flow_container || find_highest_container
+              fallback_root.remove_child(menu)
+            else
+              remove_child(menu)
+            end
+          end
         end
         @menu_list = nil
         dirty_layout!

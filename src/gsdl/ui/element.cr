@@ -267,6 +267,30 @@ module GSDL
         root_canvas
       end
 
+      def find_highest_container : Container?
+        curr = self.parent
+        highest : Container? = nil
+        while curr
+          if curr.is_a?(Container)
+            highest = curr
+          end
+          curr = curr.parent
+        end
+        highest
+      end
+
+      def find_highest_non_flow_container : Container?
+        curr = self.parent
+        highest : Container? = nil
+        while curr
+          if curr.is_a?(Container) && !curr.is_a?(BoxLayout)
+            highest = curr
+          end
+          curr = curr.parent
+        end
+        highest
+      end
+
       def is_descendant_of_overlay? : Bool
         curr = self
         while curr
