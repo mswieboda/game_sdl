@@ -8,7 +8,7 @@ module GameEx
 
     def init
       GSDL::Events.esc_exits = true
-      
+
       # Register fonts
       GSDL::FontManager.register({
         default: "PressStart2P.ttf"

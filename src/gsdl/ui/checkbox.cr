@@ -30,7 +30,9 @@ module GSDL
         hover_background_color : Color | String = "#2e2e38",
         default_text_color : Color | String = "#f4f4f5",
         hover_text_color : Color | String = "#7c3aed",
-        @on_toggle : Proc(Bool, Nil)? = nil
+        @on_toggle : Proc(Bool, Nil)? = nil,
+        @padding = Spacing.new(all: 0),
+        @margin = Spacing.new(all: 0)
       )
         @default_background_color = default_background_color.is_a?(String) ? Color.parse(default_background_color) : default_background_color
         @hover_background_color = hover_background_color.is_a?(String) ? Color.parse(hover_background_color) : hover_background_color

@@ -17,6 +17,8 @@ module GSDL
         y : Int32 = 0,
         anchor : Anchor = Anchor::Center,
         background_color : Color = Color::Transparent,
+        padding = Spacing.new(all: 0),
+        margin = Spacing.new(all: 0),
       )
         super(
           width: width,
@@ -24,7 +26,9 @@ module GSDL
           x: x,
           y: y,
           anchor: anchor,
-          background_color: background_color
+          background_color: background_color,
+          padding: padding,
+          margin: margin
         )
         self.clips_children = false
       end

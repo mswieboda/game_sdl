@@ -19,9 +19,12 @@ module GSDL
         width : Int32? = nil,
         height : Int32? = nil,
         @z_index : Int32 = 0,
+        @flex : UInt8 = 1_u8,
         opacity : UInt8 = 255_u8,
         weight : FontWeight = FontWeight::Normal,
         style : FontStyle = FontStyle::Regular,
+        @padding = Spacing.new(all: 0),
+        @margin = Spacing.new(all: 0),
       )
         @width = width || FitContent
         @height = height || FitContent

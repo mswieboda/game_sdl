@@ -27,7 +27,7 @@ module GSDL
     # By default, it plays on its own dedicated track (best for persistent instances).
     # If already playing, it restarts from the beginning.
     #
-    # If `overlap` is true, it uses the AudioManager's track pool to play a new 
+    # If `overlap` is true, it uses the AudioManager's track pool to play a new
     # instance of this sound on a fresh channel, allowing multiple instances to layer.
     # Returns the channel ID used (or -1 for the dedicated channel).
     def play(loops : Int32 = 0, overlap : Bool = false) : Int32

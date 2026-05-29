@@ -23,6 +23,8 @@ module GSDL
         @y : Int32 = 0,
         @anchor : Anchor = Anchor::TopLeft,
         @z_index : Int32 = 0,
+        @padding = Spacing.new(all: 0),
+        @margin = Spacing.new(all: 0),
       )
         if id.is_a?(Symbol)
           @texture = TextureManager.get(id)

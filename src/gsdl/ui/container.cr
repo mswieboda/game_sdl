@@ -101,6 +101,9 @@ module GSDL
       property? clips_children : Bool = true
 
       def layout!
+        @children.each do |child|
+          child.apply_anchor!(self.width, self.height)
+        end
         @dirty_layout = false
       end
 

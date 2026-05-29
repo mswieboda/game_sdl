@@ -8,9 +8,20 @@ module GSDL
         height = FitContent,
         spacing = 0,
         @background_color = Color::DarkerGray,
-        @anchor = Anchor::BottomLeft,
+        anchor = Anchor::BottomLeft,
+        flex : UInt8 = 0_u8,
+        padding = Spacing.new(all: 0),
+        margin = Spacing.new(all: 0),
       )
-        super(width: width, height: height, spacing: spacing)
+        super(
+          width: width,
+          height: height,
+          spacing: spacing,
+          anchor: anchor,
+          flex: flex,
+          padding: padding,
+          margin: margin
+        )
       end
     end
   end

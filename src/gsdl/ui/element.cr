@@ -227,8 +227,10 @@ module GSDL
       end
 
       def apply_anchor!(pw : Int32, ph : Int32)
-        # Only apply if we aren't being managed by a BoxLayout (flex > 0)
-        return if flex > 0
+        # Skip if we are being managed by a BoxLayout (since BoxLayout sequences positions)
+        if p = @parent
+          return if p.is_a?(BoxLayout)
+        end
 
         off_x, off_y = calculate_anchor_offset(pw, ph)
 
@@ -259,6 +261,32 @@ module GSDL
           curr = curr.parent
         end
         nil
+      end
+
+      def find_root_canvas : RootCanvas?
+        root_canvas
+      end
+
+      def is_descendant_of_overlay? : Bool
+        curr = self
+        while curr
+          if p = curr.parent
+            if p.is_a?(RootCanvas)
+              return p.overlays.includes?(curr)
+            end
+          end
+          curr = curr.parent
+        end
+        false
+      end
+
+      def is_descendant_of?(other : Element) : Bool
+        curr = self.parent
+        while curr
+          return true if curr == other
+          curr = curr.parent
+        end
+        false
       end
 
       private def update_position_cache

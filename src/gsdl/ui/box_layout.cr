@@ -13,7 +13,10 @@ module GSDL
         @stretch = true,
         @x = 0,
         @y = 0,
-        @anchor = Anchor::TopLeft
+        @anchor = Anchor::TopLeft,
+        @flex : UInt8 = 1_u8,
+        @padding = Spacing.new(all: 0),
+        @margin = Spacing.new(all: 0)
       )
       end
 
@@ -27,7 +30,9 @@ module GSDL
         spacing_sum = @children.empty? ? 0 : (@children.size - 1) * @spacing
 
         @children.each do |child|
-          if child.flex > 0
+          if is_horizontal ? child.width_fixed? : child.height_fixed?
+            fixed_sum += is_horizontal ? child.footprint_width : child.footprint_height
+          elsif child.flex > 0
             flex_children << child
             total_flex += child.flex
           else

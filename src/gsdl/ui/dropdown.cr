@@ -4,6 +4,59 @@ require "./text"
 
 module GSDL
   module UI
+    class DropdownMenuList < Container
+      getter dropdown : Dropdown
+
+      def initialize(
+        @dropdown : Dropdown,
+        options : Array(String),
+        x : Int32,
+        y : Int32,
+        width : Int32,
+        height : Int32,
+        background_color : Color,
+        hover_background_color : Color,
+        text_color : Color
+      )
+        @x = x
+        @y = y
+        @width = width
+        @height = height
+        @background_color = background_color
+        @clips_children = false
+        @swallows_events = true
+
+        # Create option buttons and position them vertically
+        options.each_with_index do |opt, idx|
+          btn = Button.new(
+            text: opt,
+            width: FillParent,
+            height: height,
+            default_background_color: background_color,
+            hover_background_color: hover_background_color,
+            default_text_color: text_color,
+            hover_text_color: text_color,
+            h_align: HorizontalAlign::Left,
+            padding: Spacing.new(horizontal: 12, vertical: 0)
+          ) do
+            @dropdown.selected_index = idx
+            @dropdown.close_menu!
+          end
+
+          btn.x = 0
+          btn.y = idx * height
+          btn.width = width
+          btn.height = height
+          add_child(btn)
+        end
+      end
+
+      def contains_point?(mx : Int32, my : Int32) : Bool
+        return false unless visible?
+        @children.any?(&.contains_point?(mx, my))
+      end
+    end
+
     class Dropdown < Container
       property? opened : Bool = false
       property options : Array(String)
@@ -16,7 +69,7 @@ module GSDL
       property text_color : Color
 
       @header : Button
-      @option_buttons = Array(Button).new
+      @menu_list : DropdownMenuList? = nil
 
       def initialize(
         @options : Array(String),
@@ -30,7 +83,9 @@ module GSDL
         list_background_color : Color | String = "#121214",
         hover_background_color : Color | String = "#4f46e5",
         text_color : Color | String = "#f4f4f5",
-        @on_change : Proc(String, Int32, Nil)? = nil
+        @on_change : Proc(String, Int32, Nil)? = nil,
+        @padding = Spacing.new(all: 0),
+        @margin = Spacing.new(all: 0)
       )
         @selected_index = initial_index.clamp(0, @options.size - 1)
         @header_background_color = header_background_color.is_a?(String) ? Color.parse(header_background_color) : header_background_color
@@ -58,9 +113,6 @@ module GSDL
         end
 
         add_child(@header)
-
-        # Build list of options buttons
-        rebuild_option_buttons!
       end
 
       def selected_option : String?
@@ -77,86 +129,75 @@ module GSDL
       def options=(new_options : Array(String))
         @options = new_options
         @selected_index = @selected_index.clamp(0, @options.size - 1)
-        rebuild_option_buttons!
         update_header_text
+        if @opened
+          close_menu!
+          open_menu!
+        end
       end
 
       private def toggle_menu!
-        @opened = !@opened
         if @opened
-          @just_opened = true
-          # Reset all option buttons' backgrounds so they don't carry over stale hover states!
-          @option_buttons.each do |btn|
-            btn.background_color = @list_background_color
-            btn.label.color = @text_color
-          end
+          close_menu!
+        else
+          open_menu!
         end
-        @header.text = (selected_option || "") + (@opened ? "  ▲" : "  ▼")
-        rebuild_children!
-        dirty_layout!
       end
 
       private def update_header_text
         @header.text = (selected_option || "") + (@opened ? "  ▲" : "  ▼")
       end
 
-      private def rebuild_option_buttons!
-        @option_buttons.clear
-        @options.each_with_index do |opt, idx|
-          btn = create_option_button(opt, idx)
-          # Set high z-index relative to layout so option list floats on top
-          btn.z_index = 1000
-          @option_buttons << btn
-        end
-        rebuild_children!
-      end
+      def open_menu!
+        return if @opened
+        @opened = true
+        update_header_text
 
-      private def create_option_button(opt : String, idx : Int32) : Button
-        Button.new(
-          text: opt,
-          width: FillParent,
-          height: @header.height,
-          default_background_color: @list_background_color,
+        # 1. Translate local position to global screen position
+        gx, gy = self.global_position
+
+        # 2. Align option list directly below the button bounds
+        menu_y = gy + self.height
+
+        # 3. Create absolute-positioned overlay list
+        @menu_list = DropdownMenuList.new(
+          dropdown: self,
+          options: @options,
+          x: gx,
+          y: menu_y,
+          width: self.width,
+          height: self.height, # Individual button height equals closed dropdown height
+          background_color: @list_background_color,
           hover_background_color: @hover_background_color,
-          default_text_color: @text_color,
-          hover_text_color: @text_color,
-          h_align: HorizontalAlign::Left,
-          padding: Spacing.new(horizontal: 12, vertical: 0)
-        ) do
-          self.selected_index = idx
-          toggle_menu!
+          text_color: @text_color
+        )
+
+        # 4. Escalate the child to the unclipped RootCanvas overlays
+        if root = find_root_canvas
+          root.push_overlay(@menu_list.not_nil!)
         end
+        dirty_layout!
       end
 
+      def close_menu!
+        return unless @opened
+        @opened = false
+        update_header_text
 
-      private def rebuild_children!
-        clear_children
-        add_child(@header)
-        if @opened
-          @option_buttons.each do |btn|
-            add_child(btn)
-          end
+        if (menu = @menu_list) && (root = find_root_canvas)
+          root.remove_overlay(menu)
         end
+        @menu_list = nil
+        dirty_layout!
       end
 
       def contains_point?(mx : Int32, my : Int32) : Bool
         return false unless visible?
-
-        # Always check header
-        return true if @header.contains_point?(mx, my)
-
-        # If opened, check all option buttons
-        if @opened
-          @option_buttons.each do |btn|
-            return true if btn.contains_point?(mx, my)
-          end
-        end
-
-        false
+        # Only hit test the header because option buttons are self-contained in overlay list
+        @header.contains_point?(mx, my)
       end
 
       def width : Int32
-        # Dropdown layout width is solely based on style/header size
         case @width
         when FillParent
           if p = @parent
@@ -164,7 +205,6 @@ module GSDL
           end
           0
         when FitContent
-          # Minimum default width for dropdown
           150
         else
           @width
@@ -172,8 +212,6 @@ module GSDL
       end
 
       def height : Int32
-        # Dropdown layout height remains the closed header height
-        # so it doesn't push down other elements in a VBox/HBox when opened
         case @height
         when FillParent
           if p = @parent
@@ -196,59 +234,11 @@ module GSDL
         @header.height = self.style_height > 0 ? self.style_height : 32
         @header.layout!
 
-        if @opened
-          current_y = @header.height
-          @option_buttons.each do |btn|
-            btn.reset_layout!
-            btn.x = 0
-            btn.y = current_y
-            btn.width = @header.width
-            btn.height = @header.height
-            btn.layout!
-            current_y += btn.footprint_height
-          end
-        end
-
         @dirty_layout = false
       end
 
       def update(dt : Float32)
-        # Manually update children to prevent same-frame array mutation & double click issues
         @header.update(dt)
-
-        if @opened
-          if @just_opened
-            # Position all child elements correctly immediately so they are in position for the next frame
-            layout!
-            @just_opened = false
-            # On the frame it was opened, we explicitly skip updating option buttons.
-            # This guarantees they cannot receive the same-frame mouse click/press event.
-          else
-            @option_buttons.each do |btn|
-              btn.update(dt)
-            end
-          end
-        end
-
-        # Detect click outside to close the menu
-        if @opened && GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
-          unless contains_point?(GSDL::Mouse.x, GSDL::Mouse.y)
-            toggle_menu!
-          end
-        end
-      end
-
-      # Prevent external manipulation of children for Dropdown
-      private def add_child(child : Element)
-        super(child)
-      end
-
-      def remove_child(child : Element)
-        super(child)
-      end
-
-      def clear_children
-        super
       end
     end
   end
