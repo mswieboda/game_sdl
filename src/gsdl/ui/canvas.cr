@@ -18,6 +18,8 @@ module GSDL
     end
 
     class RootCanvas < Canvas
+      OVERLAY_BASE_Z_INDEX = 1000
+
       getter overlays = Array(Element).new
 
       def initialize(@width : Int32, @height : Int32)
@@ -32,6 +34,7 @@ module GSDL
 
       def push_overlay(element : Element)
         element.parent = self
+        element.z_index = OVERLAY_BASE_Z_INDEX
         @overlays << element unless @overlays.includes?(element)
       end
 
