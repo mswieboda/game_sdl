@@ -33,6 +33,7 @@ module GSDL
         hover_text_color : Color | String = "#f4f4f5",
         padding : Spacing = Spacing.new(all: 0),
         margin : Spacing = Spacing.new(all: 0),
+        @flex : UInt8 = 1_u8,
         @on_click : Proc(Nil)? = nil
       )
         @default_background_color = default_background_color.is_a?(String) ? Color.parse(default_background_color) : default_background_color
@@ -74,6 +75,7 @@ module GSDL
         hover_text_color : Color | String = "#f4f4f5",
         padding : Spacing = Spacing.new(all: 0),
         margin : Spacing = Spacing.new(all: 0),
+        flex : UInt8 = 1_u8,
         &block : ->
       )
         initialize(
@@ -91,6 +93,7 @@ module GSDL
           hover_text_color: hover_text_color,
           padding: padding,
           margin: margin,
+          flex: flex,
           on_click: block
         )
       end

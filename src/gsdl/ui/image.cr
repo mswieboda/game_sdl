@@ -25,6 +25,7 @@ module GSDL
         @z_index : Int32 = 0,
         @padding = Spacing.new(all: 0),
         @margin = Spacing.new(all: 0),
+        @flex : UInt8 = 1_u8,
       )
         if id.is_a?(Symbol)
           @texture = TextureManager.get(id)

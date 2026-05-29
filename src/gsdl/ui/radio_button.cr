@@ -28,7 +28,8 @@ module GSDL
         hover_text_color : Color | String = "#7c3aed",
         @on_select : Proc(Nil)? = nil,
         @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0)
+        @margin = Spacing.new(all: 0),
+        @flex : UInt8 = 1_u8,
       )
         @default_text_color = default_text_color.is_a?(String) ? Color.parse(default_text_color) : default_text_color
         @hover_text_color = hover_text_color.is_a?(String) ? Color.parse(hover_text_color) : hover_text_color

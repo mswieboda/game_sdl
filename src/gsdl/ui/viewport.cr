@@ -19,6 +19,7 @@ module GSDL
         background_color : Color = Color::Transparent,
         padding = Spacing.new(all: 0),
         margin = Spacing.new(all: 0),
+        flex : UInt8 = 1_u8,
       )
         super(
           width: width,
@@ -28,7 +29,8 @@ module GSDL
           anchor: anchor,
           background_color: background_color,
           padding: padding,
-          margin: margin
+          margin: margin,
+          flex: flex
         )
         self.clips_children = false
       end

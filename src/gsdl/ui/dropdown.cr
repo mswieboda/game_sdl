@@ -85,7 +85,8 @@ module GSDL
         text_color : Color | String = "#f4f4f5",
         @on_change : Proc(String, Int32, Nil)? = nil,
         @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0)
+        @margin = Spacing.new(all: 0),
+        @flex : UInt8 = 1_u8,
       )
         @selected_index = initial_index.clamp(0, @options.size - 1)
         @header_background_color = header_background_color.is_a?(String) ? Color.parse(header_background_color) : header_background_color
