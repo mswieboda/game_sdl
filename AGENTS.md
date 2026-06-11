@@ -72,11 +72,18 @@ br sync --status --json      # Check sync status
 
 ### Workflow Pattern
 
-1. **Start**: When asked to start a new task, run `bv --robot-triage` to find actionable work
+Determine if the request is a **Beads-tracked task** (e.g., a major feature, or selected from triage) or an **untracked task** (minor bug fix, quick visual tweak, or direct user prompt that does not need formal tracking).
+
+#### A. For Beads-Tracked Tasks:
+1. **Start**: Run `bv --robot-triage` to find actionable work if starting a major feature.
 2. **Claim**: Use `br update <id> --status=in_progress --json`
 3. **Work**: Implement the task
 4. **Complete**: Use `br close <id> --json`
 5. **Sync**: Always run `br sync --flush-only --json` at session end
+
+#### B. For Untracked Tasks (Minor Fixes / Quick Prompts):
+1. **Work**: Implement the task directly. Do NOT run any `br` or `bv` commands.
+2. **Complete**: Verify compilation and behavioral correctness.
 
 ### Key Concepts
 
@@ -87,21 +94,25 @@ br sync --status --json      # Check sync status
 
 ### Best Practices
 
-- Check `bv --robot-triage` when asked to find available work
-- Update status as you work (in_progress → closed)
-- Create new issues with `br create --json` when you discover tasks
-- Use descriptive titles and set appropriate priority/type
-- Always sync before ending session
+- Check `bv --robot-triage` when asked to find available work or major features to implement.
+- Update status as you work (in_progress → closed) only for tracked tasks.
+- **Do NOT create a Beads task for every prompt.** For minor bug fixes, quick adjustments, or direct user requests that do not require tracking, skip creating/using Beads tasks. Only create tasks for major features/refactors or when explicitly asked by the user.
+- Create new issues with `br create --json` when you discover separate, significant tasks/bugs that need proper tracking.
+- Always sync before ending session if any Beads operations were performed.
 
 ### Session Termination Procedures
 
-Always ask the user to confirm via their own manual testing. And then when the user says "wrap this up", "wrap up task", "task completed", or "sync tasks", you MUST execute the following sequence:
+Always ask the user to confirm via their own manual testing. And then when the user says "wrap this up", "wrap up task", "task completed", or "sync tasks", execute the following sequence based on task type:
 
+#### If the task was tracked via Beads:
 1. **Summarize Work:** Use `br update <id> --notes "..." --json` to record a technical summary of what was accomplished, any technical debt introduced, and specific findings for the GSDL biotech logic.
 2. **Handle Discoveries:** If new bugs or dependencies were found, create them now using `br create "..." --type bug/chore --deps discovered-from:<ID> --json`.
 3. **Sync to Disk:** Run `br sync --flush-only --json`.
 4. **Final Closure:** If the task is truly finished, run `br close <ID> --json`.
 5. **Summarize to User:** Summarize changes, and task updates to user, and suggest a commit message. DO NOT use any `git` write commands, the user will perform them manually.
+
+#### If the task was UNTRACKED (minor fixes / quick prompts):
+1. **Summarize to User:** Summarize changes directly and suggest a commit message. DO NOT use any `git` write commands, and DO NOT run any `br` or `bv` commands.
 
 <!-- end-br-agent-instructions -->
 

@@ -100,7 +100,7 @@ module GSDL
         # Create header button
         selected_text = @options.empty? ? "" : @options[@selected_index]
         @header = Button.new(
-          text: selected_text + "  ▼",
+          text: selected_text,
           width: FillParent,
           height: FillParent,
           default_background_color: @header_background_color,
@@ -108,7 +108,7 @@ module GSDL
           default_text_color: @text_color,
           hover_text_color: @text_color,
           h_align: HorizontalAlign::Left,
-          padding: Spacing.new(horizontal: 12, vertical: 0)
+          padding: Spacing.new(top: 0, right: 32, bottom: 0, left: 12)
         ) do
           toggle_menu!
         end
@@ -146,7 +146,7 @@ module GSDL
       end
 
       private def update_header_text
-        @header.text = (selected_option || "") + (@opened ? "  ▲" : "  ▼")
+        @header.text = selected_option || ""
       end
 
       def open_menu!
@@ -265,6 +265,37 @@ module GSDL
 
       def update(dt : Float32)
         @header.update(dt)
+      end
+
+      def draw(draw : Draw)
+        super(draw)
+
+        # Draw the triangle arrow on top of the header button
+        arrow_w = 10
+        arrow_h = 6
+        arrow_x = content_x + content_width - 24
+        arrow_y = content_y + (content_height - arrow_h) // 2
+
+        if opened?
+          offset_x = arrow_x - arrow_w // 2
+          Triangle.new(
+            x1: offset_x + arrow_w // 2, y1: arrow_y,
+            x2: offset_x, y2: arrow_y + arrow_h,
+            x3: offset_x + arrow_w, y3: arrow_y + arrow_h,
+            color: @text_color,
+            z_index: effective_z_index + 2,
+            draw_mode: Shape::DrawMode::Fill
+          ).draw(draw)
+        else
+          Triangle.new(
+            x1: arrow_x, y1: arrow_y,
+            x2: arrow_x + arrow_w, y2: arrow_y,
+            x3: arrow_x + arrow_w // 2, y3: arrow_y + arrow_h,
+            color: @text_color,
+            z_index: effective_z_index + 2,
+            draw_mode: Shape::DrawMode::Fill
+          ).draw(draw)
+        end
       end
     end
   end
