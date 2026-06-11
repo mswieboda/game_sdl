@@ -1,6 +1,36 @@
 module GSDL
+  enum SystemCursor
+    Default
+    Hand
+    IBeam
+    Crosshair
+    Wait
+    NotAllowed
+    Move
+
+    # Maps friendly GSDL enums directly to the internal SDL3 system cursors
+    def to_sdl : LibSDL3::SystemCursor
+      case self
+      in Default    then LibSDL3::SystemCursor::DEFAULT
+      in Hand       then LibSDL3::SystemCursor::POINTER
+      in IBeam      then LibSDL3::SystemCursor::TEXT
+      in Crosshair  then LibSDL3::SystemCursor::CROSSHAIR
+      in Wait       then LibSDL3::SystemCursor::WAIT
+      in NotAllowed then LibSDL3::SystemCursor::NOT_ALLOWED
+      in Move       then LibSDL3::SystemCursor::MOVE
+      end
+    end
+  end
+
   class Cursor
     @internal : SDL3::Mouse::Cursor
+
+    # Lazy-loaded static cache for standard system cursors
+    @@system_cache = {} of LibSDL3::SystemCursor => Cursor
+
+    def self.get_system(id : LibSDL3::SystemCursor) : Cursor
+      @@system_cache[id] ||= create_system(id)
+    end
 
     def self.create_system(id : LibSDL3::SystemCursor) : Cursor
       new(SDL3::Mouse::Cursor.create_system(id))

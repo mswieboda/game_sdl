@@ -49,6 +49,7 @@ module GSDL
           v_align: VerticalAlign::Center,
         )
 
+        self.hover_cursor = GSDL::SystemCursor::Hand
         add_child(@label)
       end
 
@@ -76,29 +77,20 @@ module GSDL
         end
       end
 
+      def hovered=(value : Bool)
+        super(value)
+        if value
+          @label.color = @hover_text_color
+        else
+          @label.color = @default_text_color
+        end
+      end
+
       def update(dt : Float32)
         super(dt)
 
-        hovered = false
-        if root = root_canvas
-          curr = root.find_element_at(GSDL::Mouse.x, GSDL::Mouse.y)
-          while curr
-            if curr == self
-              hovered = true
-              break
-            end
-            curr = curr.parent
-          end
-        end
-
-        if hovered
-          @label.color = @hover_text_color
-
-          if GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
-            select_this_radio
-          end
-        else
-          @label.color = @default_text_color
+        if hovered? && GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
+          select_this_radio
         end
       end
 

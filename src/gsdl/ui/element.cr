@@ -42,6 +42,22 @@ module GSDL
       property parent : Element?
       property? swallows_events : Bool = false
 
+      # Hover State & Callbacks
+      property hover_cursor : GSDL::SystemCursor? = nil
+      property on_hover_enter : Proc(Element, Nil)? = nil
+      property on_hover_leave : Proc(Element, Nil)? = nil
+      getter? hovered : Bool = false
+
+      def hovered=(value : Bool)
+        return if @hovered == value
+        @hovered = value
+        if value
+          @on_hover_enter.try(&.call(self))
+        else
+          @on_hover_leave.try(&.call(self))
+        end
+      end
+
       @dirty_position : Bool = true
       @global_position_cache : {Int32, Int32} = {0, 0}
 

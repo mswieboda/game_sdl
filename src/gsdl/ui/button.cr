@@ -57,6 +57,7 @@ module GSDL
 
         self.padding = padding
         self.margin = margin
+        self.hover_cursor = GSDL::SystemCursor::Hand
         add_child(@label)
       end
 
@@ -106,38 +107,23 @@ module GSDL
         @label.text = val
       end
 
-      def update(dt : Float32)
-        super(dt)
-
-        # Determine if mouse is currently over this button, respecting z-ordering & hit-testing
-        hovered = false
-        if root = root_canvas
-          curr = root.find_element_at(GSDL::Mouse.x, GSDL::Mouse.y)
-          while curr
-            if curr == self
-              hovered = true
-              break
-            end
-            curr = curr.parent
-          end
-        end
-
-        # If hover state changed, trigger the callback
-        if hovered != @was_hovered
-          @was_hovered = hovered
-          @on_hover.try(&.call(hovered))
-        end
-
-        if hovered
+      def hovered=(value : Bool)
+        super(value)
+        if value
           self.background_color = @hover_background_color
           @label.color = @hover_text_color
-
-          if GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
-            @on_click.try(&.call)
-          end
         else
           self.background_color = @default_background_color
           @label.color = @default_text_color
+        end
+        @on_hover.try(&.call(value))
+      end
+
+      def update(dt : Float32)
+        super(dt)
+
+        if hovered? && GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
+          @on_click.try(&.call)
         end
       end
     end

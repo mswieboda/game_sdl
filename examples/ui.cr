@@ -64,13 +64,22 @@ module UIExample
               color: GSDL::Color::White
             )
 
-            button(
+            btn = button(
               text: "Click Me!",
               height: 36
             ) do
               # Note: button block is the on_click callback
               puts "Button clicked!"
             end
+
+            # Showcase customized hover cursor and transition callbacks!
+            btn.hover_cursor = GSDL::SystemCursor::Crosshair
+            btn.on_hover_enter = ->(el : GSDL::UI::Element) {
+              puts "Hover enter: #{el.class}"
+            }
+            btn.on_hover_leave = ->(el : GSDL::UI::Element) {
+              puts "Hover leave: #{el.class}"
+            }
 
             checkbox(
               text: "Toggle option",

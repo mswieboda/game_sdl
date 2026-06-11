@@ -21,6 +21,8 @@ module GSDL
       OVERLAY_BASE_Z_INDEX = 1000
 
       getter overlays = Array(Element).new
+      @current_hover_path = Array(Element).new
+      @default_cursor : GSDL::Cursor? = nil
 
       def initialize(@width : Int32, @height : Int32)
         super(
@@ -92,6 +94,68 @@ module GSDL
       def update(dt : Float32)
         super(dt)
         @overlays.each &.update(dt)
+
+        update_hover_states
+      end
+
+      private def update_hover_states
+        # 1. Determine which element is currently under the mouse
+        target = find_element_at(GSDL::Mouse.x, GSDL::Mouse.y)
+
+        # 2. Build the new hover path (from leaf to root)
+        new_path = [] of Element
+        curr = target
+        while curr
+          new_path << curr
+          curr = curr.parent
+        end
+
+        # 3. Transition leave for elements no longer in the path
+        @current_hover_path.each do |el|
+          unless new_path.includes?(el)
+            el.hovered = false
+          end
+        end
+
+        # 4. Transition enter for new elements in the path
+        new_path.each do |el|
+          unless @current_hover_path.includes?(el)
+            el.hovered = true
+          end
+        end
+
+        # 5. Keep track of the current hover path
+        @current_hover_path = new_path
+
+        # 6. Update system mouse cursor based on the deepest custom cursor definition
+        update_cursor_for(new_path)
+      end
+
+      private def update_cursor_for(path : Array(Element))
+        cursor_style = nil
+        path.each do |el|
+          if style = el.hover_cursor
+            cursor_style = style
+            break
+          end
+        end
+
+        if cursor_style
+          sdl_id = cursor_style.to_sdl
+          GSDL::Mouse.cursor = GSDL::Cursor.get_system(sdl_id)
+        else
+          GSDL::Mouse.cursor = get_default_cursor
+        end
+      end
+
+      private def get_default_cursor : GSDL::Cursor
+        @default_cursor ||= begin
+          if sdl_cursor = SDL3::Mouse.get_default_cursor
+            GSDL::Cursor.new(sdl_cursor)
+          else
+            GSDL::Cursor.create_system(LibSDL3::SystemCursor::DEFAULT)
+          end
+        end
       end
 
       def find_element_at(mx : Int32, my : Int32) : Element?
