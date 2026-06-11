@@ -65,7 +65,7 @@ module UIExample
             )
 
             button(
-              text: "Click Me! (0)",
+              text: "Click Me!",
               height: 36
             ) do
               # Note: button block is the on_click callback

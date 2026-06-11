@@ -110,13 +110,26 @@ module GSDL
       def x=(x : Int32)
         return if @x == x
         @x = x
+        @style_x = x
         dirty_position!
       end
 
       def y=(y : Int32)
         return if @y == y
         @y = y
+        @style_y = y
         dirty_position!
+      end
+
+      @style_x : Int32?
+      @style_y : Int32?
+
+      def style_x : Int32
+        @style_x ||= @x
+      end
+
+      def style_y : Int32
+        @style_y ||= @y
       end
 
       @style_width : Int32?
@@ -236,8 +249,8 @@ module GSDL
 
         # Update local x/y. These will be added to the parent's content_x/y
         # in the global_position call.
-        @x = off_x
-        @y = off_y
+        @x = off_x + style_x
+        @y = off_y + style_y
       end
 
       # Ancestor Helper (protected, so subclasses of Element can access, but hidden from public API)
