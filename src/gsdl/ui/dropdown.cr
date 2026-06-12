@@ -180,12 +180,12 @@ module GSDL
           # Fallback when there's no RootCanvas
           if fallback_root = find_highest_non_flow_container || find_highest_container
             @menu_list.not_nil!.z_index = 1000 # High z-index to overlay on top
-            
+
             local_x = gx - fallback_root.unscaled_content_x
             local_y = menu_y - fallback_root.unscaled_content_y
             @menu_list.not_nil!.x = local_x
             @menu_list.not_nil!.y = local_y
-            
+
             fallback_root.add_child(@menu_list.not_nil!)
           else
             # No parent container at all, add directly to self

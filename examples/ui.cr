@@ -1,5 +1,12 @@
 require "../src/game_sdl"
 
+# Override global theme colors dynamically to demonstrate theme-aware elements!
+# Buttons, checkbox highlights, and radio buttons will automatically use these theme colors.
+GSDL::ColorScheme.configure(
+  main: "#10b981",              # Emerald green as our primary accent/action color
+  ui_button_hover: "#059669",   # Darker emerald for button hover background
+)
+
 module UIExample
   class Game < GSDL::Game
     def initialize
@@ -52,7 +59,7 @@ module UIExample
         vbox(
           x: 40,
           y: 80,
-          width: 320,
+          width: 340,
           height: GSDL::UI::FitContent,
           spacing: 12,
           stretch: true,
@@ -93,6 +100,26 @@ module UIExample
             }
           )
 
+          # Demonstration of consumer custom indicator rendering override
+          custom_cb = checkbox(
+            text: "Custom Indicator UI",
+            checked: false,
+            height: 28,
+            flex: 0_u8,
+            on_toggle: ->(checked : Bool) {
+              puts "Custom Checkbox toggled: #{checked}"
+            }
+          )
+          custom_cb.custom_indicator = ->(draw : GSDL::Draw, cb : GSDL::UI::Checkbox, rect : GSDL::Rect, checked : Bool) {
+            # Render a unique custom pixel indicator: a yellow outline with a centered filled yellow dot
+            border_col = cb.hovered? ? GSDL::Color::Yellow : GSDL::Color::Gray
+            draw.rect_outline(rect, border_col, cb.effective_z_index)
+            if checked
+              inner = GSDL::Rect.new(rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8)
+              draw.rect_fill(inner, GSDL::Color::Yellow, cb.effective_z_index)
+            end
+          }
+
           text(
             text: "Choose option:",
             font_size: 12,
@@ -104,7 +131,6 @@ module UIExample
             text: "Difficulty: Easy",
             group: :difficulty,
             checked: true,
-            height: 28,
             flex: 0_u8,
             on_select: -> {
               puts "Selected Easy"
@@ -114,7 +140,6 @@ module UIExample
           radio_button(
             text: "Difficulty: Hard",
             group: :difficulty,
-            height: 28,
             flex: 0_u8,
             on_select: -> {
               puts "Selected Hard"
