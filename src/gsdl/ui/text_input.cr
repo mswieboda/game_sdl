@@ -217,11 +217,19 @@ module GSDL
       def on_mouse_down(event : GSDL::Event) : Bool
         request_focus
 
-        if Mouse.double_tap?(Mouse::ButtonLeft)
+        if Mouse.multi_tap?(Mouse::ButtonLeft, 3)
+          @selection_anchor = 0
+          @cursor_position = @text.size
+          @mouse_dragging = false
+          @cursor_visible = true
+          @blink_timer = 0_f32
+          update_text_scroll
+        elsif Mouse.double_tap?(Mouse::ButtonLeft)
           mouse_x = Mouse.x
           local_x = get_local_mouse_x(mouse_x)
           idx = find_char_index_at(local_x)
           select_word_at(idx)
+          @mouse_dragging = false
         else
           mouse_x = Mouse.x
           local_x = get_local_mouse_x(mouse_x)

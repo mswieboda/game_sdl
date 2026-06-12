@@ -30,6 +30,11 @@ module GSDL
         @last_tap_times[key] = current_time
       end
 
+      def record_tap_with_count(key : T, count : Int32, current_time : UInt64)
+        @tap_counts[key] = count
+        @last_tap_times[key] = current_time
+      end
+
       def tap_count(key : T) : Int32
         @tap_counts.fetch(key, 0)
       end

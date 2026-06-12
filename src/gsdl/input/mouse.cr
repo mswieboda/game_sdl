@@ -151,7 +151,7 @@ module GSDL
 
       unless pressed?(button)
         @@states[button] = State::JustPressed
-        @@multi_tap_tracker.record_tap(button, LibSDL3.get_ticks)
+        @@multi_tap_tracker.record_tap_with_count(button, event.button.clicks.to_i, LibSDL3.get_ticks)
         @@drag_start_x[button] = mx.to_i
         @@drag_start_y[button] = my.to_i
       end

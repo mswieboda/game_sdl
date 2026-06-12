@@ -48,6 +48,8 @@ module GSDL
     def self.handle_events(window : SDL3::Window)
       event = uninitialized Event
       while SDL3.poll_event(pointerof(event))
+        InputEvents.handle_event(event)
+
         # Chain through all handlers
         handled = false
         @@handlers.each do |h|
@@ -69,8 +71,6 @@ module GSDL
         end
 
         break if @@exit # Break from event polling if quit is signaled
-
-        InputEvents.handle_event(event)
       end
     end
   end
