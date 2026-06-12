@@ -292,6 +292,62 @@ module GSDL
           return true
         end
 
+        # Copy (Cmd + C or Ctrl + C)
+        if (gui_pressed || ctrl_pressed) && key == Keys::C
+          if selection_active?
+            start_idx, end_idx = selection_range
+            selected_text = @text[start_idx...end_idx]
+            SDL3::Clipboard.text = selected_text
+          end
+          return true
+        end
+
+        # Cut (Cmd + X or Ctrl + X)
+        if (gui_pressed || ctrl_pressed) && key == Keys::X
+          if selection_active?
+            start_idx, end_idx = selection_range
+            selected_text = @text[start_idx...end_idx]
+            SDL3::Clipboard.text = selected_text
+            delete_selection
+            @cursor_visible = true
+            @blink_timer = 0_f32
+            update_text_scroll
+            @on_change.try(&.call(@text))
+          end
+          return true
+        end
+
+        # Paste (Cmd + V or Ctrl + V)
+        if (gui_pressed || ctrl_pressed) && key == Keys::V
+          if SDL3::Clipboard.has_text?
+            clip_text = SDL3::Clipboard.text.gsub("\n", "").gsub("\r", "")
+            unless clip_text.empty?
+              if selection_active?
+                delete_selection
+              end
+
+              if max = @max_length
+                remaining = max - @text.size
+                if remaining <= 0
+                  return true
+                end
+                clip_text = clip_text[0...remaining] if clip_text.size > remaining
+              end
+
+              unless clip_text.empty?
+                @text = @text[0...@cursor_position] + clip_text + @text[@cursor_position..]
+                @cursor_position += clip_text.size
+                @selection_anchor = @cursor_position
+                @cursor_visible = true
+                @blink_timer = 0_f32
+                update_text_scroll
+                @on_change.try(&.call(@text))
+              end
+            end
+          end
+          return true
+        end
+
         if key == Keys::Backspace
           if selection_active?
             delete_selection
