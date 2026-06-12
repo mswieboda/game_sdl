@@ -14,6 +14,10 @@ module GSDL
       getter? read_only : Bool = false
       getter? disabled : Bool = false
 
+      getter allowed_characters : Regex | String | Nil = nil
+      property validator : Proc(String, Bool)? = nil
+      property invalid_border_color : Color? = nil
+
       property on_change : Proc(String, Nil)? = nil
       property on_submit : Proc(String, Nil)? = nil
 
@@ -83,6 +87,9 @@ module GSDL
         @mask_character : Char? = nil,
         @read_only : Bool = false,
         @disabled : Bool = false,
+        allowed_characters : Regex | String | Nil = nil,
+        validator : Proc(String, Bool)? = nil,
+        invalid_border_color : Color | String | Nil = nil,
         background_color : Color | String = ColorScheme.get(:ui_bg, Color.parse("#1e1e24")),
         border_color : Color | String = ColorScheme.get(:border, Color.parse("#4b5563")),
         hover_border_color : Color | String = ColorScheme.get(:main, Color.parse("#10b981")),
@@ -104,7 +111,10 @@ module GSDL
         @on_change : Proc(String, Nil)? = nil,
         @on_submit : Proc(String, Nil)? = nil,
       )
-        @text = text
+        @allowed_characters = allowed_characters
+        @validator = validator
+        @invalid_border_color = invalid_border_color.is_a?(String) ? Color.parse(invalid_border_color) : invalid_border_color
+        @text = filter_text(text)
         @cursor_position = text.size
         @selection_anchor = text.size
 
@@ -171,6 +181,9 @@ module GSDL
         mask_character : Char? = nil,
         read_only : Bool = false,
         disabled : Bool = false,
+        allowed_characters : Regex | String | Nil = nil,
+        validator : Proc(String, Bool)? = nil,
+        invalid_border_color : Color | String | Nil = nil,
         background_color : Color | String = ColorScheme.get(:ui_bg, Color.parse("#1e1e24")),
         border_color : Color | String = ColorScheme.get(:border, Color.parse("#4b5563")),
         hover_border_color : Color | String = ColorScheme.get(:main, Color.parse("#10b981")),
@@ -204,6 +217,9 @@ module GSDL
           mask_character: mask_character,
           read_only: read_only,
           disabled: disabled,
+          allowed_characters: allowed_characters,
+          validator: validator,
+          invalid_border_color: invalid_border_color,
           background_color: background_color,
           border_color: border_color,
           hover_border_color: hover_border_color,
@@ -228,6 +244,7 @@ module GSDL
       end
 
       def text=(val : String)
+        val = filter_text(val)
         return if @text == val
         @text = val
         @cursor_position = val.size
@@ -236,6 +253,42 @@ module GSDL
         @redo_stack.clear
         update_text_scroll
         @on_change.try(&.call(@text))
+      end
+
+      def allowed_characters=(val : Regex | String | Nil)
+        @allowed_characters = val
+        new_text = filter_text(@text)
+        if new_text != @text
+          @text = new_text
+          @cursor_position = Math.min(@cursor_position, @text.size)
+          @selection_anchor = Math.min(@selection_anchor, @text.size)
+          update_text_scroll
+          @on_change.try(&.call(@text))
+        end
+      end
+
+      def valid? : Bool
+        if val = @validator
+          val.call(@text)
+        else
+          true
+        end
+      end
+
+      private def filter_text(val : String) : String
+        allowed = @allowed_characters
+        return val if allowed.nil?
+
+        val.each_char.select { |c|
+          case allowed
+          when String
+            allowed.includes?(c)
+          when Regex
+            c.to_s.matches?(allowed)
+          else
+            true
+          end
+        }.join
       end
 
       def read_only=(val : Bool)
@@ -378,6 +431,7 @@ module GSDL
       def on_text_input(event : GSDL::Event) : Bool
         return true if disabled? || read_only?
         new_chars = String.new(event.text.text)
+        new_chars = filter_text(new_chars)
 
         unless new_chars.empty?
           is_boundary = new_chars.each_char.any? { |c| !word_char?(c) }
@@ -474,6 +528,7 @@ module GSDL
           return true if read_only?
           if SDL3::Clipboard.has_text?
             clip_text = SDL3::Clipboard.text.gsub("\n", "").gsub("\r", "")
+            clip_text = filter_text(clip_text)
             unless clip_text.empty?
               push_history(ActionType::Other)
               if selection_active?
@@ -889,6 +944,8 @@ module GSDL
 
         border_col = if disabled?
           @border_color
+        elsif !valid? && (invalid_col = @invalid_border_color)
+          invalid_col
         elsif read_only?
           if focused?
             @read_only_focus_border_color

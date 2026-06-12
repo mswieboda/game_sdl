@@ -65,7 +65,7 @@ module UIExample
           x: 30,
           y: 95,
           width: 964,
-          height: 590,
+          height: 640,
           spacing: 24,
           stretch: true
         ) do
@@ -73,7 +73,7 @@ module UIExample
           vbox(
             width: 480,
             height: GSDL::UI::FillParent,
-            spacing: 12,
+            spacing: 8,
             stretch: true
           ) do
             text(
@@ -87,7 +87,7 @@ module UIExample
             @toggle_input = text_input(
               placeholder: "Try typing, then toggle states...",
               width: GSDL::UI::FillParent,
-              height: 40,
+              height: 35,
               on_change: ->(val : String) { update_log("Toggleable changing: '#{val}'") }
             ) do |val|
               update_log("Toggleable submitted: '#{val}'")
@@ -96,7 +96,7 @@ module UIExample
             # Dynamic toggle controls
             hbox(
               width: GSDL::UI::FillParent,
-              height: 36,
+              height: 30,
               spacing: 12
             ) do
               button(
@@ -122,12 +122,12 @@ module UIExample
               end
             end
 
-            # 2. Standard TextInput
+            # 2. Username (Standard)
             text(text: "Username (Standard):", font_size: 10, color: GSDL::Color::Cyan)
             text_input(
               placeholder: "Enter username...",
               width: GSDL::UI::FillParent,
-              height: 40,
+              height: 35,
               on_change: ->(val : String) { update_log("Username changing: '#{val}'") }
             ) do |val|
               update_log("Username submitted: '#{val}'")
@@ -139,40 +139,65 @@ module UIExample
               placeholder: "Enter password...",
               mask_character: '*',
               width: GSDL::UI::FillParent,
-              height: 40,
+              height: 35,
               on_change: ->(val : String) { update_log("Password changing: '#{val}'") }
             ) do |val|
               update_log("Password submitted: '#{val}'")
             end
 
-            # 4. Read-Only TextInput
+            # 4. Numeric Phone Number (Filtered via String)
+            text(text: "Phone Number (Only digits & dash allowed):", font_size: 10, color: GSDL::Color::Cyan)
+            text_input(
+              placeholder: "e.g. 123-456-7890",
+              allowed_characters: "0123456789-",
+              width: GSDL::UI::FillParent,
+              height: 35,
+              on_change: ->(val : String) { update_log("Phone changing: '#{val}'") }
+            ) do |val|
+              update_log("Phone submitted: '#{val}'")
+            end
+
+            # 5. Letters Only (Filtered via Regex)
+            text(text: "Name (Letters & Spaces only, Regex):", font_size: 10, color: GSDL::Color::Cyan)
+            text_input(
+              placeholder: "Enter letters and spaces only...",
+              allowed_characters: /[a-zA-Z ]/,
+              width: GSDL::UI::FillParent,
+              height: 35,
+              on_change: ->(val : String) { update_log("Name changing: '#{val}'") }
+            ) do |val|
+              update_log("Name submitted: '#{val}'")
+            end
+
+            # 6. Email Address with Custom Validation Proc and Red invalid border
+            text(text: "Email Address (Validator check - Red border if invalid):", font_size: 10, color: GSDL::Color::Cyan)
+            text_input(
+              placeholder: "Enter valid email address...",
+              validator: ->(val : String) { val.includes?("@") && val.includes?(".") },
+              invalid_border_color: GSDL::Color.parse("#ef4444"),
+              width: GSDL::UI::FillParent,
+              height: 35,
+              on_change: ->(val : String) { update_log("Email changing: '#{val}'") }
+            ) do |val|
+              update_log("Email submitted: '#{val}'")
+            end
+
+            # 7. Read-Only TextInput
             text(text: "License Key (Read-Only - Copyable):", font_size: 10, color: GSDL::Color::Cyan)
             text_input(
               text: "GSDL-3-PREMIUM-KEY",
               read_only: true,
               width: GSDL::UI::FillParent,
-              height: 40,
+              height: 35,
               on_change: ->(val : String) { update_log("Read-only changing: '#{val}'") }
             ) do |val|
               update_log("Read-only submitted: '#{val}'")
             end
 
-            # 5. Disabled TextInput
-            text(text: "API Secret (Disabled - Blocked):", font_size: 10, color: GSDL::Color::Cyan)
-            text_input(
-              text: "SECRET_PASSWORD_123",
-              disabled: true,
-              width: GSDL::UI::FillParent,
-              height: 40,
-              on_change: ->(val : String) { update_log("Disabled changing: '#{val}'") }
-            ) do |val|
-              update_log("Disabled submitted: '#{val}'")
-            end
-
             # Simple button to clear/unfocus
             button(
               text: "Unfocus All",
-              height: 40
+              height: 35
             ) do
               @root_canvas.try(&.focused_element = nil)
               update_log("All inputs unfocused")
