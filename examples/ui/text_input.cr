@@ -37,6 +37,7 @@ module UIExample
     @root_canvas : RootCanvas?
     @event_handler : UIHandler
     @log_text : Text? = nil
+    @toggle_input : TextInput? = nil
 
     def initialize
       super(:text_input_showcase)
@@ -81,7 +82,47 @@ module UIExample
               color: GSDL::Color::White
             )
 
-            # 1. Standard TextInput
+            # 1. State Toggleable TextInput
+            text(text: "Toggleable Input (Test dynamic states below):", font_size: 10, color: GSDL::Color::Cyan)
+            @toggle_input = text_input(
+              placeholder: "Try typing, then toggle states...",
+              width: GSDL::UI::FillParent,
+              height: 40,
+              on_change: ->(val : String) { update_log("Toggleable changing: '#{val}'") }
+            ) do |val|
+              update_log("Toggleable submitted: '#{val}'")
+            end
+
+            # Dynamic toggle controls
+            hbox(
+              width: GSDL::UI::FillParent,
+              height: 36,
+              spacing: 12
+            ) do
+              button(
+                text: "Toggle Disabled",
+                flex: 1_u8
+              ) do
+                if input = @toggle_input
+                  new_state = !input.disabled?
+                  input.disabled = new_state
+                  update_log("Set disabled = #{new_state}")
+                end
+              end
+
+              button(
+                text: "Toggle Read-Only",
+                flex: 1_u8
+              ) do
+                if input = @toggle_input
+                  new_state = !input.read_only?
+                  input.read_only = new_state
+                  update_log("Set read_only = #{new_state}")
+                end
+              end
+            end
+
+            # 2. Standard TextInput
             text(text: "Username (Standard):", font_size: 10, color: GSDL::Color::Cyan)
             text_input(
               placeholder: "Enter username...",
@@ -92,7 +133,7 @@ module UIExample
               update_log("Username submitted: '#{val}'")
             end
 
-            # 2. Password TextInput (Masked)
+            # 3. Password TextInput (Masked)
             text(text: "Password (Masked):", font_size: 10, color: GSDL::Color::Cyan)
             text_input(
               placeholder: "Enter password...",
@@ -104,41 +145,28 @@ module UIExample
               update_log("Password submitted: '#{val}'")
             end
 
-            # 3. Max Length Input
-            text(text: "Coupon Code (Max Length = 8):", font_size: 10, color: GSDL::Color::Cyan)
+            # 4. Read-Only TextInput
+            text(text: "License Key (Read-Only - Copyable):", font_size: 10, color: GSDL::Color::Cyan)
             text_input(
-              placeholder: "CODE123",
-              max_length: 8,
+              text: "GSDL-3-PREMIUM-KEY",
+              read_only: true,
               width: GSDL::UI::FillParent,
               height: 40,
-              on_change: ->(val : String) { update_log("Coupon changing: '#{val}'") }
+              on_change: ->(val : String) { update_log("Read-only changing: '#{val}'") }
             ) do |val|
-              update_log("Coupon submitted: '#{val}'")
+              update_log("Read-only submitted: '#{val}'")
             end
 
-            # 4. FitContent TextInput
-            text(text: "FitContent Height Input:", font_size: 10, color: GSDL::Color::Cyan)
+            # 5. Disabled TextInput
+            text(text: "API Secret (Disabled - Blocked):", font_size: 10, color: GSDL::Color::Cyan)
             text_input(
-              placeholder: "Fit content...",
-              width: GSDL::UI::FillParent,
-              height: GSDL::UI::FitContent,
-              on_change: ->(val : String) { update_log("FitContent changing: '#{val}'") }
-            ) do |val|
-              update_log("FitContent submitted: '#{val}'")
-            end
-
-            # 5. Centered TextInput
-            text(text: "Centered text Alignment (Center / Center):", font_size: 10, color: GSDL::Color::Cyan)
-            text_input(
-              placeholder: "Centered...",
-              h_align: GSDL::HorizontalAlign::Center,
-              v_align: GSDL::VerticalAlign::Center,
+              text: "SECRET_PASSWORD_123",
+              disabled: true,
               width: GSDL::UI::FillParent,
               height: 40,
-              selection_color: GSDL::Color.new(168, 85, 247, 102), # Translucent purple selection highlight
-              on_change: ->(val : String) { update_log("Centered changing: '#{val}'") }
+              on_change: ->(val : String) { update_log("Disabled changing: '#{val}'") }
             ) do |val|
-              update_log("Centered submitted: '#{val}'")
+              update_log("Disabled submitted: '#{val}'")
             end
 
             # Simple button to clear/unfocus

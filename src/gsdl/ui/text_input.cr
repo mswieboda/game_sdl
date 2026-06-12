@@ -11,6 +11,9 @@ module GSDL
       property max_length : Int32? = nil
       property mask_character : Char? = nil
 
+      getter? read_only : Bool = false
+      getter? disabled : Bool = false
+
       property on_change : Proc(String, Nil)? = nil
       property on_submit : Proc(String, Nil)? = nil
 
@@ -24,6 +27,15 @@ module GSDL
       property text_color : Color
       property placeholder_color : Color
       property selection_color : Color
+
+      # Read-only state styling
+      property read_only_background_color : Color
+      property read_only_border_color : Color
+      property read_only_hover_border_color : Color
+      property read_only_focus_border_color : Color
+
+      # Disabled state styling
+      property disabled_overlay_color : Color
 
       @cursor_position : Int32 = 0
       @selection_anchor : Int32 = 0
@@ -44,6 +56,8 @@ module GSDL
         @anchor : Anchor = Anchor::TopLeft,
         @max_length : Int32? = nil,
         @mask_character : Char? = nil,
+        @read_only : Bool = false,
+        @disabled : Bool = false,
         background_color : Color | String = ColorScheme.get(:ui_bg, Color.parse("#1e1e24")),
         border_color : Color | String = ColorScheme.get(:border, Color.parse("#4b5563")),
         hover_border_color : Color | String = ColorScheme.get(:main, Color.parse("#10b981")),
@@ -51,6 +65,11 @@ module GSDL
         text_color : Color | String = ColorScheme.get(:ui_text, Color.parse("#f4f4f5")),
         placeholder_color : Color | String = Color.parse("#9ca3af"),
         selection_color : Color | String = Color.new(14, 165, 233, 102),
+        read_only_background_color : Color | String = Color.new(r: 255, g: 255, b: 255, a: 20),
+        read_only_border_color : Color | String? = nil,
+        read_only_hover_border_color : Color | String? = nil,
+        read_only_focus_border_color : Color | String? = nil,
+        disabled_overlay_color : Color | String = Color.new(r: 128, g: 128, b: 128, a: 128),
         font_size : Num = 16,
         padding : Spacing = Spacing.new(left: 8, right: 8, top: 4, bottom: 4),
         margin : Spacing = Spacing.new(all: 0),
@@ -71,6 +90,25 @@ module GSDL
         @text_color = text_color.is_a?(String) ? Color.parse(text_color) : text_color
         @placeholder_color = placeholder_color.is_a?(String) ? Color.parse(placeholder_color) : placeholder_color
         @selection_color = selection_color.is_a?(String) ? Color.parse(selection_color) : selection_color
+
+        @read_only_background_color = read_only_background_color.is_a?(String) ? Color.parse(read_only_background_color) : read_only_background_color
+        parsed_bc = border_color.is_a?(String) ? Color.parse(border_color) : border_color
+        if ro_bc = read_only_border_color
+          @read_only_border_color = ro_bc.is_a?(String) ? Color.parse(ro_bc) : ro_bc
+        else
+          @read_only_border_color = parsed_bc
+        end
+        if ro_hbc = read_only_hover_border_color
+          @read_only_hover_border_color = ro_hbc.is_a?(String) ? Color.parse(ro_hbc) : ro_hbc
+        else
+          @read_only_hover_border_color = parsed_bc.lerp(Color::White, 0.4_f32)
+        end
+        if ro_fbc = read_only_focus_border_color
+          @read_only_focus_border_color = ro_fbc.is_a?(String) ? Color.parse(ro_fbc) : ro_fbc
+        else
+          @read_only_focus_border_color = parsed_bc.lerp(Color::White, 0.7_f32)
+        end
+        @disabled_overlay_color = disabled_overlay_color.is_a?(String) ? Color.parse(disabled_overlay_color) : disabled_overlay_color
 
         @focusable = true
         @clips_children = true
@@ -106,6 +144,8 @@ module GSDL
         anchor : Anchor = Anchor::TopLeft,
         max_length : Int32? = nil,
         mask_character : Char? = nil,
+        read_only : Bool = false,
+        disabled : Bool = false,
         background_color : Color | String = ColorScheme.get(:ui_bg, Color.parse("#1e1e24")),
         border_color : Color | String = ColorScheme.get(:border, Color.parse("#4b5563")),
         hover_border_color : Color | String = ColorScheme.get(:main, Color.parse("#10b981")),
@@ -113,6 +153,11 @@ module GSDL
         text_color : Color | String = ColorScheme.get(:ui_text, Color.parse("#f4f4f5")),
         placeholder_color : Color | String = Color.parse("#9ca3af"),
         selection_color : Color | String = Color.new(14, 165, 233, 102),
+        read_only_background_color : Color | String = Color.new(r: 255, g: 255, b: 255, a: 20),
+        read_only_border_color : Color | String? = nil,
+        read_only_hover_border_color : Color | String? = nil,
+        read_only_focus_border_color : Color | String? = nil,
+        disabled_overlay_color : Color | String = Color.new(r: 128, g: 128, b: 128, a: 128),
         font_size : Num = 16,
         padding : Spacing = Spacing.new(left: 8, right: 8, top: 4, bottom: 4),
         margin : Spacing = Spacing.new(all: 0),
@@ -132,6 +177,8 @@ module GSDL
           anchor: anchor,
           max_length: max_length,
           mask_character: mask_character,
+          read_only: read_only,
+          disabled: disabled,
           background_color: background_color,
           border_color: border_color,
           hover_border_color: hover_border_color,
@@ -139,6 +186,11 @@ module GSDL
           text_color: text_color,
           placeholder_color: placeholder_color,
           selection_color: selection_color,
+          read_only_background_color: read_only_background_color,
+          read_only_border_color: read_only_border_color,
+          read_only_hover_border_color: read_only_hover_border_color,
+          read_only_focus_border_color: read_only_focus_border_color,
+          disabled_overlay_color: disabled_overlay_color,
           font_size: font_size,
           padding: padding,
           margin: margin,
@@ -159,6 +211,35 @@ module GSDL
         @on_change.try(&.call(@text))
       end
 
+      def read_only=(val : Bool)
+        @read_only = val
+      end
+
+      def disabled=(val : Bool)
+        return if @disabled == val
+        @disabled = val
+        if val
+          release_focus
+          @hovered = false
+        end
+      end
+
+      def focusable? : Bool
+        !disabled? && @focusable
+      end
+
+      def request_focus
+        super unless disabled?
+      end
+
+      def hovered=(value : Bool)
+        if disabled?
+          @hovered = false
+          return
+        end
+        super(value)
+      end
+
       def h_align : HorizontalAlign
         @text_element.align
       end
@@ -176,6 +257,7 @@ module GSDL
       end
 
       def on_focus
+        return if disabled?
         @cursor_visible = true
         @blink_timer = 0_f32
         Input.start_text_input
@@ -189,6 +271,7 @@ module GSDL
 
       def update(dt : Float32)
         super(dt)
+        return if disabled?
 
         if focused?
           @blink_timer += dt
@@ -215,6 +298,7 @@ module GSDL
       end
 
       def on_mouse_down(event : GSDL::Event) : Bool
+        return true if disabled?
         request_focus
 
         if Mouse.multi_tap?(Mouse::ButtonLeft, 3)
@@ -246,16 +330,19 @@ module GSDL
       end
 
       def on_mouse_move(event : GSDL::Event) : Bool
+        return true if disabled?
         # Handled in the update loop to support continuous drag outside boundaries
         true
       end
 
       def on_mouse_up(event : GSDL::Event) : Bool
+        return true if disabled?
         @mouse_dragging = false
         true
       end
 
       def on_text_input(event : GSDL::Event) : Bool
+        return true if disabled? || read_only?
         new_chars = String.new(event.text.text)
 
         unless new_chars.empty?
@@ -286,6 +373,8 @@ module GSDL
       end
 
       def on_key_down(event : GSDL::Event) : Bool
+        return true if disabled?
+
         key = event.key.key
 
         shift_pressed = Keys.pressed?(Keys::LShift) || Keys.pressed?(Keys::RShift) || (event.key.mod.to_i & 0x0003) != 0
@@ -314,6 +403,7 @@ module GSDL
 
         # Cut (Cmd + X or Ctrl + X)
         if (gui_pressed || ctrl_pressed) && key == Keys::X
+          return true if read_only?
           if selection_active?
             start_idx, end_idx = selection_range
             selected_text = @text[start_idx...end_idx]
@@ -329,6 +419,7 @@ module GSDL
 
         # Paste (Cmd + V or Ctrl + V)
         if (gui_pressed || ctrl_pressed) && key == Keys::V
+          return true if read_only?
           if SDL3::Clipboard.has_text?
             clip_text = SDL3::Clipboard.text.gsub("\n", "").gsub("\r", "")
             unless clip_text.empty?
@@ -359,6 +450,7 @@ module GSDL
         end
 
         if key == Keys::Backspace
+          return true if read_only?
           if selection_active?
             delete_selection
             @cursor_visible = true
@@ -377,6 +469,7 @@ module GSDL
             return true
           end
         elsif key == Keys::Delete
+          return true if read_only?
           if selection_active?
             delete_selection
             @cursor_visible = true
@@ -657,10 +750,29 @@ module GSDL
         return unless visible?
         layout! if @dirty_layout
 
-        border_col = focused? ? @focus_border_color : (hovered? ? @hover_border_color : @border_color)
+        border_col = if disabled?
+          @border_color
+        elsif read_only?
+          if focused?
+            @read_only_focus_border_color
+          elsif hovered?
+            @read_only_hover_border_color
+          else
+            @read_only_border_color
+          end
+        elsif focused?
+          @focus_border_color
+        elsif hovered?
+          @hover_border_color
+        else
+          @border_color
+        end
 
         rect = Rect.new(inner_x, inner_y, inner_width, inner_height)
         draw.rect_fill(rect, @background_color.not_nil!, effective_z_index)
+        if read_only?
+          draw.rect_fill(rect, @read_only_background_color, effective_z_index + 1)
+        end
         if @border_width > 0
           draw.rect_outline(rect, border_col, effective_z_index)
         end
@@ -759,6 +871,10 @@ module GSDL
           @children.each do |child|
             child.draw(draw) if child.visible?
           end
+        end
+
+        if disabled?
+          draw.rect_fill(rect, @disabled_overlay_color, effective_z_index + 4)
         end
       end
     end
