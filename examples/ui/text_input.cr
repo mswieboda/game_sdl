@@ -135,6 +135,7 @@ module UIExample
               v_align: GSDL::VerticalAlign::Center,
               width: GSDL::UI::FillParent,
               height: 40,
+              selection_color: GSDL::Color.new(168, 85, 247, 102), # Translucent purple selection highlight
               on_change: ->(val : String) { update_log("Centered changing: '#{val}'") }
             ) do |val|
               update_log("Centered submitted: '#{val}'")
