@@ -46,9 +46,21 @@ module GSDL
         end
       end
 
+      enum ActionType
+        None
+        Insert
+        DeleteBack
+        DeleteForward
+        Other
+      end
+
       @undo_stack = [] of HistoryItem
       @redo_stack = [] of HistoryItem
       @max_history : Int32 = 100
+
+      @last_action : ActionType = ActionType::None
+      @last_action_time : Time::Instant? = nil
+      @last_cursor_position : Int32? = nil
 
       @cursor_position : Int32 = 0
       @selection_anchor : Int32 = 0
@@ -281,6 +293,9 @@ module GSDL
       def on_unfocus
         @cursor_visible = false
         @mouse_dragging = false
+        @last_action = ActionType::None
+        @last_action_time = nil
+        @last_cursor_position = nil
         Input.stop_text_input
       end
 
@@ -300,8 +315,11 @@ module GSDL
               mouse_x = Mouse.x
               local_x = get_local_mouse_x(mouse_x)
               idx = find_char_index_at(local_x)
-              @cursor_position = idx
-              update_text_scroll
+              if @cursor_position != idx
+                @cursor_position = idx
+                @last_action = ActionType::None
+                update_text_scroll
+              end
             else
               @mouse_dragging = false
             end
@@ -315,6 +333,7 @@ module GSDL
       def on_mouse_down(event : GSDL::Event) : Bool
         return true if disabled?
         request_focus
+        @last_action = ActionType::None
 
         if Mouse.multi_tap?(Mouse::ButtonLeft, 3)
           @selection_anchor = 0
@@ -361,7 +380,9 @@ module GSDL
         new_chars = String.new(event.text.text)
 
         unless new_chars.empty?
-          push_history
+          is_boundary = new_chars.each_char.any? { |c| !word_char?(c) }
+          action = selection_active? ? ActionType::Other : ActionType::Insert
+          push_history(action, is_boundary)
           if selection_active?
             delete_selection
           end
@@ -383,6 +404,7 @@ module GSDL
             update_text_scroll
             @on_change.try(&.call(@text))
           end
+          @last_cursor_position = @cursor_position
         end
 
         true
@@ -433,7 +455,7 @@ module GSDL
         if (gui_pressed || ctrl_pressed) && key == Keys::X
           return true if read_only?
           if selection_active?
-            push_history
+            push_history(ActionType::Other)
             start_idx, end_idx = selection_range
             selected_text = @text[start_idx...end_idx]
             SDL3::Clipboard.text = selected_text
@@ -442,6 +464,7 @@ module GSDL
             @blink_timer = 0_f32
             update_text_scroll
             @on_change.try(&.call(@text))
+            @last_cursor_position = @cursor_position
           end
           return true
         end
@@ -452,7 +475,7 @@ module GSDL
           if SDL3::Clipboard.has_text?
             clip_text = SDL3::Clipboard.text.gsub("\n", "").gsub("\r", "")
             unless clip_text.empty?
-              push_history
+              push_history(ActionType::Other)
               if selection_active?
                 delete_selection
               end
@@ -474,6 +497,7 @@ module GSDL
                 update_text_scroll
                 @on_change.try(&.call(@text))
               end
+              @last_cursor_position = @cursor_position
             end
           end
           return true
@@ -482,15 +506,16 @@ module GSDL
         if key == Keys::Backspace
           return true if read_only?
           if selection_active?
-            push_history
+            push_history(ActionType::Other)
             delete_selection
             @cursor_visible = true
             @blink_timer = 0_f32
             update_text_scroll
             @on_change.try(&.call(@text))
+            @last_cursor_position = @cursor_position
             return true
           elsif @cursor_position > 0
-            push_history
+            push_history(ActionType::DeleteBack)
             @text = @text[0...@cursor_position - 1] + @text[@cursor_position..]
             @cursor_position -= 1
             @selection_anchor = @cursor_position
@@ -498,29 +523,33 @@ module GSDL
             @blink_timer = 0_f32
             update_text_scroll
             @on_change.try(&.call(@text))
+            @last_cursor_position = @cursor_position
             return true
           end
         elsif key == Keys::Delete
           return true if read_only?
           if selection_active?
-            push_history
+            push_history(ActionType::Other)
             delete_selection
             @cursor_visible = true
             @blink_timer = 0_f32
             update_text_scroll
             @on_change.try(&.call(@text))
+            @last_cursor_position = @cursor_position
             return true
           elsif @cursor_position < @text.size
-            push_history
+            push_history(ActionType::DeleteForward)
             @text = @text[0...@cursor_position] + @text[@cursor_position + 1..]
             @selection_anchor = @cursor_position
             @cursor_visible = true
             @blink_timer = 0_f32
             update_text_scroll
             @on_change.try(&.call(@text))
+            @last_cursor_position = @cursor_position
             return true
           end
         elsif key == Keys::Left
+          @last_action = ActionType::None
           alt_pressed = (event.key.mod.to_i & 0x0300) != 0
 
           # On Mac: Alt+Left jumps previous word, Cmd+Left jumps to start
@@ -553,6 +582,7 @@ module GSDL
           update_text_scroll
           return true
         elsif key == Keys::Right
+          @last_action = ActionType::None
           alt_pressed = (event.key.mod.to_i & 0x0300) != 0
 
           # On Mac: Alt+Right jumps next word, Cmd+Right jumps to end
@@ -585,6 +615,7 @@ module GSDL
           update_text_scroll
           return true
         elsif key == Keys::Home
+          @last_action = ActionType::None
           @cursor_position = 0
           unless shift_pressed
             @selection_anchor = 0
@@ -594,6 +625,7 @@ module GSDL
           update_text_scroll
           return true
         elsif key == Keys::End
+          @last_action = ActionType::None
           @cursor_position = @text.size
           unless shift_pressed
             @selection_anchor = @text.size
@@ -610,15 +642,37 @@ module GSDL
         false
       end
 
-      private def push_history
-        # Don't push if the last state is identical
-        if last = @undo_stack.last?
-          return if last.text == @text && last.cursor_position == @cursor_position && last.selection_anchor == @selection_anchor
+      private def push_history(action : ActionType = ActionType::Other, is_boundary : Bool = false)
+        now = Time.instant
+        group = false
+
+        if action != ActionType::Other && action == @last_action && !is_boundary
+          if last_time = @last_action_time
+            time_ok = (now - last_time).total_seconds <= 1.0
+            cursor_ok = @last_cursor_position == @cursor_position
+            if time_ok && cursor_ok
+              group = true
+            end
+          end
         end
 
-        @undo_stack << HistoryItem.new(@text, @cursor_position, @selection_anchor)
-        @undo_stack.shift if @undo_stack.size > @max_history
-        @redo_stack.clear
+        unless group
+          # Don't push if the last state is identical
+          if last = @undo_stack.last?
+            unless last.text == @text && last.cursor_position == @cursor_position && last.selection_anchor == @selection_anchor
+              @undo_stack << HistoryItem.new(@text, @cursor_position, @selection_anchor)
+              @undo_stack.shift if @undo_stack.size > @max_history
+              @redo_stack.clear
+            end
+          else
+            @undo_stack << HistoryItem.new(@text, @cursor_position, @selection_anchor)
+            @undo_stack.shift if @undo_stack.size > @max_history
+            @redo_stack.clear
+          end
+        end
+
+        @last_action = action
+        @last_action_time = now
       end
 
       private def undo
@@ -632,6 +686,10 @@ module GSDL
         @cursor_position = item.cursor_position
         @selection_anchor = item.selection_anchor
         
+        @last_action = ActionType::None
+        @last_action_time = nil
+        @last_cursor_position = nil
+
         update_text_scroll
         @on_change.try(&.call(@text))
       end
@@ -646,6 +704,10 @@ module GSDL
         @text = item.text
         @cursor_position = item.cursor_position
         @selection_anchor = item.selection_anchor
+
+        @last_action = ActionType::None
+        @last_action_time = nil
+        @last_cursor_position = nil
 
         update_text_scroll
         @on_change.try(&.call(@text))
