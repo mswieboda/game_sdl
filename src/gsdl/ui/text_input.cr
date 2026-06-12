@@ -37,6 +37,19 @@ module GSDL
       # Disabled state styling
       property disabled_overlay_color : Color
 
+      struct HistoryItem
+        getter text : String
+        getter cursor_position : Int32
+        getter selection_anchor : Int32
+
+        def initialize(@text, @cursor_position, @selection_anchor)
+        end
+      end
+
+      @undo_stack = [] of HistoryItem
+      @redo_stack = [] of HistoryItem
+      @max_history : Int32 = 100
+
       @cursor_position : Int32 = 0
       @selection_anchor : Int32 = 0
       @mouse_dragging : Bool = false
@@ -207,6 +220,8 @@ module GSDL
         @text = val
         @cursor_position = val.size
         @selection_anchor = val.size
+        @undo_stack.clear
+        @redo_stack.clear
         update_text_scroll
         @on_change.try(&.call(@text))
       end
@@ -346,6 +361,7 @@ module GSDL
         new_chars = String.new(event.text.text)
 
         unless new_chars.empty?
+          push_history
           if selection_active?
             delete_selection
           end
@@ -391,6 +407,18 @@ module GSDL
           return true
         end
 
+        # Undo (Cmd + Z or Ctrl + Z)
+        if (gui_pressed || ctrl_pressed) && !shift_pressed && key == Keys::Z
+          undo
+          return true
+        end
+
+        # Redo (Cmd + Y or Ctrl + Y or Cmd + Shift + Z or Ctrl + Shift + Z)
+        if (gui_pressed || ctrl_pressed) && ((shift_pressed && key == Keys::Z) || key == Keys::Y)
+          redo
+          return true
+        end
+
         # Copy (Cmd + C or Ctrl + C)
         if (gui_pressed || ctrl_pressed) && key == Keys::C
           if selection_active?
@@ -405,6 +433,7 @@ module GSDL
         if (gui_pressed || ctrl_pressed) && key == Keys::X
           return true if read_only?
           if selection_active?
+            push_history
             start_idx, end_idx = selection_range
             selected_text = @text[start_idx...end_idx]
             SDL3::Clipboard.text = selected_text
@@ -423,6 +452,7 @@ module GSDL
           if SDL3::Clipboard.has_text?
             clip_text = SDL3::Clipboard.text.gsub("\n", "").gsub("\r", "")
             unless clip_text.empty?
+              push_history
               if selection_active?
                 delete_selection
               end
@@ -452,6 +482,7 @@ module GSDL
         if key == Keys::Backspace
           return true if read_only?
           if selection_active?
+            push_history
             delete_selection
             @cursor_visible = true
             @blink_timer = 0_f32
@@ -459,6 +490,7 @@ module GSDL
             @on_change.try(&.call(@text))
             return true
           elsif @cursor_position > 0
+            push_history
             @text = @text[0...@cursor_position - 1] + @text[@cursor_position..]
             @cursor_position -= 1
             @selection_anchor = @cursor_position
@@ -471,6 +503,7 @@ module GSDL
         elsif key == Keys::Delete
           return true if read_only?
           if selection_active?
+            push_history
             delete_selection
             @cursor_visible = true
             @blink_timer = 0_f32
@@ -478,6 +511,7 @@ module GSDL
             @on_change.try(&.call(@text))
             return true
           elsif @cursor_position < @text.size
+            push_history
             @text = @text[0...@cursor_position] + @text[@cursor_position + 1..]
             @selection_anchor = @cursor_position
             @cursor_visible = true
@@ -574,6 +608,47 @@ module GSDL
         end
 
         false
+      end
+
+      private def push_history
+        # Don't push if the last state is identical
+        if last = @undo_stack.last?
+          return if last.text == @text && last.cursor_position == @cursor_position && last.selection_anchor == @selection_anchor
+        end
+
+        @undo_stack << HistoryItem.new(@text, @cursor_position, @selection_anchor)
+        @undo_stack.shift if @undo_stack.size > @max_history
+        @redo_stack.clear
+      end
+
+      private def undo
+        return if @undo_stack.empty?
+
+        # Save current state to redo stack before applying undo
+        @redo_stack << HistoryItem.new(@text, @cursor_position, @selection_anchor)
+        
+        item = @undo_stack.pop
+        @text = item.text
+        @cursor_position = item.cursor_position
+        @selection_anchor = item.selection_anchor
+        
+        update_text_scroll
+        @on_change.try(&.call(@text))
+      end
+
+      private def redo
+        return if @redo_stack.empty?
+
+        # Save current state to undo stack before applying redo
+        @undo_stack << HistoryItem.new(@text, @cursor_position, @selection_anchor)
+
+        item = @redo_stack.pop
+        @text = item.text
+        @cursor_position = item.cursor_position
+        @selection_anchor = item.selection_anchor
+
+        update_text_scroll
+        @on_change.try(&.call(@text))
       end
 
       private def selection_active? : Bool
