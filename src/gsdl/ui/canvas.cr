@@ -256,6 +256,12 @@ module GSDL
         super(event)
       end
 
+      def collect_focusable_elements(elements : Array(Element))
+        return unless visible?
+        super(elements)
+        @overlays.each &.collect_focusable_elements(elements)
+      end
+
       def handle_event(event : GSDL::Event) : Bool
         case event.type
         when GSDL::Events::MouseDown
@@ -267,6 +273,32 @@ module GSDL
         when GSDL::Events::MouseWheel
           on_mouse_wheel(event)
         when GSDL::Events::KeyDown
+          key = event.key.key
+          shift_pressed = Keys.pressed?(Keys::LShift) || Keys.pressed?(Keys::RShift) || (event.key.mod.to_i & 0x0003) != 0
+
+          if key == Keys::Tab
+            focusable_elements = [] of Element
+            collect_focusable_elements(focusable_elements)
+
+            unless focusable_elements.empty?
+              if current_focus = @focused_element
+                if idx = focusable_elements.index(current_focus)
+                  if shift_pressed
+                    next_idx = (idx - 1 + focusable_elements.size) % focusable_elements.size
+                  else
+                    next_idx = (idx + 1) % focusable_elements.size
+                  end
+                  self.focused_element = focusable_elements[next_idx]
+                else
+                  self.focused_element = shift_pressed ? focusable_elements.last : focusable_elements.first
+                end
+              else
+                self.focused_element = shift_pressed ? focusable_elements.last : focusable_elements.first
+              end
+              return true
+            end
+          end
+
           if el = @focused_element
             return el.on_key_down(event)
           end

@@ -79,6 +79,22 @@ module GSDL
         end || false
       end
 
+      def on_focus
+      end
+
+      def on_unfocus
+      end
+
+      def collect_focusable_elements(elements : Array(Element))
+        return unless visible?
+        if focusable?
+          elements << self
+        end
+        if self.is_a?(Container)
+          self.children.each &.collect_focusable_elements(elements)
+        end
+      end
+
       @dirty_position : Bool = true
       @global_position_cache : {Int32, Int32} = {0, 0}
 
