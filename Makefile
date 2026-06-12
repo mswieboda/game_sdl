@@ -33,7 +33,7 @@ build: $(SOURCES)
 	fi
 	@${MKDIR} $(BUILD_DIR)
 	@echo "Building example: $(EXAMPLE)..."
-	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(EXAMPLE) --link-flags "$(GSDL_LINK_FLAGS)" -p
+	$(CRYSTAL_COMPILER) build examples/$(EXAMPLE).cr -o $(BUILD_DIR)/$(subst /,_,$(EXAMPLE)) --link-flags "$(GSDL_LINK_FLAGS)" -p
 
 run: build
 	@if [ -z "$(EXAMPLE)" ]; then \
@@ -41,4 +41,4 @@ run: build
 		exit 1; \
 	fi
 	@echo "Running example: $(EXAMPLE)..."
-	./$(BUILD_DIR)/$(EXAMPLE)
+	./$(BUILD_DIR)/$(subst /,_,$(EXAMPLE))

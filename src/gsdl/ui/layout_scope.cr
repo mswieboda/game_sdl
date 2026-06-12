@@ -47,6 +47,7 @@ module GSDL
 
       register_container vbox, VBox
       register_container hbox, HBox
+      register_container grid_box, GridBox
       register_container canvas, Canvas
       register_container viewport, Viewport
       register_container status_bar, StatusBar

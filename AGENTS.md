@@ -102,7 +102,9 @@ Determine if the request is a **Beads-tracked task** (e.g., a major feature, or 
 
 ### Session Termination Procedures
 
-Always ask the user to confirm via their own manual testing. And then when the user says "wrap this up", "wrap up task", "task completed", or "sync tasks", execute the following sequence based on task type:
+**CRITICAL REQUIREMENT:** Always ask the user to verify the UI or feature behavioral correctness first. Do NOT run any `br update <id> --notes ...` or `br close` commands until the user has explicitly confirmed they have verified the implementation and it works perfectly.
+
+Only after they confirm and say "wrap this up", "wrap up task", "task completed", or "sync tasks", execute the following sequence based on task type:
 
 #### If the task was tracked via Beads:
 1. **Summarize Work:** Use `br update <id> --notes "..." --json` to record a technical summary of what was accomplished, any technical debt introduced, and specific findings for the GSDL biotech logic.
