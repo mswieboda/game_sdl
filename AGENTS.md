@@ -24,6 +24,14 @@
   - Command: `make build EXAMPLE=full`
 - **Functional Testing:** Run a specific example to exercise changes. Capture logs and exit automatically:
   - Command: `timeout 5s make run EXAMPLE=foo || true`
+- **Visual Verification:** For GUI/UI examples, perform automated visual checks on macOS. Run the example with a short `timeout` in the background, sleep for 2.0 seconds to allow the window to render, take a silent screen capture to your conversation's brain/artifacts directory, and call `wait` to cleanly exit without requiring explicit `kill` commands:
+  - Command:
+    ```bash
+    timeout 4 ./build/foo &
+    sleep 2.0
+    screencapture -x /Users/matt/.gemini/antigravity-cli/brain/<conversation-id>/test_ui_screenshot.png
+    wait
+    ```
 - **Regression Checks:** If your task affects a specific subsystem (e.g., `GSDL::Audio`), identify and run the relevant example (e.g., `examples/audio.cr`).
 - **Error Resolution:** The `Makefile` includes `--error-trace`. Focus on the first few lines of a compile error to identify the root cause.
 - **Validation Mandate:** Frequent compilation checks are mandatory. A task is not complete until behavioral correctness is verified through a successful build and run.

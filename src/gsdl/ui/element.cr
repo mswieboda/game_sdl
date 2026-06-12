@@ -19,7 +19,7 @@ module GSDL
 
       # The "Shares" this element takes in a BoxLayout
       # 0 = Fixed/Fit, 1+ = Flex Fill
-      getter flex : UInt8 = 1_u8
+      getter flex : UInt8 = 0_u8
 
       # Aesthetics
       property background_color : Color?
@@ -232,6 +232,7 @@ module GSDL
       end
 
       def width_fixed? : Bool
+        return true if @width >= 0
         # It's fixed if it's a specific number OR if it's the RootCanvas
         return true if style_width > 0 || self.is_a?(RootCanvas)
 
@@ -244,6 +245,7 @@ module GSDL
       end
 
       def height_fixed? : Bool
+        return true if @height >= 0
         # It's fixed if it's a specific number OR if it's the RootCanvas
         return true if style_height > 0 || self.is_a?(RootCanvas)
 

@@ -51,6 +51,7 @@ module GSDL
       register_container canvas, Canvas
       register_container viewport, Viewport
       register_container status_bar, StatusBar
+      register_container flow_box, FlowBox
     end
   end
 end

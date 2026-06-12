@@ -24,8 +24,8 @@ module GSDL
         text : String = "",
         @group : Symbol = :default,
         @checked : Bool = false,
-        @width : Int32 = FillParent,
-        @height : Int32 = 44,
+        @width : Int32 = FitContent,
+        @height : Int32 = FitContent,
         @x : Int32 = 0,
         @y : Int32 = 0,
         @anchor : Anchor = Anchor::Center,
@@ -37,10 +37,10 @@ module GSDL
         @on_select : Proc(Nil)? = nil,
         @padding = Spacing.new(all: 0),
         @margin = Spacing.new(all: 0),
-        @flex : UInt8 = 1_u8,
-        @radius : Int32 = 24,
-        @inner_radius : Int32 = 12,
-        label_offset_x : Int32 = 50,
+        @flex : UInt8 = 0_u8,
+        radius : Int32? = nil,
+        inner_radius : Int32? = nil,
+        label_offset_x : Int32? = nil,
       )
         @default_background_color = default_background_color.is_a?(String) ? Color.parse(default_background_color) : default_background_color
         @hover_background_color = hover_background_color.is_a?(String) ? Color.parse(hover_background_color) : hover_background_color
@@ -50,14 +50,18 @@ module GSDL
         @background_color = Color::Transparent
         @swallows_events = true
 
+        @radius = radius || (font_size.to_f32 * 1.25).round.to_i32
+        @inner_radius = inner_radius || (@radius * 0.5).round.to_i32
+        offset_x = label_offset_x || (@radius * 2 + 12)
+
         @label = Text.new(
           text: text,
           font_size: font_size,
           color: @default_text_color,
-          x: label_offset_x,
+          x: offset_x,
           y: 0,
-          width: FillParent,
-          height: FillParent,
+          width: @width == FitContent ? FitContent : FillParent,
+          height: @height == FitContent ? FitContent : FillParent,
           h_align: HorizontalAlign::Left,
           v_align: VerticalAlign::Center,
         )
@@ -105,6 +109,11 @@ module GSDL
         if hovered? && GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
           select_this_radio
         end
+      end
+
+      def layout!
+        super
+        @label.y = (content_height - @label.height) // 2
       end
 
       def draw(draw : Draw)
@@ -163,6 +172,16 @@ module GSDL
               draw_mode: Shape::DrawMode::Fill
             ).draw(draw)
           end
+        end
+      end
+
+      def height : Int32
+        case @height
+        when FitContent
+          label_h = @children.empty? ? 0 : @children.max_of { |c| (c.y + c.footprint_height).as(Int32) }
+          Math.max(label_h, @radius * 2 + 4)
+        else
+          super
         end
       end
     end

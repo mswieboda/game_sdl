@@ -20,8 +20,8 @@ module GSDL
 
       def initialize(
         text : String = "",
-        @width : Int32 = FillParent,
-        @height : Int32 = FillParent,
+        @width : Int32 = FitContent,
+        @height : Int32 = FitContent,
         @x : Int32 = 0,
         @y : Int32 = 0,
         @anchor : Anchor = Anchor::Center,
@@ -33,7 +33,7 @@ module GSDL
         hover_text_color : Color | String = ColorScheme.get(:ui_button_hover_text, ColorScheme.get(:ui_text, Color.parse("#f4f4f5"))),
         padding : Spacing = Spacing.new(all: 0),
         margin : Spacing = Spacing.new(all: 0),
-        @flex : UInt8 = 1_u8,
+        @flex : UInt8 = 0_u8,
         @on_click : Proc(Nil)? = nil
       )
         @default_background_color = default_background_color.is_a?(String) ? Color.parse(default_background_color) : default_background_color
@@ -49,8 +49,8 @@ module GSDL
           text: text,
           font_size: font_size,
           color: @default_text_color,
-          width: FillParent,
-          height: FillParent,
+          width: @width == FitContent ? FitContent : FillParent,
+          height: @height == FitContent ? FitContent : FillParent,
           h_align: h_align,
           v_align: VerticalAlign::Center,
         )
@@ -63,8 +63,8 @@ module GSDL
 
       def initialize(
         text : String = "",
-        width : Int32 = FillParent,
-        height : Int32 = FillParent,
+        width : Int32 = FitContent,
+        height : Int32 = FitContent,
         x : Int32 = 0,
         y : Int32 = 0,
         anchor : Anchor = Anchor::Center,
@@ -76,7 +76,7 @@ module GSDL
         hover_text_color : Color | String = ColorScheme.get(:ui_button_hover_text, ColorScheme.get(:ui_text, Color.parse("#f4f4f5"))),
         padding : Spacing = Spacing.new(all: 0),
         margin : Spacing = Spacing.new(all: 0),
-        flex : UInt8 = 1_u8,
+        flex : UInt8 = 0_u8,
         &block : ->
       )
         initialize(
@@ -125,6 +125,33 @@ module GSDL
         if hovered? && GSDL::Mouse.just_pressed?(GSDL::Mouse::ButtonLeft)
           @on_click.try(&.call)
         end
+      end
+
+      def width=(width : Int32)
+        super(width)
+        @label.width = width == FitContent ? FitContent : FillParent
+      end
+
+      def height=(height : Int32)
+        super(height)
+        @label.height = height == FitContent ? FitContent : FillParent
+      end
+
+      def set_layout_width(width : Int32)
+        super(width)
+        @label.width = FillParent
+      end
+
+      def set_layout_height(height : Int32)
+        super(height)
+        @label.height = FillParent
+      end
+
+      def reset_layout!
+        super
+        @label.width = style_width == FitContent ? FitContent : FillParent
+        @label.height = style_height == FitContent ? FitContent : FillParent
+        @label.reset_layout!
       end
     end
   end

@@ -74,7 +74,7 @@ module GSDL
       def initialize(
         @options : Array(String),
         initial_index : Int32 = 0,
-        @width : Int32 = FillParent,
+        @width : Int32 = FitContent,
         @height : Int32 = 32,
         @x : Int32 = 0,
         @y : Int32 = 0,
@@ -86,7 +86,7 @@ module GSDL
         @on_change : Proc(String, Int32, Nil)? = nil,
         @padding = Spacing.new(all: 0),
         @margin = Spacing.new(all: 0),
-        @flex : UInt8 = 1_u8,
+        @flex : UInt8 = 0_u8,
       )
         @selected_index = initial_index.clamp(0, @options.size - 1)
         @header_background_color = header_background_color.is_a?(String) ? Color.parse(header_background_color) : header_background_color
@@ -101,8 +101,8 @@ module GSDL
         selected_text = @options.empty? ? "" : @options[@selected_index]
         @header = Button.new(
           text: selected_text,
-          width: FillParent,
-          height: FillParent,
+          width: @width == FitContent ? FitContent : FillParent,
+          height: @height == FitContent ? FitContent : FillParent,
           default_background_color: @header_background_color,
           hover_background_color: @hover_background_color,
           default_text_color: @text_color,

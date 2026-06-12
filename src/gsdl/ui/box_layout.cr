@@ -14,7 +14,7 @@ module GSDL
         @x = 0,
         @y = 0,
         @anchor = Anchor::TopLeft,
-        @flex : UInt8 = 1_u8,
+        @flex : UInt8 = 0_u8,
         @padding = Spacing.new(all: 0),
         @margin = Spacing.new(all: 0)
       )
