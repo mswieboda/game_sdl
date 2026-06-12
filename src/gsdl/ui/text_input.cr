@@ -4,6 +4,8 @@ require "./text"
 module GSDL
   module UI
     class TextInput < Container
+      IS_MAC = {% if flag?(:darwin) %} true {% else %} false {% end %}
+
       property text : String = ""
       property placeholder : String = ""
       property max_length : Int32? = nil
@@ -384,16 +386,31 @@ module GSDL
             return true
           end
         elsif key == Keys::Left
-          if shift_pressed
-            if @cursor_position > 0
-              @cursor_position -= 1
-            end
+          alt_pressed = (event.key.mod.to_i & 0x0300) != 0
+
+          # On Mac: Alt+Left jumps previous word, Cmd+Left jumps to start
+          # On other OS: Ctrl+Left jumps previous word
+          word_jump = IS_MAC ? alt_pressed : ctrl_pressed
+          line_jump = IS_MAC && gui_pressed
+
+          new_pos = if line_jump
+            0
+          elsif word_jump
+            find_prev_word_boundary
           else
-            if selection_active?
-              @cursor_position = selection_range[0]
-            elsif @cursor_position > 0
-              @cursor_position -= 1
+            if shift_pressed
+              Math.max(0, @cursor_position - 1)
+            else
+              if selection_active?
+                selection_range[0]
+              else
+                Math.max(0, @cursor_position - 1)
+              end
             end
+          end
+
+          @cursor_position = new_pos
+          unless shift_pressed
             @selection_anchor = @cursor_position
           end
           @cursor_visible = true
@@ -401,16 +418,31 @@ module GSDL
           update_text_scroll
           return true
         elsif key == Keys::Right
-          if shift_pressed
-            if @cursor_position < @text.size
-              @cursor_position += 1
-            end
+          alt_pressed = (event.key.mod.to_i & 0x0300) != 0
+
+          # On Mac: Alt+Right jumps next word, Cmd+Right jumps to end
+          # On other OS: Ctrl+Right jumps next word
+          word_jump = IS_MAC ? alt_pressed : ctrl_pressed
+          line_jump = IS_MAC && gui_pressed
+
+          new_pos = if line_jump
+            @text.size
+          elsif word_jump
+            find_next_word_boundary
           else
-            if selection_active?
-              @cursor_position = selection_range[1]
-            elsif @cursor_position < @text.size
-              @cursor_position += 1
+            if shift_pressed
+              Math.min(@text.size, @cursor_position + 1)
+            else
+              if selection_active?
+                selection_range[1]
+              else
+                Math.min(@text.size, @cursor_position + 1)
+              end
             end
+          end
+
+          @cursor_position = new_pos
+          unless shift_pressed
             @selection_anchor = @cursor_position
           end
           @cursor_visible = true
@@ -481,6 +513,41 @@ module GSDL
 
       private def word_char?(char : Char) : Bool
         char.alphanumeric? || char == '_'
+      end
+
+      private def find_prev_word_boundary : Int32
+        pos = @cursor_position
+        return 0 if pos <= 0
+
+        # Skip non-word characters to the left
+        while pos > 0 && !word_char?(@text[pos - 1])
+          pos -= 1
+        end
+
+        # Skip word characters to the left
+        while pos > 0 && word_char?(@text[pos - 1])
+          pos -= 1
+        end
+
+        pos
+      end
+
+      private def find_next_word_boundary : Int32
+        pos = @cursor_position
+        len = @text.size
+        return len if pos >= len
+
+        # Skip non-word characters to the right
+        while pos < len && !word_char?(@text[pos])
+          pos += 1
+        end
+
+        # Skip word characters to the right
+        while pos < len && word_char?(@text[pos])
+          pos += 1
+        end
+
+        pos
       end
 
       private def get_local_mouse_x(mouse_x : Int32) : Int32
