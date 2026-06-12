@@ -45,6 +45,18 @@ module GSDL
       register_component radio_button, RadioButton
       register_component dropdown, Dropdown
 
+      def text_input(*args, **kwargs)
+        child = TextInput.new(*args, **kwargs)
+        @parent.layout_add_child(child)
+        child
+      end
+
+      def text_input(*args, **kwargs, &block : String -> Nil)
+        child = TextInput.new(*args, **kwargs, &block)
+        @parent.layout_add_child(child)
+        child
+      end
+
       register_container vbox, VBox
       register_container hbox, HBox
       register_container grid_box, GridBox

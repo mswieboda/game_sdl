@@ -41,6 +41,7 @@ module GSDL
       property? visible : Bool = true
       property parent : Element?
       property? swallows_events : Bool = false
+      property? focusable : Bool = false
 
       # Hover State & Callbacks
       property hover_cursor : GSDL::SystemCursor? = nil
@@ -56,6 +57,26 @@ module GSDL
         else
           @on_hover_leave.try(&.call(self))
         end
+      end
+
+      def request_focus
+        if rc = root_canvas
+          rc.focused_element = self
+        end
+      end
+
+      def release_focus
+        if rc = root_canvas
+          if rc.focused_element == self
+            rc.focused_element = nil
+          end
+        end
+      end
+
+      def focused? : Bool
+        if rc = root_canvas
+          rc.focused_element == self
+        end || false
       end
 
       @dirty_position : Bool = true
@@ -106,6 +127,18 @@ module GSDL
 
       def on_mouse_wheel(event : GSDL::Event) : Bool
         swallows_events?
+      end
+
+      def on_key_down(event : GSDL::Event) : Bool
+        false
+      end
+
+      def on_key_up(event : GSDL::Event) : Bool
+        false
+      end
+
+      def on_text_input(event : GSDL::Event) : Bool
+        false
       end
 
       def draw_background(draw : Draw)

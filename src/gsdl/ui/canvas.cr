@@ -23,6 +23,21 @@ module GSDL
       getter overlays = Array(Element).new
       @current_hover_path = Array(Element).new
       @default_cursor : GSDL::Cursor? = nil
+      getter focused_element : Element? = nil
+
+      def focused_element=(element : Element?)
+        return if @focused_element == element
+        old_focused = @focused_element
+        @focused_element = element
+
+        # Notify elements of focus state change
+        if old_focused && old_focused.responds_to?(:on_unfocus)
+          old_focused.on_unfocus
+        end
+        if element && element.responds_to?(:on_focus)
+          element.on_focus
+        end
+      end
 
       def initialize(@width : Int32, @height : Int32)
         super(
@@ -172,8 +187,25 @@ module GSDL
       end
 
       def on_mouse_down(event : GSDL::Event) : Bool
-        # Find the element clicked to handle auto-dismissal
+        # Find the element clicked to handle auto-dismissal and focus
         target = find_element_at(GSDL::Mouse.x, GSDL::Mouse.y)
+
+        # Set focused element
+        if target
+          curr : Element? = target
+          focusable_target : Element? = nil
+          while curr
+            if curr.focusable?
+              focusable_target = curr
+              break
+            end
+            curr = curr.parent
+          end
+
+          self.focused_element = focusable_target
+        else
+          self.focused_element = nil
+        end
 
         if !@overlays.empty?
           if target.nil? || !target.is_descendant_of_overlay?
@@ -234,6 +266,21 @@ module GSDL
           on_mouse_move(event)
         when GSDL::Events::MouseWheel
           on_mouse_wheel(event)
+        when GSDL::Events::KeyDown
+          if el = @focused_element
+            return el.on_key_down(event)
+          end
+          false
+        when GSDL::Events::KeyUp
+          if el = @focused_element
+            return el.on_key_up(event)
+          end
+          false
+        when GSDL::Events::TextInput
+          if el = @focused_element
+            return el.on_text_input(event)
+          end
+          false
         else
           false
         end
