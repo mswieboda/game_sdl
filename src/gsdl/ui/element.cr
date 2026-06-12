@@ -265,8 +265,14 @@ module GSDL
 
         # Update local x/y. These will be added to the parent's content_x/y
         # in the global_position call.
-        @x = off_x + style_x
-        @y = off_y + style_y
+        new_x = off_x + style_x
+        new_y = off_y + style_y
+
+        if @x != new_x || @y != new_y
+          @x = new_x
+          @y = new_y
+          dirty_position!
+        end
       end
 
       # Ancestor Helper (protected, so subclasses of Element can access, but hidden from public API)
