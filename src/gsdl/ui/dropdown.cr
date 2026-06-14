@@ -84,8 +84,8 @@ module GSDL
         hover_background_color : Color | String = "#4f46e5",
         text_color : Color | String = "#f4f4f5",
         @on_change : Proc(String, Int32, Nil)? = nil,
-        @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0),
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0,
         @flex : UInt8 = 0_u8,
       )
         @selected_index = initial_index.clamp(0, @options.size - 1)
@@ -113,6 +113,8 @@ module GSDL
           toggle_menu!
         end
 
+        self.padding = padding
+        self.margin = margin
         add_child(@header)
       end
 

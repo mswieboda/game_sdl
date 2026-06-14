@@ -23,8 +23,8 @@ module GSDL
         opacity : UInt8 = 255_u8,
         weight : FontWeight = FontWeight::Normal,
         style : FontStyle = FontStyle::Regular,
-        @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0),
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0,
       )
         @width = width || FitContent
         @height = height || FitContent
@@ -44,6 +44,9 @@ module GSDL
           draw_relative_to_camera: false
         )
         @text_entity.opacity = opacity
+
+        self.padding = padding
+        self.margin = margin
       end
 
       def text : String

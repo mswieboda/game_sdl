@@ -10,10 +10,12 @@ module GSDL
         @y : Int32 = 0,
         @anchor : Anchor = Anchor::Center,
         @background_color : Color = Color::Transparent,
-        @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0),
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0,
         @flex : UInt8 = 0_u8,
       )
+        self.padding = padding
+        self.margin = margin
       end
     end
 

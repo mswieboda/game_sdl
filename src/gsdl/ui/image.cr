@@ -23,8 +23,8 @@ module GSDL
         @y : Int32 = 0,
         @anchor : Anchor = Anchor::TopLeft,
         @z_index : Int32 = 0,
-        @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0),
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0,
         @flex : UInt8 = 0_u8,
       )
         if id.is_a?(Symbol)
@@ -32,6 +32,9 @@ module GSDL
         elsif id.is_a?(Texture)
           @texture = id
         end
+
+        self.padding = padding
+        self.margin = margin
       end
 
       def texture=(id : Symbol)

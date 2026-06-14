@@ -35,8 +35,8 @@ module GSDL
         default_text_color : Color | String = ColorScheme.get(:ui_checkbox_text, ColorScheme.get(:ui_text, Color.parse("#f4f4f5"))),
         hover_text_color : Color | String = ColorScheme.get(:ui_checkbox_hover_text, ColorScheme.get(:main, Color.parse("#7c3aed"))),
         @on_toggle : Proc(Bool, Nil)? = nil,
-        @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0),
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0,
         @flex : UInt8 = 0_u8,
         box_size : Int32? = nil,
         inner_size : Int32? = nil,
@@ -66,6 +66,8 @@ module GSDL
           v_align: VerticalAlign::Center,
         )
 
+        self.padding = padding
+        self.margin = margin
         self.hover_cursor = GSDL::SystemCursor::Hand
         add_child(@label)
       end
