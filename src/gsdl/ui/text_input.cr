@@ -110,6 +110,7 @@ module GSDL
         v_align : VerticalAlign = VerticalAlign::Center,
         @on_change : Proc(String, Nil)? = nil,
         @on_submit : Proc(String, Nil)? = nil,
+        background_skin : GSDL::NinePatch? = nil,
       )
         @allowed_characters = allowed_characters
         @validator = validator
@@ -119,6 +120,7 @@ module GSDL
         @selection_anchor = text.size
 
         @background_color = background_color.is_a?(String) ? Color.parse(background_color) : background_color
+        @background_skin = background_skin
         @border_color = border_color.is_a?(String) ? Color.parse(border_color) : border_color
         @hover_border_color = hover_border_color.is_a?(String) ? Color.parse(hover_border_color) : hover_border_color
         @focus_border_color = focus_border_color.is_a?(String) ? Color.parse(focus_border_color) : focus_border_color
@@ -203,6 +205,7 @@ module GSDL
         h_align : HorizontalAlign = HorizontalAlign::Left,
         v_align : VerticalAlign = VerticalAlign::Center,
         on_change : Proc(String, Nil)? = nil,
+        background_skin : GSDL::NinePatch? = nil,
         &block : String -> Nil
       )
         initialize(
@@ -240,6 +243,7 @@ module GSDL
           v_align: v_align,
           on_change: on_change,
           on_submit: block,
+          background_skin: background_skin,
         )
       end
 
@@ -963,7 +967,18 @@ module GSDL
         end
 
         rect = Rect.new(inner_x, inner_y, inner_width, inner_height)
-        draw.rect_fill(rect, @background_color.not_nil!, effective_z_index)
+        if skin = @background_skin
+          skin.draw(
+            draw: draw,
+            dest_x: inner_x,
+            dest_y: inner_y,
+            dest_w: inner_width,
+            dest_h: inner_height,
+            z_index: effective_z_index
+          )
+        else
+          draw.rect_fill(rect, @background_color.not_nil!, effective_z_index)
+        end
         if read_only?
           draw.rect_fill(rect, @read_only_background_color, effective_z_index + 1)
         end

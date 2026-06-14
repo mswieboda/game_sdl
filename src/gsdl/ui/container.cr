@@ -15,7 +15,7 @@ module GSDL
         obj = allocate
         obj.initialize(*args, **kwargs)
         scope = LayoutScope.new(obj)
-        with scope yield
+        with scope yield obj
         obj
       end
 
@@ -30,7 +30,7 @@ module GSDL
           obj = allocate
           obj.initialize(*args, **kwargs)
           scope = LayoutScope.new(obj)
-          with scope yield
+          with scope yield obj
           obj
         end
       end

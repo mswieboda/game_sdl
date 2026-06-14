@@ -22,6 +22,7 @@ module GSDL
       getter flex : UInt8 = 0_u8
 
       # Aesthetics
+      property background_skin : GSDL::NinePatch? = nil
       property background_color : Color?
       property foreground_color : Color = Color::White
 
@@ -158,7 +159,16 @@ module GSDL
       end
 
       def draw_background(draw : Draw)
-        if (color = @background_color) && !color.transparent?
+        if skin = @background_skin
+          skin.draw(
+            draw: draw,
+            dest_x: inner_x,
+            dest_y: inner_y,
+            dest_w: inner_width,
+            dest_h: inner_height,
+            z_index: effective_z_index
+          )
+        elsif (color = @background_color) && !color.transparent?
           draw.rect_fill(
             rect: FRect.new(
               x: inner_x,

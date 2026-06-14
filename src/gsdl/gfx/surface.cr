@@ -50,10 +50,6 @@ module GSDL
       @internal.fill_rect(rect: rect.to_sdl, color: color)
     end
 
-    def draw_text(text : Text, x : Num, y : Num) : Bool
-      @internal.draw_text(text: text.to_sdl, x: x.to_f32, y: y.to_f32)
-    end
-
     def fill(color : Color)
       @internal.fill(color)
     end

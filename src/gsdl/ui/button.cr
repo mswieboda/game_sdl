@@ -34,7 +34,8 @@ module GSDL
         padding : Spacing = Spacing.new(all: 0),
         margin : Spacing = Spacing.new(all: 0),
         @flex : UInt8 = 0_u8,
-        @on_click : Proc(Nil)? = nil
+        @on_click : Proc(Nil)? = nil,
+        background_skin : GSDL::NinePatch? = nil
       )
         @default_background_color = default_background_color.is_a?(String) ? Color.parse(default_background_color) : default_background_color
         @hover_background_color = hover_background_color.is_a?(String) ? Color.parse(hover_background_color) : hover_background_color
@@ -42,6 +43,7 @@ module GSDL
         @hover_text_color = hover_text_color.is_a?(String) ? Color.parse(hover_text_color) : hover_text_color
 
         @background_color = @default_background_color
+        @background_skin = background_skin
         @swallows_events = true
 
         # Create and add the text label
@@ -77,6 +79,7 @@ module GSDL
         padding : Spacing = Spacing.new(all: 0),
         margin : Spacing = Spacing.new(all: 0),
         flex : UInt8 = 0_u8,
+        background_skin : GSDL::NinePatch? = nil,
         &block : ->
       )
         initialize(
@@ -95,6 +98,7 @@ module GSDL
           padding: padding,
           margin: margin,
           flex: flex,
+          background_skin: background_skin,
           on_click: block
         )
       end

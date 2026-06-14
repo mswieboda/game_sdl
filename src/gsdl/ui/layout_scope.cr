@@ -26,7 +26,7 @@ module GSDL
           child = {{klass}}.new(*args, **kwargs)
           @parent.layout_add_child(child)
           scope = LayoutScope.new(child)
-          with scope yield
+          with scope yield child
           child
         end
 
@@ -64,6 +64,14 @@ module GSDL
       register_container viewport, Viewport
       register_container status_bar, StatusBar
       register_container flow_box, FlowBox
+
+      def background_skin=(value : GSDL::NinePatch?)
+        @parent.background_skin = value
+      end
+
+      def background_color=(value : Color?)
+        @parent.background_color = value
+      end
     end
   end
 end
