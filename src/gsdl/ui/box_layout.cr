@@ -15,9 +15,11 @@ module GSDL
         @y = 0,
         @anchor = Anchor::TopLeft,
         @flex : UInt8 = 0_u8,
-        @padding = Spacing.new(all: 0),
-        @margin = Spacing.new(all: 0)
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0
       )
+        self.padding = padding
+        self.margin = margin
       end
 
       # Helper to distribute remaining space among flexible children

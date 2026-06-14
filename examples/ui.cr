@@ -159,7 +159,7 @@ module UIExample
         # 3. Bottom Status Bar (Snaps to bottom-left of canvas via anchor)
         status_bar(
           spacing: 15,
-          padding: GSDL::UI::Spacing.new(all: 8),
+          padding: 8,
           flex: 0_u8
         ) do
           text(

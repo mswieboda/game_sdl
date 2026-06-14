@@ -31,8 +31,8 @@ module GSDL
         hover_background_color : Color | String = ColorScheme.get(:ui_button_hover, ColorScheme.get(:main, Color.parse("#4f46e5"))),
         default_text_color : Color | String = ColorScheme.get(:ui_button_text, ColorScheme.get(:ui_text, Color.parse("#f4f4f5"))),
         hover_text_color : Color | String = ColorScheme.get(:ui_button_hover_text, ColorScheme.get(:ui_text, Color.parse("#f4f4f5"))),
-        padding : Spacing = Spacing.new(all: 0),
-        margin : Spacing = Spacing.new(all: 0),
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0,
         @flex : UInt8 = 0_u8,
         @on_click : Proc(Nil)? = nil,
         background_skin : GSDL::NinePatch? = nil
@@ -76,8 +76,8 @@ module GSDL
         hover_background_color : Color | String = ColorScheme.get(:ui_button_hover, ColorScheme.get(:main, Color.parse("#4f46e5"))),
         default_text_color : Color | String = ColorScheme.get(:ui_button_text, ColorScheme.get(:ui_text, Color.parse("#f4f4f5"))),
         hover_text_color : Color | String = ColorScheme.get(:ui_button_hover_text, ColorScheme.get(:ui_text, Color.parse("#f4f4f5"))),
-        padding : Spacing = Spacing.new(all: 0),
-        margin : Spacing = Spacing.new(all: 0),
+        padding : SpacingInput = 0,
+        margin : SpacingInput = 0,
         flex : UInt8 = 0_u8,
         background_skin : GSDL::NinePatch? = nil,
         &block : ->

@@ -25,6 +25,19 @@ module GSDL
       def horizontal
         left + right
       end
+
+      # Convert a SpacingInput to a Spacing.
+      # An Int32 is treated as `all:` (uniform spacing on every side).
+      def self.from(value : SpacingInput) : Spacing
+        case value
+        when Int32 then Spacing.new(all: value)
+        else            value
+        end
+      end
     end
+
+    # Shorthand type accepted anywhere a Spacing is expected.
+    # Pass a plain Int32 to mean "all sides equal", or pass a Spacing directly.
+    alias SpacingInput = Spacing | Int32
   end
 end

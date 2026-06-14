@@ -220,7 +220,7 @@ module UIExample
 
             log_panel = vbox(
               width: GSDL::UI::FillParent,
-              padding: GSDL::UI::Spacing.new(all: 16),
+              padding: 16,
               flex: 1_u8
             ) do
               @log_text = text(
@@ -236,7 +236,7 @@ module UIExample
         # Status Bar
         status_bar(
           spacing: 15,
-          padding: GSDL::UI::Spacing.new(all: 8)
+          padding: 8
         ) do
           text(
             text: "Status: Ready",

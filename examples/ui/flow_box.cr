@@ -102,7 +102,7 @@ module UIExample
             # Details card showing currently selected/clicked items (Uses flex: 1 to fill available sidebar height)
             log_box = vbox(
               width: GSDL::UI::FillParent,
-              padding: GSDL::UI::Spacing.new(all: 12),
+              padding: 12,
               flex: 1_u8
             ) do
               text(
@@ -149,7 +149,7 @@ module UIExample
                 width: GSDL::UI::FillParent,
                 height: GSDL::UI::FitContent,
                 background_color: GSDL::Color.parse("#16161a"),
-                padding: GSDL::UI::Spacing.new(all: 12)
+                padding: 12
               ) do
                 button(text: "Sword", padding: Spacing.new(horizontal: 12, vertical: 6)) { update_log("Sword") }
                 button(text: "Iron Shield", padding: Spacing.new(horizontal: 12, vertical: 6)) { update_log("Iron Shield") }
@@ -193,7 +193,7 @@ module UIExample
                 width: GSDL::UI::FillParent,
                 height: 140,
                 background_color: GSDL::Color.parse("#1e1e24"),
-                padding: GSDL::UI::Spacing.new(all: 12)
+                padding: 12
               ) do
                 button(text: "Item Alpha", padding: Spacing.new(horizontal: 12, vertical: 6)) { update_log("Item Alpha") }
                 button(text: "Item Beta", padding: Spacing.new(horizontal: 12, vertical: 6)) { update_log("Item Beta") }
@@ -211,7 +211,7 @@ module UIExample
         # 3. Bottom Status Bar (Snaps to bottom-left of canvas via anchor)
         status_bar(
           spacing: 15,
-          padding: GSDL::UI::Spacing.new(all: 8)
+          padding: 8
         ) do
           text(
             text: "Status: Active",

@@ -14,8 +14,16 @@ module GSDL
       getter height : Int32 = FitContent
 
       # The Box Model
-      property margin : Spacing = Spacing.new(all: 0)
-      property padding : Spacing = Spacing.new(all: 0)
+      getter margin : Spacing = Spacing.new(all: 0)
+      getter padding : Spacing = Spacing.new(all: 0)
+
+      def margin=(value : SpacingInput)
+        @margin = Spacing.from(value)
+      end
+
+      def padding=(value : SpacingInput)
+        @padding = Spacing.from(value)
+      end
 
       # The "Shares" this element takes in a BoxLayout
       # 0 = Fixed/Fit, 1+ = Flex Fill

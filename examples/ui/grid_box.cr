@@ -102,7 +102,7 @@ module UIExample
             # Details card showing currently selected/clicked items
             log_box = vbox(
               width: GSDL::UI::FillParent,
-              padding: GSDL::UI::Spacing.new(all: 12),
+              padding: 12,
               flex: 1_u8
             ) do
               text(
@@ -149,7 +149,7 @@ module UIExample
                 width: GSDL::UI::FillParent,
                 height: 190,
                 background_color: GSDL::Color.parse("#16161a"),
-                padding: GSDL::UI::Spacing.new(all: 10)
+                padding: 10
               ) do
                 button(text: "Sword") { update_log("Sword") }
                 button(text: "Shield") { update_log("Shield") }
@@ -184,7 +184,7 @@ module UIExample
                 width: GSDL::UI::FillParent,
                 height: GSDL::UI::FitContent,
                 background_color: GSDL::Color.parse("#1e1e24"),
-                padding: GSDL::UI::Spacing.new(all: 14)
+                padding: 14
               ) do
                 # Row 0
                 text(text: "Adventurer Name:", font_size: 10, color: GSDL::Color::White)
@@ -223,7 +223,7 @@ module UIExample
         # 3. Bottom Status Bar (Snaps to bottom of canvas via anchor)
         status_bar(
           spacing: 15,
-          padding: GSDL::UI::Spacing.new(all: 10)
+          padding: 10
         ) do
           text(
             text: "Status: Ready",

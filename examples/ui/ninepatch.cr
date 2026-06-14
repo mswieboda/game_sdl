@@ -93,8 +93,8 @@ module NinePatchExample
           spacing: 16,
           stretch: true,
           # flex: 0_u8,
-          margin: Spacing.new(all: 64),
-          padding: Spacing.new(all: 32)
+          margin: 64,
+          padding: 32
         ) do |v|
           # Apply the NinePatch panel skin!
           v.background_skin = panel_skin

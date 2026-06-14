@@ -17,8 +17,8 @@ module GSDL
         y : Int32 = 0,
         anchor : Anchor = Anchor::Center,
         background_color : Color = Color::Transparent,
-        padding = Spacing.new(all: 0),
-        margin = Spacing.new(all: 0),
+        padding = 0,
+        margin = 0,
         flex : UInt8 = 1_u8,
       )
         super(

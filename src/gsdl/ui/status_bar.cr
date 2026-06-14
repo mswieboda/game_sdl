@@ -10,8 +10,8 @@ module GSDL
         @background_color = Color::DarkerGray,
         anchor = Anchor::BottomLeft,
         flex : UInt8 = 0_u8,
-        padding = Spacing.new(all: 0),
-        margin = Spacing.new(all: 0),
+        padding = 0,
+        margin = 0,
       )
         super(
           width: width,
