@@ -4,14 +4,42 @@ module GSDL
     DefaultFontSize = 16_f32
     DefaultOutline = 0
 
-    # key: #{name}-#{font_size}-#{outline}
-    @@fonts = Hash(String, Font).new
-    @@font_data = Hash(String, Bytes).new
-    @@families = Hash(String, FontFamily).new
-    @@registry = Hash(Symbol, String).new
-    @@cache = Hash(Tuple(Symbol, Float32, Int32, FontWeight, FontStyle), WeakRef(Font)).new
-    @@mutex = Mutex.new
+    @@fonts : Hash(String, Font)? = nil
+    @@font_data : Hash(String, Bytes)? = nil
+    @@families : Hash(String, FontFamily)? = nil
+    @@registry : Hash(Symbol, String)? = nil
+    @@cache : Hash(Tuple(Symbol, Float32, Int32, FontWeight, FontStyle), WeakRef(Font))? = nil
+    @@mutex : Mutex? = nil
     @@default = DefaultFontKey
+
+    # 2. Add safe, type-narrowed getters for internal engine methods to use
+    private def self.fonts; @@fonts.not_nil!; end
+    private def self.font_data; @@font_data.not_nil!; end
+    private def self.families; @@families.not_nil!; end
+    private def self.registry; @@registry.not_nil!; end
+    private def self.cache; @@cache.not_nil!; end
+    private def self.mutex; @@mutex.not_nil!; end
+
+    def self.setup
+      # guard against double-initialization
+      return if @@mutex
+
+      # allocate everything cleanly on the active thread stack
+      fonts = Hash(String, Font).new
+      font_data = Hash(String, Bytes).new
+      families = Hash(String, FontFamily).new
+      registry = Hash(Symbol, String).new
+      cache = Hash(Tuple(Symbol, Float32, Int32, FontWeight, FontStyle), WeakRef(Font)).new
+      mutex = Mutex.new
+
+      # assign them back to the module variables
+      @@fonts = fonts
+      @@font_data = font_data
+      @@families = families
+      @@registry = registry
+      @@cache = cache
+      @@mutex = mutex
+    end
 
     def self.default : Symbol
       @@default
@@ -28,8 +56,8 @@ module GSDL
     def self.register_family(name : String) : Nil
       family = FontFamily.new(name)
       yield family
-      @@mutex.synchronize do
-        @@families[name] = family
+      self.mutex.synchronize do
+        self.families[name] = family
       end
     end
 
@@ -41,11 +69,11 @@ module GSDL
 
     # Loads a font based on the mode (release/debug).
     def self.load(path_key : String, size : Num, outline : Int32) : Font
-      @@mutex.synchronize do
+      self.mutex.synchronize do
         font_key = get_key(get_name(path_key), size, outline)
 
-        if @@fonts.has_key?(font_key)
-          return @@fonts[font_key]
+        if self.fonts.has_key?(font_key)
+          return self.fonts[font_key]
         end
 
         data = {% if flag?(:release) %}
@@ -57,33 +85,30 @@ module GSDL
           else
             GSDL::AssetManager.asset_path + path_key
           end
-          File.open(full_path) do |file|
-            slice = Bytes.new(file.size.to_i)
-            file.read_fully(slice)
-            slice
-          end
+
+          GSDL::FS.read_asset(full_path)
         {% end %}
 
         name = get_name(path_key)
-        @@font_data[name] = data
+        self.font_data[name] = data
 
         font = Font.new(name: name, data: data, size: size, outline: outline)
-        @@fonts[font_key] = font
+        self.fonts[font_key] = font
         font
       end
     end
 
     def self.load_from_memory(name : String, data : Bytes, size : Num, outline : Int32) : Font
-      @@mutex.synchronize do
+      self.mutex.synchronize do
         font_key = get_key(name, size, outline)
-        if @@fonts.has_key?(font_key)
-          return @@fonts[font_key]
+        if self.fonts.has_key?(font_key)
+          return self.fonts[font_key]
         end
 
-        @@font_data[name] = data
+        self.font_data[name] = data
 
         font = Font.new(name: name, data: data, size: size, outline: outline)
-        @@fonts[font_key] = font
+        self.fonts[font_key] = font
         font
       end
     end
@@ -96,23 +121,23 @@ module GSDL
       weight : FontWeight = FontWeight::Normal,
       style : FontStyle = FontStyle::Regular
     ) : Font
-      @@mutex.synchronize do
+      self.mutex.synchronize do
         cache_key = {id, size.to_f32, outline, weight, style}
-        if weak_ref = @@cache[cache_key]?
+        if weak_ref = self.cache[cache_key]?
           if font = weak_ref.value
             return font
           end
         end
 
-        path_key = @@registry[id]?
+        path_key = self.registry[id]?
         if path_key.nil?
           if id == :default && (default_sym = @@default) != :default
-            path_key = @@registry[default_sym]?
-          elsif @@families.has_key?(id.to_s)
+            path_key = self.registry[default_sym]?
+          elsif self.families.has_key?(id.to_s)
             path_key = id.to_s
           else
             clean_sym = id.to_s.downcase.gsub('_', "").gsub('-', "")
-            if matched_family = @@families.keys.find { |fam| fam.downcase.gsub('_', "").gsub('-', "") == clean_sym }
+            if matched_family = self.families.keys.find { |fam| fam.downcase.gsub('_', "").gsub('-', "") == clean_sym }
               path_key = matched_family
             end
           end
@@ -121,19 +146,19 @@ module GSDL
         if path_key
           resolved_name = get_name(path_key)
           font_key = get_key(resolved_name, size, outline)
-          if font = @@fonts[font_key]?
+          if font = self.fonts[font_key]?
             return font
           end
         else
           font_key = get_key(id.to_s, size, outline)
-          if font = @@fonts[font_key]?
+          if font = self.fonts[font_key]?
             return font
           end
 
           # Also check by name (without extension) if id.to_s matches
-          @@fonts.each_key do |fkey|
+          self.fonts.each_key do |fkey|
             if fkey.starts_with?("#{id.to_s}-")
-              if font = @@fonts[fkey]?
+              if font = self.fonts[fkey]?
                 return font
               end
             end
@@ -142,7 +167,7 @@ module GSDL
           raise "Asset Registry Error: Symbol :#{id} was never registered!"
         end
 
-        if family = @@families[path_key]?
+        if family = self.families[path_key]?
           resolved_path = family.resolve(weight, style)
         else
           resolved_path = path_key
@@ -150,13 +175,13 @@ module GSDL
 
         resolved_name = get_name(resolved_path)
 
-        unless @@font_data.has_key?(resolved_name)
+        unless self.font_data.has_key?(resolved_name)
           load_font_data_unlocked(resolved_path)
         end
 
-        if data = @@font_data[resolved_name]?
+        if data = self.font_data[resolved_name]?
           font = Font.new(name: resolved_name, data: data, size: size, outline: outline)
-          @@cache[cache_key] = WeakRef.new(font)
+          self.cache[cache_key] = WeakRef.new(font)
           return font
         end
 
@@ -172,8 +197,8 @@ module GSDL
       weight : FontWeight = FontWeight::Normal,
       style : FontStyle = FontStyle::Regular
     ) : Font
-      @@mutex.synchronize do
-        if family = @@families[name]?
+      self.mutex.synchronize do
+        if family = self.families[name]?
           path_key = family.resolve(weight, style)
         else
           path_key = name
@@ -182,17 +207,17 @@ module GSDL
         resolved_name = get_name(path_key)
         font_key = get_key(resolved_name, size, outline)
 
-        if font = @@fonts[font_key]?
+        if font = self.fonts[font_key]?
           return font
         end
 
-        unless @@font_data.has_key?(resolved_name)
+        unless self.font_data.has_key?(resolved_name)
           load_font_data_unlocked(path_key)
         end
 
-        if data = @@font_data[resolved_name]?
+        if data = self.font_data[resolved_name]?
           font = Font.new(name: resolved_name, data: data, size: size, outline: outline)
-          @@fonts[font_key] = font
+          self.fonts[font_key] = font
           return font
         end
 
@@ -202,20 +227,20 @@ module GSDL
 
     # Housekeeping Maintenance Pass (Call during scene transitions)
     def self.prune_dead_references : Nil
-      @@mutex.synchronize do
-        @@cache.select! do |key, weak_ref|
+      self.mutex.synchronize do
+        self.cache.select! do |key, weak_ref|
           !weak_ref.value.nil?
         end
       end
     end
 
     def self.unload(key : String) : Nil
-      @@mutex.synchronize do
-        if font = @@fonts.delete(key)
+      self.mutex.synchronize do
+        if font = self.fonts.delete(key)
           font.destroy
         else
           prefix = "#{key}-"
-          @@fonts.reject! do |k, font|
+          self.fonts.reject! do |k, font|
             if k.starts_with?(prefix)
               font.destroy
               true
@@ -225,41 +250,41 @@ module GSDL
           end
         end
 
-        if @@font_data.has_key?(key)
-          @@font_data.delete(key)
+        if self.font_data.has_key?(key)
+          self.font_data.delete(key)
         end
       end
     end
 
     def self.clear_all : Nil
-      @@mutex.synchronize do
+      self.mutex.synchronize do
         # Close all unique fonts
-        @@fonts.values.uniq.each do |font|
+        self.fonts.values.uniq.each do |font|
           font.destroy
         end
 
-        @@fonts.clear
+        self.fonts.clear
 
         # Close all unique fonts from the weak cache
-        @@cache.each_value do |weak_ref|
+        self.cache.each_value do |weak_ref|
           if font = weak_ref.value
             font.destroy
           end
         end
-        @@cache.clear
-        @@registry.clear
+        self.cache.clear
+        self.registry.clear
 
-        @@font_data.clear
-        @@families.clear
+        self.font_data.clear
+        self.families.clear
       end
     end
 
     def self.begin_frame : Nil
-      @@mutex.synchronize do
-        @@fonts.each_value &.begin_frame
+      self.mutex.synchronize do
+        self.fonts.each_value &.begin_frame
 
         # Touch frames for all cached fonts as well
-        @@cache.each_value do |weak_ref|
+        self.cache.each_value do |weak_ref|
           if font = weak_ref.value
             font.begin_frame
           end
@@ -279,7 +304,7 @@ module GSDL
 
     private def self.load_font_data_unlocked(path_key : String) : Nil
       resolved_name = get_name(path_key)
-      return if @@font_data.has_key?(resolved_name)
+      return if self.font_data.has_key?(resolved_name)
 
       begin
         data = {% if flag?(:release) %}
@@ -291,22 +316,19 @@ module GSDL
           else
             GSDL::AssetManager.asset_path + path_key
           end
-          File.open(full_path) do |file|
-            slice = Bytes.new(file.size.to_i)
-            file.read_fully(slice)
-            slice
-          end
+
+          GSDL::FS.read_asset(full_path)
         {% end %}
-        @@font_data[resolved_name] = data
+        self.font_data[resolved_name] = data
       rescue ex
         raise "Failed to dynamically load font file at '#{path_key}': #{ex.message}"
       end
     end
 
     def self.find_symbol(name : String) : Symbol?
-      @@mutex.synchronize do
+      self.mutex.synchronize do
         clean_name = name.downcase.gsub('-', '_').gsub('_', "")
-        @@registry.each_key do |sym|
+        self.registry.each_key do |sym|
           if sym.to_s.downcase.gsub('_', "") == clean_name
             return sym
           end
@@ -316,9 +338,9 @@ module GSDL
     end
 
     def self.register_pair(key : Symbol, val : String)
-      @@mutex.synchronize do
+      self.mutex.synchronize do
         path = val.starts_with?("assets/fonts/") ? val : "assets/fonts/#{val}"
-        @@registry[key] = path
+        self.registry[key] = path
       end
     end
 

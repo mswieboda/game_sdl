@@ -135,6 +135,18 @@ module GSDL
       instance.fps_counter.fps
     end
 
+    # TODO: this should be overriden by consumers for save directory locations
+    # communicate this somehow, or make abstract
+    def self.org_name : String
+      "game_sdl"
+    end
+
+    # TODO: this should be overriden by consumers for save directory locations
+    # communicate this somehow, or make abstract
+    def self.title_name : String
+      "game"
+    end
+
     @window : SDL3::Window?
     @draw : Draw?
     @loader : Loader?
@@ -357,6 +369,12 @@ module GSDL
       SDL3::TTF.init
       SDL3::Mixer.init
 
+      # let things settle, maybe 5.times is too much or too little, unsure
+      5.times do
+        SDL3.pump_events
+        SDL3.delay(16)
+      end
+
       flags = (window_flags ? window_flags.dup : [SDL3::Window::Flags::None])
       flags << SDL3::Window::Flags::Resizable if resizable || (maximized && !resizable)
       flags << SDL3::Window::Flags::Fullscreen if fullscreen
@@ -397,6 +415,7 @@ module GSDL
         AssetManager.load_pack
       {% end %}
 
+      FontManager.setup
       AudioManager.setup
 
       if @logical_width > 0 && @logical_height > 0
@@ -466,7 +485,11 @@ module GSDL
           elapsed = (Time.instant - current_time).total_seconds.to_f32
 
           if elapsed < target_duration
-            sleep((target_duration - elapsed).seconds)
+            remaining_seconds = target_duration - elapsed
+            ms = (remaining_seconds * 1000).to_u32
+
+            # Direct OS thread block via SDL - safe on all platforms
+            SDL3.delay(ms) if ms > 0
           end
         end
       end

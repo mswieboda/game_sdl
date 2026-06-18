@@ -136,14 +136,14 @@ module GSDL
         begin
           case task.type
           when AssetType::Texture
-            io = SDL3::IOStream.from_memory(bytes, bytes.size)
+            io = SDL3::IOStream.from_memory(bytes)
             sdl_surface = SDL3::Image.load_io(io, close_io: true)
             TextureManager.load_from_surface(task.key, Surface.new(sdl_surface))
           when AssetType::Audio
-            io = SDL3::IOStream.from_memory(bytes, bytes.size)
+            io = SDL3::IOStream.from_memory(bytes)
             AudioManager.load_from_memory(task.key, io)
           when AssetType::FontOld
-            io = SDL3::IOStream.from_memory(bytes, bytes.size)
+            io = SDL3::IOStream.from_memory(bytes)
             FontOldManager.load_from_memory(task.key, io, task.size)
           when AssetType::Font
             FontManager.load_from_memory(task.key, bytes, task.size, task.outline)
@@ -207,11 +207,7 @@ module GSDL
       bytes = if AssetManager.initialized?
         AssetManager.load_raw_data(path)
       else
-        File.open(AssetManager.asset_path + path) do |file|
-          slice = Bytes.new(file.size.to_i)
-          file.read_fully(slice)
-          slice
-        end
+        GSDL::FS.read_asset(AssetManager.asset_path + path)
       end
 
       @result_mutex.synchronize do

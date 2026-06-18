@@ -62,11 +62,8 @@ module GSDL
         else
           GSDL::AssetManager.asset_path + path_key
         end
-        File.open(full_path) do |file|
-          slice = Bytes.new(file.size.to_i)
-          file.read_fully(slice)
-          slice
-        end
+
+        GSDL::FS.read_asset(full_path)
       {% end %}
 
       TileMap.from_tiled_data(data)

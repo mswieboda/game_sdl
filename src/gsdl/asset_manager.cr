@@ -26,7 +26,7 @@ module GSDL
     @@data_cache = Hash(String, Bytes).new
 
     # The File object for the opened assets.pack. Kept open for direct access.
-    @@packfile_io : File? = nil
+    @@packfile_stream : SDL3::IOStream? = nil
     @@mutex = Mutex.new
 
     # Base path for loading loose assets in debug mode
@@ -46,7 +46,7 @@ module GSDL
 
     # Checks if the AssetManager has been initialized (i.e., packfile loaded).
     def self.initialized? : Bool
-      @@packfile_io.is_a?(File)
+      @@packfile_stream.is_a?(SDL3::IOStream)
     end
 
     # --- Packfile Loading ---
@@ -57,30 +57,35 @@ module GSDL
     def self.load_pack(path : String = "")
       # Determine the actual path to the packfile
       packfile_path = if path.empty?
-        # If no path is provided, assume it's next to the executable
-        exec_dir = if exec_path = Process.executable_path
-          File.dirname(exec_path)
-        else
-          # NOTE: this won't work, unless
-          # executed from the same directory
-          # like `./executable` instead of `./bin/executable`
-          Dir.current
-        end
-
-        path = File.join(exec_dir, "assets.pack")
-
-        # On macOS, check if we are in an .app bundle and look in Resources
-        {% if flag?(:darwin) %}
-          if !File.exists?(path) && exec_dir.ends_with?("/Contents/MacOS")
-            resources_path = File.join(File.dirname(exec_dir), "Resources", "assets.pack")
-            path = resources_path if File.exists?(resources_path)
+        {% if flag?(:android) %}
+          # On Android, files in the assets folder are relative to the root
+          "assets.pack"
+        {% else %}
+          # If no path is provided, assume it's next to the executable
+          exec_dir = if exec_path = Process.executable_path
+            File.dirname(exec_path)
+          else
+            # NOTE: this won't work, unless
+            # executed from the same directory
+            # like `./executable` instead of `./bin/executable`
+            Dir.current
           end
-        {% end %}
 
-        path
+          path = File.join(exec_dir, "assets.pack")
+
+          # On macOS, check if we are in an .app bundle and look in Resources
+          {% if flag?(:darwin) %}
+            if !File.exists?(path) && exec_dir.ends_with?("/Contents/MacOS")
+              resources_path = File.join(File.dirname(exec_dir), "Resources", "assets.pack")
+              path = resources_path if File.exists?(resources_path)
+            end
+          {% end %}
+
+          path
+        {% end %}
       else
         # Use the provided path
-        path
+        GSDL::FS.normalize_path(path)
       end
 
       if initialized?
@@ -88,37 +93,28 @@ module GSDL
           puts "GSDL::AssetManager: Packfile already loaded. Closing existing and reloading."
         {% end %}
 
-        @@packfile_io.try &.close
+        @@packfile_stream.try &.close
       end
 
-      unless File.exists?(packfile_path)
-        raise "GSDL::AssetManager: Packfile not found at '#{packfile_path}'. Cannot load assets."
-      end
+      safe_path = GSDL::FS.normalize_path(packfile_path)
 
-      @@packfile_io = File.open(packfile_path, "r")
-      file = @@packfile_io.not_nil!
+      @@packfile_stream = SDL3::IOStream.from_file(safe_path, "rb")
+      stream = @@packfile_stream.not_nil!
 
       # Read magic number
-      magic = Bytes.new(4)
-      file.read_fully(magic)
-      magic_str = String.new(magic)
-      if magic_str != FormatCode
-        file.close
-        @@packfile_io = nil
-        raise "GSDL::AssetManager: Invalid packfile magic number. Expected '#{FormatCode}', got '#{magic_str}'."
+      magic = String.new(stream.read_bytes(4))
+      if magic != FormatCode
+        raise "GSDL::AssetManager: Invalid packfile magic number. Expected '#{FormatCode}', got '#{magic}'."
       end
 
-      # Read entry count
-      entry_count = file.read_bytes(UInt32, IO::ByteFormat::LittleEndian)
+      total_entries = stream.read_u32
 
       # Read manifest entries
-      entry_count.times do
-        path_len = file.read_bytes(UInt32, IO::ByteFormat::LittleEndian)
-        path_bytes = Bytes.new(path_len)
-        file.read_fully(path_bytes)
-        asset_path = String.new(path_bytes)
-        offset = file.read_bytes(UInt64, IO::ByteFormat::LittleEndian)
-        size = file.read_bytes(UInt64, IO::ByteFormat::LittleEndian)
+      total_entries.times do
+        path_len = stream.read_u32
+        asset_path = String.new(stream.read_bytes(path_len))
+        offset = stream.read_u64
+        size = stream.read_u64
         @@manifest[asset_path] = PackEntry.new(path: asset_path, offset: offset, size: size)
       end
 
@@ -126,16 +122,16 @@ module GSDL
         puts "GSDL::AssetManager: Loaded #{@@manifest.size} assets from packfile '#{packfile_path}'."
       {% end %}
     rescue ex
-      @@packfile_io.try &.close
-      @@packfile_io = nil
+      @@packfile_stream.try &.close
+      @@packfile_stream = nil
       raise "GSDL::AssetManager: Failed to load packfile: #{ex.message}"
     end
 
     # Closes the opened packfile. Should be called when all assets are loaded
     # in release mode, or on application exit
     def self.close_pack
-      @@packfile_io.try &.close
-      @@packfile_io = nil
+      @@packfile_stream.try &.close
+      @@packfile_stream = nil
       # @@manifest.clear # Keep manifest for cache lookup if we decide to clear later
 
       {% if !flag?(:release) %}
@@ -166,16 +162,17 @@ module GSDL
           raise "GSDL::AssetManager: Asset '#{path_key}' not found in packfile manifest."
         end
 
-        file = @@packfile_io.not_nil!
-        file.seek(entry.offset, IO::Seek::Set)
+        if stream = @@packfile_stream
+          stream.seek(entry.offset)
+          data = stream.read_bytes(entry.size)
 
-        data = Bytes.new(entry.size)
-        file.read_fully(data)
+          # Cache it to ensure lifetime
+          @@data_cache[path_key] = data
 
-        # Cache it to ensure lifetime
-        @@data_cache[path_key] = data
-
-        data
+          data
+        else
+          raise "GSDL::AssetManager: Packfile stream is not initialized."
+        end
       end
     end
 

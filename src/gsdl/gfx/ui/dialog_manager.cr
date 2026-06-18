@@ -27,11 +27,8 @@ module GSDL
           GSDL::AssetManager.load_raw_data(path_key)
         {% else %}
           full_path = GSDL::AssetManager.asset_path + path_key
-          File.open(full_path) do |file|
-            slice = Bytes.new(file.size.to_i)
-            file.read_fully(slice)
-            slice
-          end
+
+          GSDL::FS.read_asset(full_path)
         {% end %}
 
         @@dialogs = Hash(String, DialogNode).from_yaml(String.new(data))

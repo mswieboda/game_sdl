@@ -84,7 +84,8 @@ module GSDL
 
     # Save the entire state to a JSON file
     def save_json(path : String)
-      File.write(path, @data.to_json)
+      save_path = File.join(GSDL::FS.save_directory, filename)
+      File.write(save_path, @data.to_json)
     end
 
     # Save the entire state to a binary file

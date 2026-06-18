@@ -177,12 +177,8 @@ module GSDL
         end
       {% else %}
         # In debug mode, load from loose files
-        full_path = if path_key.starts_with?("assets/") || path_key.starts_with?(GSDL::AssetManager.asset_path)
-          path_key
-        else
-          GSDL::AssetManager.asset_path + path_key
-        end
-        texture_sdl = SDL3::Image.load_texture(Game.draw.to_sdl, full_path)
+        full_path = GSDL::AssetManager.asset_path + path_key
+        texture_sdl = SDL3::Image.load_texture(Game.draw.to_sdl, FS.normalize_path(full_path))
         Texture.new(texture_sdl)
       {% end %}
     end
