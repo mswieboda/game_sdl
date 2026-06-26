@@ -17,7 +17,7 @@ RM = rm -rf
 MKDIR = mkdir -p
 
 # File targets
-SOURCES := $(STB_TRUETYPE_OBJ) $(shell find $(SOURCE_DIR) -name "*.cr")
+SOURCES := $(STB_TRUETYPE_OBJ) src/game_sdl.cr
 
 # Phony targets don't represent files
 .PHONY: default clean build run
