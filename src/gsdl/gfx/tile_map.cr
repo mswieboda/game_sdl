@@ -92,8 +92,7 @@ module GSDL
             "assets/gfx/missing_image.png"
           end
 
-        tex_symbol = GSDL::TextureManager.find_symbol(name) || raise "Asset Registry Error: Tileset name '#{name}' is not registered in TextureManager!"
-        texture = GSDL::TextureManager.get(tex_symbol)
+        texture = GSDL::TextureManager.get_texture_by_name(name) || raise "Asset Registry Error: Tileset name '#{name}' is not registered in TextureManager!"
 
         tileset = GSDL::Tileset.new(
           texture,
@@ -240,8 +239,7 @@ module GSDL
           ts_tile_w = node["tilewidth"].to_i
           ts_tile_h = node["tileheight"].to_i
 
-          tex_symbol = GSDL::TextureManager.find_symbol(name) || raise "Asset Registry Error: Tileset name '#{name}' is not registered in TextureManager!"
-          texture = GSDL::TextureManager.get(tex_symbol)
+          texture = GSDL::TextureManager.get_texture_by_name(name) || raise "Asset Registry Error: Tileset name '#{name}' is not registered in TextureManager!"
           tileset = GSDL::Tileset.new(texture, ts_tile_w, ts_tile_h, firstgid)
 
           props_node = node.children.find { |n| n.name == "properties" }

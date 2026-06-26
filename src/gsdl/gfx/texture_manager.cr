@@ -184,11 +184,30 @@ module GSDL
     end
 
     def self.find_symbol(name : String) : Symbol?
+      puts ">>> find_symbol name: #{name}"
       @@mutex.synchronize do
         clean_name = name.downcase.gsub('-', '_').gsub('_', "")
+        puts ">>> find_symbol clean_name: #{clean_name}"
         @@registry.each_key do |sym|
+          puts ">>> registry each_key sym: #{sym.to_s.downcase.gsub('_', "")} == #{clean_name}"
           if sym.to_s.downcase.gsub('_', "") == clean_name
             return sym
+          end
+        end
+      end
+      nil
+    end
+
+    def self.get_texture_by_name(name : String) : Texture?
+      if sym = find_symbol(name)
+        return get(sym)
+      end
+
+      @@mutex.synchronize do
+        clean_name = name.downcase.gsub('-', '_').gsub('_', "")
+        @@textures.each do |key, texture|
+          if key.downcase.gsub('-', '_').gsub('_', "") == clean_name
+            return texture
           end
         end
       end
