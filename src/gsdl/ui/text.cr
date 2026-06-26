@@ -9,7 +9,7 @@ module GSDL
       def initialize(
         font : Symbol = :default,
         text : String = "",
-        font_size : Num = 16_f32,
+        font_size : Num = 16,
         @x : Int32 = 0,
         @y : Int32 = 0,
         color = ColorScheme.get(:ui_text),
