@@ -19,6 +19,10 @@ module GSDL
     TextInput = LibSDL3::SDL_EVENT_TEXT_INPUT
     WindowResized = LibSDL3::SDL_EVENT_WINDOW_RESIZED
     WindowPixelSizeChanged = LibSDL3::SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
+    FingerDown = LibSDL3::SDL_EVENT_FINGER_DOWN
+    FingerUp = LibSDL3::SDL_EVENT_FINGER_UP
+    FingerMotion = LibSDL3::SDL_EVENT_FINGER_MOTION
+    FingerCanceled = LibSDL3::SDL_EVENT_FINGER_CANCELED
 
     @@esc_exits = false
     @@exit = false

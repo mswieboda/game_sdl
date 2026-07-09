@@ -366,6 +366,10 @@ module GSDL
       end
 
       SDL3.init
+
+      # Disable touch events being posted as mouse events to prevent ghost clicks on mobile platforms.
+      LibSDL3.set_hint(LibSDL3::HINT_TOUCH_MOUSE_EVENTS, "0")
+
       SDL3::TTF.init
       SDL3::Mixer.init
 
