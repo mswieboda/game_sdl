@@ -1,0 +1,53 @@
+# Humanoid Animations
+
+Available `template_animation_id` for humanoid characters:
+
+- `backflip`
+- `breathing-idle`
+- `cross-punch`
+- `crouched-walking`
+- `crouching`
+- `drinking`
+- `falling-back-death`
+- `fight-stance-idle-8-frames`
+- `fireball`
+- `flying-kick`
+- `front-flip`
+- `getting-up`
+- `high-kick`
+- `hurricane-kick`
+- `jumping-1`
+- `jumping-2`
+- `lead-jab`
+- `leg-sweep`
+- `picking-up`
+- `pull-heavy-object`
+- `pushing`
+- `roundhouse-kick`
+- `running-4-frames`
+- `running-6-frames`
+- `running-8-frames`
+- `running-jump`
+- `running-slide`
+- `sad-walk`
+- `scary-walk`
+- `surprise-uppercut`
+- `taking-punch`
+- `throw-object`
+- `two-footed-jump`
+- `walk`
+- `walk-1`
+- `walk-2`
+- `walking`
+- `walking-10`
+- `walking-2`
+- `walking-3`
+- `walking-4`
+- `walking-4-frames`
+- `walking-5`
+- `walking-6`
+- `walking-6-frames`
+- `walking-7`
+- `walking-8`
+- `walking-8-frames`
+- `walking-9`

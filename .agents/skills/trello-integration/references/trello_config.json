@@ -1,0 +1,5 @@
+{
+  "boardId": "YOUR_TRELLO_BOARD_ID",
+  "todoListId": "YOUR_TRELLO_TODO_LIST_ID",
+  "inDevListId": "YOUR_TRELLO_IN_DEV_LIST_ID"
+}
